@@ -106,6 +106,7 @@ export async function POST(req: Request) {
     amount_paid?: number;
     change?: number;
     discount?: number;
+    redeem_points?: number;
     items?: { product_id: number; qty: number; unit_price?: number; discount?: number }[];
   };
   const items = Array.isArray(b.items) ? b.items : [];
@@ -184,6 +185,8 @@ export async function POST(req: Request) {
       let memberDisc = 0;
       let cashback = 0;
       let points = 0;
+      let redeemPts = 0;
+      let redeemVal = 0;
       let prevSpent = 0;
       let prevCashback = 0;
       let memberId: number | null = null;
@@ -192,7 +195,7 @@ export async function POST(req: Request) {
       if (b.member_id && Number(b.member_id) > 0) {
         const mrow = (await d
           .prepare(
-            'SELECT id, name, birth_date, total_spent, cashback_balance FROM members WHERE id = ?'
+            'SELECT id, name, birth_date, total_spent, cashback_balance, points FROM members WHERE id = ?'
           )
           .get(Number(b.member_id))) as
           | {
@@ -201,6 +204,7 @@ export async function POST(req: Request) {
               birth_date: string;
               total_spent: number;
               cashback_balance: number;
+              points: number;
             }
           | undefined;
         if (!mrow) throw new Error('Member tidak ditemukan');
@@ -208,6 +212,7 @@ export async function POST(req: Request) {
         memberName = mrow.name;
         prevSpent = Number(mrow.total_spent) || 0;
         prevCashback = Number(mrow.cashback_balance) || 0;
+        const prevPoints = Number(mrow.points) || 0;
 
         const baseAfterLine = subtotal - lineDiscSum - txDisc;
         // Promo ulang tahun (tanggal sama dengan hari ini) menggantikan diskon member.
@@ -226,12 +231,23 @@ export async function POST(req: Request) {
           ? Number(settings.birthday_discount) || 0
           : Number(settings.member_discount) || 0;
         memberDisc = Math.max(0, Math.min(Math.floor((baseAfterLine * discPct) / 100), baseAfterLine));
+        // Redeem poin: kasir mengirim `redeem_points` (jumlah poin dipakai).
+        // 1 poin = point_value rupiah (member_settings), dibatasi saldo poin
+        // member dan nilai yang masih bisa dibayar setelah semua diskon.
+        const pointValue = Math.max(0, Math.floor(Number(settings.point_value) || 0));
+        const rawRedeem = Math.floor(Number(b.redeem_points));
+        if (Number.isFinite(rawRedeem) && rawRedeem > 0) {
+          redeemPts = Math.min(rawRedeem, prevPoints);
+          redeemVal = Math.min(redeemPts * pointValue, Math.max(0, baseAfterLine - memberDisc));
+        }
         cashback = Math.max(
           0,
-          Math.floor(((baseAfterLine - memberDisc) * (Number(settings.cashback) || 0)) / 100)
+          Math.floor(
+            ((baseAfterLine - memberDisc - redeemVal) * (Number(settings.cashback) || 0)) / 100
+          )
         );
       }
-      const total = subtotal - lineDiscSum - txDisc - memberDisc;
+      const total = subtotal - lineDiscSum - txDisc - memberDisc - redeemVal;
       if (total <= 0)
         throw new Error('Total setelah diskon tidak valid (diskon melebihi total)');
       // Poin: 1 poin per `points_every` rupiah, hanya member yang dapat poin.
@@ -256,7 +272,7 @@ export async function POST(req: Request) {
           memberId,
           amount_paid,
           change,
-          lineDiscSum + txDisc + memberDisc,
+          lineDiscSum + txDisc + memberDisc + redeemVal,
           points,
           created_at
         );
@@ -270,6 +286,7 @@ export async function POST(req: Request) {
       }
       if (memberId) {
         // Poin + cashback + total belanja kumulatif; tier dihitung dari ambang member_settings.
+        // redeemPts mengurangi saldo poin (tambahan poin `points` dari transaksi ini).
         const newSpent = prevSpent + total;
         const newCashback = prevCashback + cashback;
         const silver = Number(settings.tier_silver) || 0;
@@ -280,10 +297,17 @@ export async function POST(req: Request) {
         await d
           .prepare(
             `UPDATE members
-             SET points = points + ?, cashback_balance = ?, total_spent = ?, tier = ?
+             SET points = points + ? - ?, cashback_balance = ?, total_spent = ?, tier = ?
              WHERE id = ?`
           )
-          .run(points, newCashback, newSpent, tier, memberId);
+          .run(points, redeemPts, newCashback, newSpent, tier, memberId);
+        // Ledger loyalitas: riwayat earn / redeem / cashback credit.
+        const insPh = d.prepare(
+          'INSERT INTO point_history (member_id, delta, reason, amount, sale_id) VALUES (?, ?, ?, ?, ?)'
+        );
+        if (points > 0) await insPh.run(memberId, points, 'earn', total, sid);
+        if (redeemPts > 0) await insPh.run(memberId, -redeemPts, 'redeem', -redeemVal, sid);
+        if (cashback > 0) await insPh.run(memberId, 0, 'cashback', cashback, sid);
       }
       return {
         id: sid,
@@ -291,6 +315,8 @@ export async function POST(req: Request) {
         status: 'unreported',
         created_at,
         points,
+        redeem_points: redeemPts,
+        redeem_value: redeemVal,
         member_name: memberName,
         member_discount: memberDisc,
         cashback,

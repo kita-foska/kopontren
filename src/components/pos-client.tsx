@@ -37,6 +37,8 @@ type SaleResp = {
     status: string;
     created_at?: string;
     points?: number;
+    redeem_points?: number;
+    redeem_value?: number;
     member_name?: string;
     member_discount?: number;
     cashback?: number;
@@ -84,6 +86,7 @@ type Receipt = {
   points: number;
   memberDiscount?: number;
   cashback?: number;
+  redeemValue?: number;
   disc: number;
 };
 
@@ -101,6 +104,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [memberId, setMemberId] = useState('');
   const [mq, setMq] = useState('');
   const [disc, setDisc] = useState('');
+  const [redeem, setRedeem] = useState('');
+  const [memberSettings, setMemberSettings] = useState<Record<string, string> | null>(null);
   const [memberModal, setMemberModal] = useState(false);
   const [memberForm, setMemberForm] = useState({ name: '', phone: '', address: '' });
   const [busy, setBusy] = useState(false);
@@ -149,6 +154,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     loadMembers();
     loadShift();
   }, [load, loadMembers, loadShift]);
+
+  // Member loyalty settings (points_every, point_value) drive the redeem UI.
+  useEffect(() => {
+    (async () => {
+      const r = await api<{ settings: Record<string, string> }>('/api/member-settings');
+      if (r.ok && r.data) setMemberSettings(r.data.settings);
+    })();
+  }, []);
 
   const visible = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -227,16 +240,27 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setCart((c) => c.filter((l) => l.product.id !== id));
   }
 
+  const selectedMember = useMemo(
+    () => members.find((m) => m.id === Number(memberId)),
+    [members, memberId]
+  );
+
   const subtotal = cart.reduce((s, l) => s + l.qty * l.price, 0);
   const discNum = admin ? Math.min(Number(disc.replace(/[^\d]/g, '')) || 0, subtotal) : 0;
   const total = Math.max(0, subtotal - discNum);
   const receivedNum = received.trim() === '' ? 0 : Number(received.replace(/[^\d]/g, '')) || 0;
   const change = Math.max(0, receivedNum - total);
-
-  const selectedMember = useMemo(
-    () => members.find((m) => m.id === Number(memberId)),
-    [members, memberId]
-  );
+  // Loyalty settings (fallback matches server defaults)
+  const pointsEvery = Math.max(1, Math.floor(Number(memberSettings?.points_every) || 10000));
+  const pointValue = Math.max(0, Math.floor(Number(memberSettings?.point_value) || 100));
+  // Redeem points capped by the member's balance
+  const redeemNum = selectedMember
+    ? Math.min(
+        Math.floor(Number(redeem.replace(/[^\d]/g, '')) || 0),
+        Math.max(0, selectedMember.points || 0)
+      )
+    : 0;
+  const redeemValue = redeemNum * pointValue;
 
   async function saveMember() {
     if (!memberForm.name.trim()) {
@@ -408,6 +432,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         note,
         member_id: memberId ? Number(memberId) : undefined,
         discount: discNum || undefined,
+        redeem_points: redeemNum || undefined,
         amount_paid: cashReceived ? receivedNum : total,
         change: cashReceived ? change : 0,
         items: cart.map((l) => ({ product_id: l.product.id, qty: l.qty, unit_price: l.price })),
@@ -434,6 +459,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         points: saved.points || 0,
         memberDiscount: saved.member_discount || 0,
         cashback: saved.cashback || 0,
+        redeemValue: saved.redeem_value || 0,
         disc: discNum,
       });
     }
@@ -442,6 +468,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setNote('');
     setReceived('');
     setDisc('');
+    setRedeem('');
     setMemberId('');
     setPhoneQ('');
     setPhoneResults(null);
@@ -503,6 +530,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       memberDiscount: receipt.memberDiscount,
       cashback: receipt.cashback,
       points: receipt.points,
+      redeemValue: receipt.redeemValue,
       total: receipt.sale?.total ?? 0,
       pay: receipt.pay,
       received: receipt.received,
@@ -530,6 +558,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       memberDiscount: receipt.memberDiscount,
       cashback: receipt.cashback,
       points: receipt.points,
+      redeemValue: receipt.redeemValue,
       total: receipt.sale?.total ?? 0,
       pay: receipt.pay,
       received: receipt.received,
@@ -892,7 +921,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 <div className="mt-1 flex items-center justify-between rounded bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-600 dark:text-emerald-300 font-semibold">
                   <span>★ Member: {selectedMember.name}</span>
                   <span>
-                    {selectedMember.points} poin (+{Math.floor(total / 10000)} poin)
+                    {selectedMember.points} poin (+{Math.floor(total / pointsEvery)} poin)
                   </span>
                 </div>
               )}
@@ -988,6 +1017,36 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 value={disc}
                 onChange={(e) => setDisc(e.target.value)}
               />
+            )}
+
+            {/* Redeem member points (kasir) */}
+            {selectedMember && (selectedMember.points || 0) > 0 && (
+              <div className="space-y-1 rounded-lg bg-violet-500/10 p-2">
+                <div className="flex items-center justify-between text-[11px] font-bold text-violet-600 dark:text-violet-300">
+                  <span>
+                    Redeem Poin ({selectedMember.points} poin · 1 poin = {rp(pointValue)})
+                  </span>
+                  <button
+                    type="button"
+                    className="rounded bg-violet-500 px-1.5 py-0.5 text-[10px] text-white hover:bg-violet-600"
+                    onClick={() => setRedeem(String(selectedMember.points || 0))}
+                  >
+                    Maks
+                  </button>
+                </div>
+                <input
+                  className="input text-xs"
+                  inputMode="numeric"
+                  placeholder="Jumlah poin dipakai (opsional)"
+                  value={redeem}
+                  onChange={(e) => setRedeem(e.target.value)}
+                />
+                {redeemNum > 0 && (
+                  <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    Potongan poin: -{rp(redeemValue)}
+                  </p>
+                )}
+              </div>
             )}
 
             {/* Totals & Change */}
@@ -1140,6 +1199,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <span>+{receipt.points} Poin</span>
                   </div>
                 )}
+                {(receipt.redeemValue ?? 0) > 0 && (
+                  <div className="mt-1 flex justify-between font-bold text-violet-600 dark:text-violet-400">
+                    <span>Poin Redeem</span>
+                    <span>-{rp(receipt.redeemValue ?? 0)}</span>
+                  </div>
+                )}
                 {(receipt.memberDiscount ?? 0) > 0 && (
                   <div className="mt-1 flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
                     <span>Diskon Member</span>
@@ -1212,6 +1277,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Poin Didapat</span>
               <span>+{receipt.points} Poin</span>
+            </div>
+          )}
+          {(receipt.redeemValue ?? 0) > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Poin Redeem</span>
+              <span>-{(receipt.redeemValue ?? 0).toLocaleString('id-ID')}</span>
             </div>
           )}
           {(receipt.memberDiscount ?? 0) > 0 && (

@@ -12,6 +12,8 @@ type Member = {
   address: string;
   points: number;
   total_spent: number;
+  cashback_balance?: number;
+  tier?: string;
   qr_code?: string;
   created_at: string;
 };
@@ -92,7 +94,31 @@ export function MemberClient() {
     }
   }
 
+  async function resetQr(m: Member) {
+    if (
+      !confirm(
+        `Reset QR member "${m.name}"? Badge/QR lama akan tidak berlaku dan diganti kode baru.`
+      )
+    )
+      return;
+    const r = await api<{ ok: boolean; qr_code: string }>(
+      `/api/members/${m.id}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ regenerate_qr: true }),
+      }
+    );
+    if (r.ok) {
+      m.qr_code = r.data?.qr_code || '';
+      setMembers((prev) => prev.map((x) => (x.id === m.id ? m : x)));
+      showToast('QR member berhasil di-reset. Buka badge lagi untuk mencetak yang baru.');
+    } else {
+      showToast(r.error || 'Gagal reset QR');
+    }
+  }
+
   const totalPoints = members.reduce((acc, m) => acc + (m.points || 0), 0);
+
   const totalSpent = members.reduce((acc, m) => acc + (m.total_spent || 0), 0);
 
   return (
@@ -179,9 +205,21 @@ export function MemberClient() {
                   {m.address || '—'}
                 </td>
                 <td className="td">
-                  <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}>
-                    ★ {m.points} poin
-                  </Badge>
+                  <div className="flex flex-col items-start gap-1">
+                    <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}>
+                      ★ {m.points} poin
+                    </Badge>
+                    {m.tier && m.tier !== 'regular' && (
+                      <span className="text-[10px] font-extrabold uppercase tracking-wide text-amber-500">
+                        Tier {m.tier}
+                      </span>
+                    )}
+                    {(m.cashback_balance || 0) > 0 && (
+                      <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        Cashback {rp(m.cashback_balance)}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="td font-bold text-slate-800 dark:text-slate-200">
                   {rp(m.total_spent)}
@@ -206,6 +244,13 @@ export function MemberClient() {
                       onClick={() => openEdit(m)}
                     >
                       Ubah
+                    </button>
+                    <span className="text-slate-300 dark:text-navy-600">|</span>
+                    <button
+                      className="text-xs font-bold text-amber-500 hover:underline dark:text-amber-400"
+                      onClick={() => resetQr(m)}
+                    >
+                      Reset QR
                     </button>
                     <span className="text-slate-300 dark:text-navy-600">|</span>
                     <button

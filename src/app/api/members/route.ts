@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const phoneQ = canonicalPhone(String(url.searchParams.get('phone') || ''));
   const code = String(url.searchParams.get('code') || '').trim();
   const d = await db();
-  let sql = `SELECT id, name, phone, address, points, total_spent, qr_code, created_at FROM members`;
+  let sql = `SELECT id, name, phone, address, points, total_spent, cashback_balance, tier, qr_code, created_at FROM members`;
   const args: string[] = [];
   if (code) {
     // QR-code lookup (member badge / scan)

@@ -110,6 +110,7 @@ export function strukWaText(o: {
   memberDiscount?: number;
   cashback?: number;
   points?: number;
+  redeemValue?: number;
   total: number;
   pay: string;
   received?: number | null;
@@ -145,6 +146,9 @@ export function strukWaText(o: {
   }
   if ((o.points ?? 0) > 0) {
     lines.push('Poin Didapat: +' + (o.points ?? 0) + ' Poin');
+  }
+  if ((o.redeemValue ?? 0) > 0) {
+    lines.push('Poin Redeem: -Rp ' + (o.redeemValue ?? 0).toLocaleString('id-ID'));
   }
   lines.push('--------------------------------');
   lines.push('Terima kasih. Mohon maaf atas ketidaknyamanannya.');
