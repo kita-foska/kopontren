@@ -1,0 +1,375 @@
+import {
+  createClient,
+  type Client,
+  type InArgs,
+  type ResultSet,
+  type Transaction,
+} from '@libsql/client';
+import crypto from 'node:crypto';
+
+// Data layer: remote SQLite (Turso / libSQL) via the @libsql/client async client.
+// Drop-in replacement for the previous local node:sqlite layer: same
+// prepare().get/.all/.run + exec() surface, so all API routes stay unchanged
+// (only difference: the methods are now async - call sites add `await`).
+//
+// Required environment variable:
+//   DATABASE_URL        -> libsql://<db>.<region>.turso.io   (Vercel/Turso)
+//   DATABASE_AUTH_TOKEN -> Turso database token
+// For pure local development (no Turso), point DATABASE_URL at a local file:
+//   DATABASE_URL = file:///D:/Ngudi Susilo/kopontren-app/data/kopontren.db
+
+export type Db = {
+  prepare(sql: string): {
+    get(...args: unknown[]): Promise<unknown>;
+    all(...args: unknown[]): Promise<unknown[]>;
+    run(...args: unknown[]): Promise<{ changes: number; lastInsertRowid: number }>;
+  };
+  exec(sql: string): Promise<void>;
+};
+
+class DbShim implements Db {
+  constructor(public c: Client) {}
+  prepare(sql: string) {
+    // @libsql/client >= 0.15 has no prepare(); build the same surface
+    // on top of client.execute({ sql, args }) instead.
+    const exec = (args: unknown[]) => this.c.execute({ sql, args: args as InArgs });
+    return {
+      get: async (...args: unknown[]) => {
+        const rs = (await exec(args)) as ResultSet;
+        return rs.rows[0];
+      },
+      all: async (...args: unknown[]) => {
+        const rs = (await exec(args)) as ResultSet;
+        return rs.rows as unknown[];
+      },
+      run: async (...args: unknown[]) => {
+        const rs = (await exec(args)) as ResultSet;
+        return {
+          changes: rs.rowsAffected,
+          lastInsertRowid: Number(rs.lastInsertRowid ?? 0),
+        };
+      },
+    };
+  }
+  async exec(sql: string) {
+    // Multi-statement SQL: run each statement on its own logical
+    // connection (the remote HTTP API accepts one statement per call).
+    for (const stmt of sql.split(';')) {
+      const s = stmt.trim();
+      if (s) await this.c.execute(s);
+    }
+  }
+}
+
+let _db: Db | null = null;
+
+const SCHEMA = `
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY,
+  username TEXT UNIQUE NOT NULL,
+  display_name TEXT DEFAULT '',
+  role TEXT NOT NULL DEFAULT 'kasir',
+  active INTEGER NOT NULL DEFAULT 1,
+  salt TEXT NOT NULL,
+  pass_hash TEXT NOT NULL,
+  pw_default INTEGER NOT NULL DEFAULT 0,
+  created_by INTEGER,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS sessions (
+  token_hash TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS products (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT '',
+  unit TEXT NOT NULL DEFAULT 'pcs',
+  base_price INTEGER NOT NULL DEFAULT 0,
+  cost_price INTEGER NOT NULL DEFAULT 0,
+  stock INTEGER NOT NULL DEFAULT 0,
+  active INTEGER NOT NULL DEFAULT 1,
+  barcode TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS sales (
+  id INTEGER PRIMARY KEY,
+  kasir_id INTEGER,
+  customer TEXT NOT NULL DEFAULT '',
+  pay_method TEXT NOT NULL DEFAULT 'cash',
+  status TEXT NOT NULL DEFAULT 'unreported',
+  note TEXT NOT NULL DEFAULT '',
+  total INTEGER NOT NULL DEFAULT 0,
+  member_id INTEGER,
+  amount_paid INTEGER NOT NULL DEFAULT 0,
+  change INTEGER NOT NULL DEFAULT 0,
+  discount INTEGER NOT NULL DEFAULT 0,
+  member_points INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  reported_at TEXT
+);
+CREATE TABLE IF NOT EXISTS sale_items (
+  id INTEGER PRIMARY KEY,
+  sale_id INTEGER NOT NULL,
+  product_id INTEGER,
+  product_name TEXT NOT NULL,
+  qty INTEGER NOT NULL,
+  unit TEXT NOT NULL DEFAULT 'pcs',
+  unit_price INTEGER NOT NULL,
+  subtotal INTEGER NOT NULL,
+  discount REAL NOT NULL DEFAULT 0,
+  cost_price INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS members (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL DEFAULT '',
+  address TEXT NOT NULL DEFAULT '',
+  points INTEGER NOT NULL DEFAULT 0,
+  total_spent INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS shifts (
+  id INTEGER PRIMARY KEY,
+  kasir_id INTEGER NOT NULL,
+  label TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'open',
+  start_time TEXT NOT NULL,
+  end_time TEXT,
+  sales_count INTEGER NOT NULL DEFAULT 0,
+  sales_total INTEGER NOT NULL DEFAULT 0,
+  cash_total INTEGER NOT NULL DEFAULT 0,
+  by_method TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS audit_log (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER,
+  username TEXT NOT NULL DEFAULT '',
+  action TEXT NOT NULL,
+  table_name TEXT NOT NULL DEFAULT '',
+  record_id INTEGER,
+  old_value TEXT,
+  new_value TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS purchases (
+  id INTEGER PRIMARY KEY,
+  product_id INTEGER,
+  product_name TEXT NOT NULL,
+  qty INTEGER NOT NULL,
+  unit_cost INTEGER NOT NULL DEFAULT 0,
+  supplier TEXT NOT NULL DEFAULT '',
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS expenses (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT '',
+  amount INTEGER NOT NULL DEFAULT 0,
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS cash_entries (
+  id INTEGER PRIMARY KEY,
+  type TEXT NOT NULL,
+  label TEXT NOT NULL,
+  amount INTEGER NOT NULL DEFAULT 0,
+  note TEXT NOT NULL DEFAULT '',
+  created_by INTEGER,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS consignments (
+  id INTEGER PRIMARY KEY,
+  owner TEXT NOT NULL,
+  owner_phone TEXT NOT NULL DEFAULT '',
+  item_name TEXT NOT NULL,
+  unit TEXT NOT NULL DEFAULT 'pcs',
+  qty_received INTEGER NOT NULL DEFAULT 0,
+  agree_price INTEGER NOT NULL DEFAULT 0,
+  qty_sold INTEGER NOT NULL DEFAULT 0,
+  qty_returned INTEGER NOT NULL DEFAULT 0,
+  amount_paid INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'active',
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  settled_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_sales_created ON sales(created_at);
+CREATE INDEX IF NOT EXISTS idx_si_sale ON sale_items(sale_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_consignments_status ON consignments(status);
+CREATE INDEX IF NOT EXISTS idx_sales_member ON sales(member_id);
+CREATE INDEX IF NOT EXISTS idx_shifts_kasir ON shifts(kasir_id);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+`;
+
+function hashPassword(pw: string, salt: string): string {
+  return crypto.scryptSync(pw, salt, 32).toString('hex');
+}
+
+async function seed(d: Db) {
+  const adminExists = await d
+    .prepare('SELECT id FROM users WHERE username = ?')
+    .get('admin');
+  if (!adminExists) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    await d
+      .prepare(
+        `INSERT INTO users (username, display_name, role, active, salt, pass_hash, pw_default, created_by)
+         VALUES ('admin', 'Pengurus', 'admin', 1, ?, ?, 1, NULL)`
+      )
+      .run(salt, hashPassword('kopontren', salt));
+  }
+  const prodCount = ((await d.prepare('SELECT COUNT(*) c FROM products').get()) as { c: number }).c;
+  if (prodCount === 0) {
+    const ins = d.prepare(
+      `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active)
+       VALUES (?, ?, ?, ?, ?, ?, 1)`
+    );
+    const demo = [
+      ['Madu Sachet', 'Madu', 'sachet', 6000, 5000, 500],
+      ['Madu Box', 'Madu', 'box', 45000, 38000, 12],
+      ['Madu Botol 500ml', 'Madu', 'botol', 25000, 21000, 24],
+      ['Teh Hijau Premium', 'Minuman', 'pcs', 12000, 9000, 40],
+      ['Keripik Bayam', 'Camilan', 'pcs', 5000, 3500, 60],
+      ['Gula Halus 1kg', 'Sembako', 'kg', 15000, 13000, 30],
+      ['Beras Premium 5kg', 'Sembako', 'sak', 72000, 66000, 10],
+      ['Air Mineral 600ml', 'Minuman', 'botol', 3000, 2000, 200],
+    ] as const;
+    for (const row of demo) {
+      await ins.run(row[0], row[1], row[2], row[3], row[4], row[5]);
+    }
+  }
+}
+
+let _dbPromise: Promise<Db> | null = null;
+
+/** Ensure a column exists on a table (no-op when it's already there). */
+async function execColumn(d: Db, sql: string) {
+  const m = /^ALTER TABLE (\w+) ADD COLUMN (\w+)/.exec(sql);
+  if (m) {
+    const rows = (await d.prepare(`PRAGMA table_info(${m[1]})`).all()) as {
+      name: string;
+    }[];
+    if (rows.some((r) => r.name === m[2])) return;
+  }
+  await d.exec(sql);
+}
+
+/**
+ * Idempotent migration of the feature batch on top of an existing database
+ * (fresh databases get everything from SCHEMA): extra sales columns,
+ * sale_items discount & cost snapshot, products.barcode, and the new
+ * members / shifts / audit_log tables.
+ */
+async function migrate(d: Db) {
+  await execColumn(d, 'ALTER TABLE sales ADD COLUMN member_id INTEGER');
+  await execColumn(
+    d,
+    "ALTER TABLE sales ADD COLUMN amount_paid INTEGER NOT NULL DEFAULT 0"
+  );
+  await execColumn(d, "ALTER TABLE sales ADD COLUMN change INTEGER NOT NULL DEFAULT 0");
+  await execColumn(d, "ALTER TABLE sales ADD COLUMN discount INTEGER NOT NULL DEFAULT 0");
+  await execColumn(d, "ALTER TABLE sales ADD COLUMN member_points INTEGER NOT NULL DEFAULT 0");
+  await execColumn(d, "ALTER TABLE sale_items ADD COLUMN discount REAL NOT NULL DEFAULT 0");
+  await execColumn(d, "ALTER TABLE sale_items ADD COLUMN cost_price INTEGER NOT NULL DEFAULT 0");
+  await execColumn(d, "ALTER TABLE products ADD COLUMN barcode TEXT NOT NULL DEFAULT ''");
+  // legacy DBs pre-date reported_at: without this, sales/report queries 500 on cold start
+  await execColumn(d, 'ALTER TABLE sales ADD COLUMN reported_at TEXT');
+  await d.exec('CREATE TABLE IF NOT EXISTS members (id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL DEFAULT \'\', address TEXT NOT NULL DEFAULT \'\', points INTEGER NOT NULL DEFAULT 0, total_spent INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
+  await d.exec('CREATE TABLE IF NOT EXISTS shifts (id INTEGER PRIMARY KEY, kasir_id INTEGER NOT NULL, label TEXT NOT NULL DEFAULT \'\', status TEXT NOT NULL DEFAULT \'open\', start_time TEXT NOT NULL, end_time TEXT, sales_count INTEGER NOT NULL DEFAULT 0, sales_total INTEGER NOT NULL DEFAULT 0, cash_total INTEGER NOT NULL DEFAULT 0, by_method TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
+  await d.exec('CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY, user_id INTEGER, username TEXT NOT NULL DEFAULT \'\', action TEXT NOT NULL, table_name TEXT NOT NULL DEFAULT \'\', record_id INTEGER, old_value TEXT, new_value TEXT, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_sales_member ON sales(member_id)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_shifts_kasir ON shifts(kasir_id)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at)');
+  // performance batch for low-end devices: the report/dashboard queries
+  // filter & order on these columns; all IF NOT EXISTS -> idempotent.
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_sales_status ON sales(status)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_purchases_created ON purchases(created_at)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_expenses_created ON expenses(created_at)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_cash_entries_created ON cash_entries(created_at)');
+}
+
+export function db(): Promise<Db> {
+  if (_db) return Promise.resolve(_db);
+  if (_dbPromise) return _dbPromise;
+  const url = process.env.DATABASE_URL ?? '';
+  if (!url) throw new Error('DATABASE_URL is not set (see DEPLOY-VERCEL.txt)');
+  const token = process.env.DATABASE_AUTH_TOKEN;
+  _dbPromise = (async () => {
+    const c = createClient({ url, authToken: token || undefined });
+    const d = new DbShim(c);
+    await d.exec(SCHEMA); // idempotent: creates tables when missing
+    await migrate(d); // feature batch: new columns & tables on existing DBs
+    // One-time migration: legacy 'YYYY-MM-DD HH:MM:SS' (UTC, space-separated)
+    // timestamps -> ISO 'YYYY-MM-DDTHH:MM:SS.sssZ', so string comparisons with
+    // startOfDayJakarta() work consistently. Idempotent: rows already in ISO
+    // have no space and are left untouched.
+    for (const t of [
+      'sales',
+      'purchases',
+      'expenses',
+      'cash_entries',
+      'consignments',
+      'products',
+      'users',
+    ]) {
+      await d.exec(
+        `UPDATE ${t} SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', created_at) WHERE instr(created_at, ' ') > 0;`
+      );
+    }
+    await d.exec(
+      `UPDATE sales SET reported_at = strftime('%Y-%m-%dT%H:%M:%fZ', reported_at) WHERE reported_at IS NOT NULL AND instr(reported_at, ' ') > 0;`
+    );
+    await d.exec(
+      `UPDATE consignments SET settled_at = strftime('%Y-%m-%dT%H:%M:%fZ', settled_at) WHERE settled_at IS NOT NULL AND instr(settled_at, ' ') > 0;`
+    );
+    await seed(d);
+    _db = d;
+    return d;
+  })();
+  return _dbPromise;
+}
+
+/**
+ * Run fn inside a transaction.
+ * Remote (Turso): libSQL's `client.transaction(mode)` returns a Transaction
+ * logical connection; all statements issued on it are shipped as one
+ * atomic batch and committed when it closes. We temporarily point the
+ * DbShim at that transaction so the call sites can keep using `d` as-is.
+ */
+export async function tx<T>(d: Db, fn: () => Promise<T> | T): Promise<T> {
+  const shim = d as DbShim;
+  const c = shim.c;
+  if (typeof c.transaction === 'function') {
+    const t: Transaction = await c.transaction('write');
+    const orig = shim.c;
+    shim.c = t as unknown as Client;
+    let ok = false;
+    try {
+      const r = await fn();
+      ok = true;
+      return r;
+    } finally {
+      shim.c = orig;
+      if (!ok) {
+        // fn failed: roll back before closing so the batch is not committed
+        try {
+          await t.execute('ROLLBACK');
+        } catch {
+          /* transaction may already be aborted */
+        }
+      }
+      try {
+        await t.close();
+      } catch {
+        /* already closed */
+      }
+    }
+  }
+  return fn();
+}

@@ -1,0 +1,92 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --nbg: #170a0e;
+  --nsurface: #221015;
+  --nborder: #3a1d24;
+  --ntext: #f1f5f9;
+  --nsub: #e5a3b1;
+  --lbg: #faf5f6;
+  --lsurface: #ffffff;
+  --lborder: #e9d5d8;
+  --ltext: #170a0e;
+  --lsub: #8a1538;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.dark body {
+  background: #170a0e;
+  color: #f1f5f9;
+}
+body {
+  background: #faf5f6;
+  color: #170a0e;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-navy-700 dark:bg-navy-800;
+  }
+  .input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500/30 dark:border-navy-600 dark:bg-navy-900 dark:text-slate-100;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-accent-500 text-white hover:bg-accent-600;
+  }
+  .btn-ghost {
+    @apply btn border border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700;
+  }
+  .btn-danger {
+    @apply btn bg-rose-600 text-white hover:bg-rose-700;
+  }
+  .btn-amber {
+    @apply btn bg-amber-500 text-slate-900 hover:bg-amber-400;
+  }
+  .label {
+    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400;
+  }
+  .th {
+    @apply px-3 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400;
+  }
+  .td {
+    @apply px-3 py-2.5 text-sm;
+  }
+  .table-row {
+    @apply border-t border-slate-100 dark:border-navy-700;
+  }
+}
+
+
+/* ===== Struk penjualan: hanya tampil saat mencetak ===== */
+.receipt-print { display: none; }
+
+@media print {
+  body * { visibility: hidden; }
+  .receipt-print, .receipt-print * { visibility: visible; }
+  .receipt-print {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 320px;
+    background: #fff;
+    color: #000;
+    font-family: 'Courier New', ui-monospace, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 12px;
+  }
+  @page { margin: 8mm; }
+}

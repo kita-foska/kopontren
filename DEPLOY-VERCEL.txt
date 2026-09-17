@@ -1,0 +1,315 @@
+================================================================
+  PANDUAN LENGKAP: JALANKAN APLIKASI KOPONTREN DI INTERNET
+  (GRATIS, UNTUK PEMULI TOTAL - IKUT PER LANGKAH, JANGAN LOMPAT)
+================================================================
+
+   *** PERHATIAN (REVISI) ***
+   Jika deploy Vercel Anda gagal dengan pesan "Deployment failed" /
+   "Failed to compile" di bagian Build Logs, berarti Anda memakai
+   kp.zip versi lama. Pakai kp.zip YANG BARU INI (sudah diperbaiki),
+   lalu upload ulang di STEP 3. Setelah itu ikuti langkah yang sama.
+
+   Versi ini juga PERUBAHAN TAMPILAN (UPDATE LOGO): ikon aplikasi & warna tema
+   (merah marun) sudah serasi dengan logo Kopontren. Kalau ingin ikut
+   perubahan ini, upload kp.zip ini di STEP 3, lalu pasang ulang ikon
+   di HP (hapus ikon lama dulu, lalu "Pasang ke Layar Utama" ulang).
+
+    CATATAN LOGO BARU: file logo-kopontren.png & logo-kopontren.svg
+    diganti dengan logo Kopontren terbaru (nama file tidak diubah,
+    jadi manifest/layout/sw.js tetap sama). Service worker di-upgrade
+    ke cache versi 3: saat aplikasi dibuka lagi, cache logo lama
+    otomatis dibuang.
+
+
+
+
+  Waktu : sekitar 30-45 menit
+  Biaya : Rp 0 (semua gratis)
+  Butuh : 1 akun Google + browser + file "kp.zip"
+
+  GAMBARAN SINGKAT:
+  - APLIKASINYA jalan di VERCEL -> "rumah online" yang menyalakan
+    aplikasi 24 jam, gratis, sudah termasuk HTTPS.
+  - DATANYA (produk, jualan, kas, pengeluaran, konsinyasi) disimpan
+    di TURSO -> database online gratis.
+  - Kamu tinggal upload 1 FILE: kp.zip. Selesai.
+
+  ALUR 6 LANGKAH BESAR:
+   1. Buat database gratis di Turso   (STEP 1)
+   2. Buat akun Vercel gratis         (STEP 2)
+   3. Upload file kp.zip ke Vercel    (STEP 3)
+   4. Coba aplikasi + ganti password  (STEP 4)
+   5. Pindahkan data lama dari PC     (STEP 5)
+   6. "Pasang" ikon di HP             (STEP 6)
+  Versi ringkas ada di bagian "RINGKASAN CEPAT" paling bawah.
+
+----------------------------------------------------------------
+  SEBELUM MULAI
+----------------------------------------------------------------
+  * Siapkan Notepad (buka dulu, nanti buat catat).
+  * Siapkan 1 akun Google (email). Semua pendaftaran pakai itu.
+  * File kp.zip harus ada di PC ini.
+  * Data lama di PC tidak akan hilang dengan langkah-langkah ini.
+    Baru dipindah di STEP 5, jadi tenang.
+
+
+================================================================
+  STEP 1 - BUAT DATABASE GRATIS DI TURSO
+================================================================
+  1. Buka browser, ketik:   https://turso.sh   lalu Enter.
+     (Nanti pindah ke console.turso.com - itu normal.)
+  2. Klik tombol "Sign Up" / "Login" (kanan atas).
+     Pilih "Continue with Google" -> masuk pakai akun Google-mu.
+     (Kalau belum punya akun Google sama sekali: bikin dulu di
+     gmail.com, gratis.)
+  3. Setelah masuk, cari tombol "New Database"
+     (biasanya di kanan atas, warna biru). Klik.
+  4. Muncul form. Isi:
+       - "Name"   : ketik  kopontren
+       - "Region" : buka daftar (dropdown), pilih "Singapore"
+                    (atau "Tokyo"). Pilih yang dekat Indonesia
+                    supaya cepat. Region lain juga boleh.
+     Bagian lain biarkan saja (default).
+  5. Klik "Create Database".
+  6. SEKARANG HALAMAN PENTING. Akan muncul 2 info:
+       a) "Database URL"   -> bentuknya:
+            libsql://kopontren-abc123....turso.io
+       b) "Database Token" -> string sangat panjang.
+            Kalau tersembunyi, klik "Reveal"/"Show"/"View".
+     SALIN KEDUANYA ke Notepad. Contoh penulisan:
+         URL  : libsql://kopontren-abc123....turso.io
+         TOKEN: eXk3Yg... (yang panjang)
+     CATATAN BESAR: Token hanya muncul SEKALI saat database baru
+     dibuat. Kalau hilang, bisa bikin token baru di halaman
+     database (token lama jadi tidak berlaku).
+     Simpan file Notepad ini di tempat mudah dijangkau
+     (mis. desktop). STEP 3 butuhnya.
+
+
+================================================================
+  STEP 2 - BUAT AKUN VERCEL (GRATIS)
+================================================================
+  1. Buka tab baru di browser, ketik:   https://vercel.com   Enter.
+  2. Klik "Sign Up" (kanan atas).
+  3. Pilih "Continue with Google" -> masuk dengan akun Google
+     yang sama.
+  4. Tunggu sebentar, kamu masuk ke "Dashboard" Vercel.
+     Ini PLAN GRATIS ("Hobby"). Tidak perlu input kartu kredit.
+     Kalau tiba-tiba diminta "Add payment method / add card"
+     -> LEMPAR-kan saja (skip).
+  5. Jangan panik melihat isi dashboard. Belum apa-apa.
+     Langsung lanjut STEP 3.
+================================================================
+  STEP 3 - UPLOAD FILE APLIKASI (kp.zip) KE VERCEL
+================================================================
+  1. Masih di Vercel, klik tombol "Add New..." (kanan atas)
+     atau ikon "+".
+  2. Pilih "Project".
+  3. Halaman baru muncul dengan beberapa tab di bagian atas:
+       "Git Repositories"   |   "Upload"   |   ...
+     KLIK TAB "Upload".
+     (Artinya: upload file tanpa Git - ini yang kita mau.
+      Kalau tab-nya tidak ada / namanya beda, cari tab yang
+      ada kata "Upload" atau "Deploy without Git".)
+  4. Muncul kotak "Drag and drop files here" / "Choose files".
+     - SERET file kp.zip ke dalam kotak itu
+       (tombol kiri mouse tahan, pindahkan ke kotak, lepas),
+       atau klik kotak -> pilih file kp.zip.
+     Vercel MEMAHAMI file .zip - TIDAK PERLU diekstrak.
+  5. Vercel otomatis mendeteksi. Muncul form
+     "Set up your application". Isi:
+       - "Project name" : ketik  kopontren
+       - "Framework"    : biasanya sudah terdeteksi otomatis
+                          "Next.js". Kalau ada dropdown,
+                          pilih "Next.js".
+       - "Root directory" / "Build command" : BIARKAN DEFAULT
+                          (jangan diubah).
+  6. BAGIAN PALING PENTING - "Environment Variables":
+     Klik tombol "+ Add environment variable" sebanyak 2x.
+
+     Variabel ke-1:
+         Name  : DATABASE_URL
+         Value : (TEMPEL) Database URL dari Turso
+                 (yang libsql://... dari STEP 1)
+     Variabel ke-2:
+         Name  : DATABASE_AUTH_TOKEN
+         Value : (TEMPEL) Database Token dari Turso
+                 (yang panjang, dari STEP 1)
+
+     Hati-hati:
+       - Jangan ada spasi di depan atau di belakang tempelan.
+       - Huruf kecil-besar HARUS persis seperti dari Turso.
+       - Opsi "Environments"/"Environment": pilih "All"
+         (Production + Preview).
+  7. Klik tombol besar "Deploy".
+  8. Vercel mulai bekerja: install -> build -> done.
+     Waktu: 2-5 menit. Jangan ditutup dulu.
+     Kalau sukses, muncul:
+         "Deployment Complete"
+         + alamat website seperti:
+         https://kopontren-xxxxx.vercel.app
+     SALIN ALAMAT INI (Ctrl+C). Nanti dibuka di HP.
+  9. Kalau muncul kata "Error" / "Build failed": jangan panik,
+     lihat bagian "JIKA DEPLOY GAGAL" di bawah.
+
+
+================================================================
+  STEP 4 - COBA APLIKASI + GANTI PASSWORD
+================================================================
+  1. Buka alamat Vercel yang baru disalin
+     (https://...vercel.app) di browser.
+     Pembuka pertama mungkin LAMBAT (10-30 detik). Normal:
+     database sedang disiapkan. Tunggu, lalu tekan F5.
+  2. Muncul layar login. Isi:
+       Username : admin
+       Password : kopontren
+     (Ini akun default yang otomatis dibuat aplikasi.)
+  3. Kalau berhasil masuk dan terlihat dashboard = SUKSES!
+  4. SEKARANG ganti password admin (WAJIB):
+       Menu "Admin" -> "Pengguna"/"Users" -> akun "admin"
+       -> "Ganti Password".
+     Buat password baru, minimal 6 huruf/angka.
+     CATAT PASSWORD BARU DI NOTEPAD - jangan sampai lupa!
+     Password lama "kopontren" tidak berlaku lagi.
+  5. Coba buka lagi alamat Vercel di tab baru / HP, login
+     dengan password baru. Harus bisa.
+
+
+================================================================
+  STEP 5 - PINDAHKAN DATA LAMA DARI PC KE ONLINE
+================================================================
+  Aplikasi online yang baru dideploy masih KOSONG
+  (hanya beberapa produk contoh + akun admin).
+  Cara TERMUDAH memindahkan data lama (produk, jualan, stok,
+  kas, pengeluaran, konsinyasi) lewat menu di browser:
+
+  A. Di PC, buka aplikasi LAMA-nya (yang masih jalan di
+     localhost:3000 atau alamat lokal):
+     1. Login sebagai pengurus/admin.
+     2. Menu: "Admin" -> "Data & Backup".
+     3. Klik "Unduh Backup" -> terunduh file .json.
+        SIMPAN FILE .json INI DI TEMPAT AMAN
+        (mis. desktop, atau Google Drive).
+
+  B. Di aplikasi ONLINE baru:
+     1. Buka alamat Vercel -> login.
+     2. Menu: "Admin" -> "Data & Backup"
+        -> "Unggah / Import Backup".
+     3. Pilih file .json yang tadi -> klik "Import".
+     4. Tunggu sebentar sampai selesai.
+
+  C. Cek:
+     - Menu "Laporan": angkanya sudah terisi.
+     - Menu "Produk": produk lama sudah ada.
+       CATATAN: beberapa produk CONTOH (Madu Sachet, Teh
+       Hijau, dll) mungkin ikut tersisa. Kalau tidak dipakai,
+       hapus saja lewat menu Produk.
+  D. Jangan hapus aplikasi lama di PC dulu - biarkan sebagai
+     cadangan sampai yakin yang online sudah jalan bagus.
+     Tidak apa-apa kalau lama-lama.
+================================================================
+  STEP 6 - "PASANG" IKON DI HP (seperti aplikasi biasa)
+================================================================
+  1. Di HP, buka browser (Chrome / Safari), ketik alamat Vercel.
+  2. Login dengan akun kamu (password BARU dari STEP 4).
+  3. Android (Chrome):
+       Ikon tiga titik (kanan atas) -> "Tambahkan ke layar
+       beranda" / "Add to Home screen" -> OK / Tambah.
+     iPhone (Safari):
+       Ikon bagikan di bawah (kotak + panah) ->
+       "Tambahkan ke Layar Beranda" -> "Tambah".
+  4. Ikon Kopontren sekarang ada di layar utama HP.
+     Ketuk -> aplikasi terbuka fullscreen seperti aplikasi
+     biasa. (Ini PWA - efeknya sama, tidak perlu Play Store.)
+  5. Kasir/pegawai lain di koperasi: berikan ALAMAT + buatkan
+     akun lewat menu "Pengguna" (sebagai pengurus admin).
+     Semua HP melihat data yang SAMA, real-time, dari mana
+     saja.
+
+
+================================================================
+  JIKA DEPLOY GAGAL (layar Vercel ada yang merah / "Error")
+================================================================
+  9 dari 10 kasus penyebabnya: Environment Variable tidak
+  benar. Cara perbaiki:
+  1. Di Vercel: buka proyek "kopontren" -> menu "Settings"
+     -> "Environment Variables".
+  2. Periksa 2 baris:
+       DATABASE_URL        -> harus benar-benar libsql://...
+                               persis seperti dari Turso,
+                               tanpa spasi.
+       DATABASE_AUTH_TOKEN -> token yang panjang, tanpa spasi.
+     (Kalau tidak ada, tambah lewat "Add Environment
+     Variable", Environment pilih "All".)
+  3. Setelah disimpan, klik "Redeploy" / tombol "Deploy"
+     yang muncul - tunggu lagi.
+  4. Kalau errornya "DATABASE_URL is not set": artinya
+     belum benar-benar tersimpan - ulangi langkah 2.
+
+
+  JIKA SUDAH ONLINE TAPI DATA TIDAK MUNCUL / LOGIN GAGAL
+================================================================
+  * Pastikan alamat yang dibuka berakhiran .vercel.app
+    (bukan localhost).
+  * Cek di turso.sh: database "kopontren" masih ada di akun
+    kamu? Kalau terhapus tidak sengaja: buat database baru
+    (STEP 1 ulang), lalu di Vercel: Settings -> Environment
+    Variables -> ganti DATABASE_URL + TOKEN dengan yang baru
+    -> Redeploy.
+  * Coba refresh (F5) dan tunggu 30 detik.
+  * Kalau masih tidak bisa: buka tab "Build" / "Logs" di
+    Vercel, screenshot error-nya, bawa ke yang paham.
+
+
+================================================================
+  KEBIASAAN BARU: BACKUP MINGGUAN (CUMA 5 MENIT)
+================================================================
+  * Tiap seminggu sekali (mis. hari Minggu):
+    buka aplikasi online -> "Admin" -> "Data & Backup"
+    -> "Unduh Backup" -> simpan file .json-nya ke Google
+    Drive (buat folder "Kopontren Backup", nama file beri
+    tanggal, mis. backup-15sep.json).
+  * Kalau suatu saat database online rusak / hilang:
+    1) Buat database Turso baru (STEP 1 ulang).
+    2) Di Vercel: Settings -> Environment Variables ->
+       ganti DATABASE_URL + TOKEN dengan yang baru ->
+       Redeploy.
+    3) Import file .json backup terakhir (STEP 5-B).
+    Data kembali.
+
+
+================================================================
+  ATURAN PENTING UNTUK DIINGAT
+================================================================
+  * SATU database online (Turso). Semua HP/PC yang login ke
+    alamat yang sama melihat data yang SAMA secara real-time.
+    Beres sudah urusan "salin database / salin file" antar PC.
+  * Token Turso + password admin = JAGA DAGING KACANG MATA.
+    Jangan ditunjukkan / diberikan ke orang lain.
+  * Paket gratis Vercel + Turso sudah lebih dari cukup untuk
+    skala koperasi / kasir kecil-menengah.
+  * Biaya bulanan: Vercel Rp 0, Turso Rp 0, Total Rp 0.
+
+
+================================================================
+  RINGKASAN CEPAT (bisa difoto / dicetak)
+================================================================
+   1. TURSO  : turso.sh -> Sign up (Google) -> "New
+                Database" -> nama "kopontren", region
+                Singapore -> SALIN Database URL + Database
+                Token (CATAT DI NOTEPAD!).
+   2. VERCEL : vercel.com -> Sign up (Google).
+   3. UPLOAD : Vercel -> "Add New" -> "Project" -> tab
+                "Upload" -> seret file kp.zip ->
+                Project name "kopontren" -> tambah 2 env:
+                   DATABASE_URL        = (URL Turso)
+                   DATABASE_AUTH_TOKEN = (Token Turso)
+                -> Deploy -> SALIN alamat .vercel.app
+   4. LOGIN  : buka alamat -> admin / kopontren
+                -> SEGERA ganti password (menu Pengguna).
+   5. DATA   : aplikasi LAMA -> Data & Backup -> "Unduh"
+                -> aplikasi BARU -> Data & Backup -> "Unggah".
+   6. HP     : buka alamat di HP -> "Tambah ke layar
+                beranda". BERES!
+  Total biaya: Rp 0 / bulan.
+================================================================

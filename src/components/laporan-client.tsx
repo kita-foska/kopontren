@@ -1,0 +1,318 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { api, Badge, Toast, useToast } from '@/components/ui';
+import { rp, fmtDateTime } from '@/lib/format';
+import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
+
+type Sale = {
+  id: number;
+  kasir_name: string;
+  customer: string;
+  pay_method: string;
+  status: string;
+  total: number;
+  created_at: string;
+  items: { product_name: string; qty: number; unit: string; unit_price: number; subtotal: number }[];
+};
+type ListResp = { sales: Sale[] };
+const PAY: Record<string, string> = { cash: 'Tunai', tf: 'Transfer', wa: 'QRIS / WA' };
+
+export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?: 'all' | 'today' }) {
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [period, setPeriod] = useState(scope === 'today' ? 1 : 7);
+  const [statusF, setStatusF] = useState('');
+  const [q, setQ] = useState('');
+  const [open, setOpen] = useState<number | null>(null);
+  const [toast, showToast] = useToast();
+  const [undoMsg, setUndoMsg] = useState('');
+  const [undoIds, setUndoIds] = useState<number[]>([]);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimer.current) clearTimeout(undoTimer.current);
+    };
+  }, []);
+
+  const load = useCallback(async () => {
+    const r = await api<ListResp>(
+      '/api/sales?days=' + period + '&status=' + (statusF || 'all')
+    );
+    if (r.ok && r.data) setSales(r.data.sales || []);
+  }, [period, statusF]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const filteredSales = useMemo(() => {
+    if (!q.trim()) return sales;
+    const term = q.trim().toLowerCase();
+    return sales.filter((s) => {
+      const matchCust = (s.customer || '').toLowerCase().includes(term);
+      const matchKasir = (s.kasir_name || '').toLowerCase().includes(term);
+      const matchId = ('#' + s.id).includes(term) || String(s.id).includes(term);
+      const matchItem = s.items.some((it) => it.product_name.toLowerCase().includes(term));
+      return matchCust || matchKasir || matchId || matchItem;
+    });
+  }, [sales, q]);
+
+  const unreported = filteredSales.filter((s) => s.status === 'unreported');
+  const unreportedTotal = unreported.reduce((a, s) => a + s.total, 0);
+  const grandTotal = filteredSales.reduce((a, s) => a + s.total, 0);
+
+  async function toggleStatus(s: Sale) {
+    const next = s.status === 'unreported' ? 'reported' : 'unreported';
+    await api('/api/sales/' + s.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: next }),
+    });
+    showToast(
+      next === 'reported'
+        ? 'Transaksi #' + s.id + ' ditandai Sudah Dilapor'
+        : 'Transaksi #' + s.id + ' dikembalikan ke Belum Dilapor'
+    );
+    load();
+  }
+
+  async function remove(id: number) {
+    if (!confirm('Hapus transaksi #' + id + '? Stok akan dikembalikan.')) return;
+    const r = await api('/api/sales/' + id, { method: 'DELETE' });
+    if (r.ok) {
+      showToast('Transaksi #' + id + ' dihapus & stok dikembalikan');
+      load();
+    } else {
+      showToast(r.error || 'Gagal menghapus');
+    }
+  }
+
+  async function markAll() {
+    const ids = unreported.map((s) => s.id);
+    if (ids.length === 0) return;
+    for (const id of ids) {
+      await api('/api/sales/' + id, { method: 'PATCH', body: JSON.stringify({ status: 'reported' }) });
+    }
+    setUndoIds(ids);
+    setUndoMsg(ids.length + ' transaksi ditandai Sudah Dilapor — klik Urungkan untuk membatalkan');
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => {
+      setUndoMsg('');
+      setUndoIds([]);
+      undoTimer.current = null;
+    }, 8000);
+    load();
+  }
+
+  async function undoAll() {
+    if (undoTimer.current) {
+      clearTimeout(undoTimer.current);
+      undoTimer.current = null;
+    }
+    for (const id of undoIds) {
+      await api('/api/sales/' + id, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'unreported' }),
+      });
+    }
+    setUndoMsg('');
+    setUndoIds([]);
+    showToast('Semua dikembalikan ke Belum Dilapor');
+    load();
+  }
+
+  async function shareWa() {
+    const msg = buildRekapMsg(unreported.map((s) => s as RekapSale), 'LAPORAN PENJUALAN KOPONTREN');
+    await shareRekap(msg);
+  }
+
+  function downloadCsv() {
+    const fromDate = period > 0 ? new Date(Date.now() - period * 86400000).toISOString() : '1970-01-01';
+    window.open('/api/reports/csv?from=' + fromDate, '_blank');
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Summary Stat Cards */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="card p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Total Transaksi</p>
+          <p className="mt-1 text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            {filteredSales.length}
+          </p>
+          <p className="text-[11px] text-slate-400">Periode terpilih</p>
+        </div>
+        <div className="card p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Total Penjualan</p>
+          <p className="mt-1 text-xl font-extrabold text-accent-500 dark:text-accent-300">
+            {rp(grandTotal)}
+          </p>
+          <p className="text-[11px] text-slate-400">Omset kotor</p>
+        </div>
+        <div className="card p-3 border-amber-500/30 bg-amber-500/5">
+          <p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+            Menunggu Rekap
+          </p>
+          <p className="mt-1 text-xl font-extrabold text-amber-600 dark:text-amber-400">
+            {unreported.length}
+          </p>
+          <p className="text-[11px] text-amber-600/70">{rp(unreportedTotal)}</p>
+        </div>
+        <div className="card p-3 border-emerald-500/30 bg-emerald-500/5">
+          <p className="text-xs font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+            Sudah Dilapor
+          </p>
+          <p className="mt-1 text-xl font-extrabold text-emerald-600 dark:text-emerald-400">
+            {filteredSales.length - unreported.length}
+          </p>
+          <p className="text-[11px] text-emerald-600/70">Tersinkronisasi</p>
+        </div>
+      </div>
+
+      {/* Filter and Action toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {[
+            [1, 'Hari ini'],
+            [7, '7 hari'],
+            [30, '30 hari'],
+            [0, 'Semua'],
+          ].map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setPeriod(v as number)}
+              className={
+                'rounded-full px-3 py-1 text-xs font-bold transition ' +
+                (period === v
+                  ? 'bg-accent-500 text-white shadow-sm'
+                  : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
+              }
+            >
+              {label}
+            </button>
+          ))}
+          <select
+            className="input w-auto text-xs"
+            value={statusF}
+            onChange={(e) => setStatusF(e.target.value)}
+          >
+            <option value="all">Semua status</option>
+            <option value="unreported">Belum dilapor</option>
+            <option value="reported">Sudah dilapor</option>
+          </select>
+          <input
+            className="input w-48 text-xs"
+            placeholder="Cari pembeli / produk / #id…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={downloadCsv}
+            className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
+            title="Download laporan transaksi format Excel/CSV"
+          >
+            📊 Unduh CSV
+          </button>
+          <button
+            onClick={shareWa}
+            disabled={unreported.length === 0}
+            className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
+          >
+            📱 Rekap WA ({unreported.length})
+          </button>
+          {admin && (
+            <button
+              onClick={markAll}
+              disabled={unreported.length === 0}
+              className="btn-amber px-2.5 py-1.5 text-xs font-bold"
+            >
+              Tandai Semua Laporan
+            </button>
+          )}
+        </div>
+      </div>
+
+      {undoMsg && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-accent-500/40 bg-accent-500/10 px-3 py-2 text-sm">
+          <span>{undoMsg}</span>
+          <button onClick={undoAll} className="font-bold text-accent-500 dark:text-accent-300">
+            Urungkan
+          </button>
+        </div>
+      )}
+
+      {/* Transaction list */}
+      <div className="space-y-2">
+        {filteredSales.map((s) => (
+          <div key={s.id} className="card p-3 hover:border-slate-300 dark:hover:border-navy-600 transition">
+            <button
+              className="flex w-full flex-wrap items-center justify-between gap-2 text-left"
+              onClick={() => setOpen(open === s.id ? null : s.id)}
+            >
+              <div className="flex items-center gap-2">
+                <Badge tone={s.status === 'unreported' ? 'amber' : 'green'}>
+                  {s.status === 'unreported' ? 'BELUM' : 'SUDAH'}
+                </Badge>
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  {s.customer || 'Pelanggan Umum'}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {PAY[s.pay_method] || s.pay_method} · {fmtDateTime(s.created_at)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                  {rp(s.total)}
+                </span>
+                <span className="text-xs text-slate-400">{open === s.id ? '▲' : '▼'}</span>
+              </div>
+            </button>
+            {open === s.id && (
+              <div className="mt-3 border-t border-slate-200 pt-3 dark:border-navy-700">
+                <table className="w-full text-xs">
+                  <tbody>
+                    {s.items.map((it, i) => (
+                      <tr key={i} className="table-row">
+                        <td className="td font-medium">{it.product_name}</td>
+                        <td className="td text-right text-slate-500">
+                          {it.qty} {it.unit} × {rp(it.unit_price)}
+                        </td>
+                        <td className="td text-right font-bold">{rp(it.subtotal)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                  Kasir: {s.kasir_name || 'Kasir'} · Transaksi #{s.id}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => toggleStatus(s)}
+                    className={s.status === 'unreported' ? 'btn-primary px-3 py-1 text-xs' : 'btn-ghost px-3 py-1 text-xs'}
+                  >
+                    {s.status === 'unreported' ? 'Tandai Sudah Dilapor' : 'Kembali ke Belum'}
+                  </button>
+                  {admin && (
+                    <button onClick={() => remove(s.id)} className="btn-danger px-3 py-1 text-xs">
+                      Hapus
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {filteredSales.length === 0 && (
+          <div className="card py-12 text-center text-sm text-slate-500">
+            <p className="text-2xl mb-1">📄</p>
+            {q ? 'Tidak ada transaksi yang cocok dengan filter pencarian.' : 'Belum ada transaksi pada periode ini.'}
+          </div>
+        )}
+      </div>
+      <Toast msg={toast} onClose={() => showToast('')} />
+    </div>
+  );
+}

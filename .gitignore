@@ -1,0 +1,19 @@
+node_modules/
+.next/
+out/
+build/
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+.env
+.env.*
+.DS_Store
+*.log
+.vercel
+
+# lokal dev artifacts
+tsconfig.tsbuildinfo
+data/*.sql
+*.tmp
+
