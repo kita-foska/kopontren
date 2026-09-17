@@ -307,7 +307,66 @@ async function migrate(d: Db) {
   // loyalty settings (key-value) + web-push VAPID keys
   await d.exec("CREATE TABLE IF NOT EXISTS member_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
   await d.exec("CREATE TABLE IF NOT EXISTS vapid_keys (id INTEGER PRIMARY KEY CHECK (id = 1), public_key TEXT NOT NULL DEFAULT '', private_key TEXT NOT NULL DEFAULT '')");
+
+  // ── feature batch 2 (2026-09-17): admin extras, member-by-phone, finance ──
+  // Products: photo / min-stock / expiry; stores; member QR token; sales store link
+  await execColumn(d, "ALTER TABLE products ADD COLUMN image_url TEXT NOT NULL DEFAULT ''");
+  await execColumn(d, 'ALTER TABLE products ADD COLUMN min_stock INTEGER NOT NULL DEFAULT 0');
+  await execColumn(d, "ALTER TABLE products ADD COLUMN expiry_date TEXT NOT NULL DEFAULT ''");
+  await execColumn(d, 'ALTER TABLE sales ADD COLUMN store_id INTEGER');
+  await execColumn(d, "ALTER TABLE members ADD COLUMN qr_code TEXT NOT NULL DEFAULT ''");
+  // shop settings (key-value: store name, address, phone, logo, receipt footer, currency, timezone)
+  await d.exec("CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT '')");
+  // categories (admin-managed; products.category stores the name)
+  await d.exec("CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // tiered units per product: 1 <unit_name> = conversion_factor <base unit>
+  await d.exec("CREATE TABLE IF NOT EXISTS product_units (id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, unit_name TEXT NOT NULL, conversion_factor REAL NOT NULL DEFAULT 1, UNIQUE (product_id, unit_name))");
+  // stock opname: physical count vs system, with the delta
+  await d.exec("CREATE TABLE IF NOT EXISTS stock_opname (id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, system_stock INTEGER NOT NULL DEFAULT 0, physical_stock INTEGER NOT NULL DEFAULT 0, difference INTEGER NOT NULL DEFAULT 0, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // customer debts (receivables)
+  await d.exec("CREATE TABLE IF NOT EXISTS debts (id INTEGER PRIMARY KEY, customer_name TEXT NOT NULL, customer_phone TEXT NOT NULL DEFAULT '', amount INTEGER NOT NULL DEFAULT 0, paid INTEGER NOT NULL DEFAULT 0, remaining INTEGER NOT NULL DEFAULT 0, due_date TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'open', note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // sales returns (restocks)
+  await d.exec("CREATE TABLE IF NOT EXISTS returns (id INTEGER PRIMARY KEY, sale_id INTEGER NOT NULL, product_id INTEGER, qty INTEGER NOT NULL DEFAULT 0, reason TEXT NOT NULL DEFAULT '', amount INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // cancelled sales (stock is restored when the cancellation is recorded)
+  await d.exec("CREATE TABLE IF NOT EXISTS sale_cancellations (id INTEGER PRIMARY KEY, sale_id INTEGER NOT NULL, reason TEXT NOT NULL DEFAULT '', cancelled_by INTEGER, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // wholesale tiers: buy >= min_qty -> discount_percent off
+  await d.exec("CREATE TABLE IF NOT EXISTS product_prices (id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, min_qty INTEGER NOT NULL DEFAULT 1, discount_percent INTEGER NOT NULL DEFAULT 0)");
+  // bundles (items = JSON array of {product_id, qty})
+  await d.exec("CREATE TABLE IF NOT EXISTS bundles (id INTEGER PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL DEFAULT 0, items TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // multi-store support (default store seeded when missing)
+  await d.exec("CREATE TABLE IF NOT EXISTS stores (id INTEGER PRIMARY KEY, name TEXT NOT NULL, address TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  const firstStore = await d.prepare('SELECT id FROM stores LIMIT 1').get();
+  if (!firstStore) await d.exec("INSERT INTO stores (name, address) VALUES ('Kopontren Al Ittihad', 'Pondok Pesantren Al Ittihad')");
+  // web-push subscriptions
+  await d.exec("CREATE TABLE IF NOT EXISTS push_subscriptions (id INTEGER PRIMARY KEY, user_id INTEGER, endpoint TEXT NOT NULL, keys TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // loyalty ledger: point earn / redeem, cashback credit / use
+  await d.exec("CREATE TABLE IF NOT EXISTS point_history (id INTEGER PRIMARY KEY, member_id INTEGER NOT NULL, delta INTEGER NOT NULL DEFAULT 0, reason TEXT NOT NULL DEFAULT '', amount INTEGER NOT NULL DEFAULT 0, sale_id INTEGER, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // indexes
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_debts_status ON debts(status)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_stock_opname_created ON stock_opname(created_at)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_point_history_member ON point_history(member_id)');
+  // unique phone per member. Partial index: many members may have an empty
+  // phone, but a non-empty phone must be unique. If duplicates already exist
+  // (legacy data), keep the oldest row's phone and clear the newer ones first
+  // so the index can be created without aborting the whole migration.
+  try {
+    await d.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_members_phone_uniq ON members(phone) WHERE phone != ''");
+  } catch {
+    const dups = (await d
+      .prepare(`SELECT phone, MIN(id) AS keep_id FROM members WHERE phone != '' GROUP BY phone HAVING COUNT(*) > 1`)
+      .all()) as { phone: string; keep_id: number }[];
+    for (const dp of dups) {
+      await d.prepare(`UPDATE members SET phone = '' WHERE phone = ? AND id != ?`).run(dp.phone, dp.keep_id);
+    }
+    try {
+      await d.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_members_phone_uniq ON members(phone) WHERE phone != ''");
+    } catch {
+      /* still colliding - app-layer validation enforces uniqueness anyway */
+    }
+  }
 }
+
 
 /**
  * Loyalty / member perks configuration (key-value with sensible defaults).
@@ -322,9 +381,58 @@ const MEMBER_SETTING_DEFAULTS: Record<string, string> = {
   birthday_discount: '10', // % discount when member's birthday is today
   wholesale_min: '0', // qty threshold for wholesale discount (0 = off)
   wholesale_discount: '0', // % wholesale discount
-  tier_silver: '500000', // total spending threshold
-  tier_gold: '2000000',
+  tier_silver: '1000000', // total spending threshold for Silver tier (Rp)
+  tier_gold: '5000000', // total spending threshold for Gold tier (Rp)
 };
+
+/**
+ * Shop settings (key-value with sensible defaults) used by receipts,
+ * reports and the app shell (store name, currency, receipt footer, …).
+ * Reads never throw; writes are admin-only (enforced in the API route).
+ */
+export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
+  store_name: 'Kopontren Al Ittihad',
+  store_address: '',
+  store_phone: '',
+  store_logo: '', // data-URL image (kept small: logo thumbnail)
+  receipt_footer: 'Jazakumullah Khairan Katsiran',
+  currency: 'Rp',
+  timezone: 'Asia/Jakarta',
+};
+
+export async function getSettings(): Promise<Record<string, string>> {
+  try {
+    const d = await db();
+    const rows = (await d.prepare('SELECT key, value FROM settings').all()) as {
+      key: string;
+      value: string;
+    }[];
+    const out: Record<string, string> = { ...SHOP_SETTING_DEFAULTS };
+    for (const r of rows) out[r.key] = r.value;
+    return out;
+  } catch {
+    return { ...SHOP_SETTING_DEFAULTS };
+  }
+}
+
+export async function saveSettings(
+  d: Db,
+  patch: Record<string, string>,
+  who?: { id: number; username: string }
+): Promise<void> {
+  const ins = d.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+  for (const [k, v] of Object.entries(patch)) {
+    if (k in SHOP_SETTING_DEFAULTS) await ins.run(k, String(v));
+  }
+  if (who) {
+    try {
+      const { logAudit } = await import('@/lib/audit');
+      await logAudit(who, 'settings:update', 'settings', null, undefined, patch);
+    } catch {
+      /* audit is best-effort */
+    }
+  }
+}
 
 export async function getMemberSettings(): Promise<Record<string, string>> {
   try {
