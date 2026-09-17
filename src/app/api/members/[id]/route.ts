@@ -4,14 +4,12 @@ import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { generateQrToken } from '@/lib/qr';
 
-type Params = { params: Promise<{ id: string }> };
-
 /**
  * PATCH /api/members/[id] — admin-only maintenance endpoint.
  * Body: { regenerate_qr: true } -> issues a new opaque QR token for the
  * member (invalidates the old one, e.g. badge lost/compromised).
  */
-export async function PATCH(req: Request, { params }: Params) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
   if (!isAdmin(user))
