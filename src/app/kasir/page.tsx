@@ -14,6 +14,8 @@ export const dynamic = 'force-dynamic';
 export default async function KasirPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
+  // Pengurus is read-only: POS is inaccessible -> send back to dashboard.
+  if (user.role === 'pengurus') redirect('/');
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">

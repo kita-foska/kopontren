@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!isAdmin(user))
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const { id } = await params;
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const d = await db();
@@ -78,8 +78,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!isAdmin(user))
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const { id } = await params;
   const d = await db();
   const prod = (await d.prepare('SELECT id, name FROM products WHERE id = ?').get(Number(id))) as

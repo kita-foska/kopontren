@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,8 +16,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     .prepare('SELECT id, kasir_id, status FROM sales WHERE id = ?')
     .get(Number(id))) as { id: number; kasir_id: number | null; status: string } | undefined;
   if (!sale) return NextResponse.json({ error: 'Transaksi tidak ditemukan' }, { status: 404 });
-  // Kasir only manages their own transactions; pengurus/admin may manage any.
-  if (!isManager(user) && sale.kasir_id !== user.id) {
+  // Pengurus read-only: tidak boleh menandai laporan.
+  if (user.role === 'pengurus')
+    return NextResponse.json({ error: 'Pengurus hanya melihat, tidak dapat menandai laporan' }, { status: 403 });
+  // Kasir only manages their own transactions; admin may manage any.
+  if (user.role === 'kasir' && sale.kasir_id !== user.id) {
     return NextResponse.json(
       { error: 'Kasir hanya dapat mengubah transaksi miliknya sendiri' },
       { status: 403 }
@@ -41,8 +44,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!isAdmin(user))
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const { id } = await params;
   const d = await db();
   const sale = (await d

@@ -635,13 +635,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       </option>
                     ))}
                 </select>
-                <button
-                  className="btn-ghost px-2.5 py-1 text-xs whitespace-nowrap"
-                  onClick={() => setMemberModal(true)}
-                  title="Tambah member baru"
-                >
-                  + Baru
-                </button>
+                {admin && (
+                  <button
+                    className="btn-ghost px-2.5 py-1 text-xs whitespace-nowrap"
+                    onClick={() => setMemberModal(true)}
+                    title="Tambah member baru"
+                  >
+                    + Baru
+                  </button>
+                )}
               </div>
               {selectedMember && (
                 <div className="mt-1 flex items-center justify-between rounded bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-600 dark:text-emerald-300 font-semibold">

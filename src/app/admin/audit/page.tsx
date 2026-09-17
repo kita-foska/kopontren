@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
-import { currentUser, isManager } from '@/lib/auth';
+import { currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 
-const LaporanClient = lazy(
-  () => import('@/components/laporan-client').then((m) => m.LaporanClient),
+const AuditClient = lazy(
+  () => import('@/components/admin/audit-client').then((m) => m.AuditClient),
   {
     loading: () => (
       <p className="text-sm text-slate-500 dark:text-slate-400">Memuat komponen…</p>
@@ -14,19 +14,20 @@ const LaporanClient = lazy(
 
 export const dynamic = 'force-dynamic';
 
-export default async function LaporanPage() {
+export default async function AuditPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
+  // Audit trail khusus admin.
+  if (user.role !== 'admin') redirect('/');
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
-        Laporan & <span className="text-amber-500">Rekap</span>
+        Audit <span className="text-accent-500 dark:text-accent-300">Trail</span>
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-        Daftar transaksi, tandai sudah/belum dilapor, dan kirim rekap ke WhatsApp pengurus.
+        Riwayat perubahan penting: produk, transaksi, kas, pengguna, dan pengaturan.
       </p>
-      {/* Pengurus: mode baca (tidak bisa tandai/hapus); Rekap WA & CSV tetap. */}
-      <LaporanClient admin={isManager(user)} readOnly={user.role === 'pengurus'} />
+      <AuditClient />
     </Shell>
   );
 }

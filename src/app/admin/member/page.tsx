@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { currentUser, isManager } from '@/lib/auth';
+import { currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 
@@ -17,7 +17,8 @@ export const dynamic = 'force-dynamic';
 export default async function AdminMemberPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
-  if (!isManager(user)) redirect('/');
+  // Member management is admin-only (pengurus is read-only).
+  if (user.role !== 'admin') redirect('/');
 
   return (
     <Shell user={user}>

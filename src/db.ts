@@ -142,6 +142,7 @@ CREATE TABLE IF NOT EXISTS shifts (
   sales_total INTEGER NOT NULL DEFAULT 0,
   cash_total INTEGER NOT NULL DEFAULT 0,
   by_method TEXT NOT NULL DEFAULT '',
+  setor INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 CREATE TABLE IF NOT EXISTS audit_log (
@@ -280,6 +281,14 @@ async function migrate(d: Db) {
   await execColumn(d, "ALTER TABLE products ADD COLUMN barcode TEXT NOT NULL DEFAULT ''");
   // legacy DBs pre-date reported_at: without this, sales/report queries 500 on cold start
   await execColumn(d, 'ALTER TABLE sales ADD COLUMN reported_at TEXT');
+  // role batch: pengurus users link to a members row (auto-member) & loyalty columns
+  await execColumn(d, 'ALTER TABLE users ADD COLUMN member_id INTEGER');
+  await execColumn(d, 'ALTER TABLE members ADD COLUMN is_pengurus INTEGER NOT NULL DEFAULT 0');
+  await execColumn(d, "ALTER TABLE members ADD COLUMN birth_date TEXT NOT NULL DEFAULT ''");
+  await execColumn(d, "ALTER TABLE members ADD COLUMN tier TEXT NOT NULL DEFAULT ''");
+  await execColumn(d, 'ALTER TABLE members ADD COLUMN cashback_balance INTEGER NOT NULL DEFAULT 0');
+  // setor kas flag on closed shifts (kasir hands the till over to admin)
+  await execColumn(d, 'ALTER TABLE shifts ADD COLUMN setor INTEGER NOT NULL DEFAULT 0');
   await d.exec('CREATE TABLE IF NOT EXISTS members (id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL DEFAULT \'\', address TEXT NOT NULL DEFAULT \'\', points INTEGER NOT NULL DEFAULT 0, total_spent INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
   await d.exec('CREATE TABLE IF NOT EXISTS shifts (id INTEGER PRIMARY KEY, kasir_id INTEGER NOT NULL, label TEXT NOT NULL DEFAULT \'\', status TEXT NOT NULL DEFAULT \'open\', start_time TEXT NOT NULL, end_time TEXT, sales_count INTEGER NOT NULL DEFAULT 0, sales_total INTEGER NOT NULL DEFAULT 0, cash_total INTEGER NOT NULL DEFAULT 0, by_method TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
   await d.exec('CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY, user_id INTEGER, username TEXT NOT NULL DEFAULT \'\', action TEXT NOT NULL, table_name TEXT NOT NULL DEFAULT \'\', record_id INTEGER, old_value TEXT, new_value TEXT, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
@@ -292,6 +301,63 @@ async function migrate(d: Db) {
   await d.exec('CREATE INDEX IF NOT EXISTS idx_purchases_created ON purchases(created_at)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_expenses_created ON expenses(created_at)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_cash_entries_created ON cash_entries(created_at)');
+  // role/member batch: lookups on members by name & phone (search + auto-member dedupe)
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_members_name ON members(name)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_members_phone ON members(phone)');
+  // loyalty settings (key-value) + web-push VAPID keys
+  await d.exec("CREATE TABLE IF NOT EXISTS member_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+  await d.exec("CREATE TABLE IF NOT EXISTS vapid_keys (id INTEGER PRIMARY KEY CHECK (id = 1), public_key TEXT NOT NULL DEFAULT '', private_key TEXT NOT NULL DEFAULT '')");
+}
+
+/**
+ * Loyalty / member perks configuration (key-value with sensible defaults).
+ * Reads never throw; writes are admin-only (enforced in the API route).
+ */
+const MEMBER_SETTING_DEFAULTS: Record<string, string> = {
+  points_every: '10000', // Rp per 1 loyalty point
+  point_value: '100', // Rp value of 1 point when redeemed
+  member_discount: '0', // % discount for member transactions
+  cashback: '0', // % cashback credited to member balance
+  birthday_active: '1', // enable birthday promo
+  birthday_discount: '10', // % discount when member's birthday is today
+  wholesale_min: '0', // qty threshold for wholesale discount (0 = off)
+  wholesale_discount: '0', // % wholesale discount
+  tier_silver: '500000', // total spending threshold
+  tier_gold: '2000000',
+};
+
+export async function getMemberSettings(): Promise<Record<string, string>> {
+  try {
+    const d = await db();
+    const rows = (await d.prepare('SELECT key, value FROM member_settings').all()) as {
+      key: string;
+      value: string;
+    }[];
+    const out: Record<string, string> = { ...MEMBER_SETTING_DEFAULTS };
+    for (const r of rows) out[r.key] = r.value;
+    return out;
+  } catch {
+    return { ...MEMBER_SETTING_DEFAULTS };
+  }
+}
+
+export async function saveMemberSettings(
+  d: Db,
+  patch: Record<string, string>,
+  who?: { id: number; username: string }
+): Promise<void> {
+  const ins = d.prepare('INSERT INTO member_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
+  for (const [k, v] of Object.entries(patch)) {
+    if (k in MEMBER_SETTING_DEFAULTS) await ins.run(k, String(v));
+  }
+  if (who) {
+    try {
+      const { logAudit } = await import('@/lib/audit');
+      await logAudit(who, 'member:settings', 'member_settings', null, undefined, patch);
+    } catch {
+      /* audit is best-effort */
+    }
+  }
 }
 
 export function db(): Promise<Db> {

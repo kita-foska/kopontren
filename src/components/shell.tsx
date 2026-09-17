@@ -4,29 +4,43 @@ import { NavPills } from './navpills';
 import { ThemeToggle } from './themetoggle';
 import { LogoutButton } from './logout';
 
+/**
+ * 3-level access:
+ *  - admin    : all menus (full write, users, backup, reset).
+ *  - pengurus : read-only rekap -> Ringkasan, Laporan & Rekap, Laporan Pengurus.
+ *  - kasir    : Ringkasan, Kasir (POS), Laporan & Rekap.
+ */
 function itemsFor(role: Role) {
-  const base = [
-    { href: '/', label: 'Ringkasan' },
-    { href: '/kasir', label: 'Kasir' },
-    { href: '/laporan', label: 'Laporan & Rekap' },
-  ];
-  if (role === 'admin' || role === 'pengurus') {
-    base.push(
+  if (role === 'admin') {
+    return [
+      { href: '/', label: 'Ringkasan' },
+      { href: '/kasir', label: 'Kasir' },
+      { href: '/laporan', label: 'Laporan & Rekap' },
       { href: '/admin/produk', label: 'Produk' },
       { href: '/admin/belanja', label: 'Belanja' },
       { href: '/admin/konsinyasi', label: 'Konsinyasi' },
       { href: '/admin/kas', label: 'Kas' },
+      { href: '/admin/shift', label: 'Shift & Kasir' },
+      { href: '/admin/pengaturan-member', label: 'Keuntungan Member' },
+      { href: '/admin/audit', label: 'Audit' },
       { href: '/admin/member', label: 'Member' },
-      { href: '/admin/laporan', label: 'Laporan Pengurus' }
-    );
-  }
-  if (role === 'admin') {
-    base.push(
+      { href: '/admin/laporan', label: 'Laporan Pengurus' },
       { href: '/admin/pengguna', label: 'Pengguna' },
-      { href: '/admin/data', label: 'Data & Backup' }
-    );
+      { href: '/admin/data', label: 'Data & Backup' },
+    ];
   }
-  return base;
+  if (role === 'pengurus') {
+    return [
+      { href: '/', label: 'Ringkasan' },
+      { href: '/laporan', label: 'Laporan & Rekap' },
+      { href: '/admin/laporan', label: 'Laporan Pengurus' },
+    ];
+  }
+  return [
+    { href: '/', label: 'Ringkasan' },
+    { href: '/kasir', label: 'Kasir' },
+    { href: '/laporan', label: 'Laporan & Rekap' },
+  ];
 }
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {

@@ -118,18 +118,20 @@ export default async function DashboardPage() {
         <div className="card p-4">
           <h2 className="mb-2 font-bold">Aksi cepat</h2>
           <div className="flex flex-wrap gap-2">
-            <a href="/kasir" className="btn-primary">
-              + Jual (POS)
-            </a>
+            {user.role !== 'pengurus' && (
+              <a href="/kasir" className="btn-primary">
+                + Jual (POS)
+              </a>
+            )}
             <a href="/laporan" className="btn-ghost">
               Laporan & Rekap
             </a>
-            {isManager(user) && (
+            {user.role === 'admin' && (
               <a href="/admin/belanja" className="btn-ghost">
                 Belanja & Stok
               </a>
             )}
-            {isManager(user) && (
+            {user.role === 'admin' && (
               <a href="/admin/kas" className="btn-ghost">
                 Pembukuan
               </a>
@@ -154,10 +156,18 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
-      <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-        Menu pengurus (Produk, Belanja, Konsinyasi, Kas, Laporan Pengurus, Pengguna, Data &amp;
-        Backup) tersedia di navigasi atas.
-      </p>
+      {user.role === 'admin' && (
+        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+          Menu lengkap (Produk, Belanja, Konsinyasi, Kas, Member, Laporan Pengurus, Pengguna,
+          Data &amp; Backup) tersedia di navigasi atas.
+        </p>
+      )}
+      {user.role === 'pengurus' && (
+        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+          Anda masuk sebagai pengurus (mode baca): Ringkasan, Laporan &amp; Rekap, dan Laporan
+          Pengurus. Menu pengelolaan (Kasir, Produk, Kas, dsb.) khusus admin.
+        </p>
+      )}
     </Shell>
   );
 }

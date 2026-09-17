@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { currentUser, isAdmin } from '@/lib/auth';
 
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!isAdmin(user))
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const d = await db();
   const purchases = await d
     .prepare('SELECT * FROM purchases ORDER BY created_at DESC LIMIT 200')

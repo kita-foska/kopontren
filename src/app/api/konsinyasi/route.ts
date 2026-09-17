@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 type Row = {
@@ -33,8 +33,8 @@ function computed(r: Row) {
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!isAdmin(user))
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const d = await db();
   const rows = (
     await d
@@ -56,8 +56,8 @@ export async function GET() {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!isAdmin(user))
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as {
     action?: string;
     id?: number;

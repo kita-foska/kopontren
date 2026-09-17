@@ -18,7 +18,16 @@ type Sale = {
 type ListResp = { sales: Sale[] };
 const PAY: Record<string, string> = { cash: 'Tunai', tf: 'Transfer', wa: 'QRIS / WA' };
 
-export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?: 'all' | 'today' }) {
+export function LaporanClient({
+  admin,
+  scope = 'all',
+  readOnly = false,
+}: {
+  admin: boolean;
+  scope?: 'all' | 'today';
+  /** pengurus mode: view-only, no mark/delete. Rekap WA & CSV tetap bisa. */
+  readOnly?: boolean;
+}) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [period, setPeriod] = useState(scope === 'today' ? 1 : 7);
   const [statusF, setStatusF] = useState('');
@@ -209,13 +218,15 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={downloadCsv}
-            className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
-            title="Download laporan transaksi format Excel/CSV"
-          >
-            📊 Unduh CSV
-          </button>
+          {admin && (
+            <button
+              onClick={downloadCsv}
+              className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
+              title="Download laporan transaksi format Excel/CSV"
+            >
+              📊 Unduh CSV
+            </button>
+          )}
           <button
             onClick={shareWa}
             disabled={unreported.length === 0}
@@ -223,7 +234,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
           >
             📱 Rekap WA ({unreported.length})
           </button>
-          {admin && (
+          {admin && !readOnly && (
             <button
               onClick={markAll}
               disabled={unreported.length === 0}
@@ -289,16 +300,21 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
                   Kasir: {s.kasir_name || 'Kasir'} · Transaksi #{s.id}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => toggleStatus(s)}
-                    className={s.status === 'unreported' ? 'btn-primary px-3 py-1 text-xs' : 'btn-ghost px-3 py-1 text-xs'}
-                  >
-                    {s.status === 'unreported' ? 'Tandai Sudah Dilapor' : 'Kembali ke Belum'}
-                  </button>
-                  {admin && (
+                  {!readOnly && (
+                    <button
+                      onClick={() => toggleStatus(s)}
+                      className={s.status === 'unreported' ? 'btn-primary px-3 py-1 text-xs' : 'btn-ghost px-3 py-1 text-xs'}
+                    >
+                      {s.status === 'unreported' ? 'Tandai Sudah Dilapor' : 'Kembali ke Belum'}
+                    </button>
+                  )}
+                  {admin && !readOnly && (
                     <button onClick={() => remove(s.id)} className="btn-danger px-3 py-1 text-xs">
                       Hapus
                     </button>
+                  )}
+                  {readOnly && (
+                    <span className="text-xs text-slate-400">Mode baca — hanya admin yang dapat menandai/menghapus</span>
                   )}
                 </div>
               </div>

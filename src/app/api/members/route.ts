@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 export async function GET(req: Request) {
@@ -24,6 +24,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  if (!isAdmin(user))
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const name = String(b.name || '').trim();
   if (!name) return NextResponse.json({ error: 'Nama member wajib' }, { status: 400 });
@@ -42,8 +44,8 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!isAdmin(user))
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const id = Number(b.id || 0);
   if (!id) return NextResponse.json({ error: 'id tidak valid' }, { status: 400 });
@@ -77,8 +79,8 @@ export async function PUT(req: Request) {
 export async function DELETE(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!isAdmin(user))
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const url = new URL(req.url);
   const id = Number(url.searchParams.get('id') || '0');
   if (!id) return NextResponse.json({ error: 'id tidak valid' }, { status: 400 });
