@@ -1,5 +1,5 @@
 ﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
-_Update: 2026-09-17 (Cline session: fitur Piutang & Retur)_
+_Update: 2026-09-18 (Cline session: fitur Piutang & Retur + git sync master/main)_
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
@@ -28,6 +28,9 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
       - `/api/sales` GET: kolom `product_id` ditambahkan ke query items
         (aditif; dibutuhkan form retur utk memetakan produk).
       - `npx tsc --noEmit` EXIT=0 (bersih).
+      - Git: commit `6a7e8c9` ke `master`, sync ke `main` (file-copy,
+        tanpa common ancestor), push origin main+master; Vercel
+        auto-deploy main. Selesai 18 Sep 2026.
 - [x] (sebelumnya) Loyalty: redeem poin, ledger point_history, QR reset,
       field struk WA; QR badge member; cari member via HP di POS;
       fix Next.js 15 params (inline Promise<{id:string}>) di members/[id].
@@ -36,7 +39,7 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
       ikon PNG; build lokal green.
 
 ### IN PROGRESS
-- [ ] Git: commit ke master, sync ke main, push origin main+master
+- (tidak ada)
 
 ### BLOCKED / CATATAN
 - **Relasi branch:** `main` dan `master` TIDAK punya common-ancestor
@@ -53,8 +56,8 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
   HP (Slow 3G + instal PWA).
 
 ## NEXT / TODO
-- [ ] Commit batch piutang & retur di `master`, sync `main`, push keduanya
-      (Vercel auto-deploy main) — SESI INI.
+- [x] Commit batch piutang & retur di `master` (`6a7e8c9`), sync `main`,
+      push keduanya — selesai SESI INI (18 Sep 2026).
 - [ ] Pantau deployment Vercel main; pastikan build green.
 - [ ] Uji manual fitur baru di produksi: catat piutang, terima bayar
       (sisa=0 -> lunas), catat retur (restock + jurnal kas keluar bila
