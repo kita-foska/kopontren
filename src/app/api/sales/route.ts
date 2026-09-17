@@ -68,7 +68,7 @@ export async function GET(req: Request) {
   if (saleIds.length) {
     const irows = (await d
       .prepare(
-        `SELECT sale_id, product_name, qty, unit, unit_price, subtotal, discount FROM sale_items WHERE sale_id IN (${inList(saleIds)}) ORDER BY sale_id, id`
+        `SELECT sale_id, product_id, product_name, qty, unit, unit_price, subtotal, discount FROM sale_items WHERE sale_id IN (${inList(saleIds)}) ORDER BY sale_id, id`
       )
       .all(...saleIds)) as { sale_id: number }[];
     for (const it of irows) {

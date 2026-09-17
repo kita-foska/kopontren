@@ -22,6 +22,14 @@ export default async function DashboardPage() {
       .prepare(`SELECT COUNT(*) c, COALESCE(SUM(total),0) t FROM sales WHERE status = 'unreported'`)
       .get()) as { c: number; t: number }
   );
+  const debtOpen =
+    user.role !== 'pengurus'
+      ? ((await d
+          .prepare(
+            `SELECT COALESCE(SUM(remaining),0) AS t, COUNT(*) AS c FROM debts WHERE status = 'open'`
+          )
+          .get()) as { c: number; t: number })
+      : { c: 0, t: 0 };
   const lowStock = (
     await d
       .prepare(
@@ -93,6 +101,20 @@ export default async function DashboardPage() {
             {rp(unreported.t)} menunggu rekap
           </p>
         </div>
+        {user.role !== 'pengurus' && (
+          <div className="card p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Piutang belum lunas
+            </p>
+            <p className="mt-1 text-2xl font-extrabold text-rose-500">{rp(debtOpen.t)}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {debtOpen.c} pelanggan ·{' '}
+              <a href="/piutang" className="font-semibold text-accent-500 underline dark:text-accent-300">
+                kelola
+              </a>
+            </p>
+          </div>
+        )}
         {isManager(user) && (
           <div className="card p-4">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">

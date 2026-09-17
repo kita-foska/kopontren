@@ -1,156 +1,92 @@
-# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
-_Update: 2026-09-17 (Cline session: optimasi performa HP kentang)_
+﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
+_Update: 2026-09-17 (Cline session: fitur Piutang & Retur)_
 
 ## GOAL
-Meringankan aplikasi utk perangkat spek rendah: aset gambar, bundle JS,
-query database, dan cache PWA. Semua perubahan di-copy `kp` Desktop.
+Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
+Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
+(Vercel build dari `main`, commit terakhir main `af9aba7` = sync dari master).
 
 ## STATE
 ### DONE
-- [x] Gambar: `logo-kopontren.png` 114.3 -> 54.3 KB (resize 512px + re-encode
-      sharp; palettize DILANGKAHI krn justru membesarkan logo warna-warni).
-      Icon-180/192/512 di-re-encode (10.6/34.7/2.0 KB). File asli aman di
-      `C:\Users\baiti\Desktop\kopontren-assets-backup\`.
-- [x] Basuh 3 file SVG (`icon-192.svg`, `icon-512.svg`, `logo-kopontren.svg`);
-      tak ada referensi tersisa (login page dulu merujuk .svg + fallback PNG).
-- [x] `manifest.json`: entri logo vertikal 1587x2494 dihapus; tetap
-      icon-180/192/512 (PNG, any/maskable).
-- [x] `next.config.mjs`: `compress:true`, `poweredByHeader:false`,
-      `productionBrowserSourceMaps:false`, `images:{formats:['image/webp'],
-      minimumCacheTTL:60}`.
-- [x] `next/image`: shell (logo header) & login (ikon 192) — WebP otomatis di
-      HP modern, fallback PNG.
-- [x] Lazy load `next/dynamic` (import diberi nama `lazy`, BUKAN `dynamic`
-      karena tabrakan dgn `export const dynamic='force-dynamic'`):
-      PosClient, LaporanClient, BelanjaClient, DataClient, KasClient,
-      KonsinyasiClient, LaporanAdminClient, MemberClient, ProdukClient,
-      PenggunaClient.
-- [x] `/api/sales` GET: query N+1 (hingga 3N round-trip Turso) diganti 3 query
-      `IN (...)` + Map in-memory.
-- [x] `db.ts`: tambah index `idx_sales_status`, `idx_purchases_created`,
-      `idx_expenses_created`, `idx_cash_entries_created` (+ guard kolom
-      `reported_at` utk DB legacy). Semua `IF NOT EXISTS` -> idempoten.
-- [x] `sw.js` cache `v5/v4` -> `v7/v7`: skip cache utk respons opaque/error,
-      prefix baru `/_next/image` (aset next/image ikut offline).
-- [x] Build production LOKAL: EXIT=0, type-check OK, static pages 21/21.
-      First Load JS shared 103 kB; /kasir 122 kB (pos-client terpisah lazy).
-- [x] `verify-schema.mjs`: seluruh DDL + migrasi valid di scratch DB
-      (node:sqlite); 11 index + kolom sales tervalidasi.
-- [x] Native `@libsql/win32-x64-msvc` & `@next/swc-win32-x64-msvc` corrupt
-      ("not a valid Win32 application") -> PERBAIKI dgn hapus folder +
-      `npm install` (machine 0x8664, `require('libsql')` NATIVE-OK).
-- [x] Script baru: `optimize-images.mjs`, `verify-schema.mjs`,
-      `backup-db.mjs` (via @libsql/client), `backup-turso-http.mjs`
-      (fetch protokol HTTP Turso, tanpa native driver) + npm scripts.
-- [x] `kp.zip` fresh dibuat di Desktop (siap upload Vercel, tanpa
-      node_modules/.next/.env/data).
-
-### BLOCKED / CATATAN
-- **Commit GitHub:** git TIDAK terpasang di mesin ini (winget dicoba;
-  bila perlu elevasi UAC, install manual dari git-scm.com).
-- **Backup Turso live:** tak bisa dari PC ini — `.env` lokal hanya
-  `DATABASE_URL=file:./data/kopontren.db`; kredensial Turso ada di env
-  Vercel. Perubahan skema aditif (IF NOT EXISTS) -> TIDAK berisiko utk
-  data. Safety-net: halaman aplikasi "Data & Backup" (unduh JSON) ->
-  lakukan sebelum deploy.
-- **Lighthouse / Slow 3G:** environment ini tanpa browser -> tes manual
-  di HP (lihat NEXT).
-- Font: `Plus Jakarta Sans` hanya dideklarasi di font-stack (fallback
-  system), TIDAK di-load via network — aman.
-
-## NEXT / TODO
-- [ ] (Opsional) Install Git, `git init` + commit, push GitHub.
-- [ ] Backup in-app: login live -> Admin -> Data & Backup -> Unduh Backup.
-- [ ] Upload `C:\Users\baiti\Desktop\kp.zip` ke Vercel (STEP 3 DEPLOY-VERCEL.txt).
-- [ ] Post-deploy: hard refresh PWA agar sw v7 aktif; cek route /login,
-      /, /kasir, /api/sales (200, bukan 500); tes mode offline dashboard.
-- [ ] Lighthouse di HP: "Slow 3G + 4x CPU" — target load < 4 detik.
-
-## FILES
-- `public/`: icon-180/192/512.png, logo-kopontren.png (54.3 KB),
-  manifest.json, sw.js (v7)
-- `src/db.ts`, `src/app/api/sales/route.ts`, 10 halaman app (lazy),
-  `src/components/shell.tsx` & `src/app/login/page.tsx` (next/image)
-- `scripts/`: optimize-images, verify-schema, backup-db, backup-turso-http
-- `DEPLOY-VERCEL.txt` (panduan upload + backup mingguan)
-
-## GOAL
-Kabeh logo, PWA icon, lan reference manifest ing project `kp`
-nggunakake logo PNG (logo-kopontren.png) — ora ana SVG manawa.
-App tetep installable minangka PWA.
-
-## STATE
-### DONE
-- [x] Gawe `public/icon-180.png`, `public/icon-192.png`, `public/icon-512.png`
-      saka `logo-kopontren.png` (1587x2494, vertikal) nganggo **sharp**
-      (fit: contain + latar transparan, logo ditengahake — tanpa distort).
-- [x] Basuh file SVG: `public/icon-192.svg`, `public/icon-512.svg`,
-      `public/logo-kopontren.svg`.
-- [x] `public/manifest.json` — icons saiki: `/icon-180.png` (180x180),
-      `/icon-192.png` (192x192), `/icon-512.png` (512x512);
-      kabeh type `image/png`, purpose `any`.
-- [x] `src/app/layout.tsx` — `icon: '/logo-kopontren.png'` +
-      `apple: '/logo-kopontren.png'`.
-- [x] `src/app/login/page.tsx` — img `src="/logo-kopontren.png"`
-      (fallback .svg dibasuh).
-- [x] `src/components/shell.tsx` — logo header `src="/icon-192.png"`
-      (referensi ngimpet sing ketemu nalika audit).
-- [x] `public/sw.js` — cache di-bump dadi `kopontren-v6`
-      (PAGE_CACHE `kopontren-pages-v6`); prefix `/icon-` lan `/logo-`
-      tetep cache-first; `/api/` tetep network-only.
-- [x] Tes lokal (`next dev`): /manifest.json, /icon-180/192/512.png,
-      /logo-kopontren.png, /sw.js, /login kabeh **200**; SVGs **404**
-      (wis adoh); HTML head ngemu `<link rel="icon"
-      href="/logo-kopontren.png"/>` + apple-touch-icon PNG.
-- [x] Bug-check total (16 Sep): `tsc --noEmit` ora ana error;
-      manifest JSON valid; dimensi PNG bener (180/192/512 square);
-      logo asline tetep 1587x2494; grep `src/` + `public/`
-      ora ana referensi `.svg` manawa.
-- [x] `DEPLOY-VERCEL.txt` diperbarui: referensi `logo-kopontren.svg`
-      dibasuh, saiki disebut cache versi 6.
-- [x] Basuh file-file sementara (script probe, log).
+- [x] Fitur Piutang (debts) & Retur (returns) — batch baru sesi ini:
+      - API: `src/app/api/debts/route.ts` (GET daftar+summary / POST catat;
+        kasir+admin bisa tulis, pengurus read-only, pengurus tak boleh).
+      - API: `src/app/api/debts/[id]/route.ts` (PATCH terima-bayar `pay`
+        max=sisa, sisa=0 -> status 'settled' otomatis; update note/due_date/
+        status; DELETE hanya admin).
+      - API: `src/app/api/returns/route.ts` (GET riwayat / POST catat retur:
+        validasi transaksi & produk milik transaksi, kasir hanya transaksi
+        sendiri; dalam `tx`: insert returns + restock products + (opsional)
+        jurnal cash_entries type='expense' bila refund tunai).
+      - Halaman: `/piutang` & `/retur` (role kasir+admin; pengurus ->
+        redirect '/'), client `piutang-client.tsx` (filter open/settled/all,
+        badge Tunggak, modal terima bayar, hapus utk admin) &
+        `retur-client.tsx` (pilih transaksi 30 hari -> pilih produk di
+        transaksi -> qty -> refund checkbox -> riwayat).
+      - Nav pills (`shell.tsx`): 'Piutang' & 'Retur' utk admin + kasir.
+      - Dashboard (`page.tsx`): kartu "Piutang belum lunas" (admin & kasir).
+      - `/api/sales` GET: kolom `product_id` ditambahkan ke query items
+        (aditif; dibutuhkan form retur utk memetakan produk).
+      - `npx tsc --noEmit` EXIT=0 (bersih).
+- [x] (sebelumnya) Loyalty: redeem poin, ledger point_history, QR reset,
+      field struk WA; QR badge member; cari member via HP di POS;
+      fix Next.js 15 params (inline Promise<{id:string}>) di members/[id].
+- [x] (sebelumnya) Migrasi lokal node:sqlite -> @libsql/client (Turso);
+      optimasi N+1 /api/sales; index db; cache sw v7; resize logo &
+      ikon PNG; build lokal green.
 
 ### IN PROGRESS
-- (ora ana)
+- [ ] Git: commit ke master, sync ke main, push origin main+master
 
-### BLOCKED
-- **Commit & Push:** git isih ora terpasang ing mesin iki, lan
-  `C:\Users\baiti\Desktop\kp` ora dadi git repo (ora ana `.git`).
-- **Tes dashboard lokal (/):** modul native `@libsql`
-  (win32-x64-msvc) gagal load ing Windows iki ("not a valid Win32
-  application") — masalah lingkungan wis adoh, **ora** ana gandhane
-  karo icon; ing Vercel (Linux) binary-é bener.
-
-## HIGHLIGHTS / MEMORY
-- Sharp wis ana ing `node_modules` (nganggeping install anyar) —
-  digunakake kanggo resize logo vertikal dadi square icon tanpa
-  ilang bentuk (contain + transparent padding).
-- Bump cache v5→v6 mbiwasa PWA sing wis di-install nyegreke aset
-  anyar nalika dibukake maneh (cache lawas dibasuh nalika activate).
-- `shell.tsx` kudu diwaspadai ing owah-owahan icon: referensi ngimpet
-  sing ora ana ing ticket asli — wis dikoreksi.
-- Apple touch icon saiki nggunakake logo vertikal (1587x2494); iOS
-  bakal ngrusak dadi persegi. Yen rumasa ana sing ketutup, ganti
-  `apple` ing `layout.tsx` dadi `'/icon-180.png'` (versi persegi).
+### BLOCKED / CATATAN
+- **Relasi branch:** `main` dan `master` TIDAK punya common-ancestor
+  (main dibuat dari "Add files via upload" Vercel). Sync dilakukan via
+  `git checkout main; git checkout master -- .; commit` (bukan merge).
+- **Git path:** `git.exe` ada di `C:\Program Files\Git\cmd\git.exe` tapi
+  BELUM ada di PATH sesi proses baru (winget install) -> pakai path penuh
+  di skrip; VS Code lama mungkin sudah lihat PATH lama.
+- **Backup Turso live:** kredensial Turso hanya di env Vercel; lokal
+  `.env` = `DATABASE_URL=file:./data/kopontren.db`. Perubahan skema
+  aditif (IF NOT EXISTS / ALTER guard) -> aman utk data; disarankan
+  backup in-app (Admin -> Data & Backup) sebelum fitur besar.
+- **Tes browser/Lighthouse:** environment tanpa browser -> tes manual di
+  HP (Slow 3G + instal PWA).
 
 ## NEXT / TODO
-- [ ] **Install Git** (git-scm.com) ing mesin iki.
-- [ ] `git init` ing `C:\Users\baiti\Desktop\kp`.
-- [ ] `git add public src/app/layout.tsx src/app/login/page.tsx
-      src/components/shell.tsx DEPLOY-VERCEL.txt state.txt`
-      (URUNG add `.env` — rahasia; wis dilindhungi `.gitignore`).
-- [ ] `git commit -m "Replace SVG icons with PNG icons
-      (logo-kopontren.png); SW cache v6"`.
-- [ ] Push menyang remote (Vercel/GitHub), utawa langsung
-      **"Upload Folder"** ing dashboard Vercel kanggo update live.
-- [ ] (Opsional) Ganti apple icon dadi `/icon-180.png` yen display
-      iOS rumasa kurang.
-- [ ] (Opsional) Tambah `*.tsbuildinfo` menyang `.gitignore`.
+- [ ] Commit batch piutang & retur di `master`, sync `main`, push keduanya
+      (Vercel auto-deploy main) — SESI INI.
+- [ ] Pantau deployment Vercel main; pastikan build green.
+- [ ] Uji manual fitur baru di produksi: catat piutang, terima bayar
+      (sisa=0 -> lunas), catat retur (restock + jurnal kas keluar bila
+      refund), badge Tunggak.
+- [ ] (Opsional) Tampilkan kolom piutang/retur di `/api/reports` +
+      Laporan Pengurus bila pengurus perlu rekap piutang.
+- [ ] (Opsional) Multi-store: tabel `stores` sudah ada di skema +
+      `sales.store_id` (kosong) — butuh pemilihan store di POS +
+      filter laporan per store.
+- [ ] (Opsional) Fitur bundel/kategori/produk-harga-grosir (tabel
+      `bundles`, `categories`, `product_prices` sudah ada di skema,
+      API & UI belum).
+
+## HIGHLIGHTS / MEMORY
+- Pola izin api: `currentUser()` -> 401; pengurus -> 403 utk tulis;
+  kasir dibatasi ke data miliknya (sale.kasir_id === user.id).
+- Refund retur TIDAK memotong cash_entries manual — dicatat otomatis
+  sebagai jurnal expense berlabel 'Retur #<saleId> · <nama produk>'
+  agar pembukuan kas tetap akur (termasuk di /api/kas & dashboard).
+- `todayStr()` di piutang-client memakai local date (WIB di Indonesia)
+  utk deteksi tunggak (due_date < hari ini & status open).
+- `Modal`, `Badge`, `Toast`, `useToast`, helper `api()` ada di
+  `src/components/ui.tsx`; format `rp/fmtDateTime` di `src/lib/format.ts`.
+- Helper bertanda underscore (`_*.bat`, `_*.ps1`, `*.log`, `_*.txt`)
+  gitignore; jangan commit.
 
 ## FILES
-- `public/`: icon-180.png, icon-192.png, icon-512.png,
-  logo-kopontren.png, manifest.json, sw.js
-- `src/app/layout.tsx`, `src/app/login/page.tsx`,
-  `src/components/shell.tsx`, `src/components/sw-register.tsx`
-- `DEPLOY-VERCEL.txt` (panduan deploy, wis di-update)
-- `state.txt` (file iki)
+- `src/app/api/debts/route.ts`, `src/app/api/debts/[id]/route.ts`,
+  `src/app/api/returns/route.ts`
+- `src/app/api/sales/route.ts` (items +product_id)
+- `src/app/piutang/page.tsx`, `src/app/retur/page.tsx`
+- `src/components/piutang-client.tsx`, `src/components/retur-client.tsx`
+- `src/components/shell.tsx` (nav), `src/app/page.tsx` (kartu piutang)
+- `src/db.ts` (tabel debts/returns sudah ada sejak feature batch 2),
+  `state.txt` (file ini)

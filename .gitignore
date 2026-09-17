@@ -19,4 +19,5 @@ data/*.sql
 _*.bat
 _*.log
 _*.ps1
+_*.txt
 

@@ -19,6 +19,8 @@ function itemsFor(role: Role) {
       { href: '/admin/produk', label: 'Produk' },
       { href: '/admin/belanja', label: 'Belanja' },
       { href: '/admin/konsinyasi', label: 'Konsinyasi' },
+      { href: '/piutang', label: 'Piutang' },
+      { href: '/retur', label: 'Retur' },
       { href: '/admin/kas', label: 'Kas' },
       { href: '/admin/shift', label: 'Shift & Kasir' },
       { href: '/admin/pengaturan-member', label: 'Keuntungan Member' },
@@ -40,6 +42,8 @@ function itemsFor(role: Role) {
     { href: '/', label: 'Ringkasan' },
     { href: '/kasir', label: 'Kasir' },
     { href: '/laporan', label: 'Laporan & Rekap' },
+    { href: '/piutang', label: 'Piutang' },
+    { href: '/retur', label: 'Retur' },
   ];
 }
 
