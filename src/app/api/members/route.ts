@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { canonicalPhone, validatePhone } from '@/lib/phone';
+import { generateQrToken } from '@/lib/qr';
 
 export async function GET(req: Request) {
   const user = await currentUser();
@@ -29,6 +30,18 @@ export async function GET(req: Request) {
   }
   sql += ` ORDER BY name COLLATE NOCASE LIMIT 500`;
   const members = await d.prepare(sql).all(...args);
+  // Backfill: members created before QR badges existed have an empty
+  // qr_code; assign one lazily so POS scanning works for legacy accounts.
+  const rows = members as { id: number; qr_code: string }[];
+  const missing = rows.filter((m) => !(m.qr_code || '').trim());
+  if (missing.length) {
+    const up = d.prepare('UPDATE members SET qr_code = ? WHERE id = ?');
+    for (const m of missing) {
+      const token = generateQrToken();
+      m.qr_code = token;
+      await up.run(token, m.id);
+    }
+  }
   return NextResponse.json({ members });
 }
 
@@ -54,19 +67,20 @@ export async function POST(req: Request) {
   // dedupe: same phone already registered -> reuse the account
   if (phone) {
     const existing = (await d
-      .prepare('SELECT id FROM members WHERE phone = ? LIMIT 1')
-      .get(phone)) as { id: number } | undefined;
+      .prepare('SELECT id, qr_code FROM members WHERE phone = ? LIMIT 1')
+      .get(phone)) as { id: number; qr_code?: string } | undefined;
     if (existing)
-      return NextResponse.json({ ok: true, id: existing.id, exists: true });
+      return NextResponse.json({ ok: true, id: existing.id, exists: true, qr_code: existing.qr_code || '' });
   }
+  const qrCode = generateQrToken();
   const info = await d
-    .prepare(`INSERT INTO members (name, phone, address) VALUES (?, ?, ?)`)
-    .run(name, phone, String(b.address || '').trim());
+    .prepare(`INSERT INTO members (name, phone, address, qr_code) VALUES (?, ?, ?, ?)`)
+    .run(name, phone, String(b.address || '').trim(), qrCode);
   await logAudit(user, 'member:create', 'members', Number(info.lastInsertRowid), undefined, {
     name,
     phone,
   });
-  return NextResponse.json({ ok: true, id: Number(info.lastInsertRowid) });
+  return NextResponse.json({ ok: true, id: Number(info.lastInsertRowid), qr_code: qrCode });
 }
 
 export async function PUT(req: Request) {

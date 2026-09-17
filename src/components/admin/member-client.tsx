@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
+import { MemberQrBadge } from '@/components/admin/member-qr-badge';
 
 type Member = {
   id: number;
@@ -11,6 +12,7 @@ type Member = {
   address: string;
   points: number;
   total_spent: number;
+  qr_code?: string;
   created_at: string;
 };
 type Resp = { members: Member[] };
@@ -27,6 +29,7 @@ export function MemberClient() {
   const [q, setQ] = useState('');
   const [form, setForm] = useState({ ...emptyForm });
   const [show, setShow] = useState(false);
+  const [qrMember, setQrMember] = useState<Member | null>(null);
   const [toast, showToast] = useToast();
 
   const load = useCallback(async () => {
@@ -189,6 +192,16 @@ export function MemberClient() {
                 <td className="td text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button
+                      className="text-xs font-bold text-sky-500 hover:underline dark:text-sky-400"
+                      onClick={() => {
+                        if ((m.qr_code || '').trim()) setQrMember(m);
+                        else showToast('QR belum tersedia — silakan muat ulang daftar member');
+                      }}
+                    >
+                      QR
+                    </button>
+                    <span className="text-slate-300 dark:text-navy-600">|</span>
+                    <button
                       className="text-xs font-bold text-accent-500 hover:underline dark:text-accent-300"
                       onClick={() => openEdit(m)}
                     >
@@ -266,6 +279,19 @@ export function MemberClient() {
           </p>
         </div>
       </Modal>
+
+      {qrMember && (
+        <MemberQrBadge
+          member={{
+            id: qrMember.id,
+            name: qrMember.name,
+            phone: qrMember.phone,
+            points: qrMember.points,
+            qr_code: qrMember.qr_code || '',
+          }}
+          onClose={() => setQrMember(null)}
+        />
+      )}
 
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
