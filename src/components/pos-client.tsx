@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import jsQR from 'jsqr';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
@@ -37,12 +38,31 @@ type SaleResp = {
     created_at?: string;
     points?: number;
     member_name?: string;
+    member_discount?: number;
+    cashback?: number;
   };
   error?: string;
 };
 type ProductsResp = { products: Product[]; categories: string[] };
-type Member = { id: number; name: string; phone: string; points: number };
+type Member = {
+  id: number;
+  name: string;
+  phone: string;
+  points: number;
+  total_spent?: number;
+  qr_code?: string;
+  tier?: string;
+};
 type MembersResp = { members: Member[] };
+
+/** normalize a typed/normalized phone locally (digits, canonical 08… form) */
+function canonPhoneLocal(raw: string): string {
+  let s = String(raw || '')
+    .replace(/\D/g, '')
+    .replace(/^62(?=0?8)/, '');
+  if (s && !s.startsWith('0')) s = '0' + s;
+  return s;
+}
 
 const PAY_LABEL: Record<string, string> = {
   cash: 'Tunai',
@@ -62,6 +82,8 @@ type Receipt = {
   memberName: string;
   memberPhone?: string;
   points: number;
+  memberDiscount?: number;
+  cashback?: number;
   disc: number;
 };
 
@@ -82,6 +104,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [memberModal, setMemberModal] = useState(false);
   const [memberForm, setMemberForm] = useState({ name: '', phone: '', address: '' });
   const [busy, setBusy] = useState(false);
+  // member phone lookup (search-on-type, QR scan, add-member)
+  const [phoneQ, setPhoneQ] = useState('');
+  const [phoneResults, setPhoneResults] = useState<Member[] | null>(null);
+  const [phoneBusy, setPhoneBusy] = useState(false);
+  const [qrModal, setQrModal] = useState(false);
+  const [qrStatus, setQrStatus] = useState('');
+  const qrVideoRef = useRef<HTMLVideoElement>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [qrisModal, setQrisModal] = useState(false);
   const [toast, showToast] = useToast();
@@ -214,17 +243,149 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       showToast('Nama member wajib diisi');
       return;
     }
-    const r = await api<{ ok: boolean; id?: number }>('/api/members', {
-      method: 'POST',
-      body: JSON.stringify(memberForm),
-    });
+    const r = await api<{ ok: boolean; id?: number; exists?: boolean; error?: string }>(
+      '/api/members',
+      {
+        method: 'POST',
+        body: JSON.stringify(memberForm),
+      }
+    );
     if (r.ok) {
-      showToast('Member ' + memberForm.name + ' ditambahkan');
+      if (r.data?.exists) {
+        showToast('Nomor sudah terdaftar — memakai member yang ada');
+      } else {
+        showToast('Member ' + memberForm.name + ' ditambahkan');
+      }
       setMemberModal(false);
       setMemberForm({ name: '', phone: '', address: '' });
       await loadMembers();
-      if (r.data?.id) setMemberId(String(r.data.id));
-    } else showToast(r.error || 'Gagal menambah member');
+      if (r.data?.id) {
+        setMemberId(String(r.data.id));
+        setPhoneResults(null);
+      }
+    } else showToast(r.error || r.data?.error || 'Gagal menambah member');
+  }
+
+  // ── member phone lookup ────────────────────────────────────────────────
+  function selectFromPhone(m: Member) {
+    setMemberId(String(m.id));
+    setCustomer(m.name);
+    setPhoneQ(m.phone || '');
+    setPhoneResults(null);
+  }
+
+  async function searchMemberPhone(raw?: string) {
+    const val = raw !== undefined ? raw : phoneQ;
+    const digits = canonPhoneLocal(val);
+    if (!digits) {
+      setPhoneResults(null);
+      return;
+    }
+    setPhoneBusy(true);
+    const r = await api<MembersResp>(
+      '/api/members?phone=' + encodeURIComponent(digits)
+    );
+    setPhoneBusy(false);
+    if (!r.ok) {
+      setPhoneResults(null);
+      return;
+    }
+    const found = r.data?.members || [];
+    setPhoneResults(found);
+    if (found.length === 1) {
+      // auto-select the single match (guard: skip when input already equals the
+      // match's phone to avoid a re-trigger loop)
+      if (canonPhoneLocal(val) !== canonPhoneLocal(found[0].phone)) {
+        selectFromPhone(found[0]);
+        showToast('Member ditemukan: ' + found[0].name);
+      }
+    }
+  }
+
+  // debounce: search 450ms after typing stops
+  const phoneQRef = useRef(phoneQ);
+  phoneQRef.current = phoneQ;
+  useEffect(() => {
+    const t = setTimeout(() => {
+      void searchMemberPhone(phoneQRef.current);
+    }, 450);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phoneQ]);
+
+  function openAddMember(prefillPhone?: string) {
+    setMemberForm({
+      name: '',
+      phone: prefillPhone !== undefined ? canonPhoneLocal(prefillPhone) : memberForm.phone,
+      address: '',
+    });
+    setMemberModal(true);
+  }
+
+  // ── QR scan (member badge) ────────────────────────────────────────────
+  function stopQrStream() {
+    const v = qrVideoRef.current;
+    if (v?.srcObject) (v.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
+  }
+
+  // release the camera whenever the scan modal closes
+  useEffect(() => {
+    if (!qrModal) stopQrStream();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qrModal]);
+
+  async function startQrScan() {
+    setQrModal(true);
+    setQrStatus('Menyambungkan kamera…');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      });
+      if (qrVideoRef.current) {
+        qrVideoRef.current.srcObject = stream;
+        await qrVideoRef.current.play();
+      }
+      setQrStatus('Arahkan kamera ke QR member…');
+      const tick = () => {
+        const v = qrVideoRef.current;
+        if (!v || !qrModal) return;
+        const c = document.createElement('canvas');
+        c.width = v.videoWidth || 320;
+        c.height = v.videoHeight || 240;
+        const ctx = c.getContext('2d');
+        if (ctx && v.readyState === 4) {
+          ctx.drawImage(v, 0, 0, c.width, c.height);
+          const img = ctx.getImageData(0, 0, c.width, c.height);
+          const code = jsQR(img.data, c.width, c.height)?.data;
+          if (code) handleQrCode(code);
+          else setTimeout(tick, 250);
+        } else setTimeout(tick, 500);
+      };
+      tick();
+    } catch {
+      setQrStatus('Kamera tidak tersedia / izin ditolak');
+    }
+  }
+
+  function handleQrCode(code: string) {
+    stopQrStream();
+    setQrModal(false);
+    const m = members.find((x) => (x.qr_code || '') === code);
+    if (m) {
+      selectFromPhone(m);
+      showToast('Member QR: ' + m.name);
+      return;
+    }
+    // maybe a raw phone number
+    const digits = canonPhoneLocal(code);
+    if (digits.length >= 10 && digits.length <= 15) {
+      setPhoneQ(digits);
+      void searchMemberPhone(digits);
+      return;
+    }
+    showToast('QR tidak dikenal — tambahkan member baru?');
+    openAddMember();
   }
 
   async function checkout() {
@@ -271,6 +432,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         memberName: saved.member_name || (selectedMember?.name ?? ''),
         memberPhone: selectedMember?.phone ?? '',
         points: saved.points || 0,
+        memberDiscount: saved.member_discount || 0,
+        cashback: saved.cashback || 0,
         disc: discNum,
       });
     }
@@ -280,6 +443,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setReceived('');
     setDisc('');
     setMemberId('');
+    setPhoneQ('');
+    setPhoneResults(null);
     load();
     loadShift();
   }
@@ -617,11 +782,85 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           {/* Member & Customer Selection */}
           <div className="mt-3 space-y-2 border-t border-slate-200 pt-3 dark:border-navy-700">
             <div>
+              {/* Phone search + QR scan (above the customer-name field) */}
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <div className="relative flex-1">
+                  <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-xs">
+                    📱
+                  </span>
+                  <input
+                    className="input pl-7 text-xs"
+                    inputMode="tel"
+                    placeholder="Nomor HP member / santri (08…)"
+                    value={phoneQ}
+                    onChange={(e) => setPhoneQ(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        void searchMemberPhone();
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="btn-ghost whitespace-nowrap px-2 py-1 text-xs"
+                  title="Scan QR member"
+                  onClick={() => void startQrScan()}
+                >
+                  ⛶ Scan QR
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost whitespace-nowrap px-2 py-1 text-xs"
+                  title="Tambah member baru"
+                  onClick={() => openAddMember(phoneQ || undefined)}
+                >
+                  + Tambah Member
+                </button>
+              </div>
+
+              {/* search results (only while no member is selected) */}
+              {!selectedMember && phoneResults !== null && phoneResults.length === 0 && (
+                <div className="mb-1.5 flex items-center justify-between rounded-lg bg-amber-500/10 px-2 py-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-300">
+                  <span>
+                    {phoneQ ? 'Tidak ada member untuk ' + canonPhoneLocal(phoneQ) : 'Belum ada member dengan nomor ini'}
+                  </span>
+                  <button
+                    type="button"
+                    className="rounded bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white"
+                    onClick={() => openAddMember(phoneQ || undefined)}
+                  >
+                    + Tambah Member
+                  </button>
+                </div>
+              )}
+              {!selectedMember && phoneResults !== null && phoneResults.length > 1 && (
+                <div className="mb-1.5 space-y-1">
+                  {phoneResults.slice(0, 5).map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => selectFromPhone(m)}
+                      className="flex w-full items-center justify-between rounded-lg bg-emerald-500/10 px-2 py-1.5 text-left text-[11px] font-semibold text-emerald-700 dark:text-emerald-300"
+                    >
+                      <span>
+                        {m.name} {m.phone ? `(${m.phone})` : ''}
+                      </span>
+                      <span>{m.points} poin</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="flex gap-1.5">
                 <select
                   className="input flex-1 text-xs"
                   value={memberId}
-                  onChange={(e) => setMemberId(e.target.value)}
+                  onChange={(e) => {
+                    setMemberId(e.target.value);
+                    setPhoneResults(null);
+                  }}
                 >
                   <option value="">Santri / Member (opsional)</option>
                   {members
@@ -635,21 +874,24 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       </option>
                     ))}
                 </select>
-                {admin && (
-                  <button
-                    className="btn-ghost px-2.5 py-1 text-xs whitespace-nowrap"
-                    onClick={() => setMemberModal(true)}
-                    title="Tambah member baru"
-                  >
-                    + Baru
-                  </button>
-                )}
+                <button
+                  className="btn-ghost whitespace-nowrap px-2.5 py-1 text-xs"
+                  onClick={() => openAddMember(phoneQ || undefined)}
+                  title="Tambah member baru"
+                >
+                  + Baru
+                </button>
               </div>
               {selectedMember && (
                 <div className="mt-1 flex items-center justify-between rounded bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-600 dark:text-emerald-300 font-semibold">
                   <span>★ Member: {selectedMember.name}</span>
-                  <span>{selectedMember.points} poin (+{Math.floor(total / 10000)} poin)</span>
+                  <span>
+                    {selectedMember.points} poin (+{Math.floor(total / 10000)} poin)
+                  </span>
                 </div>
+              )}
+              {phoneBusy && !selectedMember && (
+                <p className="mt-1 text-[10px] text-slate-400">Mencari member…</p>
               )}
             </div>
 
@@ -892,6 +1134,18 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <span>+{receipt.points} Poin</span>
                   </div>
                 )}
+                {(receipt.memberDiscount ?? 0) > 0 && (
+                  <div className="mt-1 flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
+                    <span>Diskon Member</span>
+                    <span>-{rp(receipt.memberDiscount ?? 0)}</span>
+                  </div>
+                )}
+                {(receipt.cashback ?? 0) > 0 && (
+                  <div className="mt-1 flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
+                    <span>Cashback (saldo member)</span>
+                    <span>+{rp(receipt.cashback ?? 0)}</span>
+                  </div>
+                )}
               </div>
               <div className="mt-3 text-center text-[10px] text-slate-500">
                 <p>Jazakumullah Khairan Katsiran</p>
@@ -954,6 +1208,18 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <span>+{receipt.points} Poin</span>
             </div>
           )}
+          {(receipt.memberDiscount ?? 0) > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Diskon Member</span>
+              <span>-{(receipt.memberDiscount ?? 0).toLocaleString('id-ID')}</span>
+            </div>
+          )}
+          {(receipt.cashback ?? 0) > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Cashback (saldo member)</span>
+              <span>+{(receipt.cashback ?? 0).toLocaleString('id-ID')}</span>
+            </div>
+          )}
           <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '10px' }}>
             <div>Jazakumullah Khairan Katsiran</div>
             <div>Mohon maaf atas segala kekurangan</div>
@@ -995,6 +1261,26 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               Dapat discan menggunakan BCA, Mandiri, BSI, GoPay, OVO, Dana, ShopeePay
             </p>
           </div>
+        </div>
+      </Modal>
+
+      {/* QR Member Scan Modal */}
+      <Modal
+        open={qrModal}
+        title="Scan QR Member"
+        onClose={() => setQrModal(false)}
+        footer={
+          <button className="btn-primary" onClick={() => setQrModal(false)}>
+            Tutup
+          </button>
+        }
+      >
+        <div className="space-y-2">
+          <div className="relative mx-auto w-64 h-48 overflow-hidden rounded-xl border-2 border-accent-500 bg-black">
+            <video ref={qrVideoRef} className="h-full w-full object-cover" muted playsInline />
+            <div className="pointer-events-none absolute inset-4 rounded-lg border border-emerald-400/60" />
+          </div>
+          <p className="text-center text-xs text-slate-500 dark:text-slate-400">{qrStatus}</p>
         </div>
       </Modal>
 

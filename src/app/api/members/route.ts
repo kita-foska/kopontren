@@ -2,16 +2,27 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { canonicalPhone, validatePhone } from '@/lib/phone';
 
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
   const url = new URL(req.url);
   const q = String(url.searchParams.get('q') || '').trim();
+  const phoneQ = canonicalPhone(String(url.searchParams.get('phone') || ''));
+  const code = String(url.searchParams.get('code') || '').trim();
   const d = await db();
-  let sql = `SELECT id, name, phone, address, points, total_spent, created_at FROM members`;
+  let sql = `SELECT id, name, phone, address, points, total_spent, qr_code, created_at FROM members`;
   const args: string[] = [];
-  if (q) {
+  if (code) {
+    // QR-code lookup (member badge / scan)
+    sql += ` WHERE qr_code = ?`;
+    args.push(code);
+  } else if (phoneQ) {
+    // phone search: canonical prefix, then looser match on raw value
+    sql += ` WHERE phone LIKE ? OR phone LIKE ?`;
+    args.push(phoneQ + '%', '%' + phoneQ.replace(/^0/, '62') + '%');
+  } else if (q) {
     sql += ` WHERE (name LIKE ? OR phone LIKE ? OR address LIKE ?)`;
     const like = '%' + q + '%';
     args.push(like, like, like);
@@ -24,19 +35,36 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isAdmin(user))
-    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const name = String(b.name || '').trim();
   if (!name) return NextResponse.json({ error: 'Nama member wajib' }, { status: 400 });
+  // any logged-in role (kasir/pengurus/admin) may register a member at the counter
+  const phoneRaw = String(b.phone || '').trim();
+  let phone = '';
+  if (phoneRaw) {
+    const p = validatePhone(phoneRaw);
+    if (!p)
+      return NextResponse.json(
+        { error: 'Format nomor tidak valid (10-15 digit, awalan 08/62/+62)' },
+        { status: 400 }
+      );
+    phone = p;
+  }
   const d = await db();
+  // dedupe: same phone already registered -> reuse the account
+  if (phone) {
+    const existing = (await d
+      .prepare('SELECT id FROM members WHERE phone = ? LIMIT 1')
+      .get(phone)) as { id: number } | undefined;
+    if (existing)
+      return NextResponse.json({ ok: true, id: existing.id, exists: true });
+  }
   const info = await d
-    .prepare(
-      `INSERT INTO members (name, phone, address) VALUES (?, ?, ?)`
-    )
-    .run(name, String(b.phone || '').trim(), String(b.address || '').trim());
+    .prepare(`INSERT INTO members (name, phone, address) VALUES (?, ?, ?)`)
+    .run(name, phone, String(b.address || '').trim());
   await logAudit(user, 'member:create', 'members', Number(info.lastInsertRowid), undefined, {
     name,
+    phone,
   });
   return NextResponse.json({ ok: true, id: Number(info.lastInsertRowid) });
 }
@@ -60,17 +88,39 @@ export async function PUT(req: Request) {
     points: number;
   } | undefined;
   if (!row) return NextResponse.json({ error: 'Member tidak ditemukan' }, { status: 404 });
+  const phoneRaw = String(b.phone ?? row.phone).trim();
+  let phone = '';
+  if (phoneRaw) {
+    const p = validatePhone(phoneRaw);
+    if (!p)
+      return NextResponse.json(
+        { error: 'Format nomor tidak valid (10-15 digit, awalan 08/62/+62)' },
+        { status: 400 }
+      );
+    phone = p;
+  }
+  // uniqueness: phone must not be used by another member
+  if (phone) {
+    const clash = (await d
+      .prepare('SELECT id FROM members WHERE phone = ? AND id != ? LIMIT 1')
+      .get(phone, id)) as { id: number } | undefined;
+    if (clash)
+      return NextResponse.json(
+        { error: 'Nomor sudah terdaftar pada member lain' },
+        { status: 409 }
+      );
+  }
   await d
     .prepare('UPDATE members SET name = ?, phone = ?, address = ? WHERE id = ?')
     .run(
       String(b.name ?? row.name).trim() || row.name,
-      String(b.phone ?? row.phone).trim(),
+      phone,
       String(b.address ?? row.address).trim(),
       id
     );
   await logAudit(user, 'member:update', 'members', id, row, {
     name: String(b.name ?? row.name),
-    phone: String(b.phone ?? row.phone),
+    phone,
     address: String(b.address ?? row.address),
   });
   return NextResponse.json({ ok: true });
