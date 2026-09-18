@@ -1,7 +1,15 @@
 import { redirect } from 'next/navigation';
 import { currentUser, isManager } from '@/lib/auth';
 import { Shell } from '@/components/shell';
-import { KonsinyasiClient } from '@/components/admin/konsinyasi-client';
+import lazy from 'next/dynamic';
+import { PageSkeleton } from '@/components/ui';
+
+const KonsinyasiClient = lazy(
+  () => import('@/components/admin/konsinyasi-client').then((m) => m.KonsinyasiClient),
+  {
+    loading: () => <PageSkeleton />,
+  }
+);
 
 export const dynamic = 'force-dynamic';
 

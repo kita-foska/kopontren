@@ -1,7 +1,15 @@
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
-import { MigrateClient } from '@/components/admin/migrate-client';
+import lazy from 'next/dynamic';
+import { PageSkeleton } from '@/components/ui';
+
+const MigrateClient = lazy(
+  () => import('@/components/admin/migrate-client').then((m) => m.MigrateClient),
+  {
+    loading: () => <PageSkeleton />,
+  }
+);
 
 export const dynamic = 'force-dynamic';
 

@@ -1,7 +1,15 @@
 import { redirect } from 'next/navigation';
 import { currentUser, isManager } from '@/lib/auth';
 import { Shell } from '@/components/shell';
-import { KasClient } from '@/components/admin/kas-client';
+import lazy from 'next/dynamic';
+import { PageSkeleton } from '@/components/ui';
+
+const KasClient = lazy(
+  () => import('@/components/admin/kas-client').then((m) => m.KasClient),
+  {
+    loading: () => <PageSkeleton />,
+  }
+);
 
 export const dynamic = 'force-dynamic';
 

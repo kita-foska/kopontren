@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -35,14 +36,12 @@ export default function LoginPage() {
     <div className="grid min-h-screen place-items-center bg-navy-100 p-4 dark:bg-navy-900">
       <div className="card w-full max-w-sm p-6">
         <div className="mb-5 flex items-center gap-3">
-          <img
+          <Image
             src="/logo-kopontren.svg"
             alt="Kopontren"
+            width={64}
+            height={64}
             className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain"
-            onError={(e) => {
-              const el = e.currentTarget;
-              if (el.src.includes('.svg')) el.src = '/logo-kopontren.png';
-            }}
           />
           <div>
             <h1 className="text-lg font-extrabold leading-tight tracking-tight">

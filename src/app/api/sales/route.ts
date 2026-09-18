@@ -25,6 +25,10 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const days = Number(url.searchParams.get('days') || '0');
   const status = url.searchParams.get('status') || 'all';
+  // Pagination: default 50 (target Turso Rows Read < 500 per load),
+  // klien boleh meminta sampai 500 atau paging dengan ?offset=.
+  const limit = Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 50));
+  const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
   const d = await db();
   let from: string | null = null;
   if (days > 0) from = startOfDayJakarta(1 - days);
@@ -34,38 +38,74 @@ export async function GET(req: Request) {
     where.push('status = ?');
     args.push(status);
   }
+  args.push(limit, offset);
   const rows = (
     (await d
-      .prepare(`SELECT * FROM sales WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT 500`)
+      .prepare(
+        `SELECT * FROM sales WHERE ${where.join(
+          ' AND '
+        )} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      )
       .all(...args)) as SaleRow[]
   );
-  const kasirStmt = d.prepare('SELECT username, display_name FROM users WHERE id = ?');
-  const memberStmt = d.prepare('SELECT name, phone, points FROM members WHERE id = ?');
-  const itemsStmt = d.prepare(
-    'SELECT product_name, qty, unit, unit_price, subtotal, discount FROM sale_items WHERE sale_id = ? ORDER BY id'
-  );
-  const sales = await Promise.all(
-    rows.map(async (r) => {
-      const kasir = r.kasir_id
-        ? ((await kasirStmt.get(r.kasir_id)) as { username: string; display_name: string })
-        : null;
-      const member = r.member_id
-        ? ((await memberStmt.get(r.member_id)) as {
-            name: string;
-            phone: string;
-            points: number;
-          })
-        : null;
-      return {
-        ...r,
-        kasir_name: kasir ? kasir.display_name || kasir.username : '',
-        member_name: member?.name || '',
-        member_phone: member?.phone || '',
-        items: await itemsStmt.all(r.id),
-      };
-    })
-  );
-  return NextResponse.json({ sales });
+  // Batch N+1: dulu 3 query per baris (kasir, member, items) = 3×N round-trip.
+  // Sekarang 3 query total dengan IN (...) terlepas dari jumlah baris.
+  const ph = (n: number) => Array(n).fill('?').join(', ');
+  const kasirIds = [...new Set(rows.map((r) => r.kasir_id).filter((v): v is number => !!v))];
+  const memberIds = [...new Set(rows.map((r) => r.member_id).filter((v): v is number => !!v))];
+  const saleIds = rows.map((r) => r.id);
+  const [kasirRows, memberRows, itemRows] = await Promise.all([
+    kasirIds.length
+      ? d.prepare(`SELECT id, username, display_name FROM users WHERE id IN (${ph(kasirIds.length)})`).all(
+          ...kasirIds
+        )
+      : Promise.resolve([]),
+    memberIds.length
+      ? d
+          .prepare(`SELECT id, name, phone, points FROM members WHERE id IN (${ph(memberIds.length)})`)
+          .all(...memberIds)
+      : Promise.resolve([]),
+    saleIds.length
+      ? d
+          .prepare(
+            `SELECT sale_id, product_name, qty, unit, unit_price, subtotal, discount
+             FROM sale_items WHERE sale_id IN (${ph(saleIds.length)}) ORDER BY sale_id, id`
+          )
+          .all(...saleIds)
+      : Promise.resolve([]),
+  ]);
+  const kasirMap = new Map<number, { username: string; display_name: string }>();
+  for (const u of kasirRows as { id: number; username: string; display_name: string }[])
+    kasirMap.set(u.id, u);
+  const memberMap = new Map<number, { name: string; phone: string; points: number }>();
+  for (const m of memberRows as { id: number; name: string; phone: string; points: number }[])
+    memberMap.set(m.id, m);
+  type SaleItem = {
+    product_name: string;
+    qty: number;
+    unit: string;
+    unit_price: number;
+    subtotal: number;
+    discount: number;
+  };
+  const itemsMap = new Map<number, SaleItem[]>();
+  for (const it of itemRows as (SaleItem & { sale_id: number })[]) {
+    const arr = itemsMap.get(it.sale_id) || [];
+    arr.push(it);
+    itemsMap.set(it.sale_id, arr);
+  }
+  const sales = rows.map((r) => {
+    const kasir = r.kasir_id ? kasirMap.get(r.kasir_id) : undefined;
+    const member = r.member_id ? memberMap.get(r.member_id) : undefined;
+    return {
+      ...r,
+      kasir_name: kasir ? kasir.display_name || kasir.username : '',
+      member_name: member?.name || '',
+      member_phone: member?.phone || '',
+      items: itemsMap.get(r.id) || [],
+    };
+  });
+  return NextResponse.json({ sales, limit, offset });
 }
 
 export async function POST(req: Request) {

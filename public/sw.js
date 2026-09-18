@@ -1,12 +1,50 @@
-// Kopontren PWA service worker
-// Strategy: cache-first for immutable static assets, network-first for pages
-// (offline fallback), network-only for /api (business data never cached).
-const CACHE = 'kopontren-v7';
-const PAGE_CACHE = 'kopontren-pages-v6';
+// Kopontren PWA service worker (v8)
+// Strategy:
+// - Immutable static assets (/_next/static, ikon, logo, gambar): cache-first
+// - API GET data referensi aman (/api/products, /api/member-settings):
+//   network-first dengan cache fallback (bisa dipakai offline; data bisnis
+//   seperti /api/sales & /api/members TIDAK pernah di-cache)
+// - Pages & shell: network-first dengan offline fallback
+const CACHE = 'kopontren-v8';
+const PAGE_CACHE = 'kopontren-pages-v7';
+const API_CACHE = 'kopontren-api-v8';
 const OFFLINE_FALLBACK = '/login';
 
+// Aset kritis yang diprecache saat install agar shell tetap hidup offline.
+const PRECACHE = [
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/logo-kopontren.svg',
+];
+
+// Endpoint GET yang AMAN di-cache: data referensi statis, bukan data
+// per-pengguna. Data bisnis (sales, members, kas, shift) tetap
+// network-only agar tidak pernah menyajikan angka basi.
+const SAFE_API = ['/api/products', '/api/member-settings'];
+
+// Network-first: selalu coba network; simpan respons 2xx ke cache sebagai
+// fallback offline. Respons error / opaque tidak pernah di-cache.
+function networkFirst(cacheName, req, fallback) {
+  return fetch(req)
+    .then((res) => {
+      if (res.type === 'opaque' || res.status >= 400) return res;
+      const copy = res.clone();
+      caches.open(cacheName).then((c) => c.put(req, copy));
+      return res;
+    })
+    .catch(() =>
+      caches.match(req).then((hit) => hit || caches.match(fallback || OFFLINE_FALLBACK))
+    );
+}
+
 self.addEventListener('install', (e) => {
-  e.waitUntil(self.skipWaiting());
+  e.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => Promise.all(PRECACHE.map((u) => c.add(u).catch(() => {}))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -16,7 +54,10 @@ self.addEventListener('activate', (e) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((k) => k.startsWith('kopontren') && k !== CACHE && k !== PAGE_CACHE)
+            .filter(
+              (k) =>
+                k.startsWith('kopontren') && k !== CACHE && k !== PAGE_CACHE && k !== API_CACHE
+            )
             .map((k) => caches.delete(k))
         )
       )
@@ -29,13 +70,21 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
-  // API calls: network only (never cache business data)
-  if (url.pathname.startsWith('/api/')) return;
-  // Immutable static assets: cache-first
+  // API: default network-only (data bisnis tak boleh pernah basi).
+  // Hanya endpoint referensi statis yang boleh network-first + fallback cache.
+  if (url.pathname.startsWith('/api/')) {
+    if (SAFE_API.some((p) => url.pathname === p)) {
+      e.respondWith(networkFirst(API_CACHE, req, null));
+    }
+    return;
+  }
+  // Aset statis immutable: cache-first
   if (
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/icon-') ||
-    url.pathname.startsWith('/logo-')
+    url.pathname.startsWith('/logo-') ||
+    url.pathname === '/manifest.json' ||
+    /\.(svg|png|jpe?g|gif|webp|ico)$/i.test(url.pathname)
   ) {
     e.respondWith(
       caches.open(CACHE).then((c) =>
@@ -44,23 +93,8 @@ self.addEventListener('fetch', (e) => {
     );
     return;
   }
-  // Pages & shell: network-first with offline fallback.
-  // Only healthy (2xx) responses are cached; error pages & opaque responses
-  // are never stored, so a bad deploy can never poison the offline fallback.
-  e.respondWith(
-    fetch(req)
-      .then((res) => {
-        if (res.type === 'opaque' || res.status >= 400) return res;
-        const copy = res.clone();
-        caches.open(PAGE_CACHE).then((c) => c.put(req, copy));
-        return res;
-      })
-      .catch(() =>
-        caches.match(req).then(
-          (hit) =>
-            hit ||
-            (url.pathname === '/' ? caches.match(OFFLINE_FALLBACK) : caches.match(OFFLINE_FALLBACK))
-        )
-      )
-  );
+  // Pages & shell: network-first dengan offline fallback.
+  // Hanya respons 2xx yang di-cache; halaman error & opaque tidak pernah
+  // disimpan, jadi deploy yang rusak tidak bisa meracuni fallback offline.
+  e.respondWith(networkFirst(PAGE_CACHE, req, OFFLINE_FALLBACK));
 });

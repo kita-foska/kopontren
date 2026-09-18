@@ -137,6 +137,7 @@ export function Sidebar({
                     <li key={it.href}>
                       <Link
                         href={it.href}
+                        prefetch={false}
                         onClick={onClose}
                         className={
                           'block rounded-lg px-3 py-2 text-sm font-bold transition ' +

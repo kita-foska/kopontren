@@ -91,6 +91,32 @@ export function Empty({ text }: { text: string }) {
   );
 }
 
+/**
+ * Skeleton loading: placeholder shimmer untuk halaman berat yang dimuat
+ * lazily (fallback next/dynamic) — user melihat struktur halaman, bukan
+ * layar kosong, sementara JS chunk diunduh.
+ */
+export function PageSkeleton() {
+  return (
+    <div className="space-y-4" aria-busy="true">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="card animate-pulse p-4">
+            <div className="mb-2 h-3 w-16 rounded bg-slate-200 dark:bg-navy-600" />
+            <div className="h-6 w-24 rounded bg-slate-200 dark:bg-navy-600" />
+          </div>
+        ))}
+      </div>
+      <div className="card animate-pulse p-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="mb-2 h-4 rounded bg-slate-200 dark:bg-navy-600" style={{ width: `${90 - i * 12}%` }} />
+        ))}
+      </div>
+      <p className="text-xs text-slate-400 dark:text-slate-500">Memuat data…</p>
+    </div>
+  );
+}
+
 /** Fetch JSON helper with json error surfacing. */
 export async function api<T = unknown>(
   url: string,

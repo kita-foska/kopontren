@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
@@ -13,7 +13,20 @@ type Member = {
   total_spent: number;
   created_at: string;
 };
-type Resp = { members: Member[] };
+// API sekarang paginasi (limit 50) + agregat global untuk kartu ringkasan.
+type Resp = {
+  members: Member[];
+  total: number;
+  total_points: number;
+  total_spent: number;
+  limit: number;
+  offset: number;
+};
+
+// Virtual list: hanya baris terlihat (+overscan) yang dirender, supaya
+// daftar panjang tidak membebani DOM.
+const ROW_H = 64;
+const OVERSCAN = 6;
 
 const emptyForm = {
   id: 0,
@@ -24,30 +37,73 @@ const emptyForm = {
 
 export function MemberClient() {
   const [members, setMembers] = useState<Member[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPoints, setTotalPoints] = useState(0);
+  const [totalSpent, setTotalSpent] = useState(0);
   const [q, setQ] = useState('');
+  // Search debounce 300ms (query dikirim ke server setelah 300ms).
+  const [qDeb, setQDeb] = useState('');
   const [form, setForm] = useState({ ...emptyForm });
   const [show, setShow] = useState(false);
   const [toast, showToast] = useToast();
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [scrollTop, setScrollTop] = useState(0);
+  const listRef = useRef<HTMLDivElement>(null);
+  const hasMoreRef = useRef(false);
+  const lastOffsetRef = useRef(0);
+  const lastLimitRef = useRef(50);
 
-  const load = useCallback(async () => {
-    const r = await api<Resp>('/api/members');
-    if (r.ok && r.data) setMembers(r.data.members || []);
+  useEffect(() => {
+    const t = setTimeout(() => setQDeb(q), 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  async function fetchPage(offset: number, limit: number, search: string, append: boolean) {
+    const url =
+      '/api/members?' +
+      (search ? 'q=' + encodeURIComponent(search) : 'offset=' + offset) +
+      '&limit=' + limit;
+    const r = await api<Resp>(url);
+    if (r.ok && r.data) {
+      setMembers((prev) => (append ? [...prev, ...(r.data!.members || [])] : r.data!.members || []));
+      setTotal(r.data.total || 0);
+      setTotalPoints(r.data.total_points || 0);
+      setTotalSpent(r.data.total_spent || 0);
+      lastOffsetRef.current = offset;
+      lastLimitRef.current = limit;
+      hasMoreRef.current =
+        limit === 50 && (r.data.members?.length || 0) >= limit && (r.data.total || 0) > 0;
+    }
+  }
+
+  const load = useCallback(async (search: string) => {
+    const s = search.trim();
+    // Pencarian: satu request dgn limit 500 (server-side q).
+    // Normal: pagination 50 baris/halaman + tombol "Muat lebih banyak".
+    await fetchPage(0, s ? 500 : 50, s, false);
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    load(qDeb);
+  }, [qDeb, load]);
 
-  const filtered = useMemo(() => {
-    if (!q.trim()) return members;
-    const s = q.trim().toLowerCase();
-    return members.filter(
-      (m) =>
-        m.name.toLowerCase().includes(s) ||
-        (m.phone || '').includes(s) ||
-        (m.address || '').toLowerCase().includes(s)
-    );
-  }, [members, q]);
+  async function loadMore() {
+    if (loadingMore || qDeb.trim() || !hasMoreRef.current) return;
+    setLoadingMore(true);
+    await fetchPage(lastOffsetRef.current + lastLimitRef.current, lastLimitRef.current, '', true);
+    setLoadingMore(false);
+  }
+
+  function onScroll() {
+    setScrollTop(listRef.current?.scrollTop || 0);
+  }
+
+  // Hitungan jendela virtual: indeks awal/akhir baris yang dirender.
+  const first = Math.max(0, Math.floor(scrollTop / ROW_H) - OVERSCAN);
+  const sliceEnd = Math.min(members.length, first + Math.ceil(560 / ROW_H) + OVERSCAN * 2);
+  const shown = members.slice(first, sliceEnd);
+  const padTop = first * ROW_H;
+  const padBottom = Math.max(0, (members.length - sliceEnd) * ROW_H);
 
   function openEdit(m?: Member) {
     if (m) setForm({ id: m.id, name: m.name, phone: m.phone, address: m.address });
@@ -72,7 +128,7 @@ export function MemberClient() {
     if (r.ok) {
       showToast(form.id ? 'Data member diperbarui' : 'Member baru berhasil didaftarkan');
       setShow(false);
-      load();
+      await load(qDeb);
     } else {
       showToast(r.error || 'Gagal menyimpan');
     }
@@ -83,14 +139,12 @@ export function MemberClient() {
     const r = await api('/api/members?id=' + m.id, { method: 'DELETE' });
     if (r.ok) {
       showToast('Member dihapus');
-      load();
+      await load(qDeb);
     } else {
       showToast(r.error || 'Gagal menghapus');
     }
   }
 
-  const totalPoints = members.reduce((acc, m) => acc + (m.points || 0), 0);
-  const totalSpent = members.reduce((acc, m) => acc + (m.total_spent || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -101,7 +155,7 @@ export function MemberClient() {
             Total Member
           </p>
           <p className="mt-1 text-2xl font-extrabold text-accent-500 dark:text-accent-300">
-            {members.length}
+            {total.toLocaleString('id-ID')}
           </p>
           <p className="text-xs text-slate-500">Santri & Pelanggan Terdaftar</p>
         </div>
@@ -142,7 +196,12 @@ export function MemberClient() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            {filtered.length} ditemukan
+            {total} ditemukan
+            {!qDeb.trim() && (
+              <span className="ml-1 text-slate-400 dark:text-slate-500">
+                ({members.length} dimuat)
+              </span>
+            )}
           </span>
           <button className="btn-primary" onClick={() => openEdit()}>
             + Tambah Member
@@ -151,7 +210,8 @@ export function MemberClient() {
       </div>
 
       {/* Member Table */}
-      <div className="card overflow-x-auto">
+      <div className="card overflow-hidden">
+        <div ref={listRef} onScroll={onScroll} className="max-h-[640px] overflow-auto">
         <table className="w-full min-w-[36rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -164,7 +224,12 @@ export function MemberClient() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((m) => (
+            {padTop > 0 && (
+              <tr aria-hidden="true" style={{ height: padTop }}>
+                <td colSpan={6} />
+              </tr>
+            )}
+            {shown.map((m) => (
               <tr key={m.id} className="table-row hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
                 <td className="td">
                   <p className="font-bold text-slate-900 dark:text-slate-100">{m.name}</p>
@@ -205,15 +270,28 @@ export function MemberClient() {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
+            {padBottom > 0 && (
+              <tr aria-hidden="true" style={{ height: padBottom }}>
+                <td colSpan={6} />
+              </tr>
+            )}
+            {members.length === 0 && (
               <tr>
                 <td className="td py-8 text-center text-sm text-slate-500" colSpan={6}>
-                  {q ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
+                  {qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        </div>
+        {!qDeb.trim() && hasMoreRef.current && (
+          <div className="border-t border-slate-200 p-3 text-center dark:border-navy-700">
+            <button className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal Add/Edit Member */}

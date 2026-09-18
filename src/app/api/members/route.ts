@@ -8,17 +8,37 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
   const url = new URL(req.url);
   const q = String(url.searchParams.get('q') || '').trim();
+  // Pagination: default 50, maksimal 500. Klien memakai "Muat lebih banyak"
+  // dengan ?offset=; POS meminta ?limit=500 untuk dropdown member penuh.
+  const limit = Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 50));
+  const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
   const d = await db();
-  let sql = `SELECT id, name, phone, address, points, total_spent, created_at FROM members`;
+  let where = '';
   const args: string[] = [];
   if (q) {
-    sql += ` WHERE (name LIKE ? OR phone LIKE ? OR address LIKE ?)`;
+    where = ` WHERE (name LIKE ? OR phone LIKE ? OR address LIKE ?)`;
     const like = '%' + q + '%';
     args.push(like, like, like);
   }
-  sql += ` ORDER BY name COLLATE NOCASE LIMIT 500`;
-  const members = await d.prepare(sql).all(...args);
-  return NextResponse.json({ members });
+  const rows = await d
+    .prepare(
+      `SELECT id, name, phone, address, points, total_spent, created_at FROM members${where} ORDER BY name COLLATE NOCASE LIMIT ? OFFSET ?`
+    )
+    .all(...args, limit, offset);
+  // Agregat global (seluruh tabel, bukan halaman) untuk kartu ringkasan.
+  const totals = (await d
+    .prepare(
+      `SELECT COUNT(*) c, COALESCE(SUM(points),0) p, COALESCE(SUM(total_spent),0) t FROM members${where}`
+    )
+    .get(...args)) as { c: number; p: number; t: number };
+  return NextResponse.json({
+    members: rows,
+    total: totals.c,
+    total_points: totals.p,
+    total_spent: totals.t,
+    limit,
+    offset,
+  });
 }
 
 export async function POST(req: Request) {

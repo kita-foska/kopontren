@@ -1,4 +1,5 @@
 import type { AppUser, Role } from '@/lib/auth';
+import Image from 'next/image';
 import { NavPills } from './navpills';
 import { ThemeToggle } from './themetoggle';
 import { LogoutButton } from './logout';
@@ -35,7 +36,13 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-navy-700 dark:bg-navy-900/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <a href="/" className="flex items-center gap-2.5">
-            <img src="/logo-kopontren.png" alt="" className="h-9 w-auto" />
+            <Image
+              src="/logo-kopontren.svg"
+              alt="Kopontren"
+              width={36}
+              height={36}
+              className="h-9 w-auto"
+            />
             <div className="leading-tight">
               <p className="text-sm font-extrabold tracking-tight">Kopontren Al Ittihad</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">

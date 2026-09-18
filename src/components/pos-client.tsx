@@ -70,6 +70,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [categories, setCategories] = useState<string[]>([]);
   const [cat, setCat] = useState('');
   const [q, setQ] = useState('');
+  // Search debounce 300ms: grid produk memakai qDeb supaya re-render tidak
+  // terjadi setiap ketikan; handler Enter (barcode scanner) tetap live.
+  const [qDeb, setQDeb] = useState('');
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customer, setCustomer] = useState('');
   const [pay, setPay] = useState<'cash' | 'tf' | 'wa'>('cash');
@@ -94,6 +97,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [closingSummary, setClosingSummary] = useState<ShiftInfo | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setQDeb(q), 300);
+    return () => clearTimeout(t);
+  }, [q]);
 
   const load = useCallback(async () => {
     const r = await api<ProductsResp>('/api/products?live=1');
@@ -122,7 +130,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   }, [load, loadMembers, loadShift]);
 
   const visible = useMemo(() => {
-    const term = q.trim().toLowerCase();
+    const term = qDeb.trim().toLowerCase();
     return products.filter((p) => {
       if (cat && p.category !== cat) return false;
       if (!term) return true;
@@ -130,7 +138,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       const matchBarcode = (p.barcode || '').toLowerCase().includes(term);
       return matchName || matchBarcode;
     });
-  }, [products, cat, q]);
+  }, [products, cat, qDeb]);
 
   function add(p: Product) {
     if (p.stock <= 0) {
@@ -167,14 +175,20 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         setQ('');
         return;
       }
-      // If visible has exactly 1 match
-      if (visible.length === 1) {
-        add(visible[0]);
-        showToast('Ditambahkan: ' + visible[0].name);
+      // Cocokkan langsung dari input live (bukan qDeb) agar Enter dari
+      // barcode scanner tidak tertunda oleh debounce.
+      const liveMatches = products.filter((p) => {
+        if (cat && p.category !== cat) return false;
+        return p.name.toLowerCase().includes(term) || (p.barcode || '').toLowerCase().includes(term);
+      });
+      if (liveMatches.length === 1) {
+        add(liveMatches[0]);
+        showToast('Ditambahkan: ' + liveMatches[0].name);
         setQ('');
+        setQDeb('');
         return;
       }
-      if (visible.length === 0) {
+      if (liveMatches.length === 0) {
         showToast('Produk dengan barcode/kode "' + q.trim() + '" tidak ditemukan.');
       }
     }

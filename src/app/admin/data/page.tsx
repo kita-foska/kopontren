@@ -1,7 +1,15 @@
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
-import { DataClient } from '@/components/admin/data-client';
+import lazy from 'next/dynamic';
+import { PageSkeleton } from '@/components/ui';
+
+const DataClient = lazy(
+  () => import('@/components/admin/data-client').then((m) => m.DataClient),
+  {
+    loading: () => <PageSkeleton />,
+  }
+);
 
 export const dynamic = 'force-dynamic';
 

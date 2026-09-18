@@ -1,7 +1,15 @@
 import { redirect } from 'next/navigation';
 import { currentUser, isManager } from '@/lib/auth';
 import { Shell } from '@/components/shell';
-import { LaporanAdminClient } from '@/components/admin/laporan-admin-client';
+import lazy from 'next/dynamic';
+import { PageSkeleton } from '@/components/ui';
+
+const LaporanAdminClient = lazy(
+  () => import('@/components/admin/laporan-admin-client').then((m) => m.LaporanAdminClient),
+  {
+    loading: () => <PageSkeleton />,
+  }
+);
 
 export const dynamic = 'force-dynamic';
 

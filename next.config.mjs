@@ -3,24 +3,32 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   // keep the native libSQL driver out of the webpack bundle (native .node binary)
   serverExternalPackages: ['@libsql/client'],
+  // Kompressi di edge (gzip/brotli). Explicit agar jelas di production.
+  compress: true,
+  // Sembunyikan header "X-Powered-By: Next.js"
+  poweredByHeader: false,
+  // Jangan emit source-map di production (keamanan + bundle lebih kecil)
+  productionBrowserSourceMaps: false,
   /**
-   * Cache policy for small, rarely-changing route assets so repeat visits
-   * and PWA installs do not re-fetch them every time. (Static chunks in
-   * /_next/ are already content-hashed and cached immutably by the CDN +
-   * service worker; these cover the non-hashed routes.)
+   * Cache policy untuk route assets (aset di /public TIDAK content-hash,
+   * berbeda dengan chunk /_next yang sudah immutable via content-hash):
+   * - /sw.js: max-age=0 + must-revalidate → browser selalu revalidate saat
+   *   navigasi berikutnya, jadi update service worker tidak stuck di cache.
+   * - Gambar (svg/jpg/jpeg/png/gif/ico/webp): 1 tahun immutable.
+   *   NOTE: kalau ikon/logo diganti, tambahkan version query (?v=2) di URL
+   *   pemakai untuk bust cache immutable.
+   * - /manifest.json: 1 hari, agar icon PWA baru setelah deploy tetap bisa
+   *   muncul.
    */
   async headers() {
-    // NOTE: aset di /public tidak content-hash (berbeda dengan chunk /_next),
-    // jadi TIDAK memakai "immutable" — max-age 1 hari agar ikon/manifest baru
-    // setelah deploy tetap bisa muncul.
     return [
       {
-        source: '/icon-192.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+        source: '/sw.js',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
       },
       {
-        source: '/icon-512.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+        source: '/:path*.(svg|jpg|jpeg|png|gif|ico|webp)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
         source: '/manifest.json',

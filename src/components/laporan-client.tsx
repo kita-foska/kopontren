@@ -35,11 +35,23 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
     };
   }, []);
 
+  // Muat daftar transaksi dengan pagination (server default limit 50).
+  // Loop memakai offset sampai halaman < limit (maks. 500 baris) — rekap
+  // tetap lengkap, tapi tiap request kecil & Turso Rows Read per request
+  // tetap rendah.
   const load = useCallback(async () => {
-    const r = await api<ListResp>(
-      '/api/sales?days=' + period + '&status=' + (statusF || 'all')
-    );
-    if (r.ok && r.data) setSales(r.data.sales || []);
+    const all: Sale[] = [];
+    const PAGE = 50;
+    for (let offset = 0; ; offset += PAGE) {
+      const r = await api<ListResp>(
+        '/api/sales?days=' + period + '&status=' + (statusF || 'all') + '&limit=' + PAGE + '&offset=' + offset
+      );
+      if (!r.ok || !r.data) return;
+      const page = r.data.sales || [];
+      all.push(...page);
+      if (page.length < PAGE || all.length >= 500) break;
+    }
+    setSales(all);
   }, [period, statusF]);
 
   useEffect(() => {
