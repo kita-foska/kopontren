@@ -1,74 +1,44 @@
 import Image from 'next/image';
-import type { AppUser, Role } from '@/lib/auth';
-import { NavPills } from './navpills';
+import type { AppUser } from '@/lib/auth';
+import { HamburgerNav } from './sidebar';
 import { ThemeToggle } from './themetoggle';
 import { LogoutButton } from './logout';
 
 /**
- * 3-level access:
- *  - admin    : all menus (full write, users, backup, reset).
- *  - pengurus : read-only rekap -> Ringkasan, Laporan & Rekap, Laporan Pengurus.
+ * 3-level access (sidebar groups per role):
+ *  - admin    : all groups — Utama, Admin, Loyalty, Sistem.
+ *  - pengurus : read-only rekap -> Ringkasan, Laporan & Rekap,
+ *               + Laporan Pengurus.
  *  - kasir    : Ringkasan, Kasir (POS), Laporan & Rekap.
+ *
+ * Nav is a left slide-in drawer (hamburger in header) so the header
+ * never needs horizontal scrolling, including on narrow phones.
  */
-function itemsFor(role: Role) {
-  if (role === 'admin') {
-    return [
-      { href: '/', label: 'Ringkasan' },
-      { href: '/kasir', label: 'Kasir' },
-      { href: '/laporan', label: 'Laporan & Rekap' },
-      { href: '/admin/produk', label: 'Produk' },
-      { href: '/admin/belanja', label: 'Belanja' },
-      { href: '/admin/konsinyasi', label: 'Konsinyasi' },
-      { href: '/piutang', label: 'Piutang' },
-      { href: '/retur', label: 'Retur' },
-      { href: '/admin/kas', label: 'Kas' },
-      { href: '/admin/shift', label: 'Shift & Kasir' },
-      { href: '/admin/pengaturan-member', label: 'Keuntungan Member' },
-      { href: '/admin/audit', label: 'Audit' },
-      { href: '/admin/member', label: 'Member' },
-      { href: '/admin/laporan', label: 'Laporan Pengurus' },
-      { href: '/admin/pengguna', label: 'Pengguna' },
-      { href: '/admin/data', label: 'Data & Backup' },
-    ];
-  }
-  if (role === 'pengurus') {
-    return [
-      { href: '/', label: 'Ringkasan' },
-      { href: '/laporan', label: 'Laporan & Rekap' },
-      { href: '/admin/laporan', label: 'Laporan Pengurus' },
-    ];
-  }
-  return [
-    { href: '/', label: 'Ringkasan' },
-    { href: '/kasir', label: 'Kasir' },
-    { href: '/laporan', label: 'Laporan & Rekap' },
-    { href: '/piutang', label: 'Piutang' },
-    { href: '/retur', label: 'Retur' },
-  ];
-}
-
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-navy-700 dark:bg-navy-900/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <a href="/" className="flex items-center gap-2.5">
-            <Image
-              src="/logo-kopontren.png"
-              alt=""
-              width={23}
-              height={36}
-              priority
-              className="h-9 w-auto"
-            />
-            <div className="leading-tight">
-              <p className="text-sm font-extrabold tracking-tight">Kopontren Al Ittihad</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Kasir & Pembukuan
-              </p>
-            </div>
-          </a>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <a href="/" className="flex min-w-0 items-center gap-2.5">
+              <Image
+                src="/logo-kopontren.png"
+                alt=""
+                width={23}
+                height={36}
+                priority
+                className="h-9 w-auto shrink-0"
+              />
+              <div className="min-w-0 leading-tight">
+                <p className="truncate text-sm font-extrabold tracking-tight">Kopontren Al Ittihad</p>
+                <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+                  Kasir & Pembukuan
+                </p>
+              </div>
+            </a>
+            <HamburgerNav role={user.role} />
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
             <span className="hidden items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 sm:flex dark:border-navy-600 dark:text-slate-300">
               {user.display_name || user.username}
               <span
@@ -85,9 +55,6 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
             <LogoutButton />
           </div>
         </div>
-        <nav className="mx-auto max-w-6xl overflow-x-auto px-4 pb-2">
-          <NavPills items={itemsFor(user.role)} />
-        </nav>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-5 pb-16">{children}</main>
     </div>

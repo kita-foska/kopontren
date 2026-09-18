@@ -1,5 +1,5 @@
 ﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
-_Update: 2026-09-18 (Cline session: fitur Piutang & Retur + git sync master/main)_
+_Update: 2026-09-18 (Cline session: sidebar navigasi menggantikan nav pill; git sync master/main)_
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
@@ -8,7 +8,28 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
 
 ## STATE
 ### DONE
-- [x] Fitur Piutang (debts) & Retur (returns) — batch baru sesi ini:
+- [x] Sidebar navigasi (18 Sep 2026) — menggantikan nav pill horizontal
+      (yang harus di-scroll di HP):
+      - `src/components/sidebar.tsx` (baru, 'use client'): `Sidebar`
+        (drawer slide-in dari kiri + overlay gelap `bg-navy-900/60`,
+        translate-x + transition 200ms, tutup via klik overlay / Escape /
+        klik menu / tombol ✕; scroll latar dikunci saat terbuka; item
+        aktif = bg-accent-500 text-white) + `HamburgerNav` (tombol ☰,
+        state `open` di sini).
+      - Grup menu per role: admin = Utama (Ringkasan, Kasir, Laporan &
+        Rekap) + Admin (Produk, Belanja, Konsinyasi, Piutang, Retur,
+        Kas, Shift & Kasir) + Loyalty (Keuntungan Member, Member) +
+        Sistem (Audit, Laporan Pengurus, Pengguna, Data & Backup);
+        pengurus = Ringkasan, Laporan & Rekap, Laporan Pengurus;
+        kasir = Ringkasan, Kasir, Laporan & Rekap (spesifikasi user;
+        halaman /piutang & /retur tetap bisa dibuka kasir via URL).
+      - `shell.tsx`: baris `<nav>` pill dihapus; header jadi 1 baris
+        (logo + judul + ☰ + chip user + tema + keluar); `min-w-0` +
+        `truncate` pd judul agar aman di layar sempit.
+      - `src/components/navpills.tsx` DIHAPUS (tak terpakai).
+      - `npx tsc --noEmit` EXIT=0. Test visual HP/desktop = manual
+        (environment tanpa browser).
+- [x] Fitur Piutang (debts) & Retur (returns) — batch sesi 18 Sep:
       - API: `src/app/api/debts/route.ts` (GET daftar+summary / POST catat;
         kasir+admin bisa tulis, pengurus read-only, pengurus tak boleh).
       - API: `src/app/api/debts/[id]/route.ts` (PATCH terima-bayar `pay`
@@ -56,8 +77,11 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
   HP (Slow 3G + instal PWA).
 
 ## NEXT / TODO
-- [x] Commit batch piutang & retur di `master` (`6a7e8c9`), sync `main`,
-      push keduanya — selesai SESI INI (18 Sep 2026).
+- [ ] Commit batch sidebar navigasi (selesai implementasi & tsc) ke
+      `master`, sync `main`, push keduanya (Vercel auto-deploy main).
+- [ ] Test visual sidebar: HP (Chrome DevTools device mode — pastikan
+      TIDAK ada scroll horizontal; sidebar membuka dari kiri + overlay)
+      & desktop (open/close, item aktif, Escape).
 - [ ] Pantau deployment Vercel main; pastikan build green.
 - [ ] Uji manual fitur baru di produksi: catat piutang, terima bayar
       (sisa=0 -> lunas), catat retur (restock + jurnal kas keluar bila
@@ -90,6 +114,8 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
 - `src/app/api/sales/route.ts` (items +product_id)
 - `src/app/piutang/page.tsx`, `src/app/retur/page.tsx`
 - `src/components/piutang-client.tsx`, `src/components/retur-client.tsx`
-- `src/components/shell.tsx` (nav), `src/app/page.tsx` (kartu piutang)
+- `src/components/sidebar.tsx` (drawer + HamburgerNav; menggantikan
+  `navpills.tsx` yang dihapus), `src/components/shell.tsx`
+  (header 1 baris + ☰), `src/app/page.tsx` (kartu piutang)
 - `src/db.ts` (tabel debts/returns sudah ada sejak feature batch 2),
   `state.txt` (file ini)
