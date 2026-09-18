@@ -7,15 +7,27 @@ _Update: 2026-09-18 (lanjutan session optimasi: tambah index
  di-invalidate pd POST/PUT/DELETE product), + cache member_settings
  30s di db.ts. tsc clean, next build EXIT 0. Catatan env: node
  sekarang di C:\Program Files\nodejs\node.exe; git via
- 'C:\Program Files\Git\cmd\git.exe'.)_
+ 'C:\Program Files\Git\cmd\git.exe'. Sync branch: main & master
+ ternyata UNRELATED HISTORIES (tidak ada merge-base; main lineage
+ "sync(main)" terpisah) -> `git merge` ditolak. Perbaikan: main
+ di-reset --hard ke master lalu push -f origin main; kini main =
+ cermin persis master (sama @ 1f43e60). File unik main yg hilang
+ (sw.js/manifest.json/ikon dlm root + log dev + public/icon-*.svg)
+ tidak referenced runtime: public/manifest.json & sw.js v8 hanya
+ pakai PNG (/icon-180|192|512.png, /favicon.ico). Catatan: Vercel
+ sekarang bangun dari main @ tip master; setelah commit baru di
+ master, mirror lagi dgn reset --hard + push -f.)_
 
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
 Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
-(Vercel build dari `main`; commit terakhir main `d1f9e56` = sync docs,
-sebelumnya `5b072c6` gitignore + `c2b865a` ikon). Master = `e5b01c6`
-(state) <- `5f6e6dc` (gitignore cleanup) <- `eda03c7` (ikon lucide).
+(build dari `main`). SEJAK 18 Sep: main & master UNRELATED HISTORIES
+(tdk ada merge-base; lineage "sync(main)" lama terpisah) -> `git merge`
+gagal; sync dgn `git checkout main; git reset --hard master; git push -f
+origin main` (bukan merge). Kini main == master (@ 1f43e60; lineage
+lama main 5b072c6..6646028 ter-replace, file uniknya junk/duplikat
+tidak referenced runtime — lihat _Update atas).
 
 ## STATE
 ### DONE
