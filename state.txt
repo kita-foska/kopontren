@@ -1,7 +1,7 @@
 ﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
 _Update: 2026-09-18 (Cline session: sidebar navigasi menggantikan nav pill; sync master/main;
  hamburger di kiri logo; sidebar 280/260px, animasi 300ms; fix portal; rekap piutang/retur
- di Laporan Pengurus; Vercel re-deploy main)_
+ di Laporan Pengurus; SEMUA emoji diganti ikon lucide-react; Vercel re-deploy main)_
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
@@ -45,6 +45,29 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
         (environment tanpa browser).
       - Git: commit `2fdad8f` ke `master`; sync `main` `8bad685`
         (file-copy + `git rm navpills.tsx`); push keduanya.
+- [x] Penggantian SEMUA emoji dengan ikon SVG (18 Sep 2026):
+      Pakai library `lucide-react` (^1.47.0, `npm install`) alih-alih
+      SVG custom — lebih konsisten & ringan (tree-shake). Scan regex
+      seluruh `src/` = 0 emoji tersisa.
+      - `themetoggle.tsx`: ☾/☀ -> <Moon/>/<Sun/>.
+      - `ui.tsx` (Modal): tombol tutup ✕ -> <X/>.
+      - `sidebar.tsx`: trigger ☰ -> <Menu/>, tombol tutup ✕ -> <X/>.
+      - `data-client.tsx`: 📦/📊/📥/⚠️ -> <Package/>/<BarChart/>/
+        <Upload/>/<AlertTriangle/> (kartu, ikon h-5 w-5 di wadah h-9 w-9).
+      - `member-client.tsx`: ★ badge poin -> <Star fill="currentColor"/>.
+      - `laporan-client.tsx`: 📊 Unduh CSV -> <BarChart/>, 📱 Rekap WA
+        -> <MessageCircle/>, 📄 state kosong -> <FileText/>.
+      - `pos-client.tsx`: 🔍 -> <Search/>, ✕ (search & hapus item) ->
+        <X/>, 📦/🛒 state kosong -> <Package/>/<ShoppingCart/>, 📱 input
+        phone -> <Smartphone/>, ⛶ Scan QR -> <QrCode/>, ★ member terpilih
+        -> <Star/>, tombol bayar 💵/📱/🏦 -> <Banknote/>/<QrCode/>/
+        <Landmark/>, tombol struk 📋/💬/🖨️ -> <Clipboard/>/
+        <MessageCircle/>/<Printer/>, ✓ shift ditutup -> <CheckCircle/>.
+      - Git: `master` `eda03c7` + cleanup `5f6e6dc`; sync `main`
+        `c2b865a` + `5b072c6`; push keduanya. `npx tsc --noEmit` exit 0.
+      - Ikon gaya outline (stroke), warna mengikuti `currentColor`
+        (otomatis adjust utk dark mode); bintang pakai fill.
+
 - [x] Fitur Piutang (debts) & Retur (returns) — batch sesi 18 Sep:
       - API: `src/app/api/debts/route.ts` (GET daftar+summary / POST catat;
         kasir+admin bisa tulis, pengurus read-only, pengurus tak boleh).
@@ -106,14 +129,14 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
       disengaja (sw.js, manifest.json, ikon PWA, dll; beda arah diff
       = semua insert). navpills sudah bersih via `git rm`, jadi
       cukup re-deploy Vercel (triggered oleh push main berikutnya).
-- [ ] Test visual sidebar: HP (Chrome DevTools device mode — pastikan
-      TIDAK ada scroll horizontal; sidebar membuka dari kiri + overlay,
-      tombol ☰ di kiri logo) & desktop (open/close, item aktif,
-      Escape, lebar 280/260px).
-- [ ] Pantau deployment Vercel main (commit `8bad685`/setelahnya);
-      pastikan build green & tidak ada error "Cannot find module
-      navpills". Jika masih gagal walau branch sudah bersih ->
-      Redeploy manual di dashboard Vercel.
+- [ ] Test visual: HP (Chrome DevTools device mode — pastikan TIDAK ada
+      scroll horizontal; sidebar membuka dari kiri + overlay, tombol ☰
+      di kiri logo; SEMUA ikon lucide tampil — search, tombol bayar,
+      struk, QR, star member, badge poin) & desktop (open/close
+      sidebar, item aktif, Escape, lebar 280/260px).
+- [ ] Pantau deployment Vercel main (commit `5b072c6` = terakhir) —
+      build green; jika gagal walau branch sudah bersih -> Redeploy
+      manual di dashboard Vercel.
 - [ ] Uji manual fitur baru di produksi: catat piutang, terima bayar
       (sisa=0 -> lunas), catat retur (restock + jurnal kas keluar bila
       refund), badge Tunggak.
@@ -141,8 +164,12 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
   utk deteksi tunggak (due_date < hari ini & status open).
 - `Modal`, `Badge`, `Toast`, `useToast`, helper `api()` ada di
   `src/components/ui.tsx`; format `rp/fmtDateTime` di `src/lib/format.ts`.
-- Helper bertanda underscore (`_*.bat`, `_*.ps1`, `*.log`, `_*.txt`)
-  gitignore; jangan commit.
+- Helper bertanda underscore gitignore: pola `_*` menyeluruh sejak
+  commit `5f6e6dc` (sebelumnya hanya `_*.{bat,ps1,txt}` + `*.log` —
+  celah itu bikin `_scanemoji2.mjs` lolos masuk commit, lalu dibuang).
+- Ikon UI seragam via `lucide-react` (lengkap di commit `eda03c7`);
+  jangan campur emoji lagi — tambah ikon dari lucide (import dari
+  `lucide-react`, stroke `currentColor`, ukuran `h-N w-N`).
 
 ## FILES
 - `src/app/api/debts/route.ts`, `src/app/api/debts/[id]/route.ts`,
@@ -153,5 +180,9 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
 - `src/components/sidebar.tsx` (drawer + HamburgerNav; menggantikan
   `navpills.tsx` yang dihapus), `src/components/shell.tsx`
   (header 1 baris + ☰), `src/app/page.tsx` (kartu piutang)
+- Ikon lucide-react (commit `eda03c7`): `src/components/pos-client.tsx`,
+  `src/components/themetoggle.tsx`, `src/components/ui.tsx`,
+  `src/components/laporan-client.tsx`, `src/components/admin/
+  data-client.tsx`, `src/components/admin/member-client.tsx`
 - `src/db.ts` (tabel debts/returns sudah ada sejak feature batch 2),
   `state.txt` (file ini)
