@@ -1,5 +1,0 @@
-tools: import CSV menolak target file lokal + fallback baca .env
-DATABASE_URL di .env ternyata file:./data/kopontren.db (SQLite lokal), sehingga import sebelumnya masuk DB lokal, BUKAN Turso produksi. Skrip kini:
-- menolak --apply bila target URL file: (exit 2) dengan instrusi cara set URL Turso
-- fallback baca .env bila env var belum diset (Turso URL/token)
-- menampilkan target database sebelum menulis (auditable)
