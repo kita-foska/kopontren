@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
+import { Menu, X } from 'lucide-react';
 import type { Role } from '@/lib/auth';
 
 type NavItem = { href: string; label: string };
@@ -120,7 +121,7 @@ export function Sidebar({
             aria-label="Tutup menu"
             className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-sm text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-700"
           >
-            ✕
+            <X className="h-4 w-4" />
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 pb-6">
@@ -189,7 +190,7 @@ function groupsFor(role: Role): NavGroup[] {
 }
 
 /**
- * Uncontrolled wrapper: ☰ trigger button + Sidebar (state owned here).
+ * Uncontrolled wrapper: tombol trigger ikon menu + Sidebar (state owned here).
  * Place the button in the header; the drawer renders fixed over the page.
  */
 export function HamburgerNav({ role }: { role: Role }) {
@@ -200,9 +201,9 @@ export function HamburgerNav({ role }: { role: Role }) {
         onClick={() => setOpen(true)}
         aria-label="Buka menu navigasi"
         title="Menu"
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 text-lg text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
       >
-        ☰
+        <Menu className="h-5 w-5" />
       </button>
       <Sidebar role={role} open={open} onClose={() => setOpen(false)} />
     </>

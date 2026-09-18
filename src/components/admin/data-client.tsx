@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, Badge, Toast, useToast } from '@/components/ui';
 import { fmtDateTime } from '@/lib/format';
+import { Package, BarChart, Upload, AlertTriangle } from 'lucide-react';
 
 type Log = {
   id: number;
@@ -118,7 +119,7 @@ export function DataClient() {
           <div className="card flex flex-col justify-between p-4">
             <div>
               <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-accent-500/15 text-accent-600 dark:text-accent-300">
-                📦
+                <Package className="h-5 w-5" />
               </div>
               <h2 className="mb-1 font-bold">Backup JSON</h2>
               <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
@@ -133,7 +134,7 @@ export function DataClient() {
           <div className="card flex flex-col justify-between p-4">
             <div>
               <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                📊
+                <BarChart className="h-5 w-5" />
               </div>
               <h2 className="mb-1 font-bold">Ekspor Excel / CSV</h2>
               <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
@@ -148,7 +149,7 @@ export function DataClient() {
           <div className="card flex flex-col justify-between p-4">
             <div>
               <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400">
-                📥
+                <Upload className="h-5 w-5" />
               </div>
               <h2 className="mb-1 font-bold">Import Backup</h2>
               <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
@@ -174,7 +175,7 @@ export function DataClient() {
           <div className="card flex flex-col justify-between border-rose-200 bg-rose-50/20 p-4 dark:border-rose-950 dark:bg-rose-950/10">
             <div>
               <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-rose-500/15 text-rose-600 dark:text-rose-400">
-                ⚠️
+                <AlertTriangle className="h-5 w-5" />
               </div>
               <h2 className="mb-1 font-bold text-rose-600 dark:text-rose-400">Reset Total Data</h2>
               <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">

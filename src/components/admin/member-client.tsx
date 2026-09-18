@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { MemberQrBadge } from '@/components/admin/member-qr-badge';
+import { Star } from 'lucide-react';
 
 type Member = {
   id: number;
@@ -207,7 +208,10 @@ export function MemberClient() {
                 <td className="td">
                   <div className="flex flex-col items-start gap-1">
                     <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}>
-                      ★ {m.points} poin
+                      <span className="flex items-center gap-1">
+                        <Star className="h-3 w-3" fill="currentColor" />
+                        {m.points} poin
+                      </span>
                     </Badge>
                     {m.tier && m.tier !== 'regular' && (
                       <span className="text-[10px] font-extrabold uppercase tracking-wide text-amber-500">

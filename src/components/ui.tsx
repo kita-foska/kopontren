@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 
 const tones: Record<string, string> = {
   blue: 'bg-accent-500/15 text-accent-600 dark:text-accent-300',
@@ -53,8 +54,12 @@ export function Modal({
       >
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-bold">{title}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            ✕
+          <button
+            onClick={onClose}
+            aria-label="Tutup"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+          >
+            <X className="h-4 w-4" />
           </button>
         </div>
         <div>{children}</div>

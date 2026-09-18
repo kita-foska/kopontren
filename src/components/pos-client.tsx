@@ -5,6 +5,21 @@ import jsQR from 'jsqr';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
+import {
+  Search,
+  X,
+  Package,
+  ShoppingCart,
+  Smartphone,
+  QrCode,
+  Star,
+  Banknote,
+  Landmark,
+  Clipboard,
+  MessageCircle,
+  Printer,
+  CheckCircle,
+} from 'lucide-react';
 
 type Product = {
   id: number;
@@ -633,7 +648,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                🔍
+                <Search className="h-4 w-4" />
               </span>
               <input
                 ref={searchInputRef}
@@ -649,7 +664,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-slate-400 hover:text-slate-600"
                   onClick={() => setQ('')}
                 >
-                  ✕
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -723,7 +738,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             })}
             {visible.length === 0 && (
               <div className="col-span-full py-12 text-center text-sm text-slate-500">
-                <p className="text-2xl mb-1">📦</p>
+                <Package className="mx-auto mb-2 h-8 w-8 text-slate-300 dark:text-slate-500" />
                 <p>Tidak ada produk yang cocok dengan pencarian.</p>
               </div>
             )}
@@ -763,7 +778,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     className="text-[11px] text-slate-400 hover:text-rose-500"
                     title="Hapus item"
                   >
-                    ✕
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
@@ -808,7 +823,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             ))}
             {cart.length === 0 && (
               <div className="py-8 text-center text-xs text-slate-400">
-                <p className="text-xl mb-1">🛒</p>
+                <ShoppingCart className="mx-auto mb-2 h-8 w-8 text-slate-300 dark:text-slate-500" />
                 Pilih produk di sebelah kiri atau scan barcode.
               </div>
             )}
@@ -821,7 +836,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <div className="mb-1.5 flex items-center gap-1.5">
                 <div className="relative flex-1">
                   <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-xs">
-                    📱
+                    <Smartphone className="h-3.5 w-3.5 text-slate-400" />
                   </span>
                   <input
                     className="input pl-7 text-xs"
@@ -839,11 +854,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 </div>
                 <button
                   type="button"
-                  className="btn-ghost whitespace-nowrap px-2 py-1 text-xs"
+                  className="btn-ghost inline-flex items-center gap-1 whitespace-nowrap px-2 py-1 text-xs"
                   title="Scan QR member"
                   onClick={() => void startQrScan()}
                 >
-                  ⛶ Scan QR
+                  <QrCode className="h-3.5 w-3.5" /> Scan QR
                 </button>
                 <button
                   type="button"
@@ -919,7 +934,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               </div>
               {selectedMember && (
                 <div className="mt-1 flex items-center justify-between rounded bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-600 dark:text-emerald-300 font-semibold">
-                  <span>★ Member: {selectedMember.name}</span>
+                  <span className="flex items-center gap-1">
+                    <Star className="h-3 w-3" fill="currentColor" /> Member: {selectedMember.name}
+                  </span>
                   <span>
                     {selectedMember.points} poin (+{Math.floor(total / pointsEvery)} poin)
                   </span>
@@ -941,11 +958,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <div className="flex gap-1.5">
               {(
                 [
-                  ['cash', '💵 Tunai'],
-                  ['wa', '📱 QRIS / Non-Tunai'],
-                  ['tf', '🏦 Transfer'],
+                  ['cash', 'Tunai', Banknote],
+                  ['wa', 'QRIS / Non-Tunai', QrCode],
+                  ['tf', 'Transfer', Landmark],
                 ] as const
-              ).map(([v, label]) => (
+              ).map(([v, label, Ic]) => (
                 <button
                   key={v}
                   onClick={() => setPay(v)}
@@ -956,7 +973,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
                   }
                 >
-                  {label}
+                  <span className="flex items-center justify-center gap-1">
+                    <Ic className="h-3.5 w-3.5" /> {label}
+                  </span>
                 </button>
               ))}
             </div>
@@ -1097,15 +1116,21 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         onClose={() => setReceipt(null)}
         footer={
           <div className="flex flex-wrap items-center justify-between w-full gap-2">
-            <button className="btn-ghost text-xs" onClick={copyStrukText}>
-              📋 Salin Struk
+            <button className="btn-ghost inline-flex items-center gap-1 text-xs" onClick={copyStrukText}>
+              <Clipboard className="h-3.5 w-3.5" /> Salin Struk
             </button>
             <div className="flex items-center gap-2 ml-auto">
-              <button className="btn-ghost text-xs font-bold" onClick={handleSendWaStruk}>
-                💬 Kirim WA
+              <button
+                className="btn-ghost inline-flex items-center gap-1 text-xs font-bold"
+                onClick={handleSendWaStruk}
+              >
+                <MessageCircle className="h-3.5 w-3.5" /> Kirim WA
               </button>
-              <button className="btn-primary text-xs font-bold" onClick={printStruk}>
-                🖨️ Cetak Struk
+              <button
+                className="btn-primary inline-flex items-center gap-1 text-xs font-bold"
+                onClick={printStruk}
+              >
+                <Printer className="h-3.5 w-3.5" /> Cetak Struk
               </button>
               <button className="btn-ghost text-xs" onClick={() => setReceipt(null)}>
                 Tutup
@@ -1441,8 +1466,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       >
         {closingSummary && (
           <div className="space-y-3 text-sm">
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">
-              ✓ Shift <b>{closingSummary.label || '#' + closingSummary.id}</b> telah ditutup dan siap untuk serah terima kasir.
+            <div className="flex items-start gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">
+              <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <p>
+                Shift <b>{closingSummary.label || '#' + closingSummary.id}</b> telah ditutup dan siap untuk serah
+                terima kasir.
+              </p>
             </div>
             <div className="space-y-1 text-xs">
               <div className="flex justify-between">
