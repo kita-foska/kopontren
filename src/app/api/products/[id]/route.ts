@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { ttlDel } from '@/lib/ttl-cache';
+
+const PRODUCTS_CACHE_KEY = 'products:all'; // mirrors the key in products/route.ts
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
@@ -11,6 +14,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const d = await db();
+  ttlDel(PRODUCTS_CACHE_KEY); // any product write: drop cached admin list
   const prod = (await d.prepare('SELECT * FROM products WHERE id = ?').get(Number(id))) as
     | {
         id: number;
@@ -82,6 +86,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const { id } = await params;
   const d = await db();
+  ttlDel(PRODUCTS_CACHE_KEY); // delete/archive: drop cached admin list
   const prod = (await d.prepare('SELECT id, name FROM products WHERE id = ?').get(Number(id))) as
     | { id: number; name: string }
     | undefined;

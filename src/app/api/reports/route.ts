@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
+import { ttlGet, ttlSet } from '@/lib/ttl-cache';
 
 export async function GET(req: Request) {
   const user = await currentUser();
@@ -12,6 +13,17 @@ export async function GET(req: Request) {
   const days = Number(url.searchParams.get('days') || '30');
   const from = days > 0 ? startOfDayJakarta(1 - days) : '1970-01-01 00:00:00';
   const d = await db();
+
+  // These are heavy full-range aggregates (sales + sale_items + purchases +
+  // expenses + cash_entries + debts + returns). The body is user-independent
+  // (plain shop numbers), so cache it per range: 60 s in this instance + a
+  // short browser cache. Re-checks within that window cost zero Turso rows.
+  const cacheKey = `reports:${from}`;
+  const hit = ttlGet(cacheKey);
+  if (hit !== null)
+    return NextResponse.json(JSON.parse(hit), {
+      headers: { 'Cache-Control': 'public, max-age=60', 'X-Cache': 'HIT' },
+    });
 
   const sales = (
     (await d
@@ -123,7 +135,7 @@ export async function GET(req: Request) {
 
   const cash_net = sales.t + cashIn - purchases - expenses - cashOut;
 
-  return NextResponse.json({
+  const body = {
     from,
     days,
     sales_count: sales.c,
@@ -150,5 +162,7 @@ export async function GET(req: Request) {
       total: ret.v,
       refund_total: retRefund.v,
     },
-  });
+  };
+  ttlSet(cacheKey, JSON.stringify(body), 60_000);
+  return NextResponse.json(body, { headers: { 'Cache-Control': 'public, max-age=60' } });
 }

@@ -354,6 +354,11 @@ async function migrate(d: Db) {
   await d.exec('CREATE INDEX IF NOT EXISTS idx_debts_status ON debts(status)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_stock_opname_created ON stock_opname(created_at)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_point_history_member ON point_history(member_id)');
+  // perf batch 3 (2026-09-18): close the remaining hot-query gaps from the
+  // Rows-Read audit. idx_sales_kasir: per-cashier sales (shift close,
+  // cashier filters). idx_returns_sale: sales -> returns joins (rekap retur).
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_sales_kasir ON sales(kasir_id)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_returns_sale ON returns(sale_id)');
   // unique phone per member. Partial index: many members may have an empty
   // phone, but a non-empty phone must be unique. If duplicates already exist
   // (legacy data), keep the oldest row's phone and clear the newer ones first
@@ -442,7 +447,15 @@ export async function saveSettings(
   }
 }
 
+// Per-instance TTL cache for member settings: the loyalty key-value table is
+// read on every sale POST. 30 s staleness is fine (settings change only when
+// an admin saves them, which invalidates the cache below).
+let _memberSettingsCache: { at: number; value: Record<string, string> } | null = null;
+const MEMBER_SETTINGS_TTL_MS = 30_000;
+
 export async function getMemberSettings(): Promise<Record<string, string>> {
+  if (_memberSettingsCache && Date.now() - _memberSettingsCache.at < MEMBER_SETTINGS_TTL_MS)
+    return _memberSettingsCache.value;
   try {
     const d = await db();
     const rows = (await d.prepare('SELECT key, value FROM member_settings').all()) as {
@@ -451,6 +464,7 @@ export async function getMemberSettings(): Promise<Record<string, string>> {
     }[];
     const out: Record<string, string> = { ...MEMBER_SETTING_DEFAULTS };
     for (const r of rows) out[r.key] = r.value;
+    _memberSettingsCache = { at: Date.now(), value: out };
     return out;
   } catch {
     return { ...MEMBER_SETTING_DEFAULTS };
@@ -462,6 +476,7 @@ export async function saveMemberSettings(
   patch: Record<string, string>,
   who?: { id: number; username: string }
 ): Promise<void> {
+  _memberSettingsCache = null; // writes make the cached settings stale
   const ins = d.prepare('INSERT INTO member_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
   for (const [k, v] of Object.entries(patch)) {
     if (k in MEMBER_SETTING_DEFAULTS) await ins.run(k, String(v));
@@ -478,7 +493,7 @@ export async function saveMemberSettings(
 
 // Bump this when migrate()/SCHEMA gain new statements so already-migrated
 // databases re-run fullInit exactly once per deploy that changes the schema.
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

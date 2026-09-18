@@ -1,15 +1,14 @@
 ﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
-_Update: 2026-09-18 (Cline session: OPTIMASI PERFORMA — akar masalah
- server-response 15.42s = ~150 round-trip Turso sekuensial di SETIAP
- cold start (db() jalankan seluruh rantai migrasi tiap function dingin).
- Fix: gate `schema_version` (1 SELECT saja di cold start, diuji:
- FULL-INIT 337ms vs FAST-PATH 3ms). + index hot-list
- (sales(created_at,status), sale_items(sale_id,product_id),
- products(active,category)); cache headers (immutable static, ikon
- 1 bln, sw.js/manifest no-cache); sw.js v8 + precache shell; favicon.ico
- baru; vercel.json region sin. Turso region (Tokyo/Singapura) = panduan
- manual di dashboard. next.config (compress/poweredBy/sourceMaps)
- sudah ada sebelumnya.)_
+_Update: 2026-09-18 (lanjutan session optimasi: tambah index
+ idx_sales_kasir + idx_returns_sale, BUMP SCHEMA_VERSION 1->2
+ agar gate cold-start ikut re-stamp/verify skema, cache in-memory
+ per-instance utk /api/reports (60s + Cache-Control public
+ max-age=60, X-Cache HIT/MISS) & /api/products non-live (20s,
+ di-invalidate pd POST/PUT/DELETE product), + cache member_settings
+ 30s di db.ts. tsc clean, next build EXIT 0. Catatan env: node
+ sekarang di C:\Program Files\nodejs\node.exe; git via
+ 'C:\Program Files\Git\cmd\git.exe'.)_
+
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
@@ -20,6 +19,30 @@ sebelumnya `5b072c6` gitignore + `c2b865a` ikon). Master = `e5b01c6`
 
 ## STATE
 ### DONE
+- [x] OPTIMASI ROWS READ + CACHE (18 Sep 2026, session lanjutan) —
+  laporan user: Turso "Rows Read" 8,202 (byok, 18 Sep). Temuan: 8/10
+  index yang diminta SUDAH ada di kode; 2 hilang (`idx_sales_kasir`,
+  `idx_returns_sale`). Semua route sudah batched (audit N+1: bersih).
+  - `src/db.ts`: tambah `idx_sales_kasir ON sales(kasir_id)` &
+    `idx_returns_sale ON returns(sale_id)` di `migrate()`; BUMP
+    `SCHEMA_VERSION` 1 -> 2 (gate cold-start: fullInit sekali,
+    cold start berikutnya cukup 1 SELECT).
+  - `src/lib/ttl-cache.ts` (BARU): cache in-memory per-instance kecil
+    (ttlGet/ttlSet/ttlDel, cap 100 entry) — tanpa dependensi baru.
+  - `src/app/api/reports/route.ts`: GET sekarang cache per range
+    (key `reports:<from>`) 60 s per instance + `Cache-Control:
+    public, max-age=60` (browser) + header `X-Cache: HIT/MISS`.
+    Body agregat user-independent -> aman `public`.
+  - `src/app/api/products/route.ts`: GET non-`live` (halaman admin)
+    cache 20 s per instance (`products:all`); `live=1` (POS) tetap
+    selalu fresh. `role` disisihkan dari payload cache (per-user).
+    POST (create) invalidate. `products/[id]/route.ts`: PUT & DELETE
+    `ttlDel('products:all')` (stok/harga/arsip -> daftar admin
+    segar). Tidak pakai Cache-Control browser di products karena
+    response membawa `role`.
+  - `src/db.ts` `getMemberSettings()`: cache modul 30 s (dibaca tiap
+    POST /api/sales); `saveMemberSettings()` invalidate.
+  - Verifikasi: `tsc --noEmit` EXIT 0; `next build` EXIT 0.
 - [x] OPTIMASI PERFORMA (18 Sep 2026) — laporan user: server response
   15.42s, finish 19.56s, 51 requests:
   - AKAR MASALAH: `src/db.ts` — fungsi `db()` menjalankan SELURUH rantai
@@ -206,6 +229,19 @@ sebelumnya `5b072c6` gitignore + `c2b865a` ikon). Master = `e5b01c6`
       API & UI belum).
 
 ## HIGHLIGHTS / MEMORY
+- CACHING (commit ini): `src/lib/ttl-cache.ts` = cache in-memory
+  per-instance (map + TTL + cap 100). /api/reports: key
+  `reports:<from>`, 60 s + `Cache-Control: public, max-age=60`
+  (body agregat, user-independent -> aman publik; `sw.js` tidak
+  intercept /api/* jadi browser HTTP cache jalan). /api/products
+  non-live: key `products:all`, 20 s, DI-INVALIDATE pd POST
+  products & PUT/DELETE products/[id]; `live=1` (POS) selalu fresh;
+  TANPA Cache-Control browser (response berisi `role`). 
+  member_settings: cache modul 30 s di db.ts, invalidate saat
+  saveMemberSettings.
+- ENV: node kini di `C:\Program Files\nodejs\node.exe` (bukan lagi
+  `C:\nodejs\nodejs`); git via `C:\Program Files\Git\cmd\git.exe`;
+  jalankan `& node node_modules/next/dist/bin/next build` dll.
 - Pola izin api: `currentUser()` -> 401; pengurus -> 403 utk tulis;
   kasir dibatasi ke data miliknya (sale.kasir_id === user.id).
 - Refund retur TIDAK memotong cash_entries manual — dicatat otomatis
@@ -229,9 +265,19 @@ sebelumnya `5b072c6` gitignore + `c2b865a` ikon). Master = `e5b01c6`
   `turso db clone <lama> <nama>` + update env DATABASE_URL/TOKEN.
 
 ## FILES
+- `src/lib/ttl-cache.ts` (BARU, commit ini): helper cache in-memory
+  per-instance (ttlGet/ttlSet/ttlDel, cap 100 entry).
+- `src/app/api/reports/route.ts` (commit ini): GET + cache 60 s per
+  range + `Cache-Control: public, max-age=60` + `X-Cache`.
+- `src/app/api/products/route.ts` & `src/app/api/products/[id]/
+  route.ts` (commit ini): GET non-live + cache 20 s; invalidate pd
+  POST/PUT/DELETE.
+- `src/db.ts` (commit ini): `idx_sales_kasir`, `idx_returns_sale`,
+  `SCHEMA_VERSION = 2`, cache modul `getMemberSettings()` 30 s.
+- `state.txt` (file ini)
 - `src/db.ts` (gate `schema_version` + fullInit + 3 index baru, commit
-  ini), `next.config.mjs` (headers cache), `public/sw.js` (v8 precache),
-  `public/favicon.ico` (baru), `vercel.json` (region sin)
+  sebelumnya), `next.config.mjs` (headers cache), `public/sw.js`
+  (v8 precache), `public/favicon.ico` (baru), `vercel.json` (region sin)
 - `src/app/api/debts/route.ts`, `src/app/api/debts/[id]/route.ts`,
   `src/app/api/returns/route.ts`
 - `src/app/api/sales/route.ts` (items +product_id)
