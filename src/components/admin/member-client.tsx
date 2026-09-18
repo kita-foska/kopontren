@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { MemberQrBadge } from '@/components/admin/member-qr-badge';
-import { Star } from 'lucide-react';
+import { Info, Star } from 'lucide-react';
 
 type Member = {
   id: number;
@@ -324,7 +324,7 @@ export function MemberClient() {
             />
           </div>
           <p className="rounded-lg bg-slate-100 p-2.5 text-xs text-slate-500 dark:bg-navy-900/50 dark:text-slate-400">
-            ℹ️ Setiap transaksi belanja Rp 10.000 di kasir akan otomatis menambahkan 1 poin loyalitas untuk member ini.
+            <Info className="inline h-3.5 w-3.5 align-[-0.15em]" /> Setiap transaksi belanja Rp 10.000 di kasir akan otomatis menambahkan 1 poin loyalitas untuk member ini.
           </p>
         </div>
       </Modal>
