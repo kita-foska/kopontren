@@ -1,12 +1,16 @@
 ﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
-_Update: 2026-09-18 (Cline session: sidebar navigasi menggantikan nav pill; sync master/main;
- hamburger di kiri logo; sidebar 280/260px, animasi 300ms; fix portal; rekap piutang/retur
- di Laporan Pengurus; SEMUA emoji diganti ikon lucide-react; Vercel re-deploy main)_
+_Update: 2026-09-18 (Cline session: sidebar navigasi menggantikan nav pill; sync
+ master/main; hamburger di kiri logo; sidebar 280/260px, animasi 300ms; fix
+ portal; rekap piutang/retur di Laporan Pengurus; SEMUA emoji diganti ikon
+ lucide-react; gitignore `_*` menyeluruh + buang _scanemoji2.mjs; Vercel
+ re-deploy main; state.txt diperbarui & di-commit keduanya)_
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
 Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
-(Vercel build dari `main`, commit terakhir main `af9aba7` = sync dari master).
+(Vercel build dari `main`; commit terakhir main `d1f9e56` = sync docs,
+sebelumnya `5b072c6` gitignore + `c2b865a` ikon). Master = `e5b01c6`
+(state) <- `5f6e6dc` (gitignore cleanup) <- `eda03c7` (ikon lucide).
 
 ## STATE
 ### DONE
@@ -134,7 +138,8 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
       di kiri logo; SEMUA ikon lucide tampil — search, tombol bayar,
       struk, QR, star member, badge poin) & desktop (open/close
       sidebar, item aktif, Escape, lebar 280/260px).
-- [ ] Pantau deployment Vercel main (commit `5b072c6` = terakhir) —
+- [ ] Pantau deployment Vercel main (`d1f9e56` = terakhir yg di-push;
+      commit aplikasinya `c2b865a` ikon + `5b072c6` gitignore) —
       build green; jika gagal walau branch sudah bersih -> Redeploy
       manual di dashboard Vercel.
 - [ ] Uji manual fitur baru di produksi: catat piutang, terima bayar
