@@ -16,8 +16,5 @@ data/*.db-shm
 tsconfig.tsbuildinfo
 data/*.sql
 *.tmp
-_*.bat
-_*.log
-_*.ps1
-_*.txt
+_*
 
