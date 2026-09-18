@@ -382,6 +382,18 @@ async function migrate(d: Db) {
       /* still colliding - app-layer validation enforces uniqueness anyway */
     }
   }
+
+  // ── Zakat tijarah (zakat perdagangan) batch ──
+  // Key-value settings (harga emas, nishab, kadar, tanggal haul) + riwayat
+  // pembayaran zakat (dicatat via POST /api/zakat).
+  await d.exec("CREATE TABLE IF NOT EXISTS zakat_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT '')");
+  await d.exec(
+    "CREATE TABLE IF NOT EXISTS zakat_history (id INTEGER PRIMARY KEY, total_assets INTEGER NOT NULL DEFAULT 0, nishab INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT '', zakat_amount INTEGER NOT NULL DEFAULT 0, paid_at TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))"
+  );
+  // Default sesuai rumus zakat tijarah: nishab 85 gram, kadar 2,5%.
+  // ON CONFLICT DO NOTHING -> nilai yang sudah diubah admin tetap tersimpan.
+  await d.exec("INSERT INTO zakat_settings (key, value) VALUES ('nishab_gram', '85') ON CONFLICT(key) DO NOTHING");
+  await d.exec("INSERT INTO zakat_settings (key, value) VALUES ('zakat_rate', '2.5') ON CONFLICT(key) DO NOTHING");
 }
 
 
@@ -495,12 +507,68 @@ export async function saveMemberSettings(
   }
 }
 
+/**
+ * Zakat tijarah settings (key-value; default nishab 85 gram, kadar 2,5%).
+ * Reads never throw; writes are admin-only (enforced in the API route).
+ * Per-instance 30 s TTL cache: halaman /admin/zakat membaca penghitungan
+ * berulang saat navigasi; simpan pengaturan menginvalidasi cache.
+ */
+export const ZAKAT_SETTING_DEFAULTS: Record<string, string> = {
+  gold_price: '0', // harga emas per 1 gram (Rp) — diisi admin
+  nishab_gram: '85', // nishab (gram)
+  zakat_rate: '2.5', // kadar zakat (%)
+  haul_start_date: '', // tanggal mulai haul (YYYY-MM-DD, kosong = auto awal bulan)
+  last_zakat_date: '', // zakat terakhir dibayar (YYYY-MM-DD)
+};
+
+let _zakatSettingsCache: { at: number; value: Record<string, string> } | null = null;
+const ZAKAT_SETTINGS_TTL_MS = 30_000;
+
+export async function getZakatSettings(): Promise<Record<string, string>> {
+  if (_zakatSettingsCache && Date.now() - _zakatSettingsCache.at < ZAKAT_SETTINGS_TTL_MS)
+    return _zakatSettingsCache.value;
+  try {
+    const d = await db();
+    const rows = (await d.prepare('SELECT key, value FROM zakat_settings').all()) as {
+      key: string;
+      value: string;
+    }[];
+    const out: Record<string, string> = { ...ZAKAT_SETTING_DEFAULTS };
+    for (const r of rows) out[r.key] = r.value;
+    _zakatSettingsCache = { at: Date.now(), value: out };
+    return out;
+  } catch {
+    return { ...ZAKAT_SETTING_DEFAULTS };
+  }
+}
+
+export async function saveZakatSettings(
+  d: Db,
+  patch: Record<string, string>,
+  who?: { id: number; username: string }
+): Promise<void> {
+  _zakatSettingsCache = null; // write membuat cached settings stale
+  const ins = d.prepare(
+    'INSERT INTO zakat_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+  );
+  for (const [k, v] of Object.entries(patch)) {
+    if (k in ZAKAT_SETTING_DEFAULTS) await ins.run(k, String(v));
+  }
+  if (who) {
+    try {
+      const { logAudit } = await import('@/lib/audit');
+      await logAudit(who, 'zakat:settings', 'zakat_settings', null, undefined, patch);
+    } catch {
+      /* audit is best-effort */
+    }
+  }
+}
 // Bump this when migrate()/SCHEMA gain new statements so already-migrated
 // databases re-run fullInit exactly once per deploy that changes the schema.
-// Bump: perf batch 4 — index compound idx_products_active_name (dropdown
-// /api/belanja). Semua statement IF NOT EXISTS, idempotent, aman utk DB
-// existing.
-const SCHEMA_VERSION = 3;
+// Bump: zakat batch — tabel zakat_settings + zakat_history (zakat
+// perdagangan/tijarah) + seed default nishab/kadar. Semua statement
+// IF NOT EXISTS / DO NOTHING, idempotent, aman utk DB existing.
+const SCHEMA_VERSION = 4;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
