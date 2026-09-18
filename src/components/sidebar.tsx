@@ -7,9 +7,19 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import type { Role } from '@/lib/auth';
 
-// Prefetch selektif: hanya menu utama (paling sering dibuka) yang RSC-nya
-// di-prefetch. Menu lain di-request on-demand agar bandwidth & server efisien.
-const PREFETCH_PATHS = new Set(['/', '/kasir', '/laporan']);
+// Prefetch selektif: menu utama + halaman admin yang paling sering dibuka.
+// Halaman jarang (kontrakan, piutang, retur, audit, data, dsb.) tidak di-prefetch
+// agar bandwidth & server tetap efisien.
+const PREFETCH_PATHS = new Set([
+  '/',
+  '/kasir',
+  '/laporan',
+  '/admin/produk',
+  '/admin/belanja',
+  '/admin/kas',
+  '/admin/member',
+  '/admin/laporan',
+]);
 
 type NavItem = { href: string; label: string };
 type NavGroup = { title: string; items: NavItem[] };
@@ -49,6 +59,7 @@ const ADMIN_GROUPS: NavGroup[] = [
       { href: '/admin/laporan', label: 'Laporan Pengurus' },
       { href: '/admin/pengguna', label: 'Pengguna' },
       { href: '/admin/data', label: 'Data & Backup' },
+      { href: '/admin/migrate', label: 'Import CSV' },
     ],
   },
 ];
@@ -173,7 +184,18 @@ function groupsFor(role: Role): NavGroup[] {
         title: 'Utama',
         items: [
           { href: '/', label: 'Ringkasan' },
+          { href: '/kasir', label: 'Kasir' },
           { href: '/laporan', label: 'Laporan & Rekap' },
+        ],
+      },
+      {
+        title: 'Admin',
+        items: [
+          { href: '/admin/produk', label: 'Produk' },
+          { href: '/admin/belanja', label: 'Belanja' },
+          { href: '/admin/konsinyasi', label: 'Konsinyasi' },
+          { href: '/admin/kas', label: 'Kas' },
+          { href: '/admin/member', label: 'Member' },
         ],
       },
       {
