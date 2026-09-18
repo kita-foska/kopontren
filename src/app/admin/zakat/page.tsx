@@ -1,0 +1,30 @@
+import { redirect } from 'next/navigation';
+import { currentUser } from '@/lib/auth';
+import { Shell } from '@/components/shell';
+import lazy from 'next/dynamic';
+
+const ZakatClient = lazy(
+  () => import('@/components/admin/zakat-client').then((m) => m.ZakatClient),
+  {
+    loading: () => <p className="text-sm text-slate-500 dark:text-slate-400">Memuat…</p>,
+  }
+);
+
+export const dynamic = 'force-dynamic';
+
+export default async function ZakatPage() {
+  const user = await currentUser();
+  if (!user) redirect('/login');
+  if (user.role !== 'admin') redirect('/');
+  return (
+    <Shell user={user}>
+      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
+        Perhitungan <span className="text-accent-500 dark:text-accent-300">Zakat Toko</span>
+      </h1>
+      <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        Zakat tijarah (perdagangan) 2,5% dari harta dagang: modal + laba kotor + piutang − hutang.
+      </p>
+      <ZakatClient />
+    </Shell>
+  );
+}

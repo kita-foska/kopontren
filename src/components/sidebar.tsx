@@ -19,6 +19,7 @@ const PREFETCH_PATHS = new Set([
   '/admin/kas',
   '/admin/member',
   '/admin/laporan',
+  '/admin/zakat',
 ]);
 
 type NavItem = { href: string; label: string };
@@ -43,6 +44,7 @@ const ADMIN_GROUPS: NavGroup[] = [
       { href: '/retur', label: 'Retur' },
       { href: '/admin/kas', label: 'Kas' },
       { href: '/admin/shift', label: 'Shift & Kasir' },
+      { href: '/admin/zakat', label: 'Zakat' },
     ],
   },
   {
