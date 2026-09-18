@@ -1,5 +1,6 @@
 ﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
-_Update: 2026-09-18 (Cline session: sidebar navigasi menggantikan nav pill; git sync master/main)_
+_Update: 2026-09-18 (Cline session: sidebar navigasi menggantikan nav pill; sync master/main;
+ hamburger dipindah kiri logo; sidebar 280/260px, animasi 300ms; Vercel re-deploy main)_
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
@@ -12,10 +13,14 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
       (yang harus di-scroll di HP):
       - `src/components/sidebar.tsx` (baru, 'use client'): `Sidebar`
         (drawer slide-in dari kiri + overlay gelap `bg-navy-900/60`,
-        translate-x + transition 200ms, tutup via klik overlay / Escape /
+        translate-x, panel `transition-transform duration-300 ease-in-out`,
+        overlay `transition-opacity duration-300`; lebar 280px HP /
+        260px desktop (`md:w-[260px]`); tutup via klik overlay / Escape /
         klik menu / tombol ✕; scroll latar dikunci saat terbuka; item
         aktif = bg-accent-500 text-white) + `HamburgerNav` (tombol ☰,
         state `open` di sini).
+      - Posisi tombol ☰: KIRI logo — urutan header
+        `[☰] [Logo] [Nama Toko] ... [User] [Tema] [Keluar]`.
       - Grup menu per role: admin = Utama (Ringkasan, Kasir, Laporan &
         Rekap) + Admin (Produk, Belanja, Konsinyasi, Piutang, Retur,
         Kas, Shift & Kasir) + Loyalty (Keuntungan Member, Member) +
@@ -24,11 +29,14 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
         kasir = Ringkasan, Kasir, Laporan & Rekap (spesifikasi user;
         halaman /piutang & /retur tetap bisa dibuka kasir via URL).
       - `shell.tsx`: baris `<nav>` pill dihapus; header jadi 1 baris
-        (logo + judul + ☰ + chip user + tema + keluar); `min-w-0` +
+        (☰ + logo + judul + chip user + tema + keluar); `min-w-0` +
         `truncate` pd judul agar aman di layar sempit.
-      - `src/components/navpills.tsx` DIHAPUS (tak terpakai).
+      - `src/components/navpills.tsx` DIHAPUS (tak terpakai) —
+        termasuk dari `main` (sisa strategi file-copy; commit `8bad685`).
       - `npx tsc --noEmit` EXIT=0. Test visual HP/desktop = manual
         (environment tanpa browser).
+      - Git: commit `2fdad8f` ke `master`; sync `main` `8bad685`
+        (file-copy + `git rm navpills.tsx`); push keduanya.
 - [x] Fitur Piutang (debts) & Retur (returns) — batch sesi 18 Sep:
       - API: `src/app/api/debts/route.ts` (GET daftar+summary / POST catat;
         kasir+admin bisa tulis, pengurus read-only, pengurus tak boleh).
@@ -80,10 +88,24 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
 - [x] Commit batch sidebar navigasi: `master` `b409dfb`, sync `main`
       `99dc587` (+ commit kecil pd main utk hapus `navpills.tsx` sisa —
       strategi file-copy tidak menghapus file), push keduanya.
+- [x] (18 Sep, lanjutan) hamburger di KIRI logo + sidebar 280/260px +
+      animasi 300ms: `master` `2fdad8f`, sync `main` `8bad685`
+      (commit ini jugalah yg benar-benar `git rm navpills.tsx` dari
+      main); `git ls-tree main/master -- src/components/navpills.tsx`
+      = kosong di keduanya. Push keduanya.
+- [x] Keputusan: TIDAK pakai full-sync `git read-tree -u --reset
+      master` (cara 2) pd main — `main` punya 21 file ekstra yg
+      disengaja (sw.js, manifest.json, ikon PWA, dll; beda arah diff
+      = semua insert). navpills sudah bersih via `git rm`, jadi
+      cukup re-deploy Vercel (triggered oleh push main berikutnya).
 - [ ] Test visual sidebar: HP (Chrome DevTools device mode — pastikan
-      TIDAK ada scroll horizontal; sidebar membuka dari kiri + overlay)
-      & desktop (open/close, item aktif, Escape).
-- [ ] Pantau deployment Vercel main; pastikan build green.
+      TIDAK ada scroll horizontal; sidebar membuka dari kiri + overlay,
+      tombol ☰ di kiri logo) & desktop (open/close, item aktif,
+      Escape, lebar 280/260px).
+- [ ] Pantau deployment Vercel main (commit `8bad685`/setelahnya);
+      pastikan build green & tidak ada error "Cannot find module
+      navpills". Jika masih gagal walau branch sudah bersih ->
+      Redeploy manual di dashboard Vercel.
 - [ ] Uji manual fitur baru di produksi: catat piutang, terima bayar
       (sisa=0 -> lunas), catat retur (restock + jurnal kas keluar bila
       refund), badge Tunggak.
