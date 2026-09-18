@@ -1,6 +1,7 @@
 ﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
 _Update: 2026-09-18 (Cline session: sidebar navigasi menggantikan nav pill; sync master/main;
- hamburger dipindah kiri logo; sidebar 280/260px, animasi 300ms; Vercel re-deploy main)_
+ hamburger di kiri logo; sidebar 280/260px, animasi 300ms; fix portal; rekap piutang/retur
+ di Laporan Pengurus; Vercel re-deploy main)_
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
@@ -116,8 +117,13 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
 - [ ] Uji manual fitur baru di produksi: catat piutang, terima bayar
       (sisa=0 -> lunas), catat retur (restock + jurnal kas keluar bila
       refund), badge Tunggak.
-- [ ] (Opsional) Tampilkan kolom piutang/retur di `/api/reports` +
-      Laporan Pengurus bila pengurus perlu rekap piutang.
+- [x] (Opsional, selesai 18 Sep) Kolom rekap piutang/retur pd `/api/reports`
+      + Laporan Pengurus: response baru `debts {open_total, open_count,
+      new_count, new_total, settled_total, paid_total}` &
+      `returns {count, total, refund_total}` (refund di-ambil dari jurnal
+      cash_entries berlabel 'Retur #%'). `laporan-admin-client.tsx` nambah
+      section "Rekap piutang & retur" (4 kartu). Catatan: TIDAK ada tabel
+      debt_payments — pembayaran piutang update `debts.paid` in-place.
 - [ ] (Opsional) Multi-store: tabel `stores` sudah ada di skema +
       `sales.store_id` (kosong) — butuh pemilihan store di POS +
       filter laporan per store.

@@ -16,6 +16,19 @@ type Summary = {
   cash_net: number;
   by_method: Record<string, number>;
   top: { name: string; qty: number; revenue: number }[];
+  debts?: {
+    open_total: number;
+    open_count: number;
+    new_count: number;
+    new_total: number;
+    settled_total: number;
+    paid_total: number;
+  };
+  returns?: {
+    count: number;
+    total: number;
+    refund_total: number;
+  };
 };
 
 export function LaporanAdminClient() {
@@ -121,6 +134,59 @@ export function LaporanAdminClient() {
             Catatan: laba kotor memakai HPP terakhir, bukan HPP historis saat penjualan.
           </p>
         </div>
+      </div>
+      <div className="mt-4">
+        <h2 className="mb-2 font-bold">Rekap piutang &amp; retur</h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="card p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Piutang terbuka
+            </p>
+            <p className={'mt-1 text-xl font-extrabold ' + ((s.debts?.open_total ?? 0) > 0 ? 'text-rose-500' : 'text-emerald-500')}>
+              {rp(s.debts?.open_total ?? 0)}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {s.debts?.open_count ?? 0} catatan belum lunas
+            </p>
+          </div>
+          <div className="card p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Piutang baru (periode)
+            </p>
+            <p className="mt-1 text-xl font-extrabold text-slate-800 dark:text-slate-200">
+              {rp(s.debts?.new_total ?? 0)}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {s.debts?.new_count ?? 0} catatan · diterima {rp(s.debts?.paid_total ?? 0)}
+            </p>
+          </div>
+          <div className="card p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Lunas (periode)
+            </p>
+            <p className="mt-1 text-xl font-extrabold text-emerald-500">
+              {rp(s.debts?.settled_total ?? 0)}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              piutang yang ditutup pd periode
+            </p>
+          </div>
+          <div className="card p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Retur (periode)
+            </p>
+            <p className="mt-1 text-xl font-extrabold text-amber-500">
+              {rp(s.returns?.total ?? 0)}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {s.returns?.count ?? 0} catatan · refund tunai {rp(s.returns?.refund_total ?? 0)}
+            </p>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Piutang terbuka = total sisa semua catatan berstatus open (perlu ditagih).
+          Refund retur ikut tercatat sbg jurnal kas keluar, jadi sudah masuk arus kas neto.
+        </p>
       </div>
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>

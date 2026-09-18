@@ -54,6 +54,47 @@ export async function GET(req: Request) {
       .get(from)) as { v: number }
   ).v;
 
+  const debtsOpen = (
+    (await d
+      .prepare(`SELECT COUNT(*) c, COALESCE(SUM(remaining),0) v FROM debts WHERE status = 'open'`)
+      .get()) as { c: number; v: number }
+  );
+  const debtsNew = (
+    (await d
+      .prepare(`SELECT COUNT(*) c, COALESCE(SUM(amount),0) v FROM debts WHERE created_at >= ?`)
+      .get(from)) as { c: number; v: number }
+  );
+  const debtsPaid = (
+    (await d
+      .prepare(`SELECT COALESCE(SUM(amount),0) v FROM debts WHERE status = 'settled' AND created_at >= ?`)
+      .get(from)) as { v: number }
+  );
+  // debts.paid di-update in-place (tidak ada tabel pembayaran), jadi
+  // "diterima" = total kolom `paid` utk piutang yang tercatat pd periode.
+  const debtsPaidAll = (
+    (await d
+      .prepare(
+        `SELECT COALESCE(SUM(paid),0) v FROM debts WHERE created_at >= ?`
+      )
+      .get(from)) as { v: number }
+  );
+  const ret = (
+    (await d
+      .prepare(
+        `SELECT COUNT(*) c, COALESCE(SUM(amount),0) v FROM returns WHERE created_at >= ?`
+      )
+      .get(from)) as { c: number; v: number }
+  );
+  const retRefund = (
+    (await d
+      .prepare(
+        `SELECT COALESCE(SUM(ce.amount),0) v
+         FROM cash_entries ce
+         WHERE ce.type = 'expense' AND ce.label LIKE 'Retur #%' AND ce.created_at >= ?`
+      )
+      .get(from)) as { v: number }
+  );
+
   const byMethod = Object.fromEntries(
     (
       (
@@ -96,5 +137,18 @@ export async function GET(req: Request) {
     cash_net,
     by_method: byMethod,
     top,
+    debts: {
+      open_total: debtsOpen.v,
+      open_count: debtsOpen.c,
+      new_count: debtsNew.c,
+      new_total: debtsNew.v,
+      settled_total: debtsPaid.v,
+      paid_total: debtsPaidAll.v,
+    },
+    returns: {
+      count: ret.c,
+      total: ret.v,
+      refund_total: retRefund.v,
+    },
   });
 }
