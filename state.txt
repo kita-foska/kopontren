@@ -1,9 +1,15 @@
 ﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
-_Update: 2026-09-18 (Cline session: sidebar navigasi menggantikan nav pill; sync
- master/main; hamburger di kiri logo; sidebar 280/260px, animasi 300ms; fix
- portal; rekap piutang/retur di Laporan Pengurus; SEMUA emoji diganti ikon
- lucide-react; gitignore `_*` menyeluruh + buang _scanemoji2.mjs; Vercel
- re-deploy main; state.txt diperbarui & di-commit keduanya)_
+_Update: 2026-09-18 (Cline session: OPTIMASI PERFORMA — akar masalah
+ server-response 15.42s = ~150 round-trip Turso sekuensial di SETIAP
+ cold start (db() jalankan seluruh rantai migrasi tiap function dingin).
+ Fix: gate `schema_version` (1 SELECT saja di cold start, diuji:
+ FULL-INIT 337ms vs FAST-PATH 3ms). + index hot-list
+ (sales(created_at,status), sale_items(sale_id,product_id),
+ products(active,category)); cache headers (immutable static, ikon
+ 1 bln, sw.js/manifest no-cache); sw.js v8 + precache shell; favicon.ico
+ baru; vercel.json region sin. Turso region (Tokyo/Singapura) = panduan
+ manual di dashboard. next.config (compress/poweredBy/sourceMaps)
+ sudah ada sebelumnya.)_
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
@@ -14,6 +20,40 @@ sebelumnya `5b072c6` gitignore + `c2b865a` ikon). Master = `e5b01c6`
 
 ## STATE
 ### DONE
+- [x] OPTIMASI PERFORMA (18 Sep 2026) — laporan user: server response
+  15.42s, finish 19.56s, 51 requests:
+  - AKAR MASALAH: `src/db.ts` — fungsi `db()` menjalankan SELURUH rantai
+    migrasi (exec(SCHEMA) ±17 stmt, migrate() ±35 execColumn/exec, 8
+    UPDATE normalisasi timestamp, seed) di SETIAP cold start function
+    Vercel. Tiap statement = 1 round-trip HTTP ke Turso -> ~150 RTT
+    sekuensial (±15 detik). Sekarang: gate `schema_version` — cold start
+    hanya 1 `SELECT version FROM schema_version`; full init hanya untuk
+    DB baru / upgrade skema (naikkan `SCHEMA_VERSION` tiap migrasi baru,
+    fullInit jalan sekali lalu stamp ulang).
+  - DIBUAT test gate (script temp, dihapus): fresh DB FULL-INIT 337ms,
+    cold start ke-2 FAST-PATH 3ms (±100x lebih cepat).
+  - INDEX baru (SCHEMA utk DB baru + migrate() utk DB lama):
+    `idx_sales_created_status(sales(created_at,status))`,
+    `idx_sale_items_sale(sale_items(sale_id,product_id))`,
+    `idx_products_active(products(active,category))`.
+  - `next.config.mjs`: `headers()` — /_next/static/* immutable 1 tahun;
+    /icon-* /logo-* /favicon.ico 1 bulan; /sw.js & /manifest.json
+    no-cache (biar update PWA sampai ke user). compress/poweredByHeader/
+    productionBrowserSourceMaps sudah ada sejak sebelumnya.
+  - `public/sw.js` v7->v8: precache [/manifest.json, /icon-192.png,
+    /favicon.ico] saat install; /favicon.ico ikut cache-first. Size
+    ±2.4KB raw (±0.9KB gzip) — tetap ringan karena statis+no-cache.
+  - `public/favicon.ico` BARU (10.8KB, wrapper ICO dari icon-192.png via
+    script node) — sebelumnya request /favicon.ico = 404/303ms.
+  - `vercel.json` BARU: `{"regions": ["sin"]}` — function Vercel di
+    Singapura (paling dekat user Indonesia); asset tetap CDN global.
+  - Audit N+1: /api/sales GET sudah batched (3 query IN clause,
+    bukan loop per transaksi); /api/products = 2 query; backfill
+    qr_code di /api/members hanya jalan sekali utk member legacy
+    (dibiarkan).
+  - TIDAK pakai next/font: app memakai font sistem (0 request font web)
+    — menambah web font justru bikin HP entry-level makin berat.
+    Code-splitting per route Next.js App Router sudah default.
 - [x] Sidebar navigasi (18 Sep 2026) — menggantikan nav pill horizontal
       (yang harus di-scroll di HP):
       - `src/components/sidebar.tsx` (baru, 'use client'): `Sidebar`
@@ -133,6 +173,12 @@ sebelumnya `5b072c6` gitignore + `c2b865a` ikon). Master = `e5b01c6`
       disengaja (sw.js, manifest.json, ikon PWA, dll; beda arah diff
       = semua insert). navpills sudah bersih via `git rm`, jadi
       cukup re-deploy Vercel (triggered oleh push main berikutnya).
+- [ ] Check region Turso di dashboard (Database -> Region) / CLI
+      `turso db show`; jika US -> migrasi Singapore/Tokyo
+      (`turso db create --region aws-ap-southeast-1` + clone + ganti
+      env Vercel DATABASE_URL/TOKEN). Lalu jalankan Lighthouse
+      (Chrome DevTools, profil Mobile/Slow 4G) — target finish time
+      < 5 detik & TTFB < 1 detik.
 - [ ] Test visual: HP (Chrome DevTools device mode — pastikan TIDAK ada
       scroll horizontal; sidebar membuka dari kiri + overlay, tombol ☰
       di kiri logo; SEMUA ikon lucide tampil — search, tombol bayar,
@@ -175,8 +221,17 @@ sebelumnya `5b072c6` gitignore + `c2b865a` ikon). Master = `e5b01c6`
 - Ikon UI seragam via `lucide-react` (lengkap di commit `eda03c7`);
   jangan campur emoji lagi — tambah ikon dari lucide (import dari
   `lucide-react`, stroke `currentColor`, ukuran `h-N w-N`).
+- PERFORMA: jangan tambah statement migrasi baru di `db()` tanpa
+  menaikkan `SCHEMA_VERSION` (fullInit jalan sekali, lalu cold start
+  cukup 1 SELECT `schema_version`). Turso: region check di dashboard
+  Turso (Database -> Region) / CLI `turso db show`; migrasi region =
+  `turso db create <nama> --region aws-ap-southeast-1` lalu
+  `turso db clone <lama> <nama>` + update env DATABASE_URL/TOKEN.
 
 ## FILES
+- `src/db.ts` (gate `schema_version` + fullInit + 3 index baru, commit
+  ini), `next.config.mjs` (headers cache), `public/sw.js` (v8 precache),
+  `public/favicon.ico` (baru), `vercel.json` (region sin)
 - `src/app/api/debts/route.ts`, `src/app/api/debts/[id]/route.ts`,
   `src/app/api/returns/route.ts`
 - `src/app/api/sales/route.ts` (items +product_id)

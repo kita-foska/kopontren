@@ -206,6 +206,9 @@ CREATE INDEX IF NOT EXISTS idx_consignments_status ON consignments(status);
 CREATE INDEX IF NOT EXISTS idx_sales_member ON sales(member_id);
 CREATE INDEX IF NOT EXISTS idx_shifts_kasir ON shifts(kasir_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_sales_created_status ON sales(created_at, status);
+CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id, product_id);
+CREATE INDEX IF NOT EXISTS idx_products_active ON products(active, category);
 `;
 
 function hashPassword(pw: string, salt: string): string {
@@ -304,6 +307,11 @@ async function migrate(d: Db) {
   // role/member batch: lookups on members by name & phone (search + auto-member dedupe)
   await d.exec('CREATE INDEX IF NOT EXISTS idx_members_name ON members(name)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_members_phone ON members(phone)');
+  // hot-list indexes: dashboard/report filters & joins (sales by date+status,
+  // sale items by sale, products by active+category)
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_sales_created_status ON sales(created_at, status)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id, product_id)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_products_active ON products(active, category)');
   // loyalty settings (key-value) + web-push VAPID keys
   await d.exec("CREATE TABLE IF NOT EXISTS member_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
   await d.exec("CREATE TABLE IF NOT EXISTS vapid_keys (id INTEGER PRIMARY KEY CHECK (id = 1), public_key TEXT NOT NULL DEFAULT '', private_key TEXT NOT NULL DEFAULT '')");
@@ -468,6 +476,47 @@ export async function saveMemberSettings(
   }
 }
 
+// Bump this when migrate()/SCHEMA gain new statements so already-migrated
+// databases re-run fullInit exactly once per deploy that changes the schema.
+const SCHEMA_VERSION = 1;
+
+/** One-time full initialization (fresh DB or schema upgrade). */
+async function fullInit(d: Db) {
+  await d.exec(SCHEMA); // idempotent: creates tables when missing
+  await migrate(d); // feature batch: new columns & tables on existing DBs
+  // One-time migration: legacy 'YYYY-MM-DD HH:MM:SS' (UTC, space-separated)
+  // timestamps -> ISO 'YYYY-MM-DDTHH:MM:SS.sssZ', so string comparisons with
+  // startOfDayJakarta() work consistently. Idempotent: rows already in ISO
+  // have no space and are left untouched.
+  for (const t of [
+    'sales',
+    'purchases',
+    'expenses',
+    'cash_entries',
+    'consignments',
+    'products',
+    'users',
+  ]) {
+    await d.exec(
+      `UPDATE ${t} SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', created_at) WHERE instr(created_at, ' ') > 0;`
+    );
+  }
+  await d.exec(
+    `UPDATE sales SET reported_at = strftime('%Y-%m-%dT%H:%M:%fZ', reported_at) WHERE reported_at IS NOT NULL AND instr(reported_at, ' ') > 0;`
+  );
+  await d.exec(
+    `UPDATE consignments SET settled_at = strftime('%Y-%m-%dT%H:%M:%fZ', settled_at) WHERE settled_at IS NOT NULL AND instr(settled_at, ' ') > 0;`
+  );
+  await seed(d);
+  // Stamp the schema version: every later cold start skips all migrations
+  // (one cheap SELECT instead of ~150 sequential Turso round-trips, which
+  // made the first page load take 15-20 s over the remote HTTP API).
+  await d.exec('CREATE TABLE IF NOT EXISTS schema_version(id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER NOT NULL)');
+  await d.exec(
+    `INSERT INTO schema_version(id, version) VALUES (1, ${SCHEMA_VERSION}) ON CONFLICT(id) DO UPDATE SET version = excluded.version`
+  );
+}
+
 export function db(): Promise<Db> {
   if (_db) return Promise.resolve(_db);
   if (_dbPromise) return _dbPromise;
@@ -477,32 +526,18 @@ export function db(): Promise<Db> {
   _dbPromise = (async () => {
     const c = createClient({ url, authToken: token || undefined });
     const d = new DbShim(c);
-    await d.exec(SCHEMA); // idempotent: creates tables when missing
-    await migrate(d); // feature batch: new columns & tables on existing DBs
-    // One-time migration: legacy 'YYYY-MM-DD HH:MM:SS' (UTC, space-separated)
-    // timestamps -> ISO 'YYYY-MM-DDTHH:MM:SS.sssZ', so string comparisons with
-    // startOfDayJakarta() work consistently. Idempotent: rows already in ISO
-    // have no space and are left untouched.
-    for (const t of [
-      'sales',
-      'purchases',
-      'expenses',
-      'cash_entries',
-      'consignments',
-      'products',
-      'users',
-    ]) {
-      await d.exec(
-        `UPDATE ${t} SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', created_at) WHERE instr(created_at, ' ') > 0;`
-      );
+    // Fast path: database already at the current schema version -> skip the
+    // whole migration chain. Table missing (fresh DB) => select throws => fullInit.
+    let row: { version: number } | undefined;
+    try {
+      row = (((await d.prepare('SELECT version FROM schema_version LIMIT 1').get()) ??
+        undefined) as unknown) as { version: number } | undefined;
+    } catch {
+      row = undefined;
     }
-    await d.exec(
-      `UPDATE sales SET reported_at = strftime('%Y-%m-%dT%H:%M:%fZ', reported_at) WHERE reported_at IS NOT NULL AND instr(reported_at, ' ') > 0;`
-    );
-    await d.exec(
-      `UPDATE consignments SET settled_at = strftime('%Y-%m-%dT%H:%M:%fZ', settled_at) WHERE settled_at IS NOT NULL AND instr(settled_at, ' ') > 0;`
-    );
-    await seed(d);
+    if (!row || Number(row.version) < SCHEMA_VERSION) {
+      await fullInit(d);
+    }
     _db = d;
     return d;
   })();

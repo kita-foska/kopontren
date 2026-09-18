@@ -1,13 +1,19 @@
 // Kopontren PWA service worker
 // Cache-first for immutable static assets, network-first for pages (offline fallback).
-// v7: skip caching opaque/failed responses (no poisoned offline cache),
-// cache optimized next/image URLs alongside static assets.
-const CACHE = 'kopontren-v7';
-const PAGE_CACHE = 'kopontren-pages-v7';
+// v8: precache the critical PWA shell on install (icons stay available even
+// mid-update), cache-first for /favicon.ico too.
+const CACHE = 'kopontren-v8';
+const PAGE_CACHE = 'kopontren-pages-v8';
 const OFFLINE_FALLBACK = '/login';
+const PRECACHE = ['/manifest.json', '/icon-192.png', '/favicon.ico'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(self.skipWaiting());
+  e.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => Promise.all(PRECACHE.map((u) => c.add(u))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -37,7 +43,8 @@ self.addEventListener('fetch', (e) => {
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/_next/image') ||
     url.pathname.startsWith('/icon-') ||
-    url.pathname.startsWith('/logo-')
+    url.pathname.startsWith('/logo-') ||
+    url.pathname === '/favicon.ico'
   ) {
     e.respondWith(
       caches.open(CACHE).then((c) =>
