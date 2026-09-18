@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, getZakatSettings, saveZakatSettings } from '@/db';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { currentUser, isAdmin, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 export type ZakatCalculation = {
@@ -116,6 +116,8 @@ async function computeZakat(): Promise<ZakatCalculation> {
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  if (!isManager(user))
+    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
   const calc = await computeZakat();
   return NextResponse.json(calc, { headers: { 'Cache-Control': 'no-store' } });
 }
@@ -142,15 +144,23 @@ export async function POST(req: Request) {
     .run(calc.total_assets, calc.nishab, calc.status, calc.zakat_amount, new Date().toISOString(), note);
   const id = Number(info.lastInsertRowid);
 
-  // Siklus baru: catat zakat terakhir dibayar hari ini.
-  await saveZakatSettings(d, { last_zakat_date: wibToday }, { id: user.id, username: user.username });
+  // Siklus baru HANYA bila zakat benar-benar dibayar (status 'wajib'):
+  // last_zakat_date = "zakat terakhir dibayar". Catatan status 'belum'
+  // tidak me-reset siklus, agar periode laba tetap terakumulasi sejak
+  // pembayaran terakhir (kalau dicatat ulang tiap bulan, laba hanya
+  // terhitung sejak hari sebelum -> zakat terhitung terlalu kecil).
+  const cycle_advanced = calc.status === 'wajib';
+  if (cycle_advanced) {
+    await saveZakatSettings(d, { last_zakat_date: wibToday }, { id: user.id, username: user.username });
+  }
   await logAudit(user, 'zakat:record', 'zakat_history', id, undefined, {
     total_assets: calc.total_assets,
     nishab: calc.nishab,
     status: calc.status,
     zakat_amount: calc.zakat_amount,
+    cycle_advanced,
     note: note || undefined,
   });
 
-  return NextResponse.json({ ok: true, id, ...calc });
+  return NextResponse.json({ ok: true, id, cycle_advanced, ...calc });
 }

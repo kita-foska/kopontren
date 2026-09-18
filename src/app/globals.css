@@ -88,8 +88,11 @@ body {
     line-height: 1.5;
     padding: 12px;
   }
-  /* Cetakan halaman (mis. /admin/zakat): sembunyikan chrome aplikasi
-     dan paksa skema terang agar hemat tinta & terbaca. */
+  /* Cetakan halaman (mis. /admin/zakat): SEMUA konten tersembunyi oleh
+     aturan receipt di atas, kecuali elemen ber-kelas .print-area (opt-in
+     "cetak halaman penuh" — dipakai /admin/zakat). Selebihnya sembunyikan
+     chrome aplikasi dan paksa skema terang agar hemat tinta & terbaca. */
+  .print-area, .print-area * { visibility: visible; }
   header { display: none; }
   body { background: #fff !important; }
   .card { background: #fff !important; }

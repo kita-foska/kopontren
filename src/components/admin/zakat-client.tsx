@@ -83,7 +83,7 @@ export function ZakatClient() {
     if (s.ok && s.data) setSettings(s.data);
     if (c.ok && c.data) setCalc(c.data);
     if (h.ok && h.data) setHistory(h.data.rows);
-    if (!s.ok && !c.ok) showToast('Gagal memuat data zakat');
+    if (!s.ok || !c.ok || !h.ok) showToast('Gagal memuat data zakat');
   }, []);
 
   useEffect(() => {
@@ -128,14 +128,20 @@ export function ZakatClient() {
 
   async function recordHistory() {
     setBusy(true);
-    const r = await api<ZakatCalc>('/api/zakat', {
+    const r = await api<ZakatCalc & { cycle_advanced?: boolean }>('/api/zakat', {
       method: 'POST',
       body: JSON.stringify({ note: note.trim() || undefined }),
     });
     setBusy(false);
     if (r.ok) {
       setNote('');
-      showToast('Zakat dicatat ke riwayat');
+      // Status 'belum' = belum wajib: riwayat tetap tercatat, tetapi
+      // siklus zakat TIDAK di-reset (last_zakat_date tidak berubah).
+      showToast(
+        r.data?.cycle_advanced === false
+          ? 'Dicatat "belum wajib" — siklus zakat tetap sejak pembayaran terakhir'
+          : 'Zakat dicatat ke riwayat — siklus zakat baru dimulai hari ini'
+      );
       load();
     } else {
       showToast(r.error || 'Gagal mencatat riwayat');
