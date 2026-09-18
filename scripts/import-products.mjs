@@ -20,12 +20,40 @@ if (!file) {
 }
 // Dry-run (tanpa --apply) hanya parse + preview file, tidak butuh koneksi DB.
 // (Dry-run (without --apply) only parses + previews the file, no DB connection needed.)
-const url = process.env.DATABASE_URL || '';
-const token = process.env.DATABASE_AUTH_TOKEN || '';
+const url0 = process.env.DATABASE_URL || '';
+let url = url0;
+let token = process.env.DATABASE_AUTH_TOKEN || '';
+// Cadangan: baca .env (hanya variable yang belum terisi dari lingkungan).
+try {
+  const envText = readFileSync(new URL('../../.env', import.meta.url), 'utf8');
+  for (const line of envText.split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (!m) continue;
+    const k = m[1];
+    const v = m[2].replace(/^['"]|['"]$/g, '');
+    if (k === 'DATABASE_URL' && !url) url = v;
+    if ((k === 'DATABASE_AUTH_TOKEN' || k === 'TURSO_AUTH_TOKEN') && !token) token = v;
+    if (k === 'TURSO_DB_URL' && !url && v.startsWith('libsql://')) url = v;
+  }
+} catch {}
 if (apply && !url) {
-  console.error('Set DATABASE_URL dulu (URL database Turso) untuk --apply.');
+  console.error('Set DATABASE_URL dulu (URL database Turso, libsql://...) untuk --apply.');
   process.exit(1);
 }
+if (url.startsWith('file:')) {
+  console.error(
+    'DILEWATKAN: DATABASE_URL saat ini menunjuk file lokal ("' + url + '").\n' +
+      'Import ke file lokal TIDAK akan terlihat oleh aplikasi produksi di Vercel (Turso).\n' +
+      'Set DATABASE_URL ke URL Turso (libsql://...turso.io) dari:\n' +
+      '  - Turso dashboard -> Connections -> Database URL + token, ATAU\n' +
+      '  - Vercel dashboard -> Settings -> Environment Variables (Production).\n' +
+      'Contoh (PowerShell):\n' +
+      '  $env:DATABASE_URL="libsql://namadb.xxx.fra1.turso.io"\n' +
+      '  $env:DATABASE_AUTH_TOKEN="..."'
+  );
+  process.exit(2);
+}
+console.log('Target database: ' + url + (token ? ' (token terisi)' : ' (TANPA token!)'));
 
 // ---- CSV parsing (sama seperti di src/lib/product-import.ts) ----
 function parseCsv(text) {
