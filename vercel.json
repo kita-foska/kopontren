@@ -1,3 +1,4 @@
 {
-  "regions": ["sin"]
+  "$schema": "https://openjs.vercel.sh/vercel.json",
+  "regions": ["sin1"]
 }

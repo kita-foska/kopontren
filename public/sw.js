@@ -1,19 +1,12 @@
 // Kopontren PWA service worker
-// Cache-first for immutable static assets, network-first for pages (offline fallback).
-// v8: precache the critical PWA shell on install (icons stay available even
-// mid-update), cache-first for /favicon.ico too.
-const CACHE = 'kopontren-v8';
-const PAGE_CACHE = 'kopontren-pages-v8';
+// Strategy: cache-first for immutable static assets, network-first for pages
+// (offline fallback), network-only for /api (business data never cached).
+const CACHE = 'kopontren-v7';
+const PAGE_CACHE = 'kopontren-pages-v6';
 const OFFLINE_FALLBACK = '/login';
-const PRECACHE = ['/manifest.json', '/icon-192.png', '/favicon.ico'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches
-      .open(CACHE)
-      .then((c) => Promise.all(PRECACHE.map((u) => c.add(u))))
-      .then(() => self.skipWaiting())
-  );
+  e.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (e) => {
@@ -41,33 +34,25 @@ self.addEventListener('fetch', (e) => {
   // Immutable static assets: cache-first
   if (
     url.pathname.startsWith('/_next/static/') ||
-    url.pathname.startsWith('/_next/image') ||
     url.pathname.startsWith('/icon-') ||
-    url.pathname.startsWith('/logo-') ||
-    url.pathname === '/favicon.ico'
+    url.pathname.startsWith('/logo-')
   ) {
     e.respondWith(
       caches.open(CACHE).then((c) =>
-        c.match(req).then((hit) =>
-          hit ||
-          fetch(req).then((res) => {
-            // only cache real successes, never opaque (CORS) or error responses
-            if (res.ok && res.type !== 'opaque') c.put(req, res.clone());
-            return res;
-          })
-        )
+        c.match(req).then((hit) => hit || fetch(req).then((res) => (c.put(req, res.clone()), res)))
       )
     );
     return;
   }
-  // Pages & shell: network-first with offline fallback
+  // Pages & shell: network-first with offline fallback.
+  // Only healthy (2xx) responses are cached; error pages & opaque responses
+  // are never stored, so a bad deploy can never poison the offline fallback.
   e.respondWith(
     fetch(req)
       .then((res) => {
-        if (res.ok && res.type !== 'opaque') {
-          const copy = res.clone();
-          caches.open(PAGE_CACHE).then((c) => c.put(req, copy));
-        }
+        if (res.type === 'opaque' || res.status >= 400) return res;
+        const copy = res.clone();
+        caches.open(PAGE_CACHE).then((c) => c.put(req, copy));
         return res;
       })
       .catch(() =>

@@ -3,56 +3,30 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   // keep the native libSQL driver out of the webpack bundle (native .node binary)
   serverExternalPackages: ['@libsql/client'],
-  // gzip/br responses for static & HTML on self-hosted runs (Vercel already compresses)
-  compress: true,
-  poweredByHeader: false,
-  productionBrowserSourceMaps: false,
-  // Cache-control policy (mobile: low-end phones should re-request nothing).
-  // sw.js & manifest.json stay no-cache so PWA updates reach users on next visit.
+  /**
+   * Cache policy for small, rarely-changing route assets so repeat visits
+   * and PWA installs do not re-fetch them every time. (Static chunks in
+   * /_next/ are already content-hashed and cached immutably by the CDN +
+   * service worker; these cover the non-hashed routes.)
+   */
   async headers() {
+    // NOTE: aset di /public tidak content-hash (berbeda dengan chunk /_next),
+    // jadi TIDAK memakai "immutable" — max-age 1 hari agar ikon/manifest baru
+    // setelah deploy tetap bisa muncul.
     return [
-      // Content-hashed JS/CSS chunks: immutable for 1 year.
-      {
-        source: '/_next/static/:path*',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-      },
-      // PWA icons / logo / favicon: not content-hashed -> 1 month.
-      {
-        source: '/icon-180.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }],
-      },
       {
         source: '/icon-192.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },
       {
         source: '/icon-512.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }],
-      },
-      {
-        source: '/logo-kopontren.png',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }],
-      },
-      {
-        source: '/favicon.ico',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }],
-      },
-      // Service worker & manifest: never cache, so PWA updates reach users
-      // on their next visit (sw.js update flow depends on this).
-      {
-        source: '/sw.js',
-        headers: [{ key: 'Cache-Control', value: 'no-cache' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },
       {
         source: '/manifest.json',
-        headers: [{ key: 'Cache-Control', value: 'no-cache' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },
     ];
-  },
-  // let next/image serve WebP on modern phones (PNG stays as automatic fallback)
-  images: {
-    formats: ['image/webp'],
-    minimumCacheTTL: 60,
   },
 };
 

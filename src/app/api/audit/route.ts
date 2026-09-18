@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { currentUser, isManager } from '@/lib/auth';
 
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  // Audit trail is admin-only (pengurus is read-only without audit access).
-  if (!isAdmin(user))
-    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
+  if (!isManager(user))
+    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
   const url = new URL(req.url);
   const table = String(url.searchParams.get('table') || '');
   const limit = Math.min(500, Math.max(20, Number(url.searchParams.get('limit') || '200')));
@@ -33,8 +32,8 @@ export async function GET(req: Request) {
 export async function DELETE(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isAdmin(user))
-    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
+  if (!isManager(user))
+    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
   const url = new URL(req.url);
   const days = Number(url.searchParams.get('days') || '90');
   if (!Number.isFinite(days) || days < 1)

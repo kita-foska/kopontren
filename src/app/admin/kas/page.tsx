@@ -1,20 +1,13 @@
 import { redirect } from 'next/navigation';
-import { currentUser } from '@/lib/auth';
+import { currentUser, isManager } from '@/lib/auth';
 import { Shell } from '@/components/shell';
-import lazy from 'next/dynamic';
-
-const KasClient = lazy(() => import('@/components/admin/kas-client').then((m) => m.KasClient), {
-  loading: () => (
-    <p className="text-sm text-slate-500 dark:text-slate-400">Memuat komponen…</p>
-  ),
-});
+import { KasClient } from '@/components/admin/kas-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function KasPage() {
   const user = await currentUser();
-  // Kas is admin-only (pengurus is read-only).
-  if (!user || user.role !== 'admin') redirect(user ? '/' : '/login');
+  if (!user || !isManager(user)) redirect(user ? '/' : '/login');
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">

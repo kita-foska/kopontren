@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, Badge, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
-import { BarChart, MessageCircle, FileText } from 'lucide-react';
 
 type Sale = {
   id: number;
@@ -19,16 +18,7 @@ type Sale = {
 type ListResp = { sales: Sale[] };
 const PAY: Record<string, string> = { cash: 'Tunai', tf: 'Transfer', wa: 'QRIS / WA' };
 
-export function LaporanClient({
-  admin,
-  scope = 'all',
-  readOnly = false,
-}: {
-  admin: boolean;
-  scope?: 'all' | 'today';
-  /** pengurus mode: view-only, no mark/delete. Rekap WA & CSV tetap bisa. */
-  readOnly?: boolean;
-}) {
+export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?: 'all' | 'today' }) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [period, setPeriod] = useState(scope === 'today' ? 1 : 7);
   const [statusF, setStatusF] = useState('');
@@ -219,27 +209,21 @@ export function LaporanClient({
         </div>
 
         <div className="flex items-center gap-2">
-          {admin && (
-            <button
-              onClick={downloadCsv}
-              className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
-              title="Download laporan transaksi format Excel/CSV"
-            >
-              <span className="flex items-center gap-1">
-                <BarChart className="h-3.5 w-3.5" /> Unduh CSV
-              </span>
-            </button>
-          )}
+          <button
+            onClick={downloadCsv}
+            className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
+            title="Download laporan transaksi format Excel/CSV"
+          >
+            📊 Unduh CSV
+          </button>
           <button
             onClick={shareWa}
             disabled={unreported.length === 0}
             className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
           >
-            <span className="flex items-center gap-1">
-              <MessageCircle className="h-3.5 w-3.5" /> Rekap WA ({unreported.length})
-            </span>
+            📱 Rekap WA ({unreported.length})
           </button>
-          {admin && !readOnly && (
+          {admin && (
             <button
               onClick={markAll}
               disabled={unreported.length === 0}
@@ -305,21 +289,16 @@ export function LaporanClient({
                   Kasir: {s.kasir_name || 'Kasir'} · Transaksi #{s.id}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {!readOnly && (
-                    <button
-                      onClick={() => toggleStatus(s)}
-                      className={s.status === 'unreported' ? 'btn-primary px-3 py-1 text-xs' : 'btn-ghost px-3 py-1 text-xs'}
-                    >
-                      {s.status === 'unreported' ? 'Tandai Sudah Dilapor' : 'Kembali ke Belum'}
-                    </button>
-                  )}
-                  {admin && !readOnly && (
+                  <button
+                    onClick={() => toggleStatus(s)}
+                    className={s.status === 'unreported' ? 'btn-primary px-3 py-1 text-xs' : 'btn-ghost px-3 py-1 text-xs'}
+                  >
+                    {s.status === 'unreported' ? 'Tandai Sudah Dilapor' : 'Kembali ke Belum'}
+                  </button>
+                  {admin && (
                     <button onClick={() => remove(s.id)} className="btn-danger px-3 py-1 text-xs">
                       Hapus
                     </button>
-                  )}
-                  {readOnly && (
-                    <span className="text-xs text-slate-400">Mode baca — hanya admin yang dapat menandai/menghapus</span>
                   )}
                 </div>
               </div>
@@ -328,7 +307,7 @@ export function LaporanClient({
         ))}
         {filteredSales.length === 0 && (
           <div className="card py-12 text-center text-sm text-slate-500">
-            <FileText className="mx-auto mb-2 h-8 w-8 text-slate-300 dark:text-slate-500" />
+            <p className="text-2xl mb-1">📄</p>
             {q ? 'Tidak ada transaksi yang cocok dengan filter pencarian.' : 'Belum ada transaksi pada periode ini.'}
           </div>
         )}

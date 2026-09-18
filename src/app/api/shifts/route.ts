@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, type Db } from '@/db';
-import { currentUser } from '@/lib/auth';
+import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 type ShiftRow = {
@@ -14,7 +14,6 @@ type ShiftRow = {
   sales_total: number;
   cash_total: number;
   by_method: string;
-  setor: number;
 };
 
 function enrich(r: ShiftRow, kasir_name?: string) {
@@ -60,9 +59,6 @@ async function windowStats(d: Db, kasirId: number, from: string, to?: string) {
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  // Shifts are a kasir/admin feature; pengurus is read-only (no shift access).
-  if (user.role === 'pengurus')
-    return NextResponse.json({ error: 'Pengurus tidak memiliki akses shift' }, { status: 403 });
   const url = new URL(req.url);
   const d = await db();
   const kasirStmt = d.prepare('SELECT username, display_name FROM users WHERE id = ?');
@@ -78,8 +74,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ open: null });
   }
 
-  const where = user.role === 'admin' ? `1=1` : `s.kasir_id = ?`;
-  const args: unknown[] = user.role === 'admin' ? [] : [user.id];
+  const where = isManager(user) ? `1=1` : `s.kasir_id = ?`;
+  const args: unknown[] = isManager(user) ? [] : [user.id];
   const rows = (
     (await d
       .prepare(
@@ -98,34 +94,12 @@ export async function GET(req: Request) {
   const openMine = (await d
     .prepare(`SELECT * FROM shifts WHERE kasir_id = ? AND status = 'open'`)
     .all(user.id)) as ShiftRow[];
-  // Admin additionally sees every open shift across all cashiers.
-  type Enriched = ReturnType<typeof enrich>;
-  let openAll: Enriched[] = [];
-  if (user.role === 'admin') {
-    const raw = (await d
-      .prepare(`SELECT * FROM shifts WHERE status = 'open'`)
-      .all()) as ShiftRow[];
-    openAll = await Promise.all(
-      raw.map(async (r) => {
-        const kasir = r.kasir_id
-          ? ((await kasirStmt.get(r.kasir_id)) as { username: string; display_name: string })
-          : null;
-        return enrich(r, kasir ? kasir.display_name || kasir.username : '');
-      })
-    );
-  }
-  return NextResponse.json({
-    shifts,
-    open: openMine.length ? openMine[0] : null,
-    open_all: openAll,
-  });
+  return NextResponse.json({ shifts, open: openMine.length ? openMine[0] : null });
 }
 
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (user.role === 'pengurus')
-    return NextResponse.json({ error: 'Pengurus tidak dapat membuka shift' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as { label?: string };
   const d = await db();
   const open = (await d
@@ -149,36 +123,20 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (user.role === 'pengurus')
-    return NextResponse.json({ error: 'Pengurus tidak dapat menutup shift' }, { status: 403 });
-  const b = (await req.json().catch(() => ({}))) as { id?: number; setor?: number };
-  const d = await db();
-  // Setor kas: admin marks a closed shift as "till handed over to admin".
-  if (b.setor !== undefined) {
-    if (user.role !== 'admin')
-      return NextResponse.json({ error: 'Setor kas hanya bisa ditandai admin' }, { status: 403 });
-    const id = Number(b.id || 0);
-    if (!id) return NextResponse.json({ error: 'id shift tidak valid' }, { status: 400 });
-    const s = (await d.prepare('SELECT * FROM shifts WHERE id = ?').get(id)) as ShiftRow | undefined;
-    if (!s) return NextResponse.json({ error: 'Shift tidak ditemukan' }, { status: 404 });
-    if (s.status !== 'closed')
-      return NextResponse.json({ error: 'Shift masih terbuka - tutup dulu' }, { status: 400 });
-    await d.prepare('UPDATE shifts SET setor = ? WHERE id = ?').run(b.setor ? 1 : 0, id);
-    await logAudit(user, 'shift:setor', 'shifts', id, { setor: s.setor }, { setor: b.setor ? 1 : 0 });
-    return NextResponse.json({ ok: true, setor: b.setor ? 1 : 0 });
-  }
+  const b = (await req.json().catch(() => ({}))) as { id?: number };
   const id = Number(b.id || 0);
   if (!id) return NextResponse.json({ error: 'id shift tidak valid' }, { status: 400 });
+  const d = await db();
   const shift = (await d.prepare('SELECT * FROM shifts WHERE id = ?').get(id)) as
     | ShiftRow
     | undefined;
   if (!shift) return NextResponse.json({ error: 'Shift tidak ditemukan' }, { status: 404 });
   if (shift.status !== 'open')
     return NextResponse.json({ error: 'Shift sudah ditutup' }, { status: 400 });
-  // Only the cashier themselves or an admin may close.
-  if (shift.kasir_id !== user.id && user.role !== 'admin')
+  // Only the cashier themselves or a manager may close.
+  if (shift.kasir_id !== user.id && !isManager(user))
     return NextResponse.json(
-      { error: 'Hanya kasir yang bersangkutan atau admin' },
+      { error: 'Hanya kasir yang bersangkutan atau pengurus' },
       { status: 403 }
     );
 

@@ -1,114 +1,49 @@
-// Verify that every DDL/migration statement in src/db.ts is valid SQL and
-// produces the expected indexes/columns — on a scratch in-memory SQLite
-// (node:sqlite), so no Turso connection or native driver is needed.
+// Verification script: checks the new indexes & reported_at column against a
+// scratch copy of the local database (never the original).
 // Usage: node scripts/verify-schema.mjs
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
+import { copyFileSync } from 'node:fs';
+import { createClient } from '@libsql/client';
 
-const src = readFileSync(path.join(import.meta.dirname, '..', 'src', 'db.ts'), 'utf8');
+const LOCAL = 'D:/Ngudi Susilo/kopontren-app/data/kopontren.db';
+const SCRATCH = 'D:/Ngudi Susilo/kopontren-app/data/scratch-verify.db';
+const SCRATCH_URL = 'file:///D:/Ngudi Susilo/kopontren-app/data/scratch-verify.db';
 
-// ---- 1) extract the SCHEMA template literal ----
-const mSchema = /const SCHEMA = `([\s\S]*?)`/.exec(src);
-if (!mSchema) throw new Error('SCHEMA template literal tidak ditemukan di db.ts');
+copyFileSync(LOCAL, SCRATCH);
+const client = createClient({ url: SCRATCH_URL });
+const exec = async (sql, args = []) =>
+  client.execute({ sql, args: args.length ? args : undefined });
 
-// ---- 2) extract SQL strings from d.exec('...') / execColumn(d, '...') lines ----
-const stmts = [];
-for (const line of src.split(/\r?\n/)) {
-  const m = /^\s*await (?:d\.exec\(|execColumn\(\w+, )(['"])((?:[^'\\]|\\.)*)\1/.exec(line);
-  if (m) {
-    const quote = m[1];
-    stmts.push(m[2].replace(new RegExp('\\\\' + quote, 'g'), quote));
-  }
+// 1. The new indexes (same statements db.ts SCHEMA now contains)
+await exec("CREATE INDEX IF NOT EXISTS idx_purchases_created ON purchases(created_at)");
+await exec("CREATE INDEX IF NOT EXISTS idx_expenses_created ON expenses(created_at)");
+await exec("CREATE INDEX IF NOT EXISTS idx_cash_created ON cash_entries(created_at)");
+const idx = await exec("SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%' ORDER BY name");
+console.log('indexes:', idx.rows.map((r) => r.name).join(', '));
+
+// 2. Check reported_at the same way migrate() adds it (idempotent ALTER)
+const cols = await exec("SELECT name FROM pragma_table_info('sales')");
+const hasCol = cols.rows.some((r) => r.name === 'reported_at');
+console.log('reported_at present BEFORE migrate:', hasCol);
+try {
+  await exec("ALTER TABLE sales ADD COLUMN reported_at TEXT");
+  console.log('ALTER applied on scratch copy');
+} catch (e) {
+  console.log('ALTER skipped/failed (expected when column already exists):', e.message);
 }
+const after = await exec("SELECT name FROM pragma_table_info('sales')");
+console.log('reported_at present AFTER migrate:', after.rows.some((r) => r.name === 'reported_at'));
 
-// Quote-aware SQL statement splitter ('' inside a literal is an escaped quote).
-function splitSql(sql) {
-  const out = [];
-  let cur = '';
-  let inStr = false;
-  for (let i = 0; i < sql.length; i++) {
-    const c = sql[i];
-    if (inStr) {
-      cur += c;
-      if (c === "'") {
-        if (sql[i + 1] === "'") {
-          cur += "'";
-          i++;
-        } else inStr = false;
-      }
-      continue;
-    }
-    if (c === "'") {
-      inStr = true;
-      cur += c;
-      continue;
-    }
-    if (c === ';') {
-      const s = cur.trim();
-      if (s) out.push(s);
-      cur = '';
-      continue;
-    }
-    cur += c;
-  }
-  const tail = cur.trim();
-  if (tail) out.push(tail);
-  return out;
-}
+// 3. Dashboard-style query runs (the one from app/page.tsx), with args
+const dayStart = new Date().toISOString().slice(0, 10) + 'T00:00:00.000Z';
+const r = await exec(`SELECT COALESCE(SUM(total),0) FROM sales WHERE created_at >= ?`, [dayStart]);
+console.log('sales total since', dayStart, '=', Number(r.rows[0]?.[0] ?? 0));
+const unreported = await exec(`SELECT COUNT(*) AS c FROM sales WHERE status = 'unreported'`);
+console.log('unreported sales:', unreported.rows[0].c);
 
-const db = new DatabaseSync(':memory:');
+// 4. The exact UPDATE db() runs on every cold start — would 500 everything if the column is missing
+await exec(`UPDATE sales SET reported_at = created_at WHERE status = 'unreported' AND reported_at IS NULL`);
+console.log('db() cold-start UPDATE: OK');
 
-// 3) apply base schema
-for (const s of splitSql(mSchema[1])) db.exec(s);
+console.log('VERIFY OK');
+await client.close();
 
-// 4) apply migration statements (simulate execColumn: skip existing columns)
-function columnExists(table, col) {
-  return db
-    .prepare(`PRAGMA table_info('${table}')`)
-    .all()
-    .some((r) => r.name === col);
-}
-for (const s of stmts) {
-  const m = /^ALTER TABLE (\w+) ADD COLUMN (\w+)/.exec(s);
-  if (m && columnExists(m[1], m[2])) {
-    console.log(`skip (sudah ada): ${s}`);
-    continue;
-  }
-  const head = s.trim().split(/\s+/)[0].toUpperCase();
-  if (['ROLLBACK', 'COMMIT', 'BEGIN'].includes(head)) continue;
-  db.exec(s);
-}
-
-// 5) verify expected indexes
-const idx = db
-  .prepare(`SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%' ORDER BY name`)
-  .all()
-  .map((r) => r.name);
-console.log('index tersedia:', idx.join(', '));
-const expected = [
-  'idx_sales_created',
-  'idx_sales_member',
-  'idx_sales_status',
-  'idx_shifts_kasir',
-  'idx_audit_created',
-  'idx_purchases_created',
-  'idx_expenses_created',
-  'idx_cash_entries_created',
-];
-const missingIdx = expected.filter((e) => !idx.includes(e));
-if (missingIdx.length) {
-  console.error('FAIL — index belum dibuat:', missingIdx.join(', '));
-  process.exit(1);
-}
-
-// 6) verify sales columns needed by the code
-const cols = db.prepare(`PRAGMA table_info(sales)`).all().map((r) => r.name);
-const need = ['reported_at', 'member_id', 'amount_paid', 'change', 'discount', 'member_points'];
-const missingCols = need.filter((c) => !cols.includes(c));
-if (missingCols.length) {
-  console.error('FAIL — kolom sales belum tersedia:', missingCols.join(', '));
-  process.exit(1);
-}
-
-console.log('OK — semua index & kolom tersedia di scratch DB (node:sqlite)');

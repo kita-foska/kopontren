@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, tx, getMemberSettings } from '@/db';
+import { db, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
 import { logAudit } from '@/lib/audit';
@@ -39,65 +39,38 @@ export async function GET(req: Request) {
       .prepare(`SELECT * FROM sales WHERE ${where.join(' AND ')} ORDER BY created_at DESC LIMIT 500`)
       .all(...args)) as SaleRow[]
   );
-  // Batched lookups: 3 queries total instead of up to 3*N round-trips (the old
-  // N+1 loop was painfully slow on low-end phones over Turso's HTTP API).
-  const inList = (nums: number[]) => nums.map(() => '?').join(', ');
-  const kasirIds = [
-    ...new Set(rows.map((r) => r.kasir_id).filter((v): v is number => typeof v === 'number')),
-  ];
-  const memberIds = [
-    ...new Set(rows.map((r) => r.member_id).filter((v): v is number => typeof v === 'number')),
-  ];
-  const saleIds = rows.map((r) => r.id);
-
-  const kasirMap = new Map<number, { username: string; display_name: string }>();
-  if (kasirIds.length) {
-    const krows = (await d
-      .prepare(`SELECT id, username, display_name FROM users WHERE id IN (${inList(kasirIds)})`)
-      .all(...kasirIds)) as { id: number; username: string; display_name: string }[];
-    for (const k of krows) kasirMap.set(k.id, k);
-  }
-  const memberMap = new Map<number, { name: string; phone: string; points: number }>();
-  if (memberIds.length) {
-    const mrows = (await d
-      .prepare(`SELECT id, name, phone, points FROM members WHERE id IN (${inList(memberIds)})`)
-      .all(...memberIds)) as { id: number; name: string; phone: string; points: number }[];
-    for (const m of mrows) memberMap.set(m.id, m);
-  }
-  const itemsBySale = new Map<number, unknown[]>();
-  if (saleIds.length) {
-    const irows = (await d
-      .prepare(
-        `SELECT sale_id, product_id, product_name, qty, unit, unit_price, subtotal, discount FROM sale_items WHERE sale_id IN (${inList(saleIds)}) ORDER BY sale_id, id`
-      )
-      .all(...saleIds)) as { sale_id: number }[];
-    for (const it of irows) {
-      const arr = itemsBySale.get(it.sale_id);
-      if (arr) arr.push(it);
-      else itemsBySale.set(it.sale_id, [it]);
-    }
-  }
-
-  const sales = rows.map((r) => {
-    const kasir = r.kasir_id ? kasirMap.get(r.kasir_id) : undefined;
-    const member = r.member_id ? memberMap.get(r.member_id) : undefined;
-    return {
-      ...r,
-      kasir_name: kasir ? kasir.display_name || kasir.username : '',
-      member_name: member?.name || '',
-      member_phone: member?.phone || '',
-      items: itemsBySale.get(r.id) || [],
-    };
-  });
+  const kasirStmt = d.prepare('SELECT username, display_name FROM users WHERE id = ?');
+  const memberStmt = d.prepare('SELECT name, phone, points FROM members WHERE id = ?');
+  const itemsStmt = d.prepare(
+    'SELECT product_name, qty, unit, unit_price, subtotal, discount FROM sale_items WHERE sale_id = ? ORDER BY id'
+  );
+  const sales = await Promise.all(
+    rows.map(async (r) => {
+      const kasir = r.kasir_id
+        ? ((await kasirStmt.get(r.kasir_id)) as { username: string; display_name: string })
+        : null;
+      const member = r.member_id
+        ? ((await memberStmt.get(r.member_id)) as {
+            name: string;
+            phone: string;
+            points: number;
+          })
+        : null;
+      return {
+        ...r,
+        kasir_name: kasir ? kasir.display_name || kasir.username : '',
+        member_name: member?.name || '',
+        member_phone: member?.phone || '',
+        items: await itemsStmt.all(r.id),
+      };
+    })
+  );
   return NextResponse.json({ sales });
 }
 
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  // Transaksi POS: admin & kasir. Pengurus read-only tidak boleh transaksi.
-  if (user.role === 'pengurus')
-    return NextResponse.json({ error: 'Hanya admin atau kasir yang dapat transaksi' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as {
     customer?: string;
     pay_method?: string;
@@ -106,7 +79,6 @@ export async function POST(req: Request) {
     amount_paid?: number;
     change?: number;
     discount?: number;
-    redeem_points?: number;
     items?: { product_id: number; qty: number; unit_price?: number; discount?: number }[];
   };
   const items = Array.isArray(b.items) ? b.items : [];
@@ -178,80 +150,23 @@ export async function POST(req: Request) {
         const tv = Number(b.discount);
         if (Number.isFinite(tv) && tv > 0) txDisc = Math.min(Math.floor(tv), subtotal);
       }
+      const total = subtotal - lineDiscSum - txDisc;
+      if (total <= 0)
+        throw new Error('Total setelah diskon tidak valid (diskon melebihi total)');
 
-      // Keuntungan member dari member_settings (bisa diatur admin):
-      // diskon member / promo ulang tahun, cashback, poin, dan tier.
-      const settings = await getMemberSettings();
-      let memberDisc = 0;
-      let cashback = 0;
-      let points = 0;
-      let redeemPts = 0;
-      let redeemVal = 0;
-      let prevSpent = 0;
-      let prevCashback = 0;
+      // Member link + loyalty points (1 poin per Rp 10.000 dibelanjakan).
       let memberId: number | null = null;
+      let points = 0;
       let memberName = '';
-      const pointsEvery = Math.max(1, Number(settings.points_every) || 10000);
       if (b.member_id && Number(b.member_id) > 0) {
         const mrow = (await d
-          .prepare(
-            'SELECT id, name, birth_date, total_spent, cashback_balance, points FROM members WHERE id = ?'
-          )
-          .get(Number(b.member_id))) as
-          | {
-              id: number;
-              name: string;
-              birth_date: string;
-              total_spent: number;
-              cashback_balance: number;
-              points: number;
-            }
-          | undefined;
+          .prepare('SELECT id, name FROM members WHERE id = ?')
+          .get(Number(b.member_id))) as { id: number; name: string } | undefined;
         if (!mrow) throw new Error('Member tidak ditemukan');
         memberId = mrow.id;
         memberName = mrow.name;
-        prevSpent = Number(mrow.total_spent) || 0;
-        prevCashback = Number(mrow.cashback_balance) || 0;
-        const prevPoints = Number(mrow.points) || 0;
-
-        const baseAfterLine = subtotal - lineDiscSum - txDisc;
-        // Promo ulang tahun (tanggal sama dengan hari ini) menggantikan diskon member.
-        let isBirthday = false;
-        if (settings.birthday_active === '1' && mrow.birth_date) {
-          const bdy = new Date(mrow.birth_date);
-          const now = new Date();
-          if (
-            !Number.isNaN(bdy.getTime()) &&
-            bdy.getMonth() === now.getMonth() &&
-            bdy.getDate() === now.getDate()
-          )
-            isBirthday = true;
-        }
-        const discPct = isBirthday
-          ? Number(settings.birthday_discount) || 0
-          : Number(settings.member_discount) || 0;
-        memberDisc = Math.max(0, Math.min(Math.floor((baseAfterLine * discPct) / 100), baseAfterLine));
-        // Redeem poin: kasir mengirim `redeem_points` (jumlah poin dipakai).
-        // 1 poin = point_value rupiah (member_settings), dibatasi saldo poin
-        // member dan nilai yang masih bisa dibayar setelah semua diskon.
-        const pointValue = Math.max(0, Math.floor(Number(settings.point_value) || 0));
-        const rawRedeem = Math.floor(Number(b.redeem_points));
-        if (Number.isFinite(rawRedeem) && rawRedeem > 0) {
-          redeemPts = Math.min(rawRedeem, prevPoints);
-          redeemVal = Math.min(redeemPts * pointValue, Math.max(0, baseAfterLine - memberDisc));
-        }
-        cashback = Math.max(
-          0,
-          Math.floor(
-            ((baseAfterLine - memberDisc - redeemVal) * (Number(settings.cashback) || 0)) / 100
-          )
-        );
+        points = Math.floor(total / 10000);
       }
-      const total = subtotal - lineDiscSum - txDisc - memberDisc - redeemVal;
-      if (total <= 0)
-        throw new Error('Total setelah diskon tidak valid (diskon melebihi total)');
-      // Poin: 1 poin per `points_every` rupiah, hanya member yang dapat poin.
-      if (memberId) points = Math.max(0, Math.floor(total / pointsEvery));
       const customer = String(b.customer || '').trim() || memberName;
       const amount_paid = Math.max(0, Math.floor(Number(b.amount_paid) || 0));
       const change = Math.max(0, Math.floor(Number(b.change) || 0));
@@ -272,7 +187,7 @@ export async function POST(req: Request) {
           memberId,
           amount_paid,
           change,
-          lineDiscSum + txDisc + memberDisc + redeemVal,
+          lineDiscSum + txDisc,
           points,
           created_at
         );
@@ -285,29 +200,11 @@ export async function POST(req: Request) {
         await insItem.run(sid, pid, name, qty, unit, price, sub, lineDisc, cost);
       }
       if (memberId) {
-        // Poin + cashback + total belanja kumulatif; tier dihitung dari ambang member_settings.
-        // redeemPts mengurangi saldo poin (tambahan poin `points` dari transaksi ini).
-        const newSpent = prevSpent + total;
-        const newCashback = prevCashback + cashback;
-        const silver = Number(settings.tier_silver) || 0;
-        const gold = Number(settings.tier_gold) || 0;
-        let tier = 'regular';
-        if (gold > 0 && newSpent >= gold) tier = 'gold';
-        else if (silver > 0 && newSpent >= silver) tier = 'silver';
         await d
           .prepare(
-            `UPDATE members
-             SET points = points + ? - ?, cashback_balance = ?, total_spent = ?, tier = ?
-             WHERE id = ?`
+            `UPDATE members SET points = points + ?, total_spent = total_spent + ? WHERE id = ?`
           )
-          .run(points, redeemPts, newCashback, newSpent, tier, memberId);
-        // Ledger loyalitas: riwayat earn / redeem / cashback credit.
-        const insPh = d.prepare(
-          'INSERT INTO point_history (member_id, delta, reason, amount, sale_id) VALUES (?, ?, ?, ?, ?)'
-        );
-        if (points > 0) await insPh.run(memberId, points, 'earn', total, sid);
-        if (redeemPts > 0) await insPh.run(memberId, -redeemPts, 'redeem', -redeemVal, sid);
-        if (cashback > 0) await insPh.run(memberId, 0, 'cashback', cashback, sid);
+          .run(points, total, memberId);
       }
       return {
         id: sid,
@@ -315,18 +212,13 @@ export async function POST(req: Request) {
         status: 'unreported',
         created_at,
         points,
-        redeem_points: redeemPts,
-        redeem_value: redeemVal,
         member_name: memberName,
-        member_discount: memberDisc,
-        cashback,
       };
     });
     await logAudit(user, 'sales:create', 'sales', Number(out.id), undefined, {
       total: out.total,
       member_name: out.member_name || undefined,
       points: out.points,
-      cashback: out.cashback,
     });
     return NextResponse.json({ ok: true, sale: out });
   } catch (e) {

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- Crescent Moon -->
+  <circle cx="256" cy="140" r="70" fill="#C89B3C"/>
+  <circle cx="272" cy="128" r="60" fill="#1E3A8A"/>
+  <!-- Stars -->
+  <polygon points="360,90 366,106 384,106 370,116 375,132 360,122 345,132 350,116 336,106 354,106" fill="#C89B3C"/>
+  <polygon points="140,100 144,110 155,110 147,116 150,126 140,120 130,126 133,116 125,110 136,110" fill="#C89B3C" opacity="0.7"/>
+  <!-- Mosque Dome -->
+  <path d="M126,290 Q126,190 256,175 Q386,190 386,290" fill="rgba(200,155,60,0.12)" stroke="#C89B3C" stroke-width="8"/>
+  <ellipse cx="256" cy="290" rx="130" ry="12" fill="rgba(200,155,60,0.15)" stroke="#C89B3C" stroke-width="6"/>
+  <!-- Dome ribs -->
+  <path d="M256,175 Q230,230 220,290" fill="none" stroke="rgba(200,155,60,0.3)" stroke-width="3"/>
+  <path d="M256,175 Q282,230 292,290" fill="none" stroke="rgba(200,155,60,0.3)" stroke-width="3"/>
+  <!-- Dome finial -->
+  <rect x="246" y="110" width="20" height="45" rx="5" fill="#C89B3C"/>
+  <circle cx="256" cy="102" r="16" fill="#C89B3C"/>
+  <circle cx="256" cy="88" r="6" fill="#C89B3C"/>
+  <!-- Minaret Left -->
+  <rect x="80" y="210" width="40" height="200" rx="6" fill="rgba(200,155,60,0.1)" stroke="#C89B3C" stroke-width="6"/>
+  <ellipse cx="100" cy="205" rx="28" ry="30" fill="rgba(200,155,60,0.1)" stroke="#C89B3C" stroke-width="6"/>
+  <rect x="93" y="140" width="14" height="40" rx="4" fill="#C89B3C"/>
+  <circle cx="100" cy="132" r="10" fill="#C89B3C"/>
+  <!-- Minaret Right -->
+  <rect x="392" y="210" width="40" height="200" rx="6" fill="rgba(200,155,60,0.1)" stroke="#C89B3C" stroke-width="6"/>
+  <ellipse cx="412" cy="205" rx="28" ry="30" fill="rgba(200,155,60,0.1)" stroke="#C89B3C" stroke-width="6"/>
+  <rect x="405" y="140" width="14" height="40" rx="4" fill="#C89B3C"/>
+  <circle cx="412" cy="132" r="10" fill="#C89B3C"/>
+  <!-- Base wall -->
+  <rect x="60" y="410" width="392" height="24" rx="6" fill="#C89B3C" opacity="0.7"/>
+  <!-- Open Book -->
+  <g transform="translate(256,455)">
+    <path d="M-80,-20 Q-40,-36 0,-14 L0,20 Q-40,4 -80,20 Z" fill="rgba(255,255,255,0.92)" stroke="#C89B3C" stroke-width="4"/>
+    <path d="M0,-14 Q40,-36 80,-20 L80,20 Q40,4 0,20 Z" fill="rgba(255,255,255,0.92)" stroke="#C89B3C" stroke-width="4"/>
+    <line x1="0" y1="-14" x2="0" y2="20" stroke="#C89B3C" stroke-width="5"/>
+    <line x1="-68" y1="-4" x2="-20" y2="-10" stroke="rgba(0,73,54,0.35)" stroke-width="2.5"/>
+    <line x1="-68" y1="6" x2="-20" y2="0" stroke="rgba(0,73,54,0.35)" stroke-width="2.5"/>
+    <line x1="20" y1="-10" x2="68" y2="-4" stroke="rgba(0,73,54,0.35)" stroke-width="2.5"/>
+    <line x1="20" y1="0" x2="68" y2="6" stroke="rgba(0,73,54,0.35)" stroke-width="2.5"/>
+  </g>
+</svg>

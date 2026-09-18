@@ -9,6 +9,27 @@
    kp.zip versi lama. Pakai kp.zip YANG BARU INI (sudah diperbaiki),
    lalu upload ulang di STEP 3. Setelah itu ikuti langkah yang sama.
 
+   >>> VERSI BARU (FITUR FASE 1): <<<
+   1. Menu "Laporan A" diganti "Laporan Pengurus" (dan menu "Data"
+      jadi "Data & Backup") - lebih jelas.
+   2. POS: tombol "Simpan & Tandai Belum Dilapor" jadi "Simpan
+      Transaksi". Metode bayar "WhatsApp" jadi "Transfer WA".
+   3. POS: ada kolom "Uang diterima" (hanya saat Tunai) - kembalian
+      dihitung OTOMATIS. Kalau uang kurang, transaksi TIDAK disimpan
+      (ada peringatan). Kolomnya opsional - boleh dikosongkan seperti
+      sebelumnya.
+   4. POS: setelah transaksi tersimpan, ada tombol "Cetak Struk" -
+      struk model monospace, bisa dicetak / disimpan PDF lewat dialog
+      print browser (di HP: menu browser -> Cetak -> Simpan sebagai
+      PDF / bagikan).
+   5. Dashboard: card "Menu pengurus" dihilangkan (ganda dengan
+      menu atas). Peringatan password default tetap bisa diklik.
+   6. Logo di header (atas kiri) sekarang memakai logo Kopontren
+      terbaru (sama dengan halaman login).
+   Service worker di-upgrade ke cache versi 4: saat aplikasi dibuka
+   lagi, kode lama otomatis diganti. Jika tampilan di HP belum
+   berubah, hapus ikon PWA lama lalu "Pasang ke Layar Utama" ulang.
+
    Versi ini juga PERUBAHAN TAMPILAN (UPDATE LOGO): ikon aplikasi & warna tema
    (merah marun) sudah serasi dengan logo Kopontren. Kalau ingin ikut
    perubahan ini, upload kp.zip ini di STEP 3, lalu pasang ulang ikon
@@ -313,3 +334,103 @@
                 beranda". BERES!
   Total biaya: Rp 0 / bulan.
 ================================================================
+
+
+================================================================
+ INFO BARU (16 Sept 2026) - PENTING BACA!
+================================================================
+ 1. PWA DI HP / PC WAJIB DI-REINSTALL
+    - Versi ini memperbarui "service worker" (kopi cadangan
+      otomatis) ke versi baru (kopontren-v5).
+    - Cara: hapus aplikasi dari layar beranda (HP) atau
+      hapus instalasi PWA (PC), lalu buka lagi alamat
+      .vercel.app-nya dan "Tambah ke layar beranda" ulang.
+    - Kalau tidak di-reinstall, versi lama yang masih
+      tersimpan di perangkat akan terus dipakai.
+
+ 2. DATA LAMA OTOMATIS DIKONVERSI (TANPA HAPUS APA-APA)
+    - Format tanggal/jam seluruh database kini ISO-8601 UTC
+      (contoh: 2026-09-16T04:30:00.000Z).
+    - Saat aplikasi pertama kali jalan, migrasi OTOMATIS &
+      AMAN mengubah data lama "2026-09-16 04:30:00" ke
+      format baru. TIDAK PERLU hapus data.db, TIDAK PERLU
+      import ulang. Data lama tetap ada.
+    - Dampak nyata: menu "Hari Ini"/"7 Hari"/"30 Hari" di
+      dashboard sekarang BENAR, tidak lagi meleset karena
+      beda zona waktu.
+
+ 3. PERBAIKAN LAIN DI VERSI INI
+    - Kasir hanya bisa tandai "Transaksi Bermasalah" pada
+      transaksi MILIKNYA SENDIRI (dulu bisa yang orang
+      lain juga).
+    - Struk/receipt memakai waktu dari SERVER, bukan dari
+      HP -> lebih akurat & konsisten.
+    - Harga penjualan tidak bisa lagi jadi 0/negatif/angka
+      pecahan aneh (dibulatkan otomatis).
+    - Nama file CSV hasil unduh di laporan sudah bersih
+      (tidak ada karakter aneh / nama "null").
+    - Timer "Urungkan" di laporan tidak lagi bocor.
+
+ 4. VERSEL & TURSO: TIDAK ADA PERUBAHAN
+    - Cara deploy SAMA PERSIS seperti STEP 1-3 di atas.
+    - Env vars DATABASE_URL + DATABASE_AUTH_TOKEN
+      tidak perlu diapa-apakan (tetap sama).
+    - Kalau project Vercel sudah ada: upload kp.zip baru
+      ini lewat "Add New -> Project -> Upload" (nama sama,
+      Vercel memperbarui) atau redeploy dari menu project.
+
+ ================================================================
+  LAMPIRAN TEKNIS (18 Sept 2026) - OPTIMASI LAMA + IMPORT PRODUK
+ ================================================================
+  Untuk bagian ini butuh terminal & Node.js (bukan untuk
+  pengguna biasa; bagian atas tetap cara utama).
+
+  1. OPTIMASI KELAMBUAN (PWA + Vercel)
+     a) File vercel.json: "regions": ["sin1"] -> semua fungsi
+        server dijalankan di region SINGAPORE, dekat Jakarta
+        (hemat ~200-300 ms dibanding Amerika). Kalau Vercel
+        menolak/abaikan kunci "regions", set lewat dashboard:
+        Project -> Settings -> Functions -> Region = Singapore.
+     b) Turso: pastikan database-nya berada di region
+        SINGAPORE / TOKYO (Dashboard Turso -> Database ->
+        Region). Ini sumber latensi TERBESAR - database yang
+        jauh lebih terasa daripada Vercel. Kalau masih region
+        AS/EU, pindahkan ke Singapore (data dipindah otomatis
+        oleh Turso).
+     c) Cache header favicon.ico & manifest.json ditambahkan
+        di next.config.mjs -> PWA tidak re-fetch tiap kali.
+     d) "Gerbang migrasi" SCHEMA_VERSION di src/db.ts: batch
+        migrasi lama sekarang TIDAK dijalankan lagi tiap cold
+        start (sebab pertama request lambat). Kalau nanti ada
+        PERUBAHAN SKEMA DATABASE BARU, naikkan angka
+        SCHEMA_VERSION di src/db.ts agar batch dijalankan
+        sekali lagi.
+
+  2. IMPORT PRODUK (CSV/EXCEL)
+     a) UI: menu admin baru "Import CSV"
+        (Admin -> Import CSV): pilih file -> pratinjau ->
+        import dalam batch 50 baris -> laporan + unduh JSON.
+     b) CLI (jalankan lokal di PC, Node 22+):
+        $env:DATABASE_URL='libsql://...'; $env:DATABASE_AUTH_TOKEN='...'
+        npm run import:products -- path\ke\file.csv            (dry-run)
+        npm run import:products -- path\ke\file.csv --apply     (import)
+        npm run import:excel   -- nama\file.xlsx --apply
+          (untuk Excel: install dulu -> npm i xlsx)
+     c) Aturan upsert: barcode sama = UPDATE; tanpa barcode
+        dengan nama sama (abaikan case) = UPDATE; selain itu
+        = INSERT baru. Baris invalid (name kosong, angka
+        negatif, barcode duplikat) DILEWATI & dilaporkan,
+        tidak memblokir baris lain.
+     d) Laporan pasca-import memperingatkan: produk HPP=0
+        (laba bersih tidak akurat) & margin < 5%.
+
+  3. PERBAIKAN DATA NEGATIF (contoh: total produk negatif
+     "Madu Ruqyah Baitina -355.418,24" di laporan)
+        node scripts/fix-negative-sales.mjs        (laporan saja, AMAN)
+        node scripts/fix-negative-sales.mjs --fix  (balik tanda item negatif
+                                                    + hitung ulang total penjualan)
+        node scripts/fix-negative-sales.mjs --fix --delete
+                                                    (hapus item negatif)
+     Aplikasi kasir juga sudah dicegah: qty 0/negatif tidak
+     bisa lagi tersimpan (penjagaan di server).
+

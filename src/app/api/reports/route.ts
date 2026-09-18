@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
-import { ttlGet, ttlSet } from '@/lib/ttl-cache';
 
 export async function GET(req: Request) {
   const user = await currentUser();
@@ -13,17 +12,6 @@ export async function GET(req: Request) {
   const days = Number(url.searchParams.get('days') || '30');
   const from = days > 0 ? startOfDayJakarta(1 - days) : '1970-01-01 00:00:00';
   const d = await db();
-
-  // These are heavy full-range aggregates (sales + sale_items + purchases +
-  // expenses + cash_entries + debts + returns). The body is user-independent
-  // (plain shop numbers), so cache it per range: 60 s in this instance + a
-  // short browser cache. Re-checks within that window cost zero Turso rows.
-  const cacheKey = `reports:${from}`;
-  const hit = ttlGet(cacheKey);
-  if (hit !== null)
-    return NextResponse.json(JSON.parse(hit), {
-      headers: { 'Cache-Control': 'public, max-age=60', 'X-Cache': 'HIT' },
-    });
 
   const sales = (
     (await d
@@ -66,47 +54,6 @@ export async function GET(req: Request) {
       .get(from)) as { v: number }
   ).v;
 
-  const debtsOpen = (
-    (await d
-      .prepare(`SELECT COUNT(*) c, COALESCE(SUM(remaining),0) v FROM debts WHERE status = 'open'`)
-      .get()) as { c: number; v: number }
-  );
-  const debtsNew = (
-    (await d
-      .prepare(`SELECT COUNT(*) c, COALESCE(SUM(amount),0) v FROM debts WHERE created_at >= ?`)
-      .get(from)) as { c: number; v: number }
-  );
-  const debtsPaid = (
-    (await d
-      .prepare(`SELECT COALESCE(SUM(amount),0) v FROM debts WHERE status = 'settled' AND created_at >= ?`)
-      .get(from)) as { v: number }
-  );
-  // debts.paid di-update in-place (tidak ada tabel pembayaran), jadi
-  // "diterima" = total kolom `paid` utk piutang yang tercatat pd periode.
-  const debtsPaidAll = (
-    (await d
-      .prepare(
-        `SELECT COALESCE(SUM(paid),0) v FROM debts WHERE created_at >= ?`
-      )
-      .get(from)) as { v: number }
-  );
-  const ret = (
-    (await d
-      .prepare(
-        `SELECT COUNT(*) c, COALESCE(SUM(amount),0) v FROM returns WHERE created_at >= ?`
-      )
-      .get(from)) as { c: number; v: number }
-  );
-  const retRefund = (
-    (await d
-      .prepare(
-        `SELECT COALESCE(SUM(ce.amount),0) v
-         FROM cash_entries ce
-         WHERE ce.type = 'expense' AND ce.label LIKE 'Retur #%' AND ce.created_at >= ?`
-      )
-      .get(from)) as { v: number }
-  );
-
   const byMethod = Object.fromEntries(
     (
       (
@@ -135,7 +82,7 @@ export async function GET(req: Request) {
 
   const cash_net = sales.t + cashIn - purchases - expenses - cashOut;
 
-  const body = {
+  return NextResponse.json({
     from,
     days,
     sales_count: sales.c,
@@ -149,20 +96,5 @@ export async function GET(req: Request) {
     cash_net,
     by_method: byMethod,
     top,
-    debts: {
-      open_total: debtsOpen.v,
-      open_count: debtsOpen.c,
-      new_count: debtsNew.c,
-      new_total: debtsNew.v,
-      settled_total: debtsPaid.v,
-      paid_total: debtsPaidAll.v,
-    },
-    returns: {
-      count: ret.c,
-      total: ret.v,
-      refund_total: retRefund.v,
-    },
-  };
-  ttlSet(cacheKey, JSON.stringify(body), 60_000);
-  return NextResponse.json(body, { headers: { 'Cache-Control': 'public, max-age=60' } });
+  });
 }

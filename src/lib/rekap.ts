@@ -107,10 +107,6 @@ export function strukWaText(o: {
   customer?: string;
   member?: string;
   discount?: number;
-  memberDiscount?: number;
-  cashback?: number;
-  points?: number;
-  redeemValue?: number;
   total: number;
   pay: string;
   received?: number | null;
@@ -131,24 +127,12 @@ export function strukWaText(o: {
   if (o.discount && o.discount > 0) {
     lines.push('Diskon: -Rp ' + o.discount.toLocaleString('id-ID'));
   }
-  if ((o.memberDiscount ?? 0) > 0) {
-    lines.push('Diskon Member: -Rp ' + (o.memberDiscount ?? 0).toLocaleString('id-ID'));
-  }
   lines.push('--------------------------------');
   lines.push('*TOTAL: Rp ' + o.total.toLocaleString('id-ID') + '*');
   lines.push('Bayar: ' + (PAY_LABEL[o.pay] || o.pay));
   if (o.pay === 'cash' && o.received != null) {
     lines.push('Diterima: Rp ' + o.received.toLocaleString('id-ID'));
     lines.push('Kembali: Rp ' + (o.change ?? 0).toLocaleString('id-ID'));
-  }
-  if ((o.cashback ?? 0) > 0) {
-    lines.push('Cashback: +Rp ' + (o.cashback ?? 0).toLocaleString('id-ID') + ' (saldo member)');
-  }
-  if ((o.points ?? 0) > 0) {
-    lines.push('Poin Didapat: +' + (o.points ?? 0) + ' Poin');
-  }
-  if ((o.redeemValue ?? 0) > 0) {
-    lines.push('Poin Redeem: -Rp ' + (o.redeemValue ?? 0).toLocaleString('id-ID'));
   }
   lines.push('--------------------------------');
   lines.push('Terima kasih. Mohon maaf atas ketidaknyamanannya.');

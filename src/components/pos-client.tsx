@@ -1,25 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import jsQR from 'jsqr';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
-import {
-  Search,
-  X,
-  Package,
-  ShoppingCart,
-  Smartphone,
-  QrCode,
-  Star,
-  Banknote,
-  Landmark,
-  Clipboard,
-  MessageCircle,
-  Printer,
-  CheckCircle,
-} from 'lucide-react';
 
 type Product = {
   id: number;
@@ -52,34 +36,13 @@ type SaleResp = {
     status: string;
     created_at?: string;
     points?: number;
-    redeem_points?: number;
-    redeem_value?: number;
     member_name?: string;
-    member_discount?: number;
-    cashback?: number;
   };
   error?: string;
 };
 type ProductsResp = { products: Product[]; categories: string[] };
-type Member = {
-  id: number;
-  name: string;
-  phone: string;
-  points: number;
-  total_spent?: number;
-  qr_code?: string;
-  tier?: string;
-};
+type Member = { id: number; name: string; phone: string; points: number };
 type MembersResp = { members: Member[] };
-
-/** normalize a typed/normalized phone locally (digits, canonical 08… form) */
-function canonPhoneLocal(raw: string): string {
-  let s = String(raw || '')
-    .replace(/\D/g, '')
-    .replace(/^62(?=0?8)/, '');
-  if (s && !s.startsWith('0')) s = '0' + s;
-  return s;
-}
 
 const PAY_LABEL: Record<string, string> = {
   cash: 'Tunai',
@@ -99,9 +62,6 @@ type Receipt = {
   memberName: string;
   memberPhone?: string;
   points: number;
-  memberDiscount?: number;
-  cashback?: number;
-  redeemValue?: number;
   disc: number;
 };
 
@@ -119,18 +79,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [memberId, setMemberId] = useState('');
   const [mq, setMq] = useState('');
   const [disc, setDisc] = useState('');
-  const [redeem, setRedeem] = useState('');
-  const [memberSettings, setMemberSettings] = useState<Record<string, string> | null>(null);
   const [memberModal, setMemberModal] = useState(false);
   const [memberForm, setMemberForm] = useState({ name: '', phone: '', address: '' });
   const [busy, setBusy] = useState(false);
-  // member phone lookup (search-on-type, QR scan, add-member)
-  const [phoneQ, setPhoneQ] = useState('');
-  const [phoneResults, setPhoneResults] = useState<Member[] | null>(null);
-  const [phoneBusy, setPhoneBusy] = useState(false);
-  const [qrModal, setQrModal] = useState(false);
-  const [qrStatus, setQrStatus] = useState('');
-  const qrVideoRef = useRef<HTMLVideoElement>(null);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [qrisModal, setQrisModal] = useState(false);
   const [toast, showToast] = useToast();
@@ -169,14 +120,6 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     loadMembers();
     loadShift();
   }, [load, loadMembers, loadShift]);
-
-  // Member loyalty settings (points_every, point_value) drive the redeem UI.
-  useEffect(() => {
-    (async () => {
-      const r = await api<{ settings: Record<string, string> }>('/api/member-settings');
-      if (r.ok && r.data) setMemberSettings(r.data.settings);
-    })();
-  }, []);
 
   const visible = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -255,176 +198,33 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setCart((c) => c.filter((l) => l.product.id !== id));
   }
 
-  const selectedMember = useMemo(
-    () => members.find((m) => m.id === Number(memberId)),
-    [members, memberId]
-  );
-
   const subtotal = cart.reduce((s, l) => s + l.qty * l.price, 0);
   const discNum = admin ? Math.min(Number(disc.replace(/[^\d]/g, '')) || 0, subtotal) : 0;
   const total = Math.max(0, subtotal - discNum);
   const receivedNum = received.trim() === '' ? 0 : Number(received.replace(/[^\d]/g, '')) || 0;
   const change = Math.max(0, receivedNum - total);
-  // Loyalty settings (fallback matches server defaults)
-  const pointsEvery = Math.max(1, Math.floor(Number(memberSettings?.points_every) || 10000));
-  const pointValue = Math.max(0, Math.floor(Number(memberSettings?.point_value) || 100));
-  // Redeem points capped by the member's balance
-  const redeemNum = selectedMember
-    ? Math.min(
-        Math.floor(Number(redeem.replace(/[^\d]/g, '')) || 0),
-        Math.max(0, selectedMember.points || 0)
-      )
-    : 0;
-  const redeemValue = redeemNum * pointValue;
+
+  const selectedMember = useMemo(
+    () => members.find((m) => m.id === Number(memberId)),
+    [members, memberId]
+  );
 
   async function saveMember() {
     if (!memberForm.name.trim()) {
       showToast('Nama member wajib diisi');
       return;
     }
-    const r = await api<{ ok: boolean; id?: number; exists?: boolean; error?: string }>(
-      '/api/members',
-      {
-        method: 'POST',
-        body: JSON.stringify(memberForm),
-      }
-    );
+    const r = await api<{ ok: boolean; id?: number }>('/api/members', {
+      method: 'POST',
+      body: JSON.stringify(memberForm),
+    });
     if (r.ok) {
-      if (r.data?.exists) {
-        showToast('Nomor sudah terdaftar — memakai member yang ada');
-      } else {
-        showToast('Member ' + memberForm.name + ' ditambahkan');
-      }
+      showToast('Member ' + memberForm.name + ' ditambahkan');
       setMemberModal(false);
       setMemberForm({ name: '', phone: '', address: '' });
       await loadMembers();
-      if (r.data?.id) {
-        setMemberId(String(r.data.id));
-        setPhoneResults(null);
-      }
-    } else showToast(r.error || r.data?.error || 'Gagal menambah member');
-  }
-
-  // ── member phone lookup ────────────────────────────────────────────────
-  function selectFromPhone(m: Member) {
-    setMemberId(String(m.id));
-    setCustomer(m.name);
-    setPhoneQ(m.phone || '');
-    setPhoneResults(null);
-  }
-
-  async function searchMemberPhone(raw?: string) {
-    const val = raw !== undefined ? raw : phoneQ;
-    const digits = canonPhoneLocal(val);
-    if (!digits) {
-      setPhoneResults(null);
-      return;
-    }
-    setPhoneBusy(true);
-    const r = await api<MembersResp>(
-      '/api/members?phone=' + encodeURIComponent(digits)
-    );
-    setPhoneBusy(false);
-    if (!r.ok) {
-      setPhoneResults(null);
-      return;
-    }
-    const found = r.data?.members || [];
-    setPhoneResults(found);
-    if (found.length === 1) {
-      // auto-select the single match (guard: skip when input already equals the
-      // match's phone to avoid a re-trigger loop)
-      if (canonPhoneLocal(val) !== canonPhoneLocal(found[0].phone)) {
-        selectFromPhone(found[0]);
-        showToast('Member ditemukan: ' + found[0].name);
-      }
-    }
-  }
-
-  // debounce: search 450ms after typing stops
-  const phoneQRef = useRef(phoneQ);
-  phoneQRef.current = phoneQ;
-  useEffect(() => {
-    const t = setTimeout(() => {
-      void searchMemberPhone(phoneQRef.current);
-    }, 450);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phoneQ]);
-
-  function openAddMember(prefillPhone?: string) {
-    setMemberForm({
-      name: '',
-      phone: prefillPhone !== undefined ? canonPhoneLocal(prefillPhone) : memberForm.phone,
-      address: '',
-    });
-    setMemberModal(true);
-  }
-
-  // ── QR scan (member badge) ────────────────────────────────────────────
-  function stopQrStream() {
-    const v = qrVideoRef.current;
-    if (v?.srcObject) (v.srcObject as MediaStream).getTracks().forEach((t) => t.stop());
-  }
-
-  // release the camera whenever the scan modal closes
-  useEffect(() => {
-    if (!qrModal) stopQrStream();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qrModal]);
-
-  async function startQrScan() {
-    setQrModal(true);
-    setQrStatus('Menyambungkan kamera…');
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-        audio: false,
-      });
-      if (qrVideoRef.current) {
-        qrVideoRef.current.srcObject = stream;
-        await qrVideoRef.current.play();
-      }
-      setQrStatus('Arahkan kamera ke QR member…');
-      const tick = () => {
-        const v = qrVideoRef.current;
-        if (!v || !qrModal) return;
-        const c = document.createElement('canvas');
-        c.width = v.videoWidth || 320;
-        c.height = v.videoHeight || 240;
-        const ctx = c.getContext('2d');
-        if (ctx && v.readyState === 4) {
-          ctx.drawImage(v, 0, 0, c.width, c.height);
-          const img = ctx.getImageData(0, 0, c.width, c.height);
-          const code = jsQR(img.data, c.width, c.height)?.data;
-          if (code) handleQrCode(code);
-          else setTimeout(tick, 250);
-        } else setTimeout(tick, 500);
-      };
-      tick();
-    } catch {
-      setQrStatus('Kamera tidak tersedia / izin ditolak');
-    }
-  }
-
-  function handleQrCode(code: string) {
-    stopQrStream();
-    setQrModal(false);
-    const m = members.find((x) => (x.qr_code || '') === code);
-    if (m) {
-      selectFromPhone(m);
-      showToast('Member QR: ' + m.name);
-      return;
-    }
-    // maybe a raw phone number
-    const digits = canonPhoneLocal(code);
-    if (digits.length >= 10 && digits.length <= 15) {
-      setPhoneQ(digits);
-      void searchMemberPhone(digits);
-      return;
-    }
-    showToast('QR tidak dikenal — tambahkan member baru?');
-    openAddMember();
+      if (r.data?.id) setMemberId(String(r.data.id));
+    } else showToast(r.error || 'Gagal menambah member');
   }
 
   async function checkout() {
@@ -447,7 +247,6 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         note,
         member_id: memberId ? Number(memberId) : undefined,
         discount: discNum || undefined,
-        redeem_points: redeemNum || undefined,
         amount_paid: cashReceived ? receivedNum : total,
         change: cashReceived ? change : 0,
         items: cart.map((l) => ({ product_id: l.product.id, qty: l.qty, unit_price: l.price })),
@@ -472,9 +271,6 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         memberName: saved.member_name || (selectedMember?.name ?? ''),
         memberPhone: selectedMember?.phone ?? '',
         points: saved.points || 0,
-        memberDiscount: saved.member_discount || 0,
-        cashback: saved.cashback || 0,
-        redeemValue: saved.redeem_value || 0,
         disc: discNum,
       });
     }
@@ -483,10 +279,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setNote('');
     setReceived('');
     setDisc('');
-    setRedeem('');
     setMemberId('');
-    setPhoneQ('');
-    setPhoneResults(null);
     load();
     loadShift();
   }
@@ -542,10 +335,6 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       customer: receipt.customer,
       member: receipt.memberName,
       discount: receipt.disc,
-      memberDiscount: receipt.memberDiscount,
-      cashback: receipt.cashback,
-      points: receipt.points,
-      redeemValue: receipt.redeemValue,
       total: receipt.sale?.total ?? 0,
       pay: receipt.pay,
       received: receipt.received,
@@ -570,10 +359,6 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       customer: receipt.customer,
       member: receipt.memberName,
       discount: receipt.disc,
-      memberDiscount: receipt.memberDiscount,
-      cashback: receipt.cashback,
-      points: receipt.points,
-      redeemValue: receipt.redeemValue,
       total: receipt.sale?.total ?? 0,
       pay: receipt.pay,
       received: receipt.received,
@@ -648,7 +433,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Search className="h-4 w-4" />
+                🔍
               </span>
               <input
                 ref={searchInputRef}
@@ -664,7 +449,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-slate-400 hover:text-slate-600"
                   onClick={() => setQ('')}
                 >
-                  <X className="h-4 w-4" />
+                  ✕
                 </button>
               )}
             </div>
@@ -738,7 +523,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             })}
             {visible.length === 0 && (
               <div className="col-span-full py-12 text-center text-sm text-slate-500">
-                <Package className="mx-auto mb-2 h-8 w-8 text-slate-300 dark:text-slate-500" />
+                <p className="text-2xl mb-1">📦</p>
                 <p>Tidak ada produk yang cocok dengan pencarian.</p>
               </div>
             )}
@@ -778,7 +563,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     className="text-[11px] text-slate-400 hover:text-rose-500"
                     title="Hapus item"
                   >
-                    <X className="h-4 w-4" />
+                    ✕
                   </button>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
@@ -823,7 +608,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             ))}
             {cart.length === 0 && (
               <div className="py-8 text-center text-xs text-slate-400">
-                <ShoppingCart className="mx-auto mb-2 h-8 w-8 text-slate-300 dark:text-slate-500" />
+                <p className="text-xl mb-1">🛒</p>
                 Pilih produk di sebelah kiri atau scan barcode.
               </div>
             )}
@@ -832,85 +617,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           {/* Member & Customer Selection */}
           <div className="mt-3 space-y-2 border-t border-slate-200 pt-3 dark:border-navy-700">
             <div>
-              {/* Phone search + QR scan (above the customer-name field) */}
-              <div className="mb-1.5 flex items-center gap-1.5">
-                <div className="relative flex-1">
-                  <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-xs">
-                    <Smartphone className="h-3.5 w-3.5 text-slate-400" />
-                  </span>
-                  <input
-                    className="input pl-7 text-xs"
-                    inputMode="tel"
-                    placeholder="Nomor HP member / santri (08…)"
-                    value={phoneQ}
-                    onChange={(e) => setPhoneQ(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        void searchMemberPhone();
-                      }
-                    }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="btn-ghost inline-flex items-center gap-1 whitespace-nowrap px-2 py-1 text-xs"
-                  title="Scan QR member"
-                  onClick={() => void startQrScan()}
-                >
-                  <QrCode className="h-3.5 w-3.5" /> Scan QR
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost whitespace-nowrap px-2 py-1 text-xs"
-                  title="Tambah member baru"
-                  onClick={() => openAddMember(phoneQ || undefined)}
-                >
-                  + Tambah Member
-                </button>
-              </div>
-
-              {/* search results (only while no member is selected) */}
-              {!selectedMember && phoneResults !== null && phoneResults.length === 0 && (
-                <div className="mb-1.5 flex items-center justify-between rounded-lg bg-amber-500/10 px-2 py-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-300">
-                  <span>
-                    {phoneQ ? 'Tidak ada member untuk ' + canonPhoneLocal(phoneQ) : 'Belum ada member dengan nomor ini'}
-                  </span>
-                  <button
-                    type="button"
-                    className="rounded bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white"
-                    onClick={() => openAddMember(phoneQ || undefined)}
-                  >
-                    + Tambah Member
-                  </button>
-                </div>
-              )}
-              {!selectedMember && phoneResults !== null && phoneResults.length > 1 && (
-                <div className="mb-1.5 space-y-1">
-                  {phoneResults.slice(0, 5).map((m) => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => selectFromPhone(m)}
-                      className="flex w-full items-center justify-between rounded-lg bg-emerald-500/10 px-2 py-1.5 text-left text-[11px] font-semibold text-emerald-700 dark:text-emerald-300"
-                    >
-                      <span>
-                        {m.name} {m.phone ? `(${m.phone})` : ''}
-                      </span>
-                      <span>{m.points} poin</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
               <div className="flex gap-1.5">
                 <select
                   className="input flex-1 text-xs"
                   value={memberId}
-                  onChange={(e) => {
-                    setMemberId(e.target.value);
-                    setPhoneResults(null);
-                  }}
+                  onChange={(e) => setMemberId(e.target.value)}
                 >
                   <option value="">Santri / Member (opsional)</option>
                   {members
@@ -925,8 +636,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     ))}
                 </select>
                 <button
-                  className="btn-ghost whitespace-nowrap px-2.5 py-1 text-xs"
-                  onClick={() => openAddMember(phoneQ || undefined)}
+                  className="btn-ghost px-2.5 py-1 text-xs whitespace-nowrap"
+                  onClick={() => setMemberModal(true)}
                   title="Tambah member baru"
                 >
                   + Baru
@@ -934,16 +645,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               </div>
               {selectedMember && (
                 <div className="mt-1 flex items-center justify-between rounded bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-600 dark:text-emerald-300 font-semibold">
-                  <span className="flex items-center gap-1">
-                    <Star className="h-3 w-3" fill="currentColor" /> Member: {selectedMember.name}
-                  </span>
-                  <span>
-                    {selectedMember.points} poin (+{Math.floor(total / pointsEvery)} poin)
-                  </span>
+                  <span>★ Member: {selectedMember.name}</span>
+                  <span>{selectedMember.points} poin (+{Math.floor(total / 10000)} poin)</span>
                 </div>
-              )}
-              {phoneBusy && !selectedMember && (
-                <p className="mt-1 text-[10px] text-slate-400">Mencari member…</p>
               )}
             </div>
 
@@ -958,11 +662,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <div className="flex gap-1.5">
               {(
                 [
-                  ['cash', 'Tunai', Banknote],
-                  ['wa', 'QRIS / Non-Tunai', QrCode],
-                  ['tf', 'Transfer', Landmark],
+                  ['cash', '💵 Tunai'],
+                  ['wa', '📱 QRIS / Non-Tunai'],
+                  ['tf', '🏦 Transfer'],
                 ] as const
-              ).map(([v, label, Ic]) => (
+              ).map(([v, label]) => (
                 <button
                   key={v}
                   onClick={() => setPay(v)}
@@ -973,9 +677,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
                   }
                 >
-                  <span className="flex items-center justify-center gap-1">
-                    <Ic className="h-3.5 w-3.5" /> {label}
-                  </span>
+                  {label}
                 </button>
               ))}
             </div>
@@ -1038,36 +740,6 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               />
             )}
 
-            {/* Redeem member points (kasir) */}
-            {selectedMember && (selectedMember.points || 0) > 0 && (
-              <div className="space-y-1 rounded-lg bg-violet-500/10 p-2">
-                <div className="flex items-center justify-between text-[11px] font-bold text-violet-600 dark:text-violet-300">
-                  <span>
-                    Redeem Poin ({selectedMember.points} poin · 1 poin = {rp(pointValue)})
-                  </span>
-                  <button
-                    type="button"
-                    className="rounded bg-violet-500 px-1.5 py-0.5 text-[10px] text-white hover:bg-violet-600"
-                    onClick={() => setRedeem(String(selectedMember.points || 0))}
-                  >
-                    Maks
-                  </button>
-                </div>
-                <input
-                  className="input text-xs"
-                  inputMode="numeric"
-                  placeholder="Jumlah poin dipakai (opsional)"
-                  value={redeem}
-                  onChange={(e) => setRedeem(e.target.value)}
-                />
-                {redeemNum > 0 && (
-                  <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                    Potongan poin: -{rp(redeemValue)}
-                  </p>
-                )}
-              </div>
-            )}
-
             {/* Totals & Change */}
             <div className="space-y-1 border-t border-slate-200 pt-2 text-xs dark:border-navy-700">
               <div className="flex justify-between text-slate-500 dark:text-slate-400">
@@ -1116,21 +788,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         onClose={() => setReceipt(null)}
         footer={
           <div className="flex flex-wrap items-center justify-between w-full gap-2">
-            <button className="btn-ghost inline-flex items-center gap-1 text-xs" onClick={copyStrukText}>
-              <Clipboard className="h-3.5 w-3.5" /> Salin Struk
+            <button className="btn-ghost text-xs" onClick={copyStrukText}>
+              📋 Salin Struk
             </button>
             <div className="flex items-center gap-2 ml-auto">
-              <button
-                className="btn-ghost inline-flex items-center gap-1 text-xs font-bold"
-                onClick={handleSendWaStruk}
-              >
-                <MessageCircle className="h-3.5 w-3.5" /> Kirim WA
+              <button className="btn-ghost text-xs font-bold" onClick={handleSendWaStruk}>
+                💬 Kirim WA
               </button>
-              <button
-                className="btn-primary inline-flex items-center gap-1 text-xs font-bold"
-                onClick={printStruk}
-              >
-                <Printer className="h-3.5 w-3.5" /> Cetak Struk
+              <button className="btn-primary text-xs font-bold" onClick={printStruk}>
+                🖨️ Cetak Struk
               </button>
               <button className="btn-ghost text-xs" onClick={() => setReceipt(null)}>
                 Tutup
@@ -1224,24 +890,6 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <span>+{receipt.points} Poin</span>
                   </div>
                 )}
-                {(receipt.redeemValue ?? 0) > 0 && (
-                  <div className="mt-1 flex justify-between font-bold text-violet-600 dark:text-violet-400">
-                    <span>Poin Redeem</span>
-                    <span>-{rp(receipt.redeemValue ?? 0)}</span>
-                  </div>
-                )}
-                {(receipt.memberDiscount ?? 0) > 0 && (
-                  <div className="mt-1 flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
-                    <span>Diskon Member</span>
-                    <span>-{rp(receipt.memberDiscount ?? 0)}</span>
-                  </div>
-                )}
-                {(receipt.cashback ?? 0) > 0 && (
-                  <div className="mt-1 flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
-                    <span>Cashback (saldo member)</span>
-                    <span>+{rp(receipt.cashback ?? 0)}</span>
-                  </div>
-                )}
               </div>
               <div className="mt-3 text-center text-[10px] text-slate-500">
                 <p>Jazakumullah Khairan Katsiran</p>
@@ -1304,24 +952,6 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <span>+{receipt.points} Poin</span>
             </div>
           )}
-          {(receipt.redeemValue ?? 0) > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Poin Redeem</span>
-              <span>-{(receipt.redeemValue ?? 0).toLocaleString('id-ID')}</span>
-            </div>
-          )}
-          {(receipt.memberDiscount ?? 0) > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Diskon Member</span>
-              <span>-{(receipt.memberDiscount ?? 0).toLocaleString('id-ID')}</span>
-            </div>
-          )}
-          {(receipt.cashback ?? 0) > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Cashback (saldo member)</span>
-              <span>+{(receipt.cashback ?? 0).toLocaleString('id-ID')}</span>
-            </div>
-          )}
           <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '10px' }}>
             <div>Jazakumullah Khairan Katsiran</div>
             <div>Mohon maaf atas segala kekurangan</div>
@@ -1363,26 +993,6 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               Dapat discan menggunakan BCA, Mandiri, BSI, GoPay, OVO, Dana, ShopeePay
             </p>
           </div>
-        </div>
-      </Modal>
-
-      {/* QR Member Scan Modal */}
-      <Modal
-        open={qrModal}
-        title="Scan QR Member"
-        onClose={() => setQrModal(false)}
-        footer={
-          <button className="btn-primary" onClick={() => setQrModal(false)}>
-            Tutup
-          </button>
-        }
-      >
-        <div className="space-y-2">
-          <div className="relative mx-auto w-64 h-48 overflow-hidden rounded-xl border-2 border-accent-500 bg-black">
-            <video ref={qrVideoRef} className="h-full w-full object-cover" muted playsInline />
-            <div className="pointer-events-none absolute inset-4 rounded-lg border border-emerald-400/60" />
-          </div>
-          <p className="text-center text-xs text-slate-500 dark:text-slate-400">{qrStatus}</p>
         </div>
       </Modal>
 
@@ -1466,12 +1076,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       >
         {closingSummary && (
           <div className="space-y-3 text-sm">
-            <div className="flex items-start gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">
-              <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <p>
-                Shift <b>{closingSummary.label || '#' + closingSummary.id}</b> telah ditutup dan siap untuk serah
-                terima kasir.
-              </p>
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">
+              ✓ Shift <b>{closingSummary.label || '#' + closingSummary.id}</b> telah ditutup dan siap untuk serah terima kasir.
             </div>
             <div className="space-y-1 text-xs">
               <div className="flex justify-between">

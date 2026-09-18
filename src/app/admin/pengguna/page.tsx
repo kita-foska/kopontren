@@ -1,16 +1,7 @@
 import { redirect } from 'next/navigation';
 import { currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
-import lazy from 'next/dynamic';
-
-const PenggunaClient = lazy(
-  () => import('@/components/admin/pengguna-client').then((m) => m.PenggunaClient),
-  {
-    loading: () => (
-      <p className="text-sm text-slate-500 dark:text-slate-400">Memuat komponen…</p>
-    ),
-  }
-);
+import { PenggunaClient } from '@/components/admin/pengguna-client';
 
 export const dynamic = 'force-dynamic';
 

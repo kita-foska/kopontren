@@ -11,10 +11,14 @@ data/*.db-shm
 .DS_Store
 *.log
 .vercel
-
-# lokal dev artifacts
 tsconfig.tsbuildinfo
-data/*.sql
-*.tmp
-_*
+tree.txt
+tree_check.txt
+dl.txt
+publist.txt
+build_done.txt
+build_tail.txt
+smoke.txt
+sqlite_check.txt
+_*.txt
 

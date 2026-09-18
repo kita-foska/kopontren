@@ -50,42 +50,17 @@ export async function POST(req: Request) {
   const exists = await d.prepare('SELECT id FROM users WHERE username = ?').get(username);
   if (exists) return NextResponse.json({ error: 'Username sudah dipakai' }, { status: 409 });
   const salt = randomSalt();
-  const displayName = String(b.display_name || '').trim();
   const info = await d
     .prepare(
       `INSERT INTO users (username, display_name, role, active, salt, pass_hash, pw_default, created_by)
        VALUES (?, ?, ?, 1, ?, ?, 0, ?)`
     )
-    .run(username, displayName, role, salt, hashPassword(password, salt), user.id);
-  const newUserId = Number(info.lastInsertRowid);
-
-  // Pengurus are automatically registered as a member (loyalty profile),
-  // linked via users.member_id and flagged members.is_pengurus = 1.
-  if (role === 'pengurus') {
-    const memberName = displayName || username;
-    const dup = (await d
-      .prepare('SELECT id FROM members WHERE name = ? COLLATE NOCASE AND is_pengurus = 1')
-      .get(memberName)) as { id: number } | undefined;
-    let memberRowid: number;
-    if (dup) {
-      memberRowid = dup.id;
-    } else {
-      const m = await d
-        .prepare(
-          `INSERT INTO members (name, phone, address, points, total_spent, is_pengurus)
-           VALUES (?, '', '', 0, 0, 1)`
-        )
-        .run(memberName);
-      memberRowid = Number(m.lastInsertRowid);
-    }
-    await d.prepare('UPDATE users SET member_id = ? WHERE id = ?').run(memberRowid, newUserId);
-  }
-
-  await logAudit(user, 'user:create', 'users', newUserId, undefined, {
+    .run(username, String(b.display_name || '').trim(), role, salt, hashPassword(password, salt), user.id);
+  await logAudit(user, 'user:create', 'users', Number(info.lastInsertRowid), undefined, {
     username,
     role,
   });
-  return NextResponse.json({ ok: true, id: newUserId });
+  return NextResponse.json({ ok: true });
 }
 
 export async function PUT(req: Request) {

@@ -1,16 +1,7 @@
 import { redirect } from 'next/navigation';
 import { currentUser, isManager } from '@/lib/auth';
 import { Shell } from '@/components/shell';
-import lazy from 'next/dynamic';
-
-const LaporanClient = lazy(
-  () => import('@/components/laporan-client').then((m) => m.LaporanClient),
-  {
-    loading: () => (
-      <p className="text-sm text-slate-500 dark:text-slate-400">Memuat komponen…</p>
-    ),
-  }
-);
+import { LaporanClient } from '@/components/laporan-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,8 +16,7 @@ export default async function LaporanPage() {
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         Daftar transaksi, tandai sudah/belum dilapor, dan kirim rekap ke WhatsApp pengurus.
       </p>
-      {/* Pengurus: mode baca (tidak bisa tandai/hapus); Rekap WA & CSV tetap. */}
-      <LaporanClient admin={isManager(user)} readOnly={user.role === 'pengurus'} />
+      <LaporanClient admin={isManager(user)} />
     </Shell>
   );
 }

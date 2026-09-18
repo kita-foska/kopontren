@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
-import { MemberQrBadge } from '@/components/admin/member-qr-badge';
-import { Info, Star } from 'lucide-react';
 
 type Member = {
   id: number;
@@ -13,9 +11,6 @@ type Member = {
   address: string;
   points: number;
   total_spent: number;
-  cashback_balance?: number;
-  tier?: string;
-  qr_code?: string;
   created_at: string;
 };
 type Resp = { members: Member[] };
@@ -32,7 +27,6 @@ export function MemberClient() {
   const [q, setQ] = useState('');
   const [form, setForm] = useState({ ...emptyForm });
   const [show, setShow] = useState(false);
-  const [qrMember, setQrMember] = useState<Member | null>(null);
   const [toast, showToast] = useToast();
 
   const load = useCallback(async () => {
@@ -95,31 +89,7 @@ export function MemberClient() {
     }
   }
 
-  async function resetQr(m: Member) {
-    if (
-      !confirm(
-        `Reset QR member "${m.name}"? Badge/QR lama akan tidak berlaku dan diganti kode baru.`
-      )
-    )
-      return;
-    const r = await api<{ ok: boolean; qr_code: string }>(
-      `/api/members/${m.id}`,
-      {
-        method: 'PATCH',
-        body: JSON.stringify({ regenerate_qr: true }),
-      }
-    );
-    if (r.ok) {
-      m.qr_code = r.data?.qr_code || '';
-      setMembers((prev) => prev.map((x) => (x.id === m.id ? m : x)));
-      showToast('QR member berhasil di-reset. Buka badge lagi untuk mencetak yang baru.');
-    } else {
-      showToast(r.error || 'Gagal reset QR');
-    }
-  }
-
   const totalPoints = members.reduce((acc, m) => acc + (m.points || 0), 0);
-
   const totalSpent = members.reduce((acc, m) => acc + (m.total_spent || 0), 0);
 
   return (
@@ -206,24 +176,9 @@ export function MemberClient() {
                   {m.address || '—'}
                 </td>
                 <td className="td">
-                  <div className="flex flex-col items-start gap-1">
-                    <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}>
-                      <span className="flex items-center gap-1">
-                        <Star className="h-3 w-3" fill="currentColor" />
-                        {m.points} poin
-                      </span>
-                    </Badge>
-                    {m.tier && m.tier !== 'regular' && (
-                      <span className="text-[10px] font-extrabold uppercase tracking-wide text-amber-500">
-                        Tier {m.tier}
-                      </span>
-                    )}
-                    {(m.cashback_balance || 0) > 0 && (
-                      <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                        Cashback {rp(m.cashback_balance)}
-                      </span>
-                    )}
-                  </div>
+                  <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}>
+                    ★ {m.points} poin
+                  </Badge>
                 </td>
                 <td className="td font-bold text-slate-800 dark:text-slate-200">
                   {rp(m.total_spent)}
@@ -234,27 +189,10 @@ export function MemberClient() {
                 <td className="td text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button
-                      className="text-xs font-bold text-sky-500 hover:underline dark:text-sky-400"
-                      onClick={() => {
-                        if ((m.qr_code || '').trim()) setQrMember(m);
-                        else showToast('QR belum tersedia — silakan muat ulang daftar member');
-                      }}
-                    >
-                      QR
-                    </button>
-                    <span className="text-slate-300 dark:text-navy-600">|</span>
-                    <button
                       className="text-xs font-bold text-accent-500 hover:underline dark:text-accent-300"
                       onClick={() => openEdit(m)}
                     >
                       Ubah
-                    </button>
-                    <span className="text-slate-300 dark:text-navy-600">|</span>
-                    <button
-                      className="text-xs font-bold text-amber-500 hover:underline dark:text-amber-400"
-                      onClick={() => resetQr(m)}
-                    >
-                      Reset QR
                     </button>
                     <span className="text-slate-300 dark:text-navy-600">|</span>
                     <button
@@ -324,23 +262,10 @@ export function MemberClient() {
             />
           </div>
           <p className="rounded-lg bg-slate-100 p-2.5 text-xs text-slate-500 dark:bg-navy-900/50 dark:text-slate-400">
-            <Info className="inline h-3.5 w-3.5 align-[-0.15em]" /> Setiap transaksi belanja Rp 10.000 di kasir akan otomatis menambahkan 1 poin loyalitas untuk member ini.
+            ℹ️ Setiap transaksi belanja Rp 10.000 di kasir akan otomatis menambahkan 1 poin loyalitas untuk member ini.
           </p>
         </div>
       </Modal>
-
-      {qrMember && (
-        <MemberQrBadge
-          member={{
-            id: qrMember.id,
-            name: qrMember.name,
-            phone: qrMember.phone,
-            points: qrMember.points,
-            qr_code: qrMember.qr_code || '',
-          }}
-          onClose={() => setQrMember(null)}
-        />
-      )}
 
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
