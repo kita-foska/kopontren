@@ -21,6 +21,13 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
         state `open` di sini).
       - Posisi tombol ☰: KIRI logo — urutan header
         `[☰] [Logo] [Nama Toko] ... [User] [Tema] [Keluar]`.
+      - FIX sidebar terpotong (hanya 1 menu kelihatan): header punya
+        `backdrop-blur` yang bikin *containing block* untuk descendant
+        `fixed`, jadi `inset-y-0` panel relatif ke header (~60px).
+        `Sidebar` sekarang di-render via `createPortal(document.body)`
+        (aman SSR); struktur tetap `flex flex-col` + header panel
+        `shrink-0` + `<nav>` `flex-1 overflow-y-auto` (isi penuh tinggi
+        layar, scroll hanya jika menu melebihi tinggi layar).
       - Grup menu per role: admin = Utama (Ringkasan, Kasir, Laporan &
         Rekap) + Admin (Produk, Belanja, Konsinyasi, Piutang, Retur,
         Kas, Shift & Kasir) + Loyalty (Keuntungan Member, Member) +

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import type { Role } from '@/lib/auth';
 
@@ -91,7 +92,8 @@ export function Sidebar({
       : pathname === href || pathname.startsWith(href + '/');
   }
 
-  return (
+  if (typeof document === 'undefined') return null;
+  return createPortal(
     <>
       {/* Dark overlay */}
       <div
@@ -111,7 +113,7 @@ export function Sidebar({
           (open ? 'translate-x-0' : '-translate-x-full')
         }
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-navy-700">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-navy-700">
           <p className="text-sm font-extrabold tracking-tight">Menu</p>
           <button
             onClick={onClose}
@@ -152,7 +154,8 @@ export function Sidebar({
           ))}
         </nav>
       </aside>
-    </>
+    </>,
+    document.body
   );
 }
 
