@@ -359,6 +359,10 @@ async function migrate(d: Db) {
   // cashier filters). idx_returns_sale: sales -> returns joins (rekap retur).
   await d.exec('CREATE INDEX IF NOT EXISTS idx_sales_kasir ON sales(kasir_id)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_returns_sale ON returns(sale_id)');
+  // perf batch 4 (2026-09-18): index compound utk dropdown /api/belanja
+  // (SELECT id, name FROM products WHERE active=1 ORDER BY name) — filter
+  // + sort langsung dari index, tanpa scan tabel produk.
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_products_active_name ON products(active, name)');
   // unique phone per member. Partial index: many members may have an empty
   // phone, but a non-empty phone must be unique. If duplicates already exist
   // (legacy data), keep the oldest row's phone and clear the newer ones first
@@ -493,7 +497,10 @@ export async function saveMemberSettings(
 
 // Bump this when migrate()/SCHEMA gain new statements so already-migrated
 // databases re-run fullInit exactly once per deploy that changes the schema.
-const SCHEMA_VERSION = 2;
+// Bump: perf batch 4 — index compound idx_products_active_name (dropdown
+// /api/belanja). Semua statement IF NOT EXISTS, idempotent, aman utk DB
+// existing.
+const SCHEMA_VERSION = 3;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
