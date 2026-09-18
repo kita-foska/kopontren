@@ -19,7 +19,13 @@ type Expense = {
   amount: number;
   created_at: string;
 };
-type Resp = { purchases: Purchase[]; expenses: Expense[]; products: { id: number; name: string }[] };
+  type Resp = {
+    purchases: Purchase[];
+    expenses: Expense[];
+    products: { id: number; name: string }[];
+    /** Total global dari server (seluruh data), akurat walau daftar hanya 50 terbaru. */
+    totals: { in: number; out: number };
+  };
 
 export function BelanjaClient() {
   const [tab, setTab] = useState<'in' | 'out'>('in');
@@ -64,8 +70,10 @@ export function BelanjaClient() {
   }
 
   if (!data) return <p className="text-sm text-slate-500">Memuat…</p>;
-  const inTotal = data.purchases.reduce((a, x) => a + x.qty * x.unit_cost, 0);
-  const outTotal = data.expenses.reduce((a, x) => a + x.amount, 0);
+  // Total memakai agregat global dari server (semua data), bukan jumlah dari
+  // daftar 50 terbaru — kartu ringkasan tetap akurat.
+  const inTotal = data.totals.in;
+  const outTotal = data.totals.out;
 
   return (
     <div>
@@ -130,7 +138,8 @@ export function BelanjaClient() {
             </div>
           </div>
           <div className="card p-3 text-sm">
-            Total pembelian: <b className="text-accent-500 dark:text-accent-300">{rp(inTotal)}</b>
+            Total pembelian: <b className="text-accent-500 dark:text-accent-300">{rp(inTotal)}</b>{' '}
+            <span className="text-xs text-slate-400">(50 transaksi terbaru)</span>
             <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto">
               {data.purchases.map((x) => (
                 <div
@@ -192,7 +201,8 @@ export function BelanjaClient() {
             </div>
           </div>
           <div className="card p-3 text-sm">
-            Total pengeluaran: <b className="text-rose-500">{rp(outTotal)}</b>
+            Total pengeluaran: <b className="text-rose-500">{rp(outTotal)}</b>{' '}
+            <span className="text-xs text-slate-400">(50 pengeluaran terbaru)</span>
             <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto">
               {data.expenses.map((x) => (
                 <div

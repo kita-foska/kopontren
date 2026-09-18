@@ -7,6 +7,10 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import type { Role } from '@/lib/auth';
 
+// Prefetch selektif: hanya menu utama (paling sering dibuka) yang RSC-nya
+// di-prefetch. Menu lain di-request on-demand agar bandwidth & server efisien.
+const PREFETCH_PATHS = new Set(['/', '/kasir', '/laporan']);
+
 type NavItem = { href: string; label: string };
 type NavGroup = { title: string; items: NavItem[] };
 
@@ -137,7 +141,7 @@ export function Sidebar({
                     <li key={it.href}>
                       <Link
                         href={it.href}
-                        prefetch={false}
+                        prefetch={PREFETCH_PATHS.has(it.href)}
                         onClick={onClose}
                         className={
                           'block rounded-lg px-3 py-2 text-sm font-bold transition ' +
