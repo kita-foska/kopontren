@@ -4,25 +4,13 @@ import { currentUser, isManager } from '@/lib/auth';
 import { cached } from '@/lib/ref-cache';
 
 /**
- * Cache in-memory (60 dtk) daftar produk aktif utk dropdown form stok masuk.
- * Tanpa cache, setiap GET /api/belanja membaca seluruh tabel products di
- * Turso (rows read). Daftar referensi yang jarang berubah — keterlambatan
- * 60 dtk diizinkan (halaman admin lengkap memakai /api/products?live=1
- * untuk data real-time).
+ * Cache in-memory (60 dtk, ref-cache) daftar produk aktif utk dropdown form
+ * stok masuk. Kunci 'products:active' ikut terinvalidasi oleh
+ * invalidate('products:') dari route write (products, migrate, restore) —
+ * produk baru muncul di dropdown tanpa menunggu TTL. Instance Vercel warm:
+ * request beruntun tidak menembus Turso; TTL 60 dtk jadi backstop utk
+ * staleness lintas-instance.
  */
-let productsCache: { t: number; rows: unknown[] } | null = null;
-const PRODUCTS_TTL_MS = 60_000;
-
-async function activeProducts(): Promise<unknown[]> {
-  if (productsCache && Date.now() - productsCache.t < PRODUCTS_TTL_MS) return productsCache.rows;
-  const d = await db();
-  const rows = await d
-    .prepare('SELECT id, name FROM products WHERE active = 1 ORDER BY name')
-    .all();
-  productsCache = { t: Date.now(), rows };
-  return rows;
-}
-
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
@@ -37,11 +25,16 @@ export async function GET() {
   const expenses = await d
     .prepare('SELECT * FROM expenses ORDER BY created_at DESC LIMIT 50')
     .all();
-  const products = await activeProducts();
+  const products = await cached('products:active', async () => {
+    const dd = await db();
+    return dd
+      .prepare('SELECT id, name FROM products WHERE active = 1 ORDER BY name')
+      .all();
+  });
   // Total global (semua data, bukan hanya 50 terbaru) — tanpa cache, tiap
   // GET membaca SEMUA baris purchases & expenses (pemicu utama Rows Read).
-  // Cache 60 dtk + invalidasi di POST /api/expenses; tabel purchases tidak
-  // punya route write (hanya seed/restore backup), jadi TTL adalah backstop.
+  // Cache 60 dtk + invalidasi('belanja:') di POST /api/expenses &
+  // POST /api/purchases; backup/restore memaksa segalanya segar.
   const totals = await cached('belanja:totals', async () => {
     const dd = await db();
     const inAgg = await dd.prepare('SELECT COALESCE(SUM(qty * unit_cost), 0) AS total FROM purchases').get();
