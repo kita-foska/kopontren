@@ -98,7 +98,7 @@ export function Sidebar({
         onClick={onClose}
         aria-hidden="true"
         className={
-          'fixed inset-0 z-40 bg-navy-900/60 transition-opacity duration-200 ' +
+          'fixed inset-0 z-40 bg-navy-900/60 transition-opacity duration-300 ' +
           (open ? 'opacity-100' : 'pointer-events-none opacity-0')
         }
       />
@@ -107,7 +107,7 @@ export function Sidebar({
         role="dialog"
         aria-label="Menu navigasi"
         className={
-          'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 ease-out dark:border-navy-700 dark:bg-navy-900 ' +
+          'fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-300 ease-in-out md:w-[260px] dark:border-navy-700 dark:bg-navy-900 ' +
           (open ? 'translate-x-0' : '-translate-x-full')
         }
       >

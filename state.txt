@@ -77,8 +77,9 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
   HP (Slow 3G + instal PWA).
 
 ## NEXT / TODO
-- [ ] Commit batch sidebar navigasi (selesai implementasi & tsc) ke
-      `master`, sync `main`, push keduanya (Vercel auto-deploy main).
+- [x] Commit batch sidebar navigasi: `master` `b409dfb`, sync `main`
+      `99dc587` (+ commit kecil pd main utk hapus `navpills.tsx` sisa —
+      strategi file-copy tidak menghapus file), push keduanya.
 - [ ] Test visual sidebar: HP (Chrome DevTools device mode — pastikan
       TIDAK ada scroll horizontal; sidebar membuka dari kiri + overlay)
       & desktop (open/close, item aktif, Escape).

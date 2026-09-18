@@ -20,6 +20,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-navy-700 dark:bg-navy-900/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-2.5">
+            <HamburgerNav role={user.role} />
             <a href="/" className="flex min-w-0 items-center gap-2.5">
               <Image
                 src="/logo-kopontren.png"
@@ -36,7 +37,6 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                 </p>
               </div>
             </a>
-            <HamburgerNav role={user.role} />
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <span className="hidden items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 sm:flex dark:border-navy-600 dark:text-slate-300">
