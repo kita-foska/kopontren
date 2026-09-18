@@ -139,12 +139,16 @@ if (!apply) {
 
 const client = createClient({ url, authToken: token || undefined });
 // @libsql/client >= 0.15: client.prepare() sudah dihapus -> pakai execute(sql, args).
+// Catatan: hasil execute(UPDATE) tidak menyediakan affectedRowCount,
+// jadi upsert memakai eksistensi (SELECT 1) untuk menentukan update vs insert.
 const updSql = `UPDATE products SET name=?, category=?, unit=?, base_price=?, cost_price=?, stock=? WHERE barcode=?`;
 const insSql = `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode)
    VALUES (?, ?, ?, ?, ?, ?, 1, ?)`;
+const exBarcodeSql = `SELECT 1 FROM products WHERE barcode=?`;
 const updNameSql = `UPDATE products SET category=?, unit=?, base_price=?, cost_price=?, stock=? WHERE lower(name)=lower(?)`;
 const insPlainSql = `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode)
    VALUES (?, ?, ?, ?, ?, ?, 1, '')`;
+const exNameSql = `SELECT 1 FROM products WHERE lower(name)=lower(?)`;
 
 let inserted = 0;
 let updated = 0;
@@ -152,22 +156,26 @@ const failed = [];
 for (const r of rows) {
   try {
     if (r.barcode) {
-      const res = await client.execute(updSql, [
-        r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock, r.barcode
-      ]);
-      if ((res.affectedRowCount ?? 0) > 0) updated++;
-      else {
+      const ex = await client.execute(exBarcodeSql, [r.barcode]);
+      if (ex.rows.length > 0) {
+        await client.execute(updSql, [
+          r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock, r.barcode
+        ]);
+        updated++;
+      } else {
         await client.execute(insSql, [
           r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock, r.barcode
         ]);
         inserted++;
       }
     } else {
-      const res = await client.execute(updNameSql, [
-        r.category, r.unit, r.base_price, r.cost_price, r.stock, r.name
-      ]);
-      if ((res.affectedRowCount ?? 0) > 0) updated++;
-      else {
+      const ex = await client.execute(exNameSql, [r.name]);
+      if (ex.rows.length > 0) {
+        await client.execute(updNameSql, [
+          r.category, r.unit, r.base_price, r.cost_price, r.stock, r.name
+        ]);
+        updated++;
+      } else {
         await client.execute(insPlainSql, [
           r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock
         ]);
