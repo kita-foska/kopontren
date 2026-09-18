@@ -160,20 +160,13 @@ if (rows.length === 0 || !apply) {
 }
 
 const client = createClient({ url, authToken: token || undefined });
-const upd = client.prepare(
-  `UPDATE products SET name=?, category=?, unit=?, base_price=?, cost_price=?, stock=? WHERE barcode=?`
-);
-const ins = client.prepare(
-  `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode)
-   VALUES (?, ?, ?, ?, ?, ?, 1, ?)`
-);
-const updName = client.prepare(
-  `UPDATE products SET category=?, unit=?, base_price=?, cost_price=?, stock=? WHERE lower(name)=lower(?)`
-);
-const insPlain = client.prepare(
-  `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode)
-   VALUES (?, ?, ?, ?, ?, ?, 1, '')`
-);
+// @libsql/client >= 0.15: client.prepare() sudah dihapus -> pakai execute(sql, args).
+const updSql = `UPDATE products SET name=?, category=?, unit=?, base_price=?, cost_price=?, stock=? WHERE barcode=?`;
+const insSql = `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode)
+   VALUES (?, ?, ?, ?, ?, ?, 1, ?)`;
+const updNameSql = `UPDATE products SET category=?, unit=?, base_price=?, cost_price=?, stock=? WHERE lower(name)=lower(?)`;
+const insPlainSql = `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode)
+   VALUES (?, ?, ?, ?, ?, ?, 1, '')`;
 
 let inserted = 0;
 let updated = 0;
@@ -181,17 +174,25 @@ const failed = [];
 for (const r of rows) {
   try {
     if (r.barcode) {
-      const res = await upd.run(r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock, r.barcode);
-      if (res.rowsAffected > 0) updated++;
+      const res = await client.execute(updSql, [
+        r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock, r.barcode
+      ]);
+      if ((res.affectedRowCount ?? 0) > 0) updated++;
       else {
-        await ins.run(r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock, r.barcode);
+        await client.execute(insSql, [
+          r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock, r.barcode
+        ]);
         inserted++;
       }
     } else {
-      const res = await updName.run(r.category, r.unit, r.base_price, r.cost_price, r.stock, r.name);
-      if (res.rowsAffected > 0) updated++;
+      const res = await client.execute(updNameSql, [
+        r.category, r.unit, r.base_price, r.cost_price, r.stock, r.name
+      ]);
+      if ((res.affectedRowCount ?? 0) > 0) updated++;
       else {
-        await insPlain.run(r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock);
+        await client.execute(insPlainSql, [
+          r.name, r.category, r.unit, r.base_price, r.cost_price, r.stock
+        ]);
         inserted++;
       }
     }
