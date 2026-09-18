@@ -2,6 +2,26 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { cached, invalidate } from '@/lib/ref-cache';
+
+type KasAgg = { sales: number; purchases: number; expenses: number; cashIn: number; cashOut: number };
+
+/** Agregat global utk saldo kas. Tanpa cache, tiap GET membaca SELURUH tabel
+ *  sales/purchases/expenses/cash_entries (pemicu Rows Read). Cache 60 dtk;
+ *  semua route write yang menyentuh keempat tabel ini memanggil
+ *  invalidate('kas:'). */
+async function kasAgg(): Promise<KasAgg> {
+  return cached<KasAgg>('kas:agg', async () => {
+    const d = await db();
+    const g = (rows: unknown[]) => Number((rows[0] as { v?: number } | undefined)?.v ?? 0);
+    const sales = g(await d.prepare('SELECT COALESCE(SUM(total),0) v FROM sales').all());
+    const purchases = g(await d.prepare('SELECT COALESCE(SUM(qty * unit_cost),0) v FROM purchases').all());
+    const expenses = g(await d.prepare('SELECT COALESCE(SUM(amount),0) v FROM expenses').all());
+    const cashIn = g(await d.prepare("SELECT COALESCE(SUM(amount),0) v FROM cash_entries WHERE type = 'income'").all());
+    const cashOut = g(await d.prepare("SELECT COALESCE(SUM(amount),0) v FROM cash_entries WHERE type = 'expense'").all());
+    return { sales, purchases, expenses, cashIn, cashOut };
+  });
+}
 
 export async function GET() {
   const user = await currentUser();
@@ -9,40 +29,40 @@ export async function GET() {
   if (!isManager(user))
     return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
   const d = await db();
+  // 50 baris terbaru per sumber cukup utk daftar (UI: scroll 50 teratas).
+  // Dulu 200×4 = sampai 800 baris per load → Turso Rows Read melonjak.
   const sales = (
     await d
       .prepare(
-        'SELECT id, total AS amount, customer, pay_method, created_at FROM sales ORDER BY created_at DESC LIMIT 200'
+        'SELECT id, total AS amount, customer, pay_method, created_at FROM sales ORDER BY created_at DESC LIMIT 50'
       )
       .all()
   ) as { id: number; amount: number; customer: string; pay_method: string; created_at: string }[];
   const purchases = (
     await d
       .prepare(
-        'SELECT id, (qty * unit_cost) AS amount, product_name, supplier, created_at FROM purchases ORDER BY created_at DESC LIMIT 200'
+        'SELECT id, (qty * unit_cost) AS amount, product_name, supplier, created_at FROM purchases ORDER BY created_at DESC LIMIT 50'
       )
       .all()
   ) as { id: number; amount: number; product_name: string; supplier: string; created_at: string }[];
   const expenses = (
     await d
-      .prepare('SELECT id, amount, name, created_at FROM expenses ORDER BY created_at DESC LIMIT 200')
+      .prepare('SELECT id, amount, name, created_at FROM expenses ORDER BY created_at DESC LIMIT 50')
       .all()
   ) as { id: number; amount: number; name: string; created_at: string }[];
   const entries = (
     await d
       .prepare(
-        'SELECT id, type, label, amount, created_at FROM cash_entries ORDER BY created_at DESC LIMIT 200'
+        'SELECT id, type, label, amount, created_at FROM cash_entries ORDER BY created_at DESC LIMIT 50'
       )
       .all()
   ) as { id: number; type: string; label: string; amount: number; created_at: string }[];
 
-  const sum = (rows: { amount: number }[]) => rows.reduce((a, r) => a + Number(r.amount || 0), 0);
-  const inn =
-    sum(sales) +
-    entries.filter((e) => e.type === 'income').reduce((a, e) => a + e.amount, 0);
-  const out =
-    sum(purchases) + sum(expenses) +
-    entries.filter((e) => e.type === 'expense').reduce((a, e) => a + e.amount, 0);
+  // Saldo dari agregat global (semua data), bukan dari 50 baris halaman —
+  // lebih akurat sekarang data bertambah, dan termahal-nya sudah di-cache.
+  const agg = await kasAgg();
+  const inn = agg.sales + agg.cashIn;
+  const out = agg.purchases + agg.expenses + agg.cashOut;
 
   type Row = { id: number; kind: string; sign: number; label: string; amount: number; created_at: string };
   const rows: Row[] = [
@@ -111,6 +131,8 @@ export async function POST(req: Request) {
     label: String(b.label).trim(),
     amount,
   });
+  invalidate('kas:');
+  invalidate('reports:');
   return NextResponse.json({ ok: true });
 }
 
@@ -129,5 +151,7 @@ export async function DELETE(req: Request) {
   if (!entry) return NextResponse.json({ error: 'Jurnal tidak ditemukan' }, { status: 404 });
   await d.prepare('DELETE FROM cash_entries WHERE id = ?').run(id);
   await logAudit(user, 'kas:delete', 'cash_entries', id, entry, undefined);
+  invalidate('kas:');
+  invalidate('reports:');
   return NextResponse.json({ ok: true });
 }

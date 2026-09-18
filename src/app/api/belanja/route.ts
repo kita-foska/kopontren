@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
+import { cached } from '@/lib/ref-cache';
 
 /**
  * Cache in-memory (60 dtk) daftar produk aktif utk dropdown form stok masuk.
@@ -37,22 +38,28 @@ export async function GET() {
     .prepare('SELECT * FROM expenses ORDER BY created_at DESC LIMIT 50')
     .all();
   const products = await activeProducts();
-  // Total global (semua data, bukan hanya 50 terbaru) — murah (1 baris per query),
-  // sehingga kartu ringkasan tetap akurat meski daftar dibatasi LIMIT 50.
-  const inAgg = await d.prepare('SELECT COALESCE(SUM(qty * unit_cost), 0) AS total FROM purchases').get();
-  const outAgg = await d.prepare('SELECT COALESCE(SUM(amount), 0) AS total FROM expenses').get();
+  // Total global (semua data, bukan hanya 50 terbaru) — tanpa cache, tiap
+  // GET membaca SEMUA baris purchases & expenses (pemicu utama Rows Read).
+  // Cache 60 dtk + invalidasi di POST /api/expenses; tabel purchases tidak
+  // punya route write (hanya seed/restore backup), jadi TTL adalah backstop.
+  const totals = await cached('belanja:totals', async () => {
+    const dd = await db();
+    const inAgg = await dd.prepare('SELECT COALESCE(SUM(qty * unit_cost), 0) AS total FROM purchases').get();
+    const outAgg = await dd.prepare('SELECT COALESCE(SUM(amount), 0) AS total FROM expenses').get();
+    return {
+      in: Number((inAgg as { total?: number } | undefined)?.total ?? 0),
+      out: Number((outAgg as { total?: number } | undefined)?.total ?? 0),
+    };
+  });
   // no-store: data bisnis harus selalu segar setelah pencatatan (POST) & tidak
-  // boleh di-cache CDN lintas-user. (Data statis produk sudah punya cache 30s
+  // boleh di-cache CDN lintas-user. (Data statis produk sudah punya cache 60s
   // di /api/products terpisah.)
   return NextResponse.json(
     {
       purchases,
       expenses,
       products,
-      totals: {
-        in: Number((inAgg as { total?: number } | undefined)?.total ?? 0),
-        out: Number((outAgg as { total?: number } | undefined)?.total ?? 0),
-      },
+      totals,
     },
     { headers: { 'Cache-Control': 'no-store' } }
   );

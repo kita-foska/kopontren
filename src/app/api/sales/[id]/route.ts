@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
@@ -75,6 +76,11 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     }
   });
   await logAudit(user, 'sales:delete', 'sales', sale.id, { total: sale.total }, undefined);
+  // Hapus transaksi membatalkan efeknya: stok, poin member, kas, laporan.
+  invalidate('members:');
+  invalidate('products:');
+  invalidate('kas:');
+  invalidate('reports:');
   return NextResponse.json({
     ok: true,
     note: 'Stok dikembalikan' + (sale.member_id ? ' & poin member dibatalkan' : ''),

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
 import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 type Backup = {
   version: number;
@@ -274,6 +275,9 @@ export async function POST(req: Request) {
       products: (payload.products as unknown[] | undefined)?.length ?? 0,
       sales: (payload.sales as unknown[] | undefined)?.length ?? 0,
     });
+    // Import backup mengganti seluruh data operasional -> buang SEMUA cache
+    // referensi (prefiks kosong = seluruh store).
+    invalidate('');
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json(

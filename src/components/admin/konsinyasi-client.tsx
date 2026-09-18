@@ -26,6 +26,8 @@ type Kons = {
 type Resp = {
   consignments: Kons[];
   totals: { active: number; unpaid: number; remaining: number };
+  limit?: number;
+  offset?: number;
 };
 
 const EMPTY_FORM = {
@@ -44,14 +46,38 @@ export function KonsinyasiClient() {
   const [toast, showToast] = useToast();
   const [f, setF] = useState(EMPTY_FORM);
   const [acts, setActs] = useState<Record<number, { qty: number; pay: number }>>({});
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [canMore, setCanMore] = useState(false);
 
-  const load = useCallback(async () => {
-    const r = await api<Resp>('/api/konsinyasi');
-    if (r.ok && r.data) setData(r.data);
+  const load = useCallback(async (offset = 0, append = false) => {
+    // Server cap 50 baris/halaman; offset melanjutkan riwayat konsinyasi.
+    const r = await api<Resp>('/api/konsinyasi?limit=50&offset=' + offset);
+    if (r.ok && r.data) {
+      setData((prev) => {
+        const d = r.data!;
+        if (!prev || !append) return d;
+        const seen = new Set(prev.consignments.map((k) => k.id));
+        return {
+          ...d,
+          consignments: [
+            ...prev.consignments,
+            ...d.consignments.filter((k) => !seen.has(k.id)),
+          ],
+        };
+      });
+      setCanMore((r.data!.consignments?.length || 0) >= 50);
+    }
   }, []);
   useEffect(() => {
     load();
   }, [load]);
+
+  async function loadMore() {
+    if (loadingMore || !canMore || !data) return;
+    setLoadingMore(true);
+    await load(data.consignments.length, true);
+    setLoadingMore(false);
+  }
 
   async function post(body: object, okMsg: string) {
     const r = await api<{ ok?: boolean }>('/api/konsinyasi', {
@@ -319,6 +345,13 @@ export function KonsinyasiClient() {
           {done.map((k) => (
             <KonsCard key={k.id} k={k} doneMode={true} />
           ))}
+        </div>
+      )}
+      {canMore && (
+        <div className="p-1 text-center">
+          <button className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? 'Memuat…' : 'Muat riwayat lebih lama'}
+          </button>
         </div>
       )}
       <Toast msg={toast} onClose={() => showToast('')} />

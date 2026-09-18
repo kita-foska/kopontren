@@ -15,7 +15,7 @@ type Log = {
   new_value: string | null;
   created_at: string;
 };
-type Resp = { logs: Log[]; tables: string[] };
+type Resp = { logs: Log[]; tables: string[]; limit?: number; offset?: number };
 
 function truncate(s: string | null, n = 60): string {
   if (!s) return '';
@@ -33,15 +33,34 @@ export function AuditClient() {
   const [userF, setUserF] = useState('');
   const [tableF, setTableF] = useState('');
   const [sinceF, setSinceF] = useState('');
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [canMore, setCanMore] = useState(false);
   const [toast, showToast] = useToast();
 
-  const load = useCallback(async () => {
-    const r = await api<Resp>('/api/audit?limit=500');
-    if (r.ok && r.data) setData(r.data);
+  const load = useCallback(async (offset = 0, append = false) => {
+    // Server cap 50 baris/halaman (target Rows Read); tombol "Muat
+    // lebih banyak" melanjutkan dari offset halaman terakhir.
+    const r = await api<Resp>('/api/audit?limit=50&offset=' + offset);
+    if (r.ok && r.data) {
+      setData((prev) => {
+        const d = r.data!;
+        if (!prev || !append) return d;
+        const seen = new Set(prev.logs.map((l) => l.id));
+        return { ...d, logs: [...prev.logs, ...d.logs.filter((l) => !seen.has(l.id))] };
+      });
+      setCanMore((r.data!.logs?.length || 0) >= 50);
+    }
   }, []);
   useEffect(() => {
     load();
   }, [load]);
+
+  async function loadMore() {
+    if (loadingMore || !canMore || !data) return;
+    setLoadingMore(true);
+    await load(data.logs.length, true);
+    setLoadingMore(false);
+  }
 
   async function purge(days: number) {
     if (!confirm('Hapus log audit lebih tua dari ' + days + ' hari?')) return;
@@ -161,6 +180,13 @@ export function AuditClient() {
           </tbody>
         </table>
       </div>
+      {canMore && (
+        <div className="p-1 text-center">
+          <button className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? 'Memuat…' : 'Muat lebih banyak log'}
+          </button>
+        </div>
+      )}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

@@ -2,41 +2,29 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { cached, invalidate } from '@/lib/ref-cache';
 
 /**
- * In-memory cache untuk data statis (produk + kategori). Instance function
- * Vercel bertahan antar-request (warm), jadi request beruntun tidak
- * menembus Turso. TTL 30 detik; param ?fresh=1 memaksa bypass cache
- * (dipakai halaman admin setelah mengubah data). Catatan: cache per-instance
- * — invalidasi antar-instance tidak mungkin di edgeless serverless,
- * makanya TTL dipertahankan pendek.
+ * Cache in-memory (60 dtk, ref-cache) utk data statis produk + kategori.
+ * Instance Vercel warm: request beruntun tidak menembus Turso.
+ * `?fresh=1` memaksa bypass (dipakai halaman admin setelah mengubah data);
+ * route WRITE (products POST/PUT/DELETE, sales, retur, migrate) juga
+ * memanggil invalidate('products:') — TTL 60 dtk jadi backstop.
  */
-type ProdCacheEntry = { t: number; products: unknown[]; categories: string[] };
-const CACHE_TTL_MS = 30_000;
-const prodCache: Record<string, ProdCacheEntry> = {};
-
-function cacheKey(live: boolean): string {
-  return live ? 'live' : 'all';
-}
-
-async function getProductsCache(
-  live: boolean
-): Promise<{ products: unknown[]; categories: string[] }> {
-  const hit = prodCache[cacheKey(live)];
-  if (hit && Date.now() - hit.t < CACHE_TTL_MS) return { products: hit.products, categories: hit.categories };
-  const d = await db();
-  const products: unknown[] = live
-    ? await d.prepare('SELECT * FROM products WHERE active = 1 ORDER BY category, name').all()
-    : await d.prepare('SELECT * FROM products ORDER BY category, name').all();
-  const categories: string[] = (
-    (await d
-      .prepare(
-        "SELECT DISTINCT category FROM products WHERE active = 1 AND category != '' ORDER BY category"
-      )
-      .all()) as { category: string }[]
-  ).map((r) => r.category);
-  prodCache[cacheKey(live)] = { t: Date.now(), products, categories };
-  return { products, categories };
+async function getProductsCache(live: boolean): Promise<{ products: unknown[]; categories: string[] }> {
+  const key = live ? 'products:live' : 'products:all';
+  return cached<{ products: unknown[]; categories: string[] }>(key, async () => {
+    const d = await db();
+    const products: unknown[] = live
+      ? await d.prepare('SELECT * FROM products WHERE active = 1 ORDER BY category, name').all()
+      : await d.prepare('SELECT * FROM products ORDER BY category, name').all();
+    const categories: string[] = (
+      (await d
+        .prepare("SELECT DISTINCT category FROM products WHERE active = 1 AND category != '' ORDER BY category")
+        .all()) as { category: string }[]
+    ).map((r) => r.category);
+    return { products, categories };
+  });
 }
 
 export async function GET(req: Request) {
@@ -47,16 +35,17 @@ export async function GET(req: Request) {
   const fresh = url.searchParams.get('fresh') === '1';
   let data: { products: unknown[]; categories: string[] };
   if (fresh) {
-    // Bypass: buang entri lalu ambil dari DB.
-    delete prodCache[cacheKey(live)];
+    // Bypass: buang entri cache lalu ambil segar dari DB.
+    invalidate(live ? 'products:live' : 'products:all');
     data = await getProductsCache(live);
   } else {
     data = await getProductsCache(live);
   }
   // Pagination opsional (default: seluruh daftar, karena POS/catalog butuh
-  // katalog lengkap). ?limit=&offset= membatasi halaman yang dikirim.
+  // katalog lengkap). ?limit=&offset= membatasi halaman yang dikirim;
+  // cap 50 baris/halaman (target Turso Rows Read) — klien memakai paging.
   const limit = url.searchParams.get('limit')
-    ? Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 50))
+    ? Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50))
     : null;
   const offset = url.searchParams.get('offset') ? Math.max(0, Number(url.searchParams.get('offset')) || 0) : 0;
   const products =
@@ -101,5 +90,6 @@ export async function POST(req: Request) {
     stock: Number(b.stock) || 0,
     barcode: barcode || undefined,
   });
+  invalidate('products:');
   return NextResponse.json({ ok: true, id });
 }

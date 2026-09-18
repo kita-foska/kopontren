@@ -3,6 +3,7 @@ import { db, tx } from '@/db';
 import { currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { parseImport, type ImportRow, type RowError } from '@/lib/product-import';
+import { invalidate } from '@/lib/ref-cache';
 
 /**
  * POST /api/migrate/products — batch product upsert (ADMIN ONLY).
@@ -173,6 +174,8 @@ export async function POST(req: Request) {
     total_products: totalProducts,
   });
 
+  // Produk berubah massal -> buang cache referensi produk.
+  invalidate('products:');
   return NextResponse.json({
     ok: true,
     inserted,

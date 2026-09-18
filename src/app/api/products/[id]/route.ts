@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
@@ -30,6 +31,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (Number.isNaN(v) || v < 0)
       return NextResponse.json({ error: 'Stok tidak valid' }, { status: 400 });
     await d.prepare('UPDATE products SET stock = ? WHERE id = ?').run(v, prod.id);
+    invalidate('products:');
     await logAudit(user, 'product:stock', 'products', prod.id, { stock: prod.stock }, {
       stock: v,
     });
@@ -39,6 +41,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (b.active !== undefined && b.name === undefined) {
     const active = b.active ? 1 : 0;
     await d.prepare('UPDATE products SET active = ? WHERE id = ?').run(active, prod.id);
+    invalidate('products:');
     await logAudit(user, 'product:toggle', 'products', prod.id, { active: prod.active }, {
       active,
     });
@@ -61,6 +64,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       newBarcode,
       prod.id
     );
+  invalidate('products:');
   await logAudit(user, 'product:update', 'products', prod.id, {
     name: prod.name,
     base_price: prod.base_price,
@@ -94,6 +98,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   ).c;
   if (sold > 0) {
     await d.prepare('UPDATE products SET active = 0 WHERE id = ?').run(prod.id);
+    invalidate('products:');
     await logAudit(user, 'product:archive', 'products', prod.id, { name: prod.name }, { active: 0 });
     return NextResponse.json({
       ok: true,
@@ -103,6 +108,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   }
 
   await d.prepare('DELETE FROM products WHERE id = ?').run(prod.id);
+  invalidate('products:');
   await logAudit(user, 'product:delete', 'products', prod.id, { name: prod.name }, undefined);
   return NextResponse.json({ ok: true, message: 'Produk berhasil dihapus' });
 }

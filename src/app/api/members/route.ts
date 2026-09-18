@@ -2,15 +2,16 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { cached, invalidate } from '@/lib/ref-cache';
 
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
   const url = new URL(req.url);
   const q = String(url.searchParams.get('q') || '').trim();
-  // Pagination: default 50, maksimal 500. Klien memakai "Muat lebih banyak"
-  // dengan ?offset=; POS meminta ?limit=500 untuk dropdown member penuh.
-  const limit = Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 50));
+  // Pagination: default & maksimal 50 (target Turso Rows Read); klien
+  // memakai "Muat lebih banyak" dengan ?offset= .
+  const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50));
   const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
   const d = await db();
   let where = '';
@@ -26,11 +27,16 @@ export async function GET(req: Request) {
     )
     .all(...args, limit, offset);
   // Agregat global (seluruh tabel, bukan halaman) untuk kartu ringkasan.
-  const totals = (await d
-    .prepare(
-      `SELECT COUNT(*) c, COALESCE(SUM(points),0) p, COALESCE(SUM(total_spent),0) t FROM members${where}`
-    )
-    .get(...args)) as { c: number; p: number; t: number };
+  // Cache 60 dtk (ref-cache): COUNT/SUM penuh tabel members adalah pemicu
+  // Rows Read; dibuang saat ada mutasi (member & poin via transaksi).
+  const totals = await cached(`members:totals:${q || '-'}`, async () => {
+    const t = (await d
+      .prepare(
+        `SELECT COUNT(*) c, COALESCE(SUM(points),0) p, COALESCE(SUM(total_spent),0) t FROM members${where}`
+      )
+      .get(...args)) as { c: number; p: number; t: number };
+    return t;
+  });
   return NextResponse.json({
     members: rows,
     total: totals.c,
@@ -56,6 +62,7 @@ export async function POST(req: Request) {
   await logAudit(user, 'member:create', 'members', Number(info.lastInsertRowid), undefined, {
     name,
   });
+  invalidate('members:');
   return NextResponse.json({ ok: true, id: Number(info.lastInsertRowid) });
 }
 
@@ -91,6 +98,7 @@ export async function PUT(req: Request) {
     phone: String(b.phone ?? row.phone),
     address: String(b.address ?? row.address),
   });
+  invalidate('members:');
   return NextResponse.json({ ok: true });
 }
 
@@ -110,5 +118,6 @@ export async function DELETE(req: Request) {
   await d.prepare('DELETE FROM members WHERE id = ?').run(id);
   await d.prepare('UPDATE sales SET member_id = NULL WHERE member_id = ?').run(id);
   await logAudit(user, 'member:delete', 'members', id, row, undefined);
+  invalidate('members:');
   return NextResponse.json({ ok: true });
 }

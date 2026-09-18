@@ -21,7 +21,8 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
   const url = new URL(req.url);
   const status = url.searchParams.get('status') || 'all';
-  const limit = Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 100));
+  // Cap 50 baris/halaman (target Rows Read); sebelumnya default 100, max 500.
+  const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50));
   const d = await db();
   const st = status === 'open' || status === 'settled' ? status : 'all';
   const where = st === 'all' ? '1=1' : 'status = ?';

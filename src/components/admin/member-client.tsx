@@ -78,9 +78,9 @@ export function MemberClient() {
 
   const load = useCallback(async (search: string) => {
     const s = search.trim();
-    // Pencarian: satu request dgn limit 500 (server-side q).
-    // Normal: pagination 50 baris/halaman + tombol "Muat lebih banyak".
-    await fetchPage(0, s ? 500 : 50, s, false);
+    // Pencarian & daftar normal: 50 baris/halaman (cap server) + tombol
+    // "Muat lebih banyak" untuk melanjutkan tanpa membebani Rows Read.
+    await fetchPage(0, 50, s, false);
   }, []);
 
   useEffect(() => {

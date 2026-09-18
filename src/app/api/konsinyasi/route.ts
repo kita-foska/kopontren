@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 type Row = {
   id: number;
@@ -30,26 +31,42 @@ function computed(r: Row) {
   return { ...r, remaining, payable, unpaid: payable - r.amount_paid };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
   if (!isManager(user))
     return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  const url = new URL(req.url);
+  // 50 baris/halaman + ?offset= (dulu LIMIT 500 tanpa paging — sekarang
+  // klien menambah "Muat lebih banyak").
+  const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50));
+  const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
   const d = await db();
   const rows = (
     await d
-      .prepare(`SELECT ${COLS} FROM consignments ORDER BY (status = 'active') DESC, created_at DESC LIMIT 500`)
-      .all()
+      .prepare(`SELECT ${COLS} FROM consignments ORDER BY (status = 'active') DESC, created_at DESC LIMIT ? OFFSET ?`)
+      .all(limit, offset)
   ) as Row[];
   const items = rows.map(computed);
-  const act = items.filter((i) => i.status === 'active');
+  // Ringkasan dari agregat atas baris ACTIVE (bukan dari halaman yang
+  // dipaging) agar tetap akurat meski list dibatasi 50 baris.
+  const actAgg = (await d
+    .prepare(
+      `SELECT COUNT(*) c,
+              COALESCE(SUM(qty_received - qty_sold - qty_returned), 0) r,
+              COALESCE(SUM(qty_sold * agree_price - amount_paid), 0) u
+       FROM consignments WHERE status = 'active'`
+    )
+    .get()) as { c: number; r: number; u: number };
   return NextResponse.json({
     consignments: items,
     totals: {
-      active: act.length,
-      unpaid: act.reduce((a, i) => a + i.unpaid, 0),
-      remaining: act.reduce((a, i) => a + i.remaining, 0),
+      active: actAgg.c,
+      unpaid: actAgg.u,
+      remaining: actAgg.r,
     },
+    limit,
+    offset,
   });
 }
 
@@ -165,6 +182,9 @@ export async function POST(req: Request) {
                 'Pembayaran konsinyasi #' + id,
                 user.id
               );
+            // Uang keluar kas -> saldo kas & agregat laporan basi (cache).
+            invalidate('kas:');
+            invalidate('reports:');
             return {
               ok: true,
               unpaid: row.qty_sold * row.agree_price - (row.amount_paid + amount),

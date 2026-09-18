@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 export async function POST(req: Request) {
   const user = await currentUser();
@@ -51,5 +52,10 @@ export async function POST(req: Request) {
     unit_cost: cost,
     supplier: String(b.supplier || '').trim() || undefined,
   });
+  // Restok & harga modal produk berubah; agregat belanja/kas/laporan ikut.
+  invalidate('products:');
+  invalidate('belanja:');
+  invalidate('kas:');
+  invalidate('reports:');
   return NextResponse.json({ ok: true, stock: stockRow.stock });
 }

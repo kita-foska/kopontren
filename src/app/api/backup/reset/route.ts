@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
 import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 export async function POST() {
   const user = await currentUser();
@@ -25,6 +26,8 @@ export async function POST() {
   await logAudit(user, 'data:reset', 'database', null, undefined, {
     note: 'Semua data operasional dihapus',
   });
+  // Semua data operasional terhapus -> buang SEMUA cache referensi.
+  invalidate('');
   return NextResponse.json({
     ok: true,
     note: 'Semua data operasional dihapus. Akun pengguna & riwayat session tetap ada.',

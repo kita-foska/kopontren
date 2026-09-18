@@ -18,7 +18,7 @@ type Shift = {
   by_method: Record<string, number>;
   setor?: number;
 };
-type Resp = { shifts: Shift[]; open: Shift | null; open_all?: Shift[] };
+type Resp = { shifts: Shift[]; open: Shift | null; open_all?: Shift[]; limit?: number; offset?: number };
 
 const METHOD_LABEL: Record<string, string> = { cash: 'Tunai', tf: 'Transfer', wa: 'QRIS/WA' };
 
@@ -26,14 +26,32 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
   const [data, setData] = useState<Resp | null>(null);
   const [toast, showToast] = useToast();
   const [busy, setBusy] = useState('');
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [canMore, setCanMore] = useState(false);
 
-  const load = useCallback(async () => {
-    const r = await api<Resp>('/api/shifts');
-    if (r.ok && r.data) setData(r.data);
+  const load = useCallback(async (offset = 0, append = false) => {
+    // Server cap 50 baris/halaman; offset melanjutkan daftar rekap shift.
+    const r = await api<Resp>('/api/shifts?limit=50&offset=' + offset);
+    if (r.ok && r.data) {
+      setData((prev) => {
+        const d = r.data!;
+        if (!prev || !append) return d;
+        const seen = new Set(prev.shifts.map((s) => s.id));
+        return { ...d, shifts: [...prev.shifts, ...d.shifts.filter((s) => !seen.has(s.id))] };
+      });
+      setCanMore((r.data!.shifts?.length || 0) >= 50);
+    }
   }, []);
   useEffect(() => {
     load();
   }, [load]);
+
+  async function loadMore() {
+    if (loadingMore || !canMore || !data) return;
+    setLoadingMore(true);
+    await load(data.shifts.length, true);
+    setLoadingMore(false);
+  }
 
   async function close(id: number) {
     if (!confirm('Tutup shift #' + id + ' dan kunci rekapnya?')) return;
@@ -158,6 +176,13 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
           </tbody>
         </table>
       </div>
+      {canMore && (
+        <div className="p-1 text-center">
+          <button className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? 'Memuat…' : 'Muat shift lama lainnya'}
+          </button>
+        </div>
+      )}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 export async function POST(req: Request) {
   const user = await currentUser();
@@ -26,5 +27,9 @@ export async function POST(req: Request) {
     category: String(b.category || '').trim() || undefined,
     amount,
   });
+  // Pengeluaran ubah total belanja, saldo kas & laporan.
+  invalidate('belanja:');
+  invalidate('kas:');
+  invalidate('reports:');
   return NextResponse.json({ ok: true });
 }

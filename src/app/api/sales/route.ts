@@ -3,6 +3,7 @@ import { db, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 type SaleRow = {
   id: number;
@@ -25,9 +26,9 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const days = Number(url.searchParams.get('days') || '0');
   const status = url.searchParams.get('status') || 'all';
-  // Pagination: default 50 (target Turso Rows Read < 500 per load),
-  // klien boleh meminta sampai 500 atau paging dengan ?offset=.
-  const limit = Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 50));
+  // Pagination: default & maksimal 50 (target Turso Rows Read < 3.000),
+  // klien boleh paging dengan ?offset=.
+  const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50));
   const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
   const d = await db();
   let from: string | null = null;
@@ -260,6 +261,12 @@ export async function POST(req: Request) {
       member_name: out.member_name || undefined,
       points: out.points,
     });
+    // Transaksi mengubah stok, poin member, saldo kas & agregat laporan
+    // -> buang cache agar pembacaan berikutnya segar.
+    invalidate('members:');
+    invalidate('products:');
+    invalidate('kas:');
+    invalidate('reports:');
     return NextResponse.json({ ok: true, sale: out });
   } catch (e) {
     return NextResponse.json(

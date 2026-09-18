@@ -60,10 +60,9 @@ export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
   const url = new URL(req.url);
-  const d = await db();
-  const kasirStmt = d.prepare('SELECT username, display_name FROM users WHERE id = ?');
 
   if (url.searchParams.get('current') === '1') {
+    const d = await db();
     const open = (await d
       .prepare(`SELECT * FROM shifts WHERE kasir_id = ? AND status = 'open' ORDER BY id DESC LIMIT 1`)
       .get(user.id)) as ShiftRow | undefined;
@@ -74,27 +73,39 @@ export async function GET(req: Request) {
     return NextResponse.json({ open: null });
   }
 
+  const d = await db();
   const where = isManager(user) ? `1=1` : `s.kasir_id = ?`;
   const args: unknown[] = isManager(user) ? [] : [user.id];
+  // Daftar shift tertutup: 50 per halaman + ?offset= (dulu 200 tanpa paging
+  // = 200 baris per load; plus N+1 nama kasir -> see below).
+  const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50));
+  const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
   const rows = (
     (await d
       .prepare(
-        `SELECT s.* FROM shifts s WHERE ${where} AND s.status = 'closed' ORDER BY s.end_time DESC LIMIT 200`
+        `SELECT s.* FROM shifts s WHERE ${where} AND s.status = 'closed' ORDER BY s.end_time DESC LIMIT ? OFFSET ?`
       )
-      .all(...args)) as ShiftRow[]
+      .all(...args, limit, offset)) as ShiftRow[]
   );
-  const shifts = await Promise.all(
-    rows.map(async (r) => {
-      const kasir = r.kasir_id
-        ? ((await kasirStmt.get(r.kasir_id)) as { username: string; display_name: string })
-        : null;
-      return enrich(r, kasir ? kasir.display_name || kasir.username : '');
-    })
-  );
+  // Batch N+1: dulu 1 query users PER shift (hingga 200 round-trip Turso).
+  // Sekarang 1 query IN (...) utk semua kasir_id unik pada halaman ini.
+  const ph = (n: number) => Array(n).fill('?').join(', ');
+  const kasirIds = [...new Set(rows.map((r) => r.kasir_id).filter((v): v is number => !!v))];
+  const kasirRows = kasirIds.length
+    ? ((await d
+        .prepare(`SELECT id, username, display_name FROM users WHERE id IN (${ph(kasirIds.length)})`)
+        .all(...kasirIds)) as { id: number; username: string; display_name: string }[])
+    : [];
+  const kasirMap = new Map<number, { username: string; display_name: string }>();
+  for (const u of kasirRows) kasirMap.set(u.id, u);
+  const shifts = rows.map((r) => {
+    const k = r.kasir_id ? kasirMap.get(r.kasir_id) : undefined;
+    return enrich(r, k ? k.display_name || k.username : '');
+  });
   const openMine = (await d
     .prepare(`SELECT * FROM shifts WHERE kasir_id = ? AND status = 'open'`)
     .all(user.id)) as ShiftRow[];
-  return NextResponse.json({ shifts, open: openMine.length ? openMine[0] : null });
+  return NextResponse.json({ shifts, open: openMine.length ? openMine[0] : null, limit, offset });
 }
 
 export async function POST(req: Request) {

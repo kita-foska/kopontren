@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
 import { currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 type ReturnRow = {
   id: number;
@@ -20,7 +21,8 @@ export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
   const url = new URL(req.url);
-  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit')) || 50));
+  // Cap 50 baris/halaman (target Rows Read); sebelumnya cap 200.
+  const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50));
   const d = await db();
   const returns = (
     (await d
@@ -112,6 +114,10 @@ export async function POST(req: Request) {
     reason: reason || undefined,
     refund,
   });
+  // Retur ubah stok produk (+refund) jurnal kas keluar & agregat laporan.
+  invalidate('products:');
+  invalidate('kas:');
+  invalidate('reports:');
   return NextResponse.json({
     ok: true,
     id: newId,

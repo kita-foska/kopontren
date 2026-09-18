@@ -363,6 +363,14 @@ async function migrate(d: Db) {
   // (SELECT id, name FROM products WHERE active=1 ORDER BY name) — filter
   // + sort langsung dari index, tanpa scan tabel produk.
   await d.exec('CREATE INDEX IF NOT EXISTS idx_products_active_name ON products(active, name)');
+  // perf batch 5 (2026-09-18, audit Rows Read Turso): index utk query yang
+  // sebelumnya full-scan: debts (ORDER BY created_at), shifts (list closed
+  // ORDER BY end_time), consignments (ORDER BY created_at), audit_log
+  // (filter table_name utk dropdown log audit).
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_debts_created ON debts(created_at)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_shifts_status_end ON shifts(status, end_time)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_consignments_created ON consignments(created_at)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_audit_table ON audit_log(table_name)');
   // unique phone per member. Partial index: many members may have an empty
   // phone, but a non-empty phone must be unique. If duplicates already exist
   // (legacy data), keep the oldest row's phone and clear the newer ones first
@@ -568,7 +576,7 @@ export async function saveZakatSettings(
 // Bump: zakat batch — tabel zakat_settings + zakat_history (zakat
 // perdagangan/tijarah) + seed default nishab/kadar. Semua statement
 // IF NOT EXISTS / DO NOTHING, idempotent, aman utk DB existing.
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

@@ -27,16 +27,33 @@ export function DataClient() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [tables, setTables] = useState<string[]>([]);
   const [tableFilter, setTableFilter] = useState('');
-  const [limit, setLimit] = useState(100);
+  const [limit, setLimit] = useState(50);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [canMore, setCanMore] = useState(false);
 
-  const loadLogs = useCallback(async () => {
-    const url = `/api/audit?limit=${limit}${tableFilter ? '&table=' + tableFilter : ''}`;
-    const r = await api<AuditResp>(url);
+  const loadLogs = useCallback(async (offset = 0, append = false) => {
+    // Server cap 50 baris/halaman (target Rows Read); "Muat lebih banyak"
+    // melanjutkan dari offset halaman terakhir.
+    const url = `/api/audit?limit=${limit}&offset=${offset}${tableFilter ? '&table=' + tableFilter : ''}`;
+    const r = await api<AuditResp & { limit?: number; offset?: number }>(url);
     if (r.ok && r.data) {
-      setLogs(r.data.logs || []);
+      setLogs((prev) => {
+        const got = r.data!.logs || [];
+        if (!append) return got;
+        const seen = new Set((prev || []).map((l) => l.id));
+        return [...(prev || []), ...got.filter((l) => !seen.has(l.id))];
+      });
       setTables(r.data.tables || []);
+      setCanMore((r.data.logs?.length || 0) >= 50);
     }
   }, [limit, tableFilter]);
+
+  const loadMoreLogs = useCallback(async () => {
+    if (loadingMore || !canMore) return;
+    setLoadingMore(true);
+    await loadLogs(logs.length, true);
+    setLoadingMore(false);
+  }, [loadingMore, canMore, loadLogs, logs.length]);
 
   useEffect(() => {
     if (activeTab === 'audit') {
@@ -211,15 +228,13 @@ export function DataClient() {
               <select
                 className="input w-auto text-xs"
                 value={limit}
-                onChange={(e) => setLimit(Number(e.target.value) || 100)}
+                onChange={(e) => setLimit(Number(e.target.value) || 50)}
               >
+                <option value={25}>25 log</option>
                 <option value={50}>50 log</option>
-                <option value={100}>100 log</option>
-                <option value={200}>200 log</option>
-                <option value={500}>500 log</option>
               </select>
             </div>
-            <button className="btn-ghost px-3 py-1 text-xs" onClick={loadLogs}>
+            <button className="btn-ghost px-3 py-1 text-xs" onClick={() => loadLogs()}>
               Refresh Log
             </button>
           </div>
@@ -275,6 +290,13 @@ export function DataClient() {
               </tbody>
             </table>
           </div>
+          {canMore && (
+            <div className="p-1 text-center">
+              <button className="btn-ghost text-xs" onClick={loadMoreLogs} disabled={loadingMore}>
+                {loadingMore ? 'Memuat…' : 'Muat lebih banyak log'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
