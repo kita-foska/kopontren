@@ -5,6 +5,7 @@ import { ThemeToggle } from './themetoggle';
 import { LogoutButton } from './logout';
 import { SessionWatcher } from './session-watcher';
 import { NotificationBell } from './notification-bell';
+import { SessionCountdown } from './session-countdown';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   return (
@@ -30,6 +31,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
             </a>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <SessionCountdown />
             <span className="hidden items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 sm:flex dark:border-navy-600 dark:text-slate-300">
               {user.display_name || user.username}
               <span
