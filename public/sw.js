@@ -5,7 +5,7 @@
 //   network-first dengan cache fallback (bisa dipakai offline; data bisnis
 //   seperti /api/sales & /api/members TIDAK pernah di-cache)
 // - Pages & shell: network-first dengan offline fallback
-const CACHE = 'kopontren-v8';
+const CACHE = 'kopontren-v9';
 const PAGE_CACHE = 'kopontren-pages-v7';
 const API_CACHE = 'kopontren-api-v8';
 const OFFLINE_FALLBACK = '/login';
@@ -97,4 +97,41 @@ self.addEventListener('fetch', (e) => {
   // Hanya respons 2xx yang di-cache; halaman error & opaque tidak pernah
   // disimpan, jadi deploy yang rusak tidak bisa meracuni fallback offline.
   e.respondWith(networkFirst(PAGE_CACHE, req, OFFLINE_FALLBACK));
+});
+
+// ── Web Push: tampilkan notifikasi (ikon, judul, isi, link) ──
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = {};
+  }
+  const title = String(data.title || 'Kopontren');
+  const options = {
+    body: String(data.body || ''),
+    icon: data.icon || '/icon-192.png',
+    data: {
+      link: (data.data && data.data.link) || '/admin/notifications',
+      type: (data.data && data.data.type) || '',
+    },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Klik notifikasi -> fokus jendela terkait / buka halaman tujuan.
+self.addEventListener('notificationclick', (event) => {
+  event.preventDefault();
+  if (event.notification) event.notification.close();
+  const link =
+    (event.notification && event.notification.data && event.notification.data.link) ||
+    '/admin/notifications';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if (w.url.includes(link) && 'focus' in w) return w.focus();
+      }
+      return self.clients.openWindow(link);
+    })
+  );
 });

@@ -3,6 +3,7 @@ import { db, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { notifyCashBalance, notifyNewBelanja } from '@/lib/notify';
 
 export async function POST(req: Request) {
   const user = await currentUser();
@@ -57,5 +58,12 @@ export async function POST(req: Request) {
   invalidate('belanja:');
   invalidate('kas:');
   invalidate('reports:');
+  // Notifikasi admin (best-effort): belanja baru + cek kas menipis.
+  try {
+    await notifyNewBelanja(prod.name, qty, String(b.supplier || '').trim(), qty * cost);
+    await notifyCashBalance();
+  } catch (e) {
+    console.warn('[notify] pemicu belanja gagal:', e);
+  }
   return NextResponse.json({ ok: true, stock: stockRow.stock });
 }

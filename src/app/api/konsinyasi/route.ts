@@ -3,6 +3,7 @@ import { db, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { notifyNewKonsinyasi } from '@/lib/notify';
 
 type Row = {
   id: number;
@@ -124,6 +125,11 @@ export async function POST(req: Request) {
           qty,
           agree_price: price,
         });
+        try {
+          await notifyNewKonsinyasi(owner, item, qty);
+        } catch (e) {
+          console.warn('[notify] pemicu konsinyasi gagal:', e);
+        }
         return NextResponse.json({ ok: true, id: out });
       }
       case 'sell':

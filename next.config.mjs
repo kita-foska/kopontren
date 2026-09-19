@@ -2,7 +2,7 @@
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   // keep the native libSQL driver out of the webpack bundle (native .node binary)
-  serverExternalPackages: ['@libsql/client'],
+  serverExternalPackages: ['@libsql/client', 'web-push'],
   // Kompressi di edge (gzip/brotli). Explicit agar jelas di production.
   compress: true,
   // Sembunyikan header "X-Powered-By: Next.js"

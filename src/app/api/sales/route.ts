@@ -4,6 +4,7 @@ import { currentUser, isManager } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { notifyLargeTransaction, notifyStockAfterSale } from '@/lib/notify';
 
 type SaleRow = {
   id: number;
@@ -298,6 +299,8 @@ export async function POST(req: Request) {
         created_at,
         points,
         member_name: memberName,
+        customer,
+        product_ids: insertItems.map((x) => x[2]),
       };
     });
     await logAudit(user, 'sales:create', 'sales', Number(out.id), undefined, {
@@ -311,6 +314,13 @@ export async function POST(req: Request) {
     invalidate('products:');
     invalidate('kas:');
     invalidate('reports:');
+    // Notifikasi admin (best-effort, tidak memblokir/merollback penjualan).
+    try {
+      await notifyLargeTransaction(out.total, out.id, out.customer, method);
+      await notifyStockAfterSale(out.product_ids);
+    } catch (e) {
+      console.warn('[notify] pemicu penjualan gagal:', e);
+    }
     return NextResponse.json({ ok: true, sale: out });
   } catch (e) {
     return NextResponse.json(

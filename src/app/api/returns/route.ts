@@ -3,6 +3,7 @@ import { db, tx } from '@/db';
 import { currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { notifyNewRetur } from '@/lib/notify';
 
 type ReturnRow = {
   id: number;
@@ -118,6 +119,11 @@ export async function POST(req: Request) {
   invalidate('products:');
   invalidate('kas:');
   invalidate('reports:');
+  try {
+    await notifyNewRetur(saleId, item.product_name, qty, amount);
+  } catch (e) {
+    console.warn('[notify] pemicu retur gagal:', e);
+  }
   return NextResponse.json({
     ok: true,
     id: newId,

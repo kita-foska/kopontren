@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
+import { notifyCashBalance } from '@/lib/notify';
 
 type KasAgg = { sales: number; purchases: number; expenses: number; cashIn: number; cashOut: number };
 
@@ -133,6 +134,12 @@ export async function POST(req: Request) {
   });
   invalidate('kas:');
   invalidate('reports:');
+  // Cek kas menipis (best-effort, HANYA admin).
+  try {
+    await notifyCashBalance();
+  } catch (e) {
+    console.warn('[notify] pemicu kas gagal:', e);
+  }
   return NextResponse.json({ ok: true });
 }
 
@@ -153,5 +160,11 @@ export async function DELETE(req: Request) {
   await logAudit(user, 'kas:delete', 'cash_entries', id, entry, undefined);
   invalidate('kas:');
   invalidate('reports:');
+  // Cek kas menipis (best-effort, HANYA admin).
+  try {
+    await notifyCashBalance();
+  } catch (e) {
+    console.warn('[notify] pemicu kas gagal:', e);
+  }
   return NextResponse.json({ ok: true });
 }

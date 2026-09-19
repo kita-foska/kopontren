@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { db } from '@/db';
-import { SESSION_COOKIE, createSession, hashPassword } from '@/lib/auth';
+import {
+  SESSION_COOKIE,
+  SESSION_EXP_COOKIE,
+  createSession,
+  hashPassword,
+  pinConfigured,
+  expCookieOptions,
+} from '@/lib/auth';
 
 export async function POST(req: Request) {
   const b = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
@@ -37,6 +44,7 @@ export async function POST(req: Request) {
   const token = await createSession(user.id);
   const res = NextResponse.json({
     ok: true,
+    pin_configured: await pinConfigured(user.id),
     user: {
       id: user.id,
       username: user.username,
@@ -49,6 +57,14 @@ export async function POST(req: Request) {
     sameSite: 'lax',
     path: '/',
     maxAge: 7 * 24 * 3600,
+    secure: process.env.NODE_ENV === 'production',
+  });
+  // Cookie pendamping batas hidup sesi idle (dibaca middleware utk redirect /login/pin).
+  const exp = await expCookieOptions();
+  res.cookies.set(SESSION_EXP_COOKIE, exp.value, {
+    path: '/',
+    maxAge: exp.maxAge,
+    sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
   });
   return res;

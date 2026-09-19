@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, type Db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { notifyShiftClosed, notifyShiftOpened } from '@/lib/notify';
 
 type ShiftRow = {
   id: number;
@@ -122,13 +123,18 @@ export async function POST(req: Request) {
       { status: 409 }
     );
   const now = new Date().toISOString();
+  const label = String(b.label || '').trim();
   const info = await d
     .prepare(`INSERT INTO shifts (kasir_id, label, status, start_time) VALUES (?, ?, 'open', ?)`)
-    .run(user.id, String(b.label || '').trim(), now);
-  await logAudit(user, 'shift:open', 'shifts', Number(info.lastInsertRowid), undefined, {
-    start_time: now,
-  });
-  return NextResponse.json({ ok: true, id: Number(info.lastInsertRowid), start_time: now });
+    .run(user.id, label, now);
+  const newId = Number(info.lastInsertRowid);
+  await logAudit(user, 'shift:open', 'shifts', newId, undefined, { start_time: now });
+  try {
+    await notifyShiftOpened(newId, label, user.display_name || user.username);
+  } catch (e) {
+    console.warn('[notify] pemicu shift open gagal:', e);
+  }
+  return NextResponse.json({ ok: true, id: newId, start_time: now });
 }
 
 export async function PATCH(req: Request) {
@@ -169,6 +175,16 @@ export async function PATCH(req: Request) {
     .prepare('SELECT username, display_name FROM users WHERE id = ?')
     .get(shift.kasir_id)) as { username: string; display_name: string } | undefined;
   await logAudit(user, 'shift:close', 'shifts', id, shift, { ...stats, end_time: end });
+  try {
+    await notifyShiftClosed(
+      id,
+      kasir ? kasir.display_name || kasir.username : '',
+      stats.sales_count,
+      stats.sales_total
+    );
+  } catch (e) {
+    console.warn('[notify] pemicu shift close gagal:', e);
+  }
   return NextResponse.json({
     ok: true,
     summary: enrich(

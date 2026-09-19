@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db, getZakatSettings, saveZakatSettings } from '@/db';
 import { currentUser, isAdmin, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { notifyNewZakat } from '@/lib/notify';
 
 export type ZakatCalculation = {
   total_assets: number;
@@ -161,6 +162,12 @@ export async function POST(req: Request) {
     cycle_advanced,
     note: note || undefined,
   });
+  // Notifikasi admin (best-effort): zakat baru tercatat.
+  try {
+    await notifyNewZakat(calc.zakat_amount, calc.status, calc.total_assets);
+  } catch (e) {
+    console.warn('[notify] pemicu zakat gagal:', e);
+  }
 
   return NextResponse.json({ ok: true, id, cycle_advanced, ...calc });
 }

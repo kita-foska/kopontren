@@ -62,6 +62,7 @@ const ADMIN_GROUPS: NavGroup[] = [
   {
     title: 'Sistem',
     items: [
+      { href: '/admin/notifications', label: 'Notifikasi' },
       { href: '/admin/audit', label: 'Audit' },
       { href: '/admin/laporan', label: 'Laporan Pengurus' },
       { href: '/admin/pengguna', label: 'Pengguna' },

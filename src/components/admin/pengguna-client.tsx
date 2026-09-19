@@ -27,6 +27,11 @@ export function PenggunaClient() {
   const [pwModal, setPwModal] = useState<User | null>(null);
   const [pw, setPw] = useState('');
   const [ownPw, setOwnPw] = useState({ old: '', next: '' });
+  const [pinModal, setPinModal] = useState<User | null>(null);
+  const [pinNew, setPinNew] = useState({ new: '', confirm: '' });
+  const [ownPin, setOwnPin] = useState({ old: '', next: '', confirm: '' });
+  const [timeout, setTimeoutSec] = useState('');
+  const [timeoutBusy, setTimeoutBusy] = useState(false);
   const [toast, showToast] = useToast();
 
   const load = useCallback(async () => {
@@ -38,6 +43,13 @@ export function PenggunaClient() {
   }, []);
   useEffect(() => {
     load();
+    api<{ session_timeout?: number }>('/api/settings')
+      .then((r) => {
+        if (r.ok && r.data && typeof r.data.session_timeout === 'number') {
+          setTimeoutSec(String(r.data.session_timeout));
+        }
+      })
+      .catch(() => undefined);
   }, [load]);
 
   async function createUser() {
@@ -92,6 +104,53 @@ export function PenggunaClient() {
       setOwnPw({ old: '', next: '' });
       load();
     } else showToast(r.error || 'Password lama salah');
+  }
+
+  async function resetPin() {
+    if (!pinModal || pinNew.new.length < 4 || pinNew.new.length > 6 || pinNew.new !== pinNew.confirm) {
+      showToast('PIN baru 4-6 digit & konfirmasi harus sama');
+      return;
+    }
+    const r = await api('/api/auth/pin/reset', {
+      method: 'POST',
+      body: JSON.stringify({ newPin: pinNew.new, confirm: pinNew.confirm, user_id: pinModal.id }),
+    });
+    if (r.ok) {
+      showToast('PIN ' + pinModal.username + ' direset');
+      setPinModal(null);
+      setPinNew({ new: '', confirm: '' });
+    } else showToast(r.error || 'Gagal reset PIN');
+  }
+
+  async function changeOwnPin() {
+    if (ownPin.next.length < 4 || ownPin.next.length > 6 || ownPin.next !== ownPin.confirm) {
+      showToast('PIN baru 4-6 digit & konfirmasi harus sama');
+      return;
+    }
+    const r = await api('/api/auth/pin/change', {
+      method: 'POST',
+      body: JSON.stringify({ oldPin: ownPin.old, newPin: ownPin.next, confirm: ownPin.confirm }),
+    });
+    if (r.ok) {
+      showToast('PIN Anda diubah');
+      setOwnPin({ old: '', next: '', confirm: '' });
+    } else showToast(r.error || 'PIN lama salah');
+  }
+
+  async function saveTimeout() {
+    const n = Number(timeout);
+    if (!Number.isFinite(n) || n < 60 || n > 604800) {
+      showToast('Timeout harus 60–604800 detik');
+      return;
+    }
+    setTimeoutBusy(true);
+    const r = await api('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ session_timeout: n }),
+    });
+    setTimeoutBusy(false);
+    if (r.ok) showToast('Session timeout disimpan (berlaku utk sesi berikutnya).');
+    else showToast(r.error || 'Gagal menyimpan');
   }
 
   return (
@@ -165,6 +224,62 @@ export function PenggunaClient() {
             </button>
           </div>
         </div>
+        <div className="card p-4">
+          <h2 className="mb-1 font-bold">Ganti PIN Anda</h2>
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+            PIN 4-6 digit, dipakai untuk masuk cepat setelah sesi entek (idle timeout).
+          </p>
+          <div className="space-y-2">
+            <input
+              className="input"
+              type="password"
+              inputMode="numeric"
+              placeholder="PIN lama"
+              value={ownPin.old}
+              onChange={(e) => setOwnPin({ ...ownPin, old: e.target.value.replace(/\D/g, '') })}
+            />
+            <input
+              className="input"
+              type="password"
+              inputMode="numeric"
+              placeholder="PIN baru (4-6 digit)"
+              value={ownPin.next}
+              onChange={(e) => setOwnPin({ ...ownPin, next: e.target.value.replace(/\D/g, '') })}
+            />
+            <input
+              className="input"
+              type="password"
+              inputMode="numeric"
+              placeholder="Ulangi PIN baru"
+              value={ownPin.confirm}
+              onChange={(e) =>
+                setOwnPin({ ...ownPin, confirm: e.target.value.replace(/\D/g, '') })
+              }
+            />
+            <button className="btn-ghost w-full" onClick={changeOwnPin}>
+              Ganti PIN
+            </button>
+          </div>
+        </div>
+        <div className="card p-4">
+          <h2 className="mb-1 font-bold">Keamanan sesi</h2>
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+            Auto-logout bila tidak ada aktivitas selama N detik (default 3600 = 1 jam).
+            Berlaku utk sesi berikutnya.
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              className="input"
+              inputMode="numeric"
+              placeholder="detik"
+              value={timeout}
+              onChange={(e) => setTimeoutSec(e.target.value.replace(/\D/g, ''))}
+            />
+            <button className="btn-primary" disabled={timeoutBusy || !timeout} onClick={saveTimeout}>
+              {timeoutBusy ? 'Menyimpan…' : 'Simpan'}
+            </button>
+          </div>
+        </div>
       </div>
       <div className="card mt-4 overflow-x-auto">
         <table className="w-full min-w-[36rem]">
@@ -210,6 +325,15 @@ export function PenggunaClient() {
                   >
                     Reset PW
                   </button>
+                  <button
+                    onClick={() => {
+                      setPinModal(u);
+                      setPinNew({ new: '', confirm: '' });
+                    }}
+                    className="ml-2 font-bold text-accent-500 dark:text-accent-300"
+                  >
+                    Reset PIN
+                  </button>
                   {u.id !== self?.id && (
                     <button
                       onClick={() => toggleActive(u)}
@@ -248,6 +372,43 @@ export function PenggunaClient() {
           onChange={(e) => setPw(e.target.value)}
           autoFocus
         />
+      </Modal>
+      <Modal
+        open={!!pinModal}
+        title={'Reset PIN: ' + (pinModal?.username || '')}
+        onClose={() => setPinModal(null)}
+        footer={
+          <>
+            <button className="btn-ghost" onClick={() => setPinModal(null)}>
+              Batal
+            </button>
+            <button className="btn-primary" onClick={resetPin}>
+              Reset
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-2">
+          <input
+            className="input"
+            type="password"
+            inputMode="numeric"
+            placeholder="PIN baru (4-6 digit)"
+            value={pinNew.new}
+            onChange={(e) => setPinNew({ ...pinNew, new: e.target.value.replace(/\D/g, '') })}
+            autoFocus
+          />
+          <input
+            className="input"
+            type="password"
+            inputMode="numeric"
+            placeholder="Ulangi PIN baru"
+            value={pinNew.confirm}
+            onChange={(e) =>
+              setPinNew({ ...pinNew, confirm: e.target.value.replace(/\D/g, '') })
+            }
+          />
+        </div>
       </Modal>
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>

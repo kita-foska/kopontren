@@ -3,6 +3,8 @@ import Image from 'next/image';
 import { HamburgerNav } from './sidebar';
 import { ThemeToggle } from './themetoggle';
 import { LogoutButton } from './logout';
+import { SessionWatcher } from './session-watcher';
+import { NotificationBell } from './notification-bell';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   return (
@@ -40,12 +42,14 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                 {user.role.toUpperCase()}
               </span>
             </span>
+            {user.role === 'admin' && <NotificationBell />}
             <ThemeToggle />
             <LogoutButton />
           </div>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-5 pb-16">{children}</main>
+      <SessionWatcher />
     </div>
   );
 }

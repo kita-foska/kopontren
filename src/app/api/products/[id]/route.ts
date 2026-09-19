@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { notifyStockChange } from '@/lib/notify';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
@@ -21,6 +22,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         base_price: number;
         cost_price: number;
         barcode: string;
+        unit: string;
       }
     | undefined;
   if (!prod) return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 });
@@ -35,6 +37,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     await logAudit(user, 'product:stock', 'products', prod.id, { stock: prod.stock }, {
       stock: v,
     });
+    // Notifikasi stok menipis/habis (best-effort, HANYA admin).
+    try {
+      await notifyStockChange(prod.id, v, prod.name, prod.unit);
+    } catch (e) {
+      console.warn('[notify] pemicu stok gagal:', e);
+    }
     return NextResponse.json({ ok: true, stock: v });
   }
   // toggle active: { active: 0|1 }

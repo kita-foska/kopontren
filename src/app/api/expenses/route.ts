@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { notifyCashBalance } from '@/lib/notify';
 
 export async function POST(req: Request) {
   const user = await currentUser();
@@ -31,5 +32,11 @@ export async function POST(req: Request) {
   invalidate('belanja:');
   invalidate('kas:');
   invalidate('reports:');
+  // Cek kas menipis (best-effort, HANYA admin).
+  try {
+    await notifyCashBalance();
+  } catch (e) {
+    console.warn('[notify] pemicu pengeluaran gagal:', e);
+  }
   return NextResponse.json({ ok: true });
 }

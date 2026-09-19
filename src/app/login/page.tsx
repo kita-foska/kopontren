@@ -24,7 +24,16 @@ export default function LoginPage() {
         setErr(data.error || 'Gagal masuk. Periksa username & password.');
         return;
       }
-      window.location.replace('/');
+      // Arahkan ke setup PIN bila belum punya PIN, atau diminta reset (?reset=1).
+      // Password di-simpan sementara (sessionStorage) utk aturan "PIN ≠ password",
+      // lalu dihapus halaman setup setelah dipakai.
+      const reset = new URLSearchParams(window.location.search).get('reset') === '1';
+      if (!data.pin_configured || reset) {
+        sessionStorage.setItem('__kop_pw', password);
+        window.location.replace('/login/pin/setup');
+      } else {
+        window.location.replace('/');
+      }
     } catch {
       setErr('Terjadi kesalahan jaringan.');
     } finally {

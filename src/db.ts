@@ -80,7 +80,20 @@ CREATE TABLE IF NOT EXISTS sessions (
   token_hash TEXT PRIMARY KEY,
   user_id INTEGER NOT NULL,
   expires_at TEXT NOT NULL,
+  last_activity TEXT,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+-- PIN 4-6 digit per user (scrypt, sama seperti password). Untuk re-auth
+-- setelah sesi idle timeout. unique(user_id): satu PIN per user.
+CREATE TABLE IF NOT EXISTS user_pins (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL UNIQUE,
+  pin_hash TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  failed_attempts INTEGER NOT NULL DEFAULT 0,
+  locked_until TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 CREATE TABLE IF NOT EXISTS products (
   id INTEGER PRIMARY KEY,
@@ -417,6 +430,72 @@ async function migrate(d: Db) {
   // ON CONFLICT DO NOTHING -> nilai yang sudah diubah admin tetap tersimpan.
   await d.exec("INSERT INTO zakat_settings (key, value) VALUES ('nishab_gram', '85') ON CONFLICT(key) DO NOTHING");
   await d.exec("INSERT INTO zakat_settings (key, value) VALUES ('zakat_rate', '2.5') ON CONFLICT(key) DO NOTHING");
+
+  // ── Keamanan (2026): PIN 4-6 digit + idle timeout sesi ──
+  // sessions.last_activity: jejak aktivitas terakhir utk idle timeout (refresh
+  // tiap request; entek setelah session_timeout detik tanpa aktivitas).
+  await execColumn(d, 'ALTER TABLE sessions ADD COLUMN last_activity TEXT');
+  // user_pins: PIN ter-hash scrypt (mirip password), 1 baris per user.
+  await d.exec(
+    "CREATE TABLE IF NOT EXISTS user_pins (" +
+      'id INTEGER PRIMARY KEY, ' +
+      'user_id INTEGER NOT NULL UNIQUE, ' +
+      'pin_hash TEXT NOT NULL, ' +
+      'salt TEXT NOT NULL, ' +
+      'failed_attempts INTEGER NOT NULL DEFAULT 0, ' +
+      'locked_until TEXT, ' +
+      "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), " +
+      "updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))" +
+      ')'
+  );
+  // Seed default timeout sesi (hanya kalau belum ada; admin bisa override).
+  await d.exec("INSERT INTO settings (key, value) VALUES ('session_timeout', '3600') ON CONFLICT(key) DO NOTHING");
+
+  // ── Notifikasi (2026): in-app + web push, HANYA admin ──
+  // notifications: baris notifikasi in-app per user admin (user_id selalu
+  // role 'admin'; kasir/pengurus/member tidak pernah menerima).
+  await d.exec(
+    "CREATE TABLE IF NOT EXISTS notifications (" +
+      "id INTEGER PRIMARY KEY, " +
+      "user_id INTEGER NOT NULL, " +
+      "type TEXT NOT NULL DEFAULT '', " +
+      "title TEXT NOT NULL DEFAULT '', " +
+      "message TEXT NOT NULL DEFAULT '', " +
+      "link TEXT NOT NULL DEFAULT '', " +
+      "read INTEGER NOT NULL DEFAULT 0, " +
+      "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))" +
+      ")"
+  );
+  await d.exec(
+    "CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, read, created_at)"
+  );
+  // notification_settings: toggle per-admin per-jenis. Baris tidak ada =
+  // default (in_app ON, push OFF) — push selalu opt-in eksplisit.
+  await d.exec(
+    "CREATE TABLE IF NOT EXISTS notification_settings (" +
+      "id INTEGER PRIMARY KEY, " +
+      "user_id INTEGER NOT NULL, " +
+      "type TEXT NOT NULL, " +
+      "enabled_in_app INTEGER NOT NULL DEFAULT 1, " +
+      "enabled_push INTEGER NOT NULL DEFAULT 0, " +
+      "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), " +
+      "UNIQUE(user_id, type)" +
+      ")"
+  );
+  await d.exec("CREATE INDEX IF NOT EXISTS idx_notif_settings_user ON notification_settings(user_id, type)");
+  // notification_logs: jejak pengiriman per channel (in_app/push),
+  // status sent/failed + pesan error. Gagal kirim tetap tercatat.
+  await d.exec(
+    "CREATE TABLE IF NOT EXISTS notification_logs (" +
+      "id INTEGER PRIMARY KEY, " +
+      "notification_id INTEGER, " +
+      "channel TEXT NOT NULL, " +
+      "status TEXT NOT NULL, " +
+      "error TEXT NOT NULL DEFAULT '', " +
+      "sent_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))" +
+      ")"
+  );
+  await d.exec("CREATE INDEX IF NOT EXISTS idx_notif_logs_notif ON notification_logs(notification_id)");
 }
 
 
@@ -450,6 +529,8 @@ export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
   receipt_footer: 'Jazakumullah Khairan Katsiran',
   currency: 'Rp',
   timezone: 'Asia/Jakarta',
+  // Detik. Idle timeout sesi (default 3600 = 1 jam). Bisa diubah admin.
+  session_timeout: '3600',
 };
 
 export async function getSettings(): Promise<Record<string, string>> {
@@ -596,7 +677,21 @@ export async function saveZakatSettings(
 // aman utk DB existing.
 // Bump v7 (2026): sales.client_ref (idempotency key utk antrean POS
 // offline) + index partial unique. Idempotent, aman utk DB existing.
-const SCHEMA_VERSION = 7;
+// Bump v8 (2026): keamanan — tabel user_pins (PIN 4-6 digit, scrypt) +
+// sessions.last_activity (idle timeout) + setting session_timeout. Semua
+// statement IF NOT EXISTS / idempotent, aman utk DB existing.
+  // v9: kolom settings.session_timeout (idle timeout, default 3600 dtk).
+  async function migrate28(d: Db) {
+    await execColumn(
+      d,
+      'ALTER TABLE settings ADD COLUMN session_timeout INTEGER NOT NULL DEFAULT 3600'
+    );
+  }
+
+// Bump v10 (2026): notifikasi admin — tabel notifications,
+// notification_settings, notification_logs (+ index). Idempotent, aman
+// utk DB existing.
+const SCHEMA_VERSION = 10;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
@@ -619,6 +714,7 @@ async function fullInit(d: Db) {
       `UPDATE ${t} SET created_at = strftime('%Y-%m-%dT%H:%M:%fZ', created_at) WHERE instr(created_at, ' ') > 0;`
     );
   }
+  await migrate28(d);
   await d.exec(
     `UPDATE sales SET reported_at = strftime('%Y-%m-%dT%H:%M:%fZ', reported_at) WHERE reported_at IS NOT NULL AND instr(reported_at, ' ') > 0;`
   );
