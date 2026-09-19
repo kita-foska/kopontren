@@ -73,6 +73,15 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
           `UPDATE members SET points = MAX(points - ?, 0), total_spent = MAX(total_spent - ?, 0) WHERE id = ?`
         )
         .run(sale.member_points, sale.total, sale.member_id);
+      // Ledger: batal transaksi membatalkan poin yang sudah diberikan.
+      if (sale.member_points > 0) {
+        await d
+          .prepare(
+            `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
+             VALUES (?, ?, 'void', ?, ?)`
+          )
+          .run(sale.member_id, -sale.member_points, sale.total, sale.id);
+      }
     }
   });
   await logAudit(user, 'sales:delete', 'sales', sale.id, { total: sale.total }, undefined);

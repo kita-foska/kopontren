@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { currentUser, isAdmin } from '@/lib/auth';
 import { runCron } from '@/lib/notify';
 
@@ -17,7 +18,11 @@ export async function POST(req: Request) {
   const secret = process.env.CRON_SECRET;
   if (secret) {
     const provided = req.headers.get('x-cron-secret') || '';
-    if (provided === secret) {
+    // Perbandingan constant-time (timing-safe) utk secret.
+    const a = Buffer.from(provided);
+    const s = Buffer.from(secret);
+    const match = a.length === s.length && crypto.timingSafeEqual(a, s);
+    if (match) {
       const job = new URL(req.url).searchParams.get('job') || 'due';
       const res = await runCron(job);
       return NextResponse.json({ ok: true, source: 'cron-secret', ...(res as object) });

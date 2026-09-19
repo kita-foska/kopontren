@@ -53,8 +53,12 @@ export async function GET(req: Request) {
   // Cache 60 detik di browser/CDN untuk data referensi; data bisnis
   // (sales, members, kas, shift) sengaja TIDAK di-cache — mutasi harus
   // selalu terbaca segar.
+  // Catatan: payload TIDAK memuat user.role — response ini di-cache browser
+  // 60 detik (header di bawah), dan di perangkat POS berbagi, hasil cache
+  // satu user bisa dibaca user lain. Role client diambil dari halaman,
+  // bukan dari endpoint ini.
   return NextResponse.json(
-    { products, categories: data.categories, role: user.role, limit, offset },
+    { products, categories: data.categories, limit, offset },
     { headers: { 'Cache-Control': 'public, max-age=60' } }
   );
 }

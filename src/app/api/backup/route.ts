@@ -38,7 +38,7 @@ export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
   if (!isAdmin(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+    return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
   const d = await db();
   const all = async (q: string) => await d.prepare(q).all();
   const payload: Backup = {

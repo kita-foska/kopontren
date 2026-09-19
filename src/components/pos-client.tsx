@@ -179,6 +179,18 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     if (r.ok && r.data) setMembers(r.data.members || []);
   }, []);
 
+  // Nilai per poin (Rp) diambil dari pengaturan member, bukan konstanta:
+  // admin bisa mengubah points_every di /admin/pengaturan-member.
+  const [pointsEvery, setPointsEvery] = useState(10000);
+  useEffect(() => {
+    api<{ settings: Record<string, string> }>('/api/member-settings').then((r) => {
+      if (r.ok && r.data?.settings?.points_every) {
+        const v = Math.max(1000, Math.floor(Number(r.data.settings.points_every) || 10000));
+        setPointsEvery(v);
+      }
+    });
+  }, []);
+
   const loadShift = useCallback(async () => {
     const r = await api<{ open: ShiftInfo | null }>('/api/shifts?current=1');
     if (r.ok && r.data) {
@@ -928,7 +940,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               {selectedMember && (
                 <div className="mt-1 flex items-center justify-between rounded bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-600 dark:text-emerald-300 font-semibold">
                   <span>★ Member: {selectedMember.name}</span>
-                  <span>{selectedMember.points} poin (+{Math.floor(total / 10000)} poin)</span>
+                  <span>{selectedMember.points} poin (+{Math.floor(total / pointsEvery)} poin)</span>
                 </div>
               )}
             </div>

@@ -1,22 +1,44 @@
 ﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
-_Update: 2026-09-18 (lanjutan session optimasi: tambah index
- idx_sales_kasir + idx_returns_sale, BUMP SCHEMA_VERSION 1->2
- agar gate cold-start ikut re-stamp/verify skema, cache in-memory
- per-instance utk /api/reports (60s + Cache-Control public
- max-age=60, X-Cache HIT/MISS) & /api/products non-live (20s,
- di-invalidate pd POST/PUT/DELETE product), + cache member_settings
- 30s di db.ts. tsc clean, next build EXIT 0. Catatan env: node
- sekarang di C:\Program Files\nodejs\node.exe; git via
- 'C:\Program Files\Git\cmd\git.exe'. Sync branch: main & master
- ternyata UNRELATED HISTORIES (tidak ada merge-base; main lineage
- "sync(main)" terpisah) -> `git merge` ditolak. Perbaikan: main
- di-reset --hard ke master lalu push -f origin main; kini main =
- cermin persis master (sama @ 1f43e60). File unik main yg hilang
- (sw.js/manifest.json/ikon dlm root + log dev + public/icon-*.svg)
- tidak referenced runtime: public/manifest.json & sw.js v8 hanya
- pakai PNG (/icon-180|192|512.png, /favicon.ico). Catatan: Vercel
- sekarang bangun dari main @ tip master; setelah commit baru di
- master, mirror lagi dgn reset --hard + push -f.)_
+_Update: 2026-09-18 (SESSION AUDIT & FIX — scope Kopontren, BMT
+ hanya dicek keberadaan). Di-audit: seluruh route API (auth/PIN,
+ sales, reports, kas, shifts, debts, payables, purchases, expenses,
+ returns, konsinyasi, members, member-settings, products+bulk,
+ migrate, settings, users, audit, notifications*, push*, backup,
+ belanja, zakat-skim), db.ts, lib/auth.ts, lib/notify.ts,
+ komponen (pos-client 1586 baris, session-watcher,
+ session-countdown, shell, notification-bell, ui, rekap, dll).
+ FIX (11 file, tsc EXIT 0, next build EXIT 0 — 48 page, First
+ Load JS maks ±123 kB):
+  1. auth.ts changePin: PIN lama salah kini +failed_attempts &
+     lockout (5x→15 mnt, konsisten verifyPin).
+  2. api/auth/login: throttle brute-force (10 gagal/username+IP
+     /15 mnt → kunci 15 mnt, 429; username tak dikenal ikut
+     dihitung; cap Map 500).
+  3. lib/ref-cache.ts: cap 256 key + eviksi tertua (key
+     members:totals:<q> dulu tak berujung).
+  4. api/sales POST: poin loyalty pakai
+     member_settings.points_every (dulu hard-coded 10.000) +
+     tulis ledger point_history (earn).
+  5. api/sales/[id] DELETE: ledger point_history (void).
+  6. pos-client: estimasi poin + fetch /api/member-settings
+     (points_every), tidak lagi konstanta.
+  7. api/products GET: hapus `role` dr payload ber-cache browser.
+  8. api/returns POST: plafon qty = terjual − sudah diretur.
+  9. api/notifications/cron: CRON_SECRET timingSafeEqual.
+ 10. api/backup: pesan 403 "Hanya pengurus"→"Hanya admin".
+ 11. api/auth/pin/reset: validasi integer user_id.
+ DOKUMENTASI: README.md direvisi besar (Turso, PIN, sesi,
+ notifikasi, skema data, roadmap); MEMORY.md & TODO.md BARU.
+ STATUS KINI: skema v10 (SCHEMA_VERSION), fitur lengkap: POS +
+ offline queue, shift, piutang, hutang, retur, konsinyasi,
+ member/loyalty (poin+QR), BMT zakat, notifikasi in-app+push
+ (20 jenis + cron), audit log, backup/reset. Gap fitur = TODO.md.
+ Catatan env (tetap): node C:\Program Files\nodejs\node.exe; git
+ C:\Program Files\Git\cmd\git.exe; main & master UNRELATED
+ HISTORIES dulu — kini lokal HANYA branch main (mirror); sync
+ dgn push kedua remote. build panjang: Start-Process detached +
+ polling file (terminal foreground Cline sering "close"
+ command berjalan).)_
 
 
 ## GOAL

@@ -18,6 +18,9 @@ export async function POST(req: Request) {
   const newPin = String(b.newPin || '');
   const confirm = String(b.confirm || '');
   const targetId = Number(b.user_id || user.id);
+  if (!Number.isInteger(targetId) || targetId <= 0) {
+    return NextResponse.json({ error: 'user_id tidak valid' }, { status: 400 });
+  }
   if (targetId !== user.id && !isAdmin(user)) {
     return NextResponse.json({ error: 'Hanya admin yang bisa reset PIN user lain' }, { status: 403 });
   }

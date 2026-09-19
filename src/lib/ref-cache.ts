@@ -10,6 +10,10 @@
  * jadi backstop (multi-instance Vercel tidak saling invalidate).
  */
 const TTL_MS = 60_000;
+// Plafon ukuran store: key dinamis (mis. 'members:totals:<q>' mengikuti
+// string pencarian user) tidak boleh membesar tanpa batas di heap
+// instance. Map menjaga urutan insert -> eviksi dari yang tertua.
+const MAX_KEYS = 256;
 
 type Entry = { t: number; v: unknown };
 const store = new Map<string, Entry>();
@@ -20,6 +24,17 @@ export async function cached<T>(key: string, fn: () => Promise<T>): Promise<T> {
   if (hit && Date.now() - hit.t < TTL_MS) return hit.v as T;
   const v = await fn();
   store.set(key, { t: Date.now(), v });
+  if (store.size > MAX_KEYS) {
+    for (const [k, e] of [...store]) {
+      if (store.size <= MAX_KEYS) break;
+      if (Date.now() - e.t >= TTL_MS) store.delete(k); // buang yang basi dulu
+    }
+    while (store.size > MAX_KEYS) {
+      const oldest = store.keys().next().value;
+      if (oldest === undefined) break;
+      store.delete(oldest); // eviksi paling tua (urutan insert)
+    }
+  }
   return v;
 }
 

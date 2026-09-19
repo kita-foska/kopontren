@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, tx } from '@/db';
+import { db, tx, getMemberSettings } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
 import { logAudit } from '@/lib/audit';
@@ -239,7 +239,9 @@ export async function POST(req: Request) {
       if (total <= 0)
         throw new Error('Total setelah diskon tidak valid (diskon melebihi total)');
 
-      // Member link + loyalty points (1 poin per Rp 10.000 dibelanjakan).
+      // Member link + loyalty points. Nilai per poin diambil dari
+      // pengaturan member (points_every, default Rp 10.000) — dulu
+      // hard-coded 10.000 sehingga setting admin tidak pernah terpakai.
       let memberId: number | null = null;
       let points = 0;
       let memberName = '';
@@ -250,7 +252,9 @@ export async function POST(req: Request) {
         if (!mrow) throw new Error('Member tidak ditemukan');
         memberId = mrow.id;
         memberName = mrow.name;
-        points = Math.floor(total / 10000);
+        const mset = await getMemberSettings();
+        const pointsEvery = Math.max(1000, Math.floor(Number(mset.points_every) || 10000));
+        points = Math.floor(total / pointsEvery);
       }
       const customer = String(b.customer || '').trim() || memberName;
       const amount_paid = Math.max(0, Math.floor(Number(b.amount_paid) || 0));
@@ -291,6 +295,15 @@ export async function POST(req: Request) {
             `UPDATE members SET points = points + ?, total_spent = total_spent + ? WHERE id = ?`
           )
           .run(points, total, memberId);
+        // Jejak ledger poin (dulu tabel point_history tidak pernah tertulis).
+        if (points > 0) {
+          await d
+            .prepare(
+              `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
+               VALUES (?, ?, 'earn', ?, ?)`
+            )
+            .run(memberId, points, total, sid);
+        }
       }
       return {
         id: sid,

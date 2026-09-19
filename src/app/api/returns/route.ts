@@ -79,14 +79,28 @@ export async function POST(req: Request) {
     );
   const item = (
     (await d
-      .prepare('SELECT product_name, unit_price FROM sale_items WHERE sale_id = ? AND product_id = ? LIMIT 1')
-      .all(saleId, productId))[0] as { product_name: string; unit_price: number } | undefined
+      .prepare('SELECT product_name, unit_price, qty FROM sale_items WHERE sale_id = ? AND product_id = ? LIMIT 1')
+      .all(saleId, productId))[0] as { product_name: string; unit_price: number; qty: number } | undefined
   );
   if (!item)
     return NextResponse.json(
       { error: 'Produk tersebut tidak ada di transaksi yang dipilih' },
       { status: 400 }
     );
+  // Plafon: jumlah retur tidak boleh melebihi (qty terjual - yang sudah
+  // diretur) agar stok tidak bisa digelembungkan lewat retur berlebihan.
+  const already = (
+    (await d
+      .prepare('SELECT COALESCE(SUM(qty), 0) s FROM returns WHERE sale_id = ? AND product_id = ?')
+      .get(saleId, productId)) as { s: number }
+  ).s;
+  const maxQty = Math.max(0, Number(item.qty || 0) - Number(already));
+  if (qty > maxQty) {
+    return NextResponse.json(
+      { error: 'Jumlah retur melebihi sisa yang dapat diretur (' + maxQty + ' ' + item.product_name + ')' },
+      { status: 400 }
+    );
+  }
   const amount = Math.floor(item.unit_price * qty);
   const now = new Date().toISOString();
 

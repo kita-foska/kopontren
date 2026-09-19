@@ -435,8 +435,22 @@ export async function changePin(
   const cand = Buffer.from(hashPin(oldPin, row.salt), 'hex');
   const stored = Buffer.from(row.pin_hash, 'hex');
   if (cand.length !== stored.length || !crypto.timingSafeEqual(cand, stored)) {
+    // Hitung juga ke lockout (konsisten dgn verifyPin): PIN lama salah
+    // berulang tidak boleh dipakai menembus PIN tanpa verifikasi.
+    const attempts = row.failed_attempts + 1;
+    if (attempts >= PIN_MAX_ATTEMPTS) {
+      const lockedUntil = new Date(now + PIN_LOCK_SECONDS * 1000).toISOString();
+      await d
+        .prepare('UPDATE user_pins SET failed_attempts = ?, locked_until = ?, updated_at = ? WHERE user_id = ?')
+        .run(attempts, lockedUntil, new Date().toISOString(), userId);
+      return { ok: false, error: 'PIN lama salah. Percobaan habis — PIN terkunci sementara.' };
+    }
+    await d
+      .prepare('UPDATE user_pins SET failed_attempts = ?, updated_at = ? WHERE user_id = ?')
+      .run(attempts, new Date().toISOString(), userId);
     return { ok: false, error: 'PIN lama salah' };
   }
+  // PIN lama benar -> setupPin() sendiri me-reset failed_attempts/locked_until.
   return setupPin(userId, newPin);
 }
 
