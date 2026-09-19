@@ -331,6 +331,12 @@ async function migrate(d: Db) {
   await d.exec("CREATE TABLE IF NOT EXISTS product_units (id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, unit_name TEXT NOT NULL, conversion_factor REAL NOT NULL DEFAULT 1, UNIQUE (product_id, unit_name))");
   // stock opname: physical count vs system, with the delta
   await d.exec("CREATE TABLE IF NOT EXISTS stock_opname (id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, system_stock INTEGER NOT NULL DEFAULT 0, physical_stock INTEGER NOT NULL DEFAULT 0, difference INTEGER NOT NULL DEFAULT 0, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // trade payables ("Hutang" / utang dagang ke supplier): same shape as
+  // debts + created_by. Paying via /api/payables/[id] also inserts a
+  // cash_entries 'expense' row (integrasi kas keluar), mirroring /api/kas.
+  await d.exec("CREATE TABLE IF NOT EXISTS payables (id INTEGER PRIMARY KEY, supplier_name TEXT NOT NULL, supplier_phone TEXT NOT NULL DEFAULT '', amount INTEGER NOT NULL DEFAULT 0, paid INTEGER NOT NULL DEFAULT 0, remaining INTEGER NOT NULL DEFAULT 0, due_date TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'open', note TEXT NOT NULL DEFAULT '', created_by INTEGER, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_payables_status ON payables(status)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_payables_created ON payables(created_at)');
   // customer debts (receivables)
   await d.exec("CREATE TABLE IF NOT EXISTS debts (id INTEGER PRIMARY KEY, customer_name TEXT NOT NULL, customer_phone TEXT NOT NULL DEFAULT '', amount INTEGER NOT NULL DEFAULT 0, paid INTEGER NOT NULL DEFAULT 0, remaining INTEGER NOT NULL DEFAULT 0, due_date TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'open', note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
   // sales returns (restocks)
@@ -576,7 +582,10 @@ export async function saveZakatSettings(
 // Bump: zakat batch — tabel zakat_settings + zakat_history (zakat
 // perdagangan/tijarah) + seed default nishab/kadar. Semua statement
 // IF NOT EXISTS / DO NOTHING, idempotent, aman utk DB existing.
-const SCHEMA_VERSION = 5;
+// Bump v6 (2026): tabel payables (Hutang / utang dagang ke supplier)
+// + index status/created. Semua statement IF NOT EXISTS, idempotent,
+// aman utk DB existing.
+const SCHEMA_VERSION = 6;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
@@ -652,6 +661,13 @@ export function db(): Promise<Db> {
 export async function tx<T>(d: Db, fn: () => Promise<T> | T): Promise<T> {
   const shim = d as DbShim;
   const c = shim.c;
+  // Local SQLite (file:) pada @libsql/client 0.15: client.transaction()
+  // SILENTLY LOST — statement dalam tx dibuang saat close() tanpa commit
+  // (diverifikasi: INSERT/UPDATE dalam tx tidak persist di file backend).
+  // Jalankan sekuensial (auto-commit per statement) — safe utk dev lokal.
+  // Turso remote: transaction = logical connection, batch atomik 1 round-trip.
+  const rawUrl = (process.env.DATABASE_URL || '').trim();
+  if (rawUrl.startsWith('file:')) return fn();
   if (typeof c.transaction === 'function') {
     const t: Transaction = await c.transaction('write');
     const orig = shim.c;
