@@ -1,4 +1,5 @@
 {
   "$schema": "https://openjs.vercel.sh/vercel.json",
-  "regions": ["sin1"]
+  "regions": ["sin1"],
+  "buildCommand": "node scripts/inject-sw-version.mjs && next build"
 }
