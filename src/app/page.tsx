@@ -64,18 +64,20 @@ export default async function DashboardPage() {
           )}
         </div>
       )}
-      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
-        Ringkasan <span className="text-accent-500 dark:text-accent-300">Hari Ini</span>
-      </h1>
-      <p className="mb-5 text-sm text-slate-500 dark:text-slate-400">
-        {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
-          new Date()
-        )}{' '}
-        · login sebagai {user.display_name || user.username} ({user.role})
-      </p>
+      <div className="grad-hero mb-5 rounded-2xl p-5 text-white shadow-md">
+        <h1 className="text-2xl font-extrabold tracking-tight">
+          Ringkasan <span className="text-white/80">Hari Ini</span>
+        </h1>
+        <p className="mt-1 text-sm text-white/70">
+          {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
+            new Date()
+          )}{' '}
+          · login sebagai {user.display_name || user.username} ({user.role})
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="card p-4">
+        <div className="card fade-up p-4">
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Penjualan hari ini
           </p>
@@ -84,7 +86,11 @@ export default async function DashboardPage() {
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400">{salesToday.c} transaksi</p>
         </div>
-        <div className="card p-4">
+        <div
+          className={
+            'card fade-up p-4 ' + (unreported.c > 0 ? 'border-amber-500/50' : '')
+          }
+        >
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Belum dilaporkan
           </p>
@@ -94,7 +100,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         {isManager(user) && (
-          <div className="card p-4">
+          <div className="card fade-up p-4">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Arus kas hari ini
             </p>
@@ -104,7 +110,7 @@ export default async function DashboardPage() {
             </p>
           </div>
         )}
-        <div className="card p-4">
+        <div className="card fade-up p-4">
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Produk aktif
           </p>
@@ -115,7 +121,7 @@ export default async function DashboardPage() {
         </div>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-2">
-        <div className="card p-4">
+        <div className="card fade-up p-4">
           <h2 className="mb-2 font-bold">Aksi cepat</h2>
           <div className="flex flex-wrap gap-2">
             <a href="/kasir" className="btn-primary">
@@ -136,7 +142,7 @@ export default async function DashboardPage() {
             )}
           </div>
         </div>
-        <div className="card p-4">
+        <div className="card fade-up p-4">
           <h2 className="mb-2 font-bold">Stok menipis (&lt; 5)</h2>
           {lowStock.length === 0 ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">Semua stok aman.</p>

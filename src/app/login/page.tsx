@@ -33,21 +33,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-navy-100 p-4 dark:bg-navy-900">
-      <div className="card w-full max-w-sm p-6">
+    <div className="grad-hero relative grid min-h-screen place-items-center overflow-hidden p-4">
+      {/* Soft radial glow layers for depth */}
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-accent-400/20 blur-3xl" />
+
+      <div className="fade-up card w-full max-w-sm border-white/40 bg-white/85 p-6 backdrop-blur-xl dark:border-white/10 dark:bg-white/10 sm:p-7">
         <div className="mb-5 flex items-center gap-3">
           <Image
             src="/logo-kopontren.svg"
             alt="Kopontren"
             width={64}
             height={64}
-            className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain"
+            className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain shadow-sm ring-1 ring-black/5"
           />
           <div>
-            <h1 className="text-lg font-extrabold leading-tight tracking-tight">
+            <h1 className="text-lg font-extrabold leading-tight tracking-tight text-accent-700 dark:text-white">
               Kopontren Al Ittihad
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Kasir & Pembukuan</p>
+            <p className="text-xs text-slate-500 dark:text-slate-300">Kasir &amp; Pembukuan</p>
           </div>
         </div>
         <form onSubmit={submit} className="space-y-3">
@@ -80,15 +84,19 @@ export default function LoginPage() {
             />
           </div>
           {err && (
-            <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-400">
+            <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-300">
               {err}
             </p>
           )}
-          <button type="submit" disabled={busy || !username || !password} className="btn-primary w-full">
+          <button
+            type="submit"
+            disabled={busy || !username || !password}
+            className="btn-primary w-full shadow-md shadow-accent-500/20"
+          >
             {busy ? 'Memproses…' : 'Masuk'}
           </button>
         </form>
-        <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-300">
           Akun dibuat oleh Pengurus. Hubungi pengurus jika belum punya username.
         </p>
       </div>
