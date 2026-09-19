@@ -27,6 +27,12 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
       },
       {
+        // API: jangan pernah di-cache (browser/CDN) — data bisnis & auth
+        // harus selalu fresh. Service worker juga tidak intercept /api/*.
+        source: '/api/:path*',
+        headers: [{ key: 'Cache-Control', value: 'no-store' }],
+      },
+      {
         source: '/:path*.(svg|jpg|jpeg|png|gif|ico|webp)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },

@@ -1,13 +1,20 @@
-// Kopontren PWA service worker (v8)
+// Kopontren PWA service worker (v11)
 // Strategy:
 // - Immutable static assets (/_next/static, ikon, logo, gambar): cache-first
-// - API GET data referensi aman (/api/products, /api/member-settings):
-//   network-first dengan cache fallback (bisa dipakai offline; data bisnis
-//   seperti /api/sales & /api/members TIDAK pernah di-cache)
-// - Pages & shell: network-first dengan offline fallback
-const CACHE = 'kopontren-v9';
-const PAGE_CACHE = 'kopontren-pages-v7';
-const API_CACHE = 'kopontren-api-v8';
+// - SEMUA /api/*: NETWORK-ONLY (tidak pernah diintercept/di-cache) — data
+//   bisnis & auth tidak boleh pernah basi; respon no-store tidak disimpan
+//   ke cache. (Sebelumnya /api/products & /api/member-settings di-cache
+//   network-first; dihapus total karena respon basi di cache adalah
+//   penyebab bug "0 request" saat SW lama masih aktif.)
+// - Pages & shell: network-first dengan offline fallback (hanya respons 2xx
+//   & tanpa header no-store yang disimpan; no-cache tetap boleh disimpan
+//   sebagai fallback offline karena online-nya selalu network-first).
+// SW-BUILD marker di-stamp ulang setiap build oleh scripts/inject-sw-version.mjs
+// → konten file berubah → browser mendeteksi SW baru → install + skipWaiting
+// + clientsClaim → cache lama di-purge saat activate.
+// SW-BUILD:71833ae6c2fb
+const CACHE = 'kopontren-v10';
+const PAGE_CACHE = 'kopontren-pages-v8';
 const OFFLINE_FALLBACK = '/login';
 
 // Aset kritis yang diprecache saat install agar shell tetap hidup offline.
@@ -18,17 +25,14 @@ const PRECACHE = [
   '/logo-kopontren.svg',
 ];
 
-// Endpoint GET yang AMAN di-cache: data referensi statis, bukan data
-// per-pengguna. Data bisnis (sales, members, kas, shift) tetap
-// network-only agar tidak pernah menyajikan angka basi.
-const SAFE_API = ['/api/products', '/api/member-settings'];
-
 // Network-first: selalu coba network; simpan respons 2xx ke cache sebagai
-// fallback offline. Respons error / opaque tidak pernah di-cache.
+// fallback offline. Respons error / opaque / no-store tidak pernah di-cache.
 function networkFirst(cacheName, req, fallback) {
   return fetch(req)
     .then((res) => {
       if (res.type === 'opaque' || res.status >= 400) return res;
+      const cc = (res.headers.get('cache-control') || '').toLowerCase();
+      if (cc.includes('no-store')) return res; // jangan pernah simpan no-store
       const copy = res.clone();
       caches.open(cacheName).then((c) => c.put(req, copy));
       return res;
@@ -56,7 +60,7 @@ self.addEventListener('activate', (e) => {
           keys
             .filter(
               (k) =>
-                k.startsWith('kopontren') && k !== CACHE && k !== PAGE_CACHE && k !== API_CACHE
+                k.startsWith('kopontren') && k !== CACHE && k !== PAGE_CACHE
             )
             .map((k) => caches.delete(k))
         )
@@ -70,14 +74,10 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
-  // API: default network-only (data bisnis tak boleh pernah basi).
-  // Hanya endpoint referensi statis yang boleh network-first + fallback cache.
-  if (url.pathname.startsWith('/api/')) {
-    if (SAFE_API.some((p) => url.pathname === p)) {
-      e.respondWith(networkFirst(API_CACHE, req, null));
-    }
-    return;
-  }
+  // API: SELALU network-only — tidak diintercept, tidak di-cache.
+  // (Sebelumnya /api/products & /api/member-settings di-cache; dihapus
+  // karena cache API basi + SW lama adalah sumber bug "0 request".)
+  if (url.pathname.startsWith('/api/')) return;
   // Aset statis immutable: cache-first
   if (
     url.pathname.startsWith('/_next/static/') ||

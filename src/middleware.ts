@@ -13,8 +13,21 @@ const EXP_COOKIE = 'kopontren_session_exp';
  */
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith('/api/')) return;
-  if (pathname.startsWith('/login')) return;
+  if (pathname.startsWith('/api/')) {
+    // Header no-store utk /api/* di-set via next.config headers (CDN level).
+    return;
+  }
+  // HTML & route dinamis: selalu revalidate supaya deploy baru menyajikan
+  // bundle terbaru (aset statis /public & /_next dikecualikan — mereka
+  // punya policy header sendiri di next.config).
+  const isStaticPublic =
+    /^\/_next\//.test(pathname) ||
+    /^(\/(sw\.js|manifest\.json|favicon\.ico|icon-|logo-kopontren))(\/|$)/.test(pathname) ||
+    /\.(svg|png|jpe?g|gif|webp|ico)$/i.test(pathname);
+  const res = NextResponse.next();
+  if (!isStaticPublic) res.headers.set('Cache-Control', 'no-cache, must-revalidate');
+
+  if (pathname.startsWith('/login')) return res;
 
   const hasSession = !!req.cookies.get(SESSION_COOKIE)?.value;
   if (!hasSession) {
@@ -30,6 +43,7 @@ export function middleware(req: NextRequest) {
     url.search = '';
     return NextResponse.redirect(url);
   }
+  return res;
 }
 
 export const config = {

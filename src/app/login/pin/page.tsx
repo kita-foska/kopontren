@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { PinDots, PinPad } from '@/components/pin-pad';
@@ -13,34 +13,50 @@ type Session = {
 
 export default function PinReauthPage() {
   const router = useRouter();
-  const [status, setStatus] = useState<'loading' | 'none' | 'timeout'>('loading');
+  // 'error' = gagal/tidak bisa cek sesi (jaringan/timeout/server 5xx) —
+  // dibedakan dari 'timeout' status SESI (idle habis, perlu PIN).
+  const [status, setStatus] = useState<'loading' | 'none' | 'timeout' | 'error'>('loading');
   const [user, setUser] = useState<PUser | null>(null);
   const [value, setValue] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const done = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const checkSession = useCallback(async () => {
+    setStatus('loading');
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    // Tanpa timeout, fetch yang pending selamanya membuat spinner
+    // "Memeriksa sesi…" nyangkut (mis. Vercel cold start + Turso lambat).
+    const timer = setTimeout(() => ctrl.abort(), 10_000);
+    try {
+      const res = await fetch('/api/auth/session', { cache: 'no-store', signal: ctrl.signal });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const s: Session = await res.json();
+      if (s.status === 'active') {
+        done.current = true;
+        router.replace('/');
+        return;
+      }
+      if (s.status === 'timeout') {
+        setUser(s.user || null);
+        setStatus('timeout');
+        return;
+      }
+      setStatus('none');
+    } catch {
+      // Gagal (timeout/jaringan/respon tak valid) -> jangan stuck di loading.
+      if (!done.current) setStatus('error');
+    } finally {
+      clearTimeout(timer);
+    }
+  }, [router]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/api/auth/session', { cache: 'no-store' });
-        const s: Session = await res.json();
-        if (s.status === 'active') {
-          done.current = true;
-          router.replace('/');
-          return;
-        }
-        if (s.status === 'timeout') {
-          setUser(s.user || null);
-          setStatus('timeout');
-          return;
-        }
-        setStatus('none');
-      } catch {
-        setStatus('none');
-      }
-    })();
-  }, [router]);
+    checkSession();
+    return () => abortRef.current?.abort();
+  }, [checkSession]);
 
   async function verify() {
     if (value.length < 4 || busy || done.current) return;
@@ -113,6 +129,31 @@ export default function PinReauthPage() {
             </p>
             <button
               className="btn-primary w-full shadow-md shadow-accent-500/20"
+              onClick={() => (window.location.href = '/login')}
+            >
+              Ke Login
+            </button>
+          </div>
+        )}
+
+        {status === 'error' && (
+          <div className="space-y-4">
+            <p className="text-center text-sm text-slate-600 dark:text-slate-300">
+              Gagal memeriksa sesi — jaringan lambat atau server belum siap
+              (timeout 10 dtk).
+            </p>
+            <button
+              className="btn-primary w-full shadow-md shadow-accent-500/20"
+              onClick={() => {
+                setErr('');
+                setValue('');
+                checkSession();
+              }}
+            >
+              Coba Lagi
+            </button>
+            <button
+              className="w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               onClick={() => (window.location.href = '/login')}
             >
               Ke Login
