@@ -28,7 +28,7 @@ export type ZakatCalculation = {
  *             /api/reports: periode mulai dari zakat terakhir / tanggal
  *             mulai haul; bila keduanya kosong, awal bulan WIB berjalan.
  *   piutang = Σ remaining hutang customer (debts status open)
- *   hutang  = 0 (belum ada pencatatan kewajiban dagang)
+ *   hutang  = Σ remaining kewajiban dagang (payables status open)
  *   nishab  = nishab_gram × gold_price
  *   wajib   bila harga emas terisi dan total >= nishab.
  */
@@ -87,7 +87,15 @@ async function computeZakat(): Promise<ZakatCalculation> {
         .get()) as { v: number }
     ).v
   );
-  const hutang = 0;
+  // Hutang dagang ke supplier (payables open) dikurangkan dari harta bersih —
+  // konsisten fiqh zakat tijarah (utang dicicil saka harta).
+  const hutang = Number(
+    (
+      (await d
+        .prepare(`SELECT COALESCE(SUM(remaining), 0) v FROM payables WHERE status = 'open'`)
+        .get()) as { v: number }
+    ).v
+  );
 
   const total_assets = modal + laba + piutang - hutang;
   const nishab = Math.round(nishab_gram * gold_price);
