@@ -38,6 +38,11 @@ export function ProdukClient() {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  // Kelola massal: pilih baris -> stok/kategori/hapus massal via /api/products/bulk
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkStock, setBulkStock] = useState('');
+  const [bulkCat, setBulkCat] = useState('');
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const load = useCallback(async () => {
     const r = await api<Resp>('/api/products');
@@ -129,6 +134,73 @@ export function ProdukClient() {
     }
   }
 
+  // ── Kelola massal ────────────────────────────────────────────────
+  function toggleSel(id: number) {
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function selectAllFiltered() {
+    setSelected((s) => {
+      const ids = filtered.map((p) => p.id);
+      const all = ids.every((id) => s.has(id));
+      return all ? new Set<number>() : new Set(ids);
+    });
+  }
+  async function bulk(action: 'stock' | 'category' | 'delete', extra?: Record<string, unknown>) {
+    if (selected.size === 0) return;
+    setBulkBusy(true);
+    const r = await api<{ ok: boolean; affected?: number }>('/api/products/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ action, ids: [...selected], ...extra }),
+    });
+    setBulkBusy(false);
+    if (r.ok) {
+      showToast(r.data?.affected + ' produk diproses');
+      setSelected(new Set());
+      setBulkStock('');
+      setBulkCat('');
+      load();
+    } else {
+      showToast(r.error || 'Gagal operasi massal');
+    }
+  }
+  function exportCsv() {
+    const head = ['id', 'name', 'category', 'unit', 'base_price', 'cost_price', 'stock', 'active', 'barcode'];
+    const rows = products.map((p) => [
+      p.id,
+      p.name,
+      p.category,
+      p.unit,
+      p.base_price,
+      p.cost_price,
+      p.stock,
+      p.active,
+      p.barcode ?? '',
+    ]);
+    const csv = [head, ...rows]
+      .map((r) =>
+        r
+          .map((v) => {
+            const s = String(v ?? '');
+            return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+          })
+          .join(',')
+      )
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'produk-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(products.length + ' produk diekspor ke CSV');
+  }
+
   const F = (k: keyof typeof form, o?: { numeric?: boolean; label?: string; ph?: string }) => (
     <div>
       <label className="label">{o?.label || k}</label>
@@ -172,11 +244,69 @@ export function ProdukClient() {
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
             {filtered.length} dari {products.length} produk
           </span>
+          <button className="btn-ghost" onClick={exportCsv}>
+            ⬇ Export CSV
+          </button>
           <button className="btn-primary" onClick={() => openEdit()}>
             + Tambah Produk
           </button>
         </div>
       </div>
+
+      {/* Bar kelola massal (muncul saat ada baris terpilih) */}
+      {selected.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-accent-500/30 bg-accent-500/10 px-3 py-2 text-xs font-semibold">
+          <span className="text-accent-600 dark:text-accent-300">
+            {selected.size} produk dipilih
+          </span>
+          <input
+            className="input w-24 py-1"
+            type="number"
+            placeholder="Stok ±"
+            value={bulkStock}
+            onChange={(e) => setBulkStock(e.target.value)}
+          />
+          <button
+            className="btn-ghost px-2.5 py-1 text-xs"
+            disabled={bulkBusy || bulkStock === ''}
+            onClick={() => void bulk('stock', { delta: Number(bulkStock) })}
+          >
+            Terapkan Stok
+          </button>
+          <select
+            className="input w-auto py-1"
+            value={bulkCat}
+            onChange={(e) => setBulkCat(e.target.value)}
+          >
+            <option value="">Kategori…</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <button
+            className="btn-ghost px-2.5 py-1 text-xs"
+            disabled={bulkBusy || !bulkCat}
+            onClick={() => void bulk('category', { value: bulkCat })}
+          >
+            Terapkan Kategori
+          </button>
+          <button
+            className="btn-danger px-2.5 py-1 text-xs"
+            disabled={bulkBusy}
+            onClick={() => {
+              if (confirm('Hapus massal: ' + selected.size + ' produk akan DINONAKTIFKAN (aman utk riwayat)?'))
+                void bulk('delete');
+            }}
+          >
+            Hapus Massal
+          </button>
+          <button className="btn-ghost px-2.5 py-1 text-xs" onClick={() => setSelected(new Set())}>
+            Batal
+          </button>
+        </div>
+      )}
 
       {/* Category Pills */}
       {categories.length > 0 && (
@@ -217,6 +347,15 @@ export function ProdukClient() {
         <table className="w-full min-w-[44rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
+              <th className="th w-8">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-accent-500"
+                  title="Pilih semua yang terlihat"
+                  checked={filtered.length > 0 && filtered.every((p) => selected.has(p.id))}
+                  onChange={selectAllFiltered}
+                />
+              </th>
               <th className="th">Produk & Barcode</th>
               <th className="th">Harga Jual</th>
               <th className="th">HPP / Beli</th>
@@ -232,6 +371,14 @@ export function ProdukClient() {
               const marginPct = p.cost_price > 0 ? Math.round((margin / p.cost_price) * 100) : 0;
               return (
                 <tr key={p.id} className="table-row hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
+                  <td className="td">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-accent-500"
+                      checked={selected.has(p.id)}
+                      onChange={() => toggleSel(p.id)}
+                    />
+                  </td>
                   <td className="td">
                     <p className="font-bold text-slate-900 dark:text-slate-100">{p.name}</p>
                     <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
@@ -311,7 +458,7 @@ export function ProdukClient() {
             })}
             {filtered.length === 0 && (
               <tr>
-                <td className="td py-8 text-center text-sm text-slate-500" colSpan={7}>
+                <td className="td py-8 text-center text-sm text-slate-500" colSpan={8}>
                   {q || cat ? 'Tidak ada produk yang cocok dengan pencarian.' : 'Belum ada produk.'}
                 </td>
               </tr>

@@ -29,6 +29,7 @@ const ADMIN_GROUPS: NavGroup[] = [
   {
     title: 'Utama',
     items: [
+      { href: '/admin/dashboard', label: 'Dashboard' },
       { href: '/', label: 'Ringkasan' },
       { href: '/kasir', label: 'Kasir' },
       { href: '/laporan', label: 'Laporan & Rekap' },
@@ -186,6 +187,7 @@ function groupsFor(role: Role): NavGroup[] {
       {
         title: 'Utama',
         items: [
+          { href: '/admin/dashboard', label: 'Dashboard' },
           { href: '/', label: 'Ringkasan' },
           { href: '/kasir', label: 'Kasir' },
           { href: '/laporan', label: 'Laporan & Rekap' },

@@ -79,6 +79,27 @@ function toNum(v: unknown): number {
   return Number(s);
 }
 
+/**
+ * Auto-kategorisasi ringan berbasis keyword (dipakai saat import: baris
+ * tanpa kategori diberi usul otomatis; admin tetap bisa mengganti di
+ * preview sebelum import). Hasil deterministik, tanpa dependency.
+ */
+const CATEGORY_RULES: [RegExp, string][] = [
+  [/madu|honey/i, 'Madu'],
+  [/teh|tea|kopi|coffee|susu|skm|minum|air|air mineral|juice|es\b/i, 'Minuman'],
+  [/keripik|coklat|permen|snack|camilan|chip|biskuit|mie|mi instan|keju|choco/i, 'Camilan'],
+  [/gula|beras|beras|sambal|minyak goreng|telur|tepung|garam|kopi\b|kedelai|santan/i, 'Sembako'],
+  [/sabun|sampo|shampo|pasta gigi|tissue|masker|cotton|deodoran|mandi/i, 'Kebersihan'],
+  [/rokok|baju|celana|kaos|sendal|sepatu|jilbab|mukena|saadah|mukena/i, 'Pakaian'],
+  [/baterei|baterai|selotip|pulis|korek/i, 'Rumah Tangga'],
+];
+
+export function suggestCategory(name: string, existing = ''): string {
+  if (existing && existing.trim()) return existing.trim();
+  for (const [re, cat] of CATEGORY_RULES) if (re.test(name)) return cat;
+  return '';
+}
+
 /** Parse + validate into ImportRow[]. Throws with a human message on fatal problems. */
 export function parseImport(text: string): {
   rows: ImportRow[];
@@ -140,7 +161,7 @@ export function parseImport(text: string): {
     rows.push({
       line,
       name,
-      category: String(cCat ?? '').trim(),
+      category: suggestCategory(name, String(cCat ?? '').trim()),
       unit: String(cUnit ?? '').trim() || 'pcs',
       base_price: Math.round(Number(base)),
       cost_price: Math.round(Number(cost)),
@@ -199,7 +220,7 @@ export function excelToRow(line: number, e: ExcelMapping): ImportRow | RowError 
   return {
     line,
     name,
-    category: String(e.category ?? '').trim(),
+    category: suggestCategory(name, String(e.category ?? '').trim()),
     unit: String(e.uom ?? '').trim() || 'pcs',
     base_price: Math.max(0, Math.round(base)),
     cost_price: Math.max(0, Math.round(cost)),
