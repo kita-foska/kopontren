@@ -19,6 +19,12 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [r] Backup GET/POST: pesan 403 "Hanya pengurus" → "Hanya admin"
       (guard-nya `isAdmin`) — SELESAI
 - [r] `pin/reset`: validasi integer `user_id` — SELESAI
+- [x] ZAKAT tijarah: hutang dagang (`payables` open) dikurangkan dari
+      harta bersih utk zakat — commit `6ef487b`, pushed master+main
+      18 Sep 2026 — SELESAI
+- [r] ZAKAT known issues (terdokumentasi, belum difix): export CSV
+      timestamp UTC vs tampilan WIB (±7 jam, kosmetik); batas periode
+      laba zakat pakai UTC (±7 jam di ujung periode) — lihat MEMORY.md
 
 ## Fitur (gap fungsional)
 - [m] Terapkan perks member di alur POS: diskon member, cashback
@@ -50,7 +56,20 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [r] `reports/csv` tanpa batas baris (manager-only, aman, tapi
       "sejak awal" = baca seluruh sale_items).
 
+## Ceklis Uji Manual `/admin/zakat` (deploy Vercel `6ef487b`, 18 Sep 2026)
+- [ ] 1. Buka `/admin/zakat` → 4 StatCard load (Modal, Laba, Piutang, Hutang)
+- [ ] 2. Set harga emas → Simpan → Hitung Ulang
+- [ ] 3. Nisab = 85 × harga emas
+- [ ] 4. Total harta = modal + laba + piutang − hutang
+- [ ] 5. Zakat 2.5% = total × rate
+- [ ] 6. Test "Belum Wajib" → `last_zakat_date` tidak di-reset
+- [ ] 7. Export CSV → buka file, cek 7 kolom
+- [ ] 8. Print → `.print-area` tidak kosong
+- [ ] 9. Bug #1 (A1–A5): tambah payables open → "Hutang" muncul, total berkurang
+- [ ] 10. Auth: manager GET 200 · POST 403
+
 ## Catatan
-- BMT/zakat: ada & berfungsi penuh (di luar scope audit kali ini).
+- BMT/zakat: berfungsi penuh; hutang dagang tijarah kini dihitung
+  dalam total zakat (commit `6ef487b`).
 - Vercel: build dari `main`; setelah commit di `master`, mirror main
   (reset --hard + push -f).

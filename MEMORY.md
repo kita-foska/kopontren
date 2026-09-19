@@ -52,14 +52,19 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   invalidated otomatis saat save.
 
 ## Pola kerja git (PENTING — beda dari kebiasaan)
-- Repo: `https://github.com/verica1937/kopontren-app.git`.
+- Repo: `https://github.com/kita-foska/kopontren.git` (per 18 Sep 2026;
+  sebelumnya `verica1937/kopontren-app`). Branch lokal: `master` (HEAD)
+  + `main` (mirror).
 - Pengembangan di branch **`master`**; **`main` = cermin master**
-  (Vercel build dari `main`). Sinkron: commit di master →
-  `git checkout main && git reset --hard master && git push -f origin main`.
-  Sejarah main & master dulu UNRELATED (tidak ada merge-base) — jangan
-  `git merge` antar keduanya.
-- Local saat ini HANYA branch `main` (mirror); `master` ada di remote.
-  Git: `C:\Program Files\Git\cmd\git.exe`; node: `C:\Program Files\nodejs\node.exe`.
+  (Vercel build dari `main`). Sinkron dual-branch:
+  `git push origin master:master && git push origin master:main`
+  (fast-forward push; main & master kini berbagi sejarah sejak sinkron
+  GitHub — JANGAN `git merge` antar keduanya).
+- Git: `C:\Program Files\Git\cmd\git.exe`; node: `C:\Program Files\nodejs\node.exe`.
+- **JANGAN commit `public/sw.js`**: setiap `npm run build`,
+  `inject-sw-version.mjs` men-stamp ulang `// SW-BUILD:<hex>` (seed
+  `.next/BUILD_ID` + timestamp) → file berubah tiap build lokal;
+  Vercel men-stamp sendiri saat build. (Aturan sama utk `out/`, `data.db`.)
 - `.gitignore`: pola `_*` menyeluruh (file scratch `_*.{txt,log,...}`
   otomatis diabaikan) + `*.log` + tsbuildinfo.
 
@@ -88,3 +93,26 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
 - Backup JSON (`/api/backup`) mencakup produk/penjualan/pembelian/kas/
   konsinyasi/member/shift/audit — TIDAK debts/payables/returns/
   notifications (lihat TODO.md).
+
+## ZAKAT Tijarah & Known Issues (18 Sep 2026)
+- **Bug #1 DI-FIX** (commit `6ef487b`, dual-push master+main):
+  `computeZakat()` di `/api/zakat` kini **mengurangkan hutang dagang** —
+  `SUM(payables.remaining)` dgn `status='open'` — dari harta bersih
+  (dulu hard-coded `hutang = 0`; statcard "Hutang" selalu Rp 0).
+  Arahnya: piutang (`receivables` open) **ditambah**, hutang dagang
+  **dikurangkan** → harta bersih = modal + laba + piutang − hutang
+  (konsisten fiqh zakat tijarah).
+- **Known issues (belum difix, low priority):**
+  - `reports/csv` export: timestamp ditulis **UTC mentah**, UI tampil
+    WIB (beda ±7 jam) — kosmetik, tidak memengaruhi perhitungam.
+  - Batas periode LABA zakat memakai perbandingan UTC
+    (`date('now')`), bukan batas hari/bulan WIB — laba bisa meleset
+    ±7 jam di ujung periode.
+- **Known behavior — `/sw.js` redirect (temuan 18 Sep 2026, bukan
+  regression):** fetch `/sw.js` **tanpa cookie sesi → 307 redirect ke
+  `/login`** (whitelist `isStaticPublic` di `src/middleware.ts` hanya
+  mengontrol header `Cache-Control`, TIDAK melewati session guard).
+  Implikasi: PWA tidak bisa diinstall dari halaman publik — service
+  worker baru ter-fetch setelah login. Karena aplikasi internal, ini
+  **acceptable**; kalau kelak ingin PWA installable dari landing page,
+  perlu me-whitelist `/sw.js` di session guard middleware.
