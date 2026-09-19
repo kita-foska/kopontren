@@ -1,9 +1,55 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import jsQR from 'jsqr';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
+
+type QueuedSale = {
+  ref: string;
+  at: string;
+  payload: {
+    customer: string;
+    pay_method: string;
+    note: string;
+    member_id?: number;
+    discount?: number;
+    amount_paid: number;
+    change: number;
+    client_ref: string;
+    items: { product_id: number; qty: number; unit_price: number }[];
+  };
+};
+
+const OFFLINE_QUEUE_KEY = 'kopontren_pos_queue_v1';
+
+function loadQueue(): QueuedSale[] {
+  try {
+    const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+    const arr = raw ? (JSON.parse(raw) as QueuedSale[]) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Skor pencarian fuzzy: subsequence + bonus beruntun/posisi awal. */
+function fuzzyScore(term: string, text: string): number {
+  const t = term.toLowerCase();
+  const s = text.toLowerCase();
+  let ti = 0;
+  let score = 0;
+  for (let i = 0; i < s.length && ti < t.length; i++) {
+    if (s[i] === t[ti]) {
+      score += 2 + Math.max(0, 8 - i * 0.25);
+      ti++;
+    }
+  }
+  if (ti !== t.length) return 0;
+  score += 40;
+  return Math.min(90, Math.round(score));
+}
 
 type Product = {
   id: number;
@@ -38,6 +84,7 @@ type SaleResp = {
     points?: number;
     member_name?: string;
   };
+  deduped?: boolean;
   error?: string;
 };
 type ProductsResp = { products: Product[]; categories: string[] };
@@ -87,6 +134,22 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [qrisModal, setQrisModal] = useState(false);
+  const [scanModal, setScanModal] = useState(false);
+  // Hotkey F4 / auto-cetak struk / antrean offline
+  const [autoPrint, setAutoPrint] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('kopontren_pos_autoprint') !== 'off';
+    } catch {
+      return true;
+    }
+  });
+  const [offlineQueue, setOfflineQueue] = useState<QueuedSale[]>(() => loadQueue());
+  const [flushing, setFlushing] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const customerRef = useRef<HTMLInputElement>(null);
+  const receivedRef = useRef<HTMLInputElement>(null);
+  const queueRef = useRef<QueuedSale[]>(offlineQueue);
+  queueRef.current = offlineQueue;
   const [toast, showToast] = useToast();
 
   // Shift states
@@ -131,13 +194,33 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
 
   const visible = useMemo(() => {
     const term = qDeb.trim().toLowerCase();
-    return products.filter((p) => {
-      if (cat && p.category !== cat) return false;
-      if (!term) return true;
-      const matchName = p.name.toLowerCase().includes(term);
-      const matchBarcode = (p.barcode || '').toLowerCase().includes(term);
-      return matchName || matchBarcode;
-    });
+    if (!term) return cat ? products.filter((p) => p.category === cat) : products;
+    // Pencarian cerdas: ranking (exact > prefix > includes > fuzzy) +
+    // filter kategori aktif. Hasil fuzzy dibatasi 40 baris teratas.
+    type Scored = { p: Product; s: number };
+    const scored: Scored[] = [];
+    for (const p of products) {
+      if (cat && p.category !== cat) continue;
+      const n = p.name.toLowerCase();
+      const b = (p.barcode || '').toLowerCase();
+      let s: number;
+      if (n === term) s = 120;
+      else if (b === term) s = 115;
+      else if (n.startsWith(term)) s = 100;
+      else if (b.startsWith(term)) s = 95;
+      else if (n.includes(term) || b.includes(term)) s = 80;
+      else s = fuzzyScore(term, p.name) * 0.5; // ketik salah / ejaan mirip -> fuzzy
+      if (s >= 30) scored.push({ p, s });
+    }
+    if (scored.length === 0) return [];
+    const exactOnly = scored.every((x) => x.s >= 80);
+    if (exactOnly) {
+      // Urutan katalog (stabil & familiar) utk kecocokan non-fuzzy.
+      const ids = new Set(scored.filter((x) => x.s >= 80).map((x) => x.p.id));
+      return products.filter((p) => ids.has(p.id));
+    }
+    scored.sort((a, b2) => b2.s - a.s);
+    return scored.slice(0, 40).map((x) => x.p);
   }, [products, cat, qDeb]);
 
   function add(p: Product) {
@@ -158,6 +241,19 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       }
       return [...c, { product: p, qty: 1, price: p.base_price }];
     });
+  }
+
+  /** Tambah produk hasil scan barcode (scanner USB / kamera). */
+  function addByBarcode(code: string) {
+    const c = code.trim().toLowerCase();
+    if (!c) return;
+    const hit = products.find((p) => (p.barcode || '').toLowerCase() === c);
+    if (hit) {
+      add(hit);
+      showToast('Ditambahkan: ' + hit.name);
+      return;
+    }
+    showToast('Produk dengan barcode "' + code + '" tidak ditemukan.');
   }
 
   // Handle barcode scanner Enter press
@@ -189,6 +285,24 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         return;
       }
       if (liveMatches.length === 0) {
+        // Fuzzy: ejaan mirip / typo ringan (mis. "madu satchet" -> "Madu Sachet").
+        let best: Product | null = null;
+        let bestScore = 55;
+        for (const p of products) {
+          if (cat && p.category !== cat) continue;
+          const s = fuzzyScore(term, p.name) * 0.5;
+          if (s > bestScore) {
+            bestScore = s;
+            best = p;
+          }
+        }
+        if (best) {
+          add(best);
+          showToast('Ditambahkan (tebakan terdekat): ' + best.name);
+          setQ('');
+          setQDeb('');
+          return;
+        }
         showToast('Produk dengan barcode/kode "' + q.trim() + '" tidak ditemukan.');
       }
     }
@@ -253,24 +367,44 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     }
     setBusy(true);
     const cashReceived = pay === 'cash' && received.trim() !== '';
-    const r = await api<SaleResp>('/api/sales', {
-      method: 'POST',
-      body: JSON.stringify({
-        customer: customer || (selectedMember ? selectedMember.name : ''),
-        pay_method: pay,
-        note,
-        member_id: memberId ? Number(memberId) : undefined,
-        discount: discNum || undefined,
-        amount_paid: cashReceived ? receivedNum : total,
-        change: cashReceived ? change : 0,
-        items: cart.map((l) => ({ product_id: l.product.id, qty: l.qty, unit_price: l.price })),
-      }),
-    });
+    const clientRef =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : 'ref-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    const payload: QueuedSale['payload'] = {
+      customer: customer || (selectedMember ? selectedMember.name : ''),
+      pay_method: pay,
+      note,
+      member_id: memberId ? Number(memberId) : undefined,
+      discount: discNum || undefined,
+      amount_paid: cashReceived ? receivedNum : total,
+      change: cashReceived ? change : 0,
+      client_ref: clientRef,
+      items: cart.map((l) => ({ product_id: l.product.id, qty: l.qty, unit_price: l.price })),
+    };
+    const r = await api<SaleResp>('/api/sales', { method: 'POST', body: JSON.stringify(payload) });
     setBusy(false);
     if (!r.ok) {
-      showToast(r.error || 'Gagal menyimpan transaksi.');
+      // Kesalahan jaringan (offline) -> simpan ke antrean offline; stok
+      // lokal sudah dipotong, transaksi akan tersinkron otomatis saat online.
+      if (r.error === 'Kesalahan jaringan.') {
+        const entry: QueuedSale = { ref: clientRef, at: new Date().toISOString(), payload };
+        setOfflineQueue((q) => {
+          const next = [...q, entry];
+          try {
+            localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(next));
+          } catch {
+            /* penyimpanan penuh: transaksi tetap di memori */
+          }
+          return next;
+        });
+        showToast('⚡ Offline — transaksi tercatat, akan otomatis tersinkron saat internet pulih.');
+      } else {
+        showToast(r.error || 'Gagal menyimpan transaksi.');
+      }
       return;
     }
+    if (r.data.deduped) showToast('Transaksi sudah tersinkron sebelumnya (tanpa duplikat).');
     const saved = r.data.sale;
     if (saved) {
       setReceipt({
@@ -296,7 +430,110 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setMemberId('');
     load();
     loadShift();
+    // Auto-cetak struk setelah transaksi (bisa dimatikan di modal struk).
+    if (r.data.sale && !r.data.deduped && autoPrint) setTimeout(() => window.print(), 900);
   }
+
+  /** Sinkronkan antrean transaksi offline (dipanggil otomatis saat online). */
+  async function flushQueue() {
+    const q = queueRef.current;
+    if (q.length === 0 || flushing) return;
+    setFlushing(true);
+    let remaining = q;
+    for (const item of remaining) {
+      const r = await api<SaleResp>('/api/sales', {
+        method: 'POST',
+        body: JSON.stringify(item.payload),
+      });
+      if (r.ok) remaining = remaining.filter((x) => x.ref !== item.ref);
+      else break; // masih offline / error: sisanya ditangani retry berikutnya
+    }
+    setOfflineQueue((cur) => {
+      const next = cur.filter((x) => remaining.some((r2) => r2.ref === x.ref));
+      try {
+        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(next));
+      } catch {
+        /* abaikan */
+      }
+      return next;
+    });
+    setFlushing(false);
+    load();
+    loadShift();
+    if (remaining.length === 0 && q.length > 0)
+      showToast('Semua transaksi offline berhasil tersinkron ✔');
+  }
+
+  // Deteksi offline/online: sinkron otomatis saat internet pulih.
+  useEffect(() => {
+    const onOn = () => {
+      setIsOnline(true);
+      void flushQueue();
+    };
+    const onOff = () => setIsOnline(false);
+    window.addEventListener('online', onOn);
+    window.addEventListener('offline', onOff);
+    const onlineNow = typeof navigator === 'undefined' || navigator.onLine;
+    setIsOnline(onlineNow);
+    if (onlineNow && queueRef.current.length > 0) void flushQueue();
+    return () => {
+      window.removeEventListener('online', onOn);
+      window.removeEventListener('offline', onOff);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Hotkey kasir: F1 cari · F2 pembeli · F3 bayar · F4 simpan · F5 cetak · ESC batal.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'F1') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      } else if (e.key === 'F2') {
+        e.preventDefault();
+        customerRef.current?.focus();
+      } else if (e.key === 'F3') {
+        e.preventDefault();
+        if (pay === 'cash' && total > 0) receivedRef.current?.focus();
+        else customerRef.current?.focus();
+      } else if (e.key === 'F4') {
+        e.preventDefault();
+        if (!busy && cart.length > 0) void checkout();
+      } else if (e.key === 'F5') {
+        e.preventDefault();
+        if (receipt) window.print();
+      } else if (e.key === 'Escape') {
+        if (scanModal) {
+          setScanModal(false);
+        } else if (qrisModal) {
+          setQrisModal(false);
+        } else if (shiftModalOpen) {
+          setShiftModalOpen(false);
+        } else if (memberModal) {
+          setMemberModal(false);
+        } else if (receipt) {
+          setReceipt(null);
+        } else {
+          setQ('');
+          setQDeb('');
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [
+    busy,
+    cart.length,
+    pay,
+    total,
+    receipt,
+    scanModal,
+    qrisModal,
+    shiftModalOpen,
+    memberModal,
+    checkout,
+  ]);
 
   // Shift Management
   async function handleOpenShift() {
@@ -439,6 +676,27 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         </div>
       </div>
 
+      {/* Antrean transaksi offline: sinkron otomatis saat internet pulih */}
+      {!isOnline && (
+        <div className="rounded-xl border border-sky-500/40 bg-sky-500/10 px-4 py-2.5 text-xs font-semibold text-sky-600 dark:text-sky-300">
+          📡 Mode offline — POS tetap berjalan. Transaksi akan tersimpan & tersinkron otomatis.
+        </div>
+      )}
+      {offlineQueue.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
+          <span>
+            ⚡ {offlineQueue.length} transaksi offline menunggu sinkronisasi…
+          </span>
+          <button
+            onClick={() => void flushQueue()}
+            disabled={flushing || !isOnline}
+            className="btn-amber px-3 py-1 text-[11px]"
+          >
+            {flushing ? 'Sinkronisasi…' : 'Sinkronkan Sekarang'}
+          </button>
+        </div>
+      )}
+
       {/* Main POS layout */}
       <div className="grid gap-4 lg:grid-cols-[1fr_24rem]">
         {/* Left Column: Product catalog & Search */}
@@ -452,7 +710,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <input
                 ref={searchInputRef}
                 className="input pl-9"
-                placeholder="Ketik nama atau scan barcode (tekan Enter untuk auto-add)…"
+                placeholder="Ketik nama / scan barcode — Enter utk auto-add (F1)…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
@@ -467,6 +725,16 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 </button>
               )}
             </div>
+
+            {/* Scan barcode via kamera (jsQR) — fallback utk HP tanpa scanner */}
+            <button
+              type="button"
+              onClick={() => setScanModal(true)}
+              className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-[0.98] dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
+              title="Arahkan kamera ke barcode produk"
+            >
+              📷 Scan Barcode
+            </button>
 
             {/* Category pills */}
             <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1">
@@ -666,6 +934,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </div>
 
             <input
+              ref={customerRef}
               className="input text-xs"
               placeholder="Nama pembeli umum (opsional)"
               value={customer}
@@ -700,9 +969,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             {pay === 'cash' && (
               <div className="space-y-1.5">
                 <input
+                  ref={receivedRef}
                   className="input text-sm font-bold"
                   inputMode="numeric"
-                  placeholder="Uang diterima (Rp)"
+                  placeholder="Uang diterima (Rp) · F3"
                   value={received}
                   onChange={(e) => setReceived(e.target.value)}
                 />
@@ -783,13 +1053,18 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               )}
             </div>
 
+            {/* Petunjuk hotkey (desktop) */}
+            <p className="hidden text-[10px] font-medium text-slate-400 lg:block dark:text-slate-500">
+              F1 Cari · F2 Pembeli · F3 Bayar · F4 Simpan · F5 Cetak · ESC Batal
+            </p>
+
             {/* Checkout Button */}
             <button
               onClick={checkout}
               disabled={busy || cart.length === 0}
               className="btn-primary w-full py-2.5 text-sm font-bold shadow-md active:scale-[0.98]"
             >
-              {busy ? 'Menyimpan Transaksi…' : `Bayar ${rp(total)}`}
+              {busy ? 'Menyimpan Transaksi…' : `Bayar ${rp(total)} (F4)`}
             </button>
           </div>
         </div>
@@ -801,21 +1076,41 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         title="Transaksi Berhasil Disimpan"
         onClose={() => setReceipt(null)}
         footer={
-          <div className="flex flex-wrap items-center justify-between w-full gap-2">
-            <button className="btn-ghost text-xs" onClick={copyStrukText}>
-              📋 Salin Struk
-            </button>
-            <div className="flex items-center gap-2 ml-auto">
-              <button className="btn-ghost text-xs font-bold" onClick={handleSendWaStruk}>
-                💬 Kirim WA
+          <div className="w-full space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <button className="btn-ghost text-xs" onClick={copyStrukText}>
+                📋 Salin Struk
               </button>
-              <button className="btn-primary text-xs font-bold" onClick={printStruk}>
-                🖨️ Cetak Struk
-              </button>
-              <button className="btn-ghost text-xs" onClick={() => setReceipt(null)}>
-                Tutup
-              </button>
+              <div className="ml-auto flex items-center gap-2">
+                <button className="btn-ghost text-xs font-bold" onClick={handleSendWaStruk}>
+                  💬 Kirim WA
+                </button>
+                <button className="btn-primary text-xs font-bold" onClick={printStruk}>
+                  🖨️ Cetak Struk (F5)
+                </button>
+                <button className="btn-ghost text-xs" onClick={() => setReceipt(null)}>
+                  Tutup
+                </button>
+              </div>
             </div>
+            <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              <input
+                type="checkbox"
+                checked={autoPrint}
+                onChange={(e) => {
+                  setAutoPrint(e.target.checked);
+                  try {
+                    localStorage.setItem(
+                      'kopontren_pos_autoprint',
+                      e.target.checked ? 'on' : 'off'
+                    );
+                  } catch {
+                    /* private mode */
+                  }
+                }}
+              />
+              Auto-cetak struk setelah transaksi
+            </label>
           </div>
         }
       >
@@ -972,6 +1267,26 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           </div>
         </div>
       )}
+
+      {/* Modal Scan Barcode Kamera */}
+      <Modal
+        open={scanModal}
+        title="Scan Barcode dengan Kamera"
+        onClose={() => setScanModal(false)}
+        footer={
+          <button className="btn-ghost" onClick={() => setScanModal(false)}>
+            Tutup
+          </button>
+        }
+      >
+        <CameraScan
+          onCode={(code) => {
+            setScanModal(false);
+            addByBarcode(code);
+          }}
+          onClose={() => setScanModal(false)}
+        />
+      </Modal>
 
       {/* QRIS Modal */}
       <Modal
@@ -1158,6 +1473,114 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       </Modal>
 
       <Toast msg={toast} onClose={() => showToast('')} />
+    </div>
+  );
+}
+
+/**
+ * Scanner barcode berbasis kamera (jsQR: QR, Code128, EAN-13, dsb.).
+ * Dipakai utk HP tanpa scanner fisik. Kamera berhenti otomatis saat modal
+ * ditutup (cleanup effect) / setelah kode berhasil terbaca.
+ */
+function CameraScan({ onCode, onClose }: { onCode: (code: string) => void; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [status, setStatus] = useState<'starting' | 'scanning' | 'denied' | 'unavailable'>(
+    'starting'
+  );
+  const doneRef = useRef(false);
+  const onCodeRef = useRef(onCode);
+  onCodeRef.current = onCode;
+
+  useEffect(() => {
+    doneRef.current = false;
+    let stream: MediaStream | null = null;
+    let raf = 0;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function decode(video: HTMLVideoElement) {
+      if (doneRef.current || !ctx) return;
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+      ctx.drawImage(video, 0, 0, w, h);
+      const data = ctx.getImageData(0, 0, w, h);
+      const found = jsQR(data.data, w, h);
+      if (found && found.data) {
+        doneRef.current = true;
+        onCodeRef.current(found.data);
+        return;
+      }
+      raf = requestAnimationFrame(() => decode(video));
+    }
+
+    async function start() {
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+        setStatus('unavailable');
+        return;
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+          audio: false,
+        });
+        setStatus('scanning');
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+          raf = requestAnimationFrame(() => {
+            if (videoRef.current) decode(videoRef.current);
+          });
+        }
+      } catch {
+        setStatus('denied');
+      }
+    }
+    void start();
+
+    return () => {
+      doneRef.current = true;
+      if (raf) cancelAnimationFrame(raf);
+      stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
+  if (status === 'denied' || status === 'unavailable') {
+    return (
+      <div className="py-6 text-center text-sm">
+        <p className="text-xl mb-2">📵</p>
+        <p className="font-semibold text-slate-700 dark:text-slate-200">
+          {status === 'denied'
+            ? 'Izin kamera ditolak. Buka izin kamera di browser, lalu coba lagi.'
+            : 'Kamera tidak tersedia di perangkat ini.'}
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          Alternatif: ketik nomor barcode di kolom pencarian, lalu tekan Enter.
+        </p>
+        <button className="btn-ghost mt-3" onClick={onClose}>
+          Tutup
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="relative overflow-hidden rounded-xl bg-black">
+        <video ref={videoRef} className="h-56 w-full object-cover" muted playsInline />
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="h-32 w-2/3 rounded-lg border-2 border-white/80 bg-white/5" />
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <span>{status === 'starting' ? 'Menyalakan kamera…' : 'Arahkan barcode ke dalam bingkai'}</span>
+        <button className="btn-ghost px-3 py-1 text-xs" onClick={onClose}>
+          Batal (ESC)
+        </button>
+      </div>
     </div>
   );
 }

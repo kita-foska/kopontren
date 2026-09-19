@@ -120,6 +120,7 @@ export async function POST(req: Request) {
     amount_paid?: number;
     change?: number;
     discount?: number;
+    client_ref?: string;
     items?: { product_id: number; qty: number; unit_price?: number; discount?: number }[];
   };
   const items = Array.isArray(b.items) ? b.items : [];
@@ -127,8 +128,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Keranjang kosong' }, { status: 400 });
   const method = ['cash', 'tf', 'wa'].includes(String(b.pay_method)) ? String(b.pay_method) : 'cash';
   const manager = isManager(user);
+  const clientRef = String(b.client_ref || '').trim().slice(0, 64);
 
   const d = await db();
+  // Idempotensi offline-queue: transaksi POS offline memakai client_ref
+  // (UUID sisi klien). Retry sinkronisasi mengembalikan sale yang sudah
+  // ada tanpa duplikat stok/kas/loyalty.
+  if (clientRef) {
+    const dup = (await d
+      .prepare(
+        `SELECT s.id, s.total, s.status, s.created_at, s.member_points points, s.member_id,
+                m.name member_name
+         FROM sales s LEFT JOIN members m ON m.id = s.member_id
+         WHERE s.client_ref = ?`
+      )
+      .get(clientRef)) as
+      | {
+          id: number;
+          total: number;
+          status: string;
+          created_at: string;
+          points: number;
+          member_id: number | null;
+          member_name?: string;
+        }
+      | undefined;
+    if (dup) {
+      invalidate('members:');
+      invalidate('products:');
+      invalidate('kas:');
+      invalidate('reports:');
+      return NextResponse.json({
+        ok: true,
+        deduped: true,
+        sale: {
+          id: dup.id,
+          total: dup.total,
+          status: dup.status,
+          created_at: dup.created_at,
+          points: dup.points,
+          member_name: dup.member_name || '',
+        },
+      });
+    }
+  }
   try {
     const out = await tx(d, async () => {
       let subtotal = 0;
@@ -216,8 +259,8 @@ export async function POST(req: Request) {
       const sale = await d
         .prepare(
           `INSERT INTO sales (kasir_id, customer, pay_method, status, note, total,
-                              member_id, amount_paid, change, discount, member_points, created_at)
-           VALUES (?, ?, ?, 'unreported', ?, ?, ?, ?, ?, ?, ?, ?)`
+                              member_id, amount_paid, change, discount, member_points, created_at, client_ref)
+           VALUES (?, ?, ?, 'unreported', ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .run(
           user.id,
@@ -230,7 +273,8 @@ export async function POST(req: Request) {
           change,
           lineDiscSum + txDisc,
           points,
-          created_at
+          created_at,
+          clientRef
         );
       const sid = Number(sale.lastInsertRowid);
       const insItem = d.prepare(

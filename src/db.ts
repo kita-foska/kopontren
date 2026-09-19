@@ -377,6 +377,15 @@ async function migrate(d: Db) {
   await d.exec('CREATE INDEX IF NOT EXISTS idx_shifts_status_end ON shifts(status, end_time)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_consignments_created ON consignments(created_at)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_audit_table ON audit_log(table_name)');
+  // POS offline-queue: client-generated idempotency key per transaksi. Retry
+  // sinkronisasi offline tidak menciptakan duplikat (lookup O(1) via index
+  // partial; baris legacy '' tidak terindeks).
+  await execColumn(d, "ALTER TABLE sales ADD COLUMN client_ref TEXT NOT NULL DEFAULT ''");
+  try {
+    await d.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_sales_client_ref ON sales(client_ref) WHERE client_ref != ''");
+  } catch {
+    /* index mungkin gagal jika duplikat legacy; dedupe aplikasi tetap jalan */
+  }
   // unique phone per member. Partial index: many members may have an empty
   // phone, but a non-empty phone must be unique. If duplicates already exist
   // (legacy data), keep the oldest row's phone and clear the newer ones first
@@ -585,7 +594,9 @@ export async function saveZakatSettings(
 // Bump v6 (2026): tabel payables (Hutang / utang dagang ke supplier)
 // + index status/created. Semua statement IF NOT EXISTS, idempotent,
 // aman utk DB existing.
-const SCHEMA_VERSION = 6;
+// Bump v7 (2026): sales.client_ref (idempotency key utk antrean POS
+// offline) + index partial unique. Idempotent, aman utk DB existing.
+const SCHEMA_VERSION = 7;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
