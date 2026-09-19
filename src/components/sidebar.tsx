@@ -14,6 +14,8 @@ const PREFETCH_PATHS = new Set([
   '/',
   '/kasir',
   '/laporan',
+  '/admin/dashboard',
+  '/pengurus/dashboard',
   '/admin/produk',
   '/admin/belanja',
   '/admin/kas',
@@ -30,6 +32,7 @@ const ADMIN_GROUPS: NavGroup[] = [
     title: 'Utama',
     items: [
       { href: '/admin/dashboard', label: 'Dashboard' },
+      { href: '/pengurus/dashboard', label: 'Dashboard Global' },
       { href: '/', label: 'Ringkasan' },
       { href: '/kasir', label: 'Kasir' },
       { href: '/laporan', label: 'Laporan & Rekap' },

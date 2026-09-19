@@ -88,6 +88,30 @@ export async function GET(req: Request) {
 
     const cash_net = sales.t + cashIn - purchases - expenses - cashOut;
 
+    // Series penjualan per-hari (bucket hari WIB via shift '+7 hours') untuk
+    // chart dashboard pengurus: deteksi anomali + export 7/30/365 hari.
+    // Maks. ~366 baris utk 1 tahun; termasuk cache 60 dtk di atas.
+    const daily = (
+      (await d
+        .prepare(
+          `SELECT strftime('%Y-%m-%d', created_at, '+7 hours') day,
+                  COUNT(*) c, COALESCE(SUM(total),0) t
+           FROM sales
+           WHERE created_at >= ?
+           GROUP BY day
+           ORDER BY day`
+        )
+        .all(from)) as { day: string; c: number; t: number }[]
+    );
+
+    // Daftar cabang (multi-cabang): sales belum menyimpan store_id, jadi
+    // data penjualan tetap global; stores hanya utk info & perencanaan.
+    const stores = (
+      (await d
+        .prepare(`SELECT id, name, address FROM stores ORDER BY name`)
+        .all()) as { id: number; name: string; address: string }[]
+    );
+
     return {
       from,
       days,
@@ -102,6 +126,8 @@ export async function GET(req: Request) {
       cash_net,
       by_method: byMethod,
       top,
+      daily,
+      stores,
     };
   });
   return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } });

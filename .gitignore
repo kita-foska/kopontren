@@ -12,6 +12,7 @@ data/*.db-shm
 *.log
 .vercel
 tsconfig.tsbuildinfo
+*.exit
 tree.txt
 tree_check.txt
 dl.txt
