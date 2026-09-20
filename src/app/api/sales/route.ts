@@ -251,26 +251,69 @@ export async function POST(req: Request) {
         const tv = Number(b.discount);
         if (Number.isFinite(tv) && tv > 0) txDisc = Math.min(Math.floor(tv), subtotal);
       }
-      const total = subtotal - lineDiscSum - txDisc;
-      if (total <= 0)
+      const prePerk = subtotal - lineDiscSum - txDisc;
+      if (prePerk <= 0)
         throw new Error('Total setelah diskon tidak valid (diskon melebihi total)');
 
-      // Member link + loyalty points. Nilai per poin diambil dari
-      // pengaturan member (points_every, default Rp 10.000) — dulu
-      // hard-coded 10.000 sehingga setting admin tidak pernah terpakai.
+      // Member link + loyalty perks (diskon member/ulang tahun, cashback,
+      // poin, auto-tier). Semua perk dihitung server-side di sini — POS
+      // hanya memakai rumus yang sama untuk preview; server yang menjadi
+      // sumber kebenaran. Nilai tiap setting berasal dari pengaturan
+      // member (/admin/pengaturan-member, cache 60 dtk).
+      let total = prePerk;
       let memberId: number | null = null;
       let points = 0;
       let memberName = '';
+      let memberDiscount = 0;
+      let cashback = 0;
+      let tier = '';
       if (b.member_id && Number(b.member_id) > 0) {
         const mrow = (await d
-          .prepare('SELECT id, name FROM members WHERE id = ?')
-          .get(Number(b.member_id))) as { id: number; name: string } | undefined;
+          .prepare('SELECT id, name, birth_date, total_spent FROM members WHERE id = ?')
+          .get(Number(b.member_id))) as
+          | { id: number; name: string; birth_date: string; total_spent: number }
+          | undefined;
         if (!mrow) throw new Error('Member tidak ditemukan');
         memberId = mrow.id;
         memberName = mrow.name;
         const mset = await getMemberSettings();
+        const num = (k: string) => {
+          const v = Math.floor(Number(mset[k]));
+          return Number.isFinite(v) && v > 0 ? v : 0;
+        };
+        // Perk 1 — diskon member: base member_discount%; saat hari ulang
+        // tahun (match MM-DD birth_date, zona Asia/Jakarta karena server
+        // Vercel UTC) & birthday_active aktif, berlaku MAKS(birthday_discount,
+        // base) — pilih yang paling untung untuk member. Cap 90% agar
+        // total tetap > 0.
+        const jktDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' })
+          .format(new Date())
+          .slice(5);
+        const isBday = mrow.birth_date?.length === 10 && mrow.birth_date.slice(5) === jktDay;
+        let pct = num('member_discount');
+        if (isBday && mset.birthday_active === '1') pct = Math.max(pct, num('birthday_discount'));
+        pct = Math.min(90, pct);
+        memberDiscount = Math.floor((prePerk * pct) / 100);
+        total = prePerk - memberDiscount;
+        // Perk 2 — cashback: % dari total SETELAH perk, dikredit ke
+        // members.cashback_balance (redemisi = fitur menyusul).
+        cashback = Math.floor((total * num('cashback')) / 100);
+        // Poin dihitung dari total setelah perk, nilai per poin dari
+        // setting points_every (default Rp 10.000).
         const pointsEvery = Math.max(1000, Math.floor(Number(mset.points_every) || 10000));
         points = Math.floor(total / pointsEvery);
+        // Perk 3 — auto-tier: status dari akumulasi total_spent
+        // (gold > silver > nona); tier hanya badge/status, tanpa diskon
+        // tambahan (keputusan user).
+        const newSpent = (Number(mrow.total_spent) || 0) + total;
+        const silverMin = num('tier_silver');
+        const goldMin = num('tier_gold');
+        tier =
+          goldMin > 0 && newSpent >= goldMin
+            ? 'gold'
+            : silverMin > 0 && newSpent >= silverMin
+              ? 'silver'
+              : '';
       }
       const customer = String(b.customer || '').trim() || memberName;
       const amount_paid = Math.max(0, Math.floor(Number(b.amount_paid) || 0));
@@ -280,8 +323,8 @@ export async function POST(req: Request) {
       const sale = await d
         .prepare(
           `INSERT INTO sales (kasir_id, customer, pay_method, status, note, total,
-                              member_id, amount_paid, change, discount, member_points, created_at, client_ref)
-           VALUES (?, ?, ?, 'unreported', ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                              member_id, amount_paid, change, discount, member_discount, member_points, created_at, client_ref)
+           VALUES (?, ?, ?, 'unreported', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .run(
           user.id,
@@ -293,6 +336,7 @@ export async function POST(req: Request) {
           amount_paid,
           change,
           lineDiscSum + txDisc,
+          memberDiscount,
           points,
           created_at,
           clientRef
@@ -308,9 +352,10 @@ export async function POST(req: Request) {
       if (memberId) {
         await d
           .prepare(
-            `UPDATE members SET points = points + ?, total_spent = total_spent + ? WHERE id = ?`
+            `UPDATE members SET points = points + ?, total_spent = total_spent + ?,
+             tier = ?, cashback_balance = cashback_balance + ? WHERE id = ?`
           )
-          .run(points, total, memberId);
+          .run(points, total, tier, cashback, memberId);
         // Jejak ledger poin (dulu tabel point_history tidak pernah tertulis).
         if (points > 0) {
           await d
@@ -320,6 +365,16 @@ export async function POST(req: Request) {
             )
             .run(memberId, points, total, sid);
         }
+        // Jejak ledger cashback: tabel sama, reason 'cashback' — saldo
+        // members.cashback_balance kini tertulis & terlacak.
+        if (cashback > 0) {
+          await d
+            .prepare(
+              `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
+               VALUES (?, ?, 'cashback', ?, ?)`
+            )
+            .run(memberId, cashback, total, sid);
+        }
       }
       return {
         id: sid,
@@ -327,6 +382,9 @@ export async function POST(req: Request) {
         status: 'unreported',
         created_at,
         points,
+        member_discount: memberDiscount,
+        cashback,
+        tier,
         member_name: memberName,
         customer,
         product_ids: insertItems.map((x) => x[2]),

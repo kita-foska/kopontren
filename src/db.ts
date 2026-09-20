@@ -310,6 +310,10 @@ async function migrate(d: Db) {
   await execColumn(d, 'ALTER TABLE members ADD COLUMN cashback_balance INTEGER NOT NULL DEFAULT 0');
   // setor kas flag on closed shifts (kasir hands the till over to admin)
   await execColumn(d, 'ALTER TABLE shifts ADD COLUMN setor INTEGER NOT NULL DEFAULT 0');
+  // Perks loyalitas member: nominal potongan diskon member/ulang tahun,
+  // tercatat terpisah dari kolom discount (manual/grosir) agar laporan
+  // kasir bisa membedakan keduanya.
+  await execColumn(d, 'ALTER TABLE sales ADD COLUMN member_discount INTEGER NOT NULL DEFAULT 0');
   await d.exec('CREATE TABLE IF NOT EXISTS members (id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL DEFAULT \'\', address TEXT NOT NULL DEFAULT \'\', points INTEGER NOT NULL DEFAULT 0, total_spent INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
   await d.exec('CREATE TABLE IF NOT EXISTS shifts (id INTEGER PRIMARY KEY, kasir_id INTEGER NOT NULL, label TEXT NOT NULL DEFAULT \'\', status TEXT NOT NULL DEFAULT \'open\', start_time TEXT NOT NULL, end_time TEXT, sales_count INTEGER NOT NULL DEFAULT 0, sales_total INTEGER NOT NULL DEFAULT 0, cash_total INTEGER NOT NULL DEFAULT 0, by_method TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
   await d.exec('CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY, user_id INTEGER, username TEXT NOT NULL DEFAULT \'\', action TEXT NOT NULL, table_name TEXT NOT NULL DEFAULT \'\', record_id INTEGER, old_value TEXT, new_value TEXT, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');

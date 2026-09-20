@@ -82,13 +82,24 @@ type SaleResp = {
     status: string;
     created_at?: string;
     points?: number;
+    member_discount?: number;
+    cashback?: number;
+    tier?: string;
     member_name?: string;
   };
   deduped?: boolean;
   error?: string;
 };
 type ProductsResp = { products: Product[]; categories: string[] };
-type Member = { id: number; name: string; phone: string; points: number };
+type Member = {
+  id: number;
+  name: string;
+  phone: string;
+  points: number;
+  birth_date?: string;
+  tier?: string;
+  cashback_balance?: number;
+};
 type MembersResp = { members: Member[] };
 
 const PAY_LABEL: Record<string, string> = {
@@ -96,6 +107,15 @@ const PAY_LABEL: Record<string, string> = {
   tf: 'Transfer Bank',
   wa: 'QRIS / Non-Tunai',
 };
+
+/**
+ * Tanggal hari ini (YYYY-MM-DD) zona Asia/Jakarta — dipakai cek ulang
+ * tahun. Server jalan UTC (Vercel), jadi match zona sama agar tidak
+ * meleset sehari di sekitar tengah malam.
+ */
+function jktToday(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+}
 
 type Receipt = {
   sale: SaleResp['sale'];
@@ -110,6 +130,9 @@ type Receipt = {
   memberPhone?: string;
   points: number;
   disc: number;
+  memberDiscount: number;
+  cashback: number;
+  tier?: string;
 };
 
 export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string }) {
@@ -179,17 +202,21 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     if (r.ok && r.data) setMembers(r.data.members || []);
   }, []);
 
-  // Nilai per poin (Rp) diambil dari pengaturan member, bukan konstanta:
-  // admin bisa mengubah points_every di /admin/pengaturan-member.
-  const [pointsEvery, setPointsEvery] = useState(10000);
+  // Pengaturan member (poin, diskon, cashback, ultah, tier) diambil dari
+  // /api/member-settings — admin ubah di /admin/pengaturan-member. POS
+  // memakai rumus yang sama dengan server (POST /api/sales) untuk preview
+  // perk; server tetap sumber kebenaran saat transaksi disimpan.
+  const [memberSettings, setMemberSettings] = useState<Record<string, string> | null>(null);
   useEffect(() => {
     api<{ settings: Record<string, string> }>('/api/member-settings').then((r) => {
-      if (r.ok && r.data?.settings?.points_every) {
-        const v = Math.max(1000, Math.floor(Number(r.data.settings.points_every) || 10000));
-        setPointsEvery(v);
-      }
+      if (r.ok && r.data?.settings) setMemberSettings(r.data.settings);
     });
   }, []);
+  const pointsEvery = Math.max(1000, Math.floor(Number(memberSettings?.points_every) || 10000));
+  const numSetting = (k: string) => {
+    const v = Math.floor(Number(memberSettings?.[k]));
+    return Number.isFinite(v) && v > 0 ? v : 0;
+  };
 
   const loadShift = useCallback(async () => {
     const r = await api<{ open: ShiftInfo | null }>('/api/shifts?current=1');
@@ -340,14 +367,30 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
 
   const subtotal = cart.reduce((s, l) => s + l.qty * l.price, 0);
   const discNum = admin ? Math.min(Number(disc.replace(/[^\d]/g, '')) || 0, subtotal) : 0;
-  const total = Math.max(0, subtotal - discNum);
   const receivedNum = received.trim() === '' ? 0 : Number(received.replace(/[^\d]/g, '')) || 0;
-  const change = Math.max(0, receivedNum - total);
 
   const selectedMember = useMemo(
     () => members.find((m) => m.id === Number(memberId)),
     [members, memberId]
   );
+
+  // Preview perk member — rumus identik dengan server (POST /api/sales):
+  // diskon base = member_discount%; saat hari ulang tahun (MM-DD
+  // birth_date vs tanggal hari ini zona Asia/Jakarta) & birthday_active,
+  // pakai MAKS(birthday_discount, base). Cap 90%. Cashback = % dari total
+  // setelah perk, masuk saldo member (redemisi menyusul).
+  const bd = selectedMember?.birth_date;
+  const isBday =
+    Boolean(bd && bd.length === 10 && bd.slice(5) === jktToday().slice(5)) &&
+    memberSettings?.birthday_active === '1';
+  let perkPct = selectedMember ? numSetting('member_discount') : 0;
+  if (isBday) perkPct = Math.max(perkPct, numSetting('birthday_discount'));
+  perkPct = Math.min(90, perkPct);
+  const baseForPerk = Math.max(0, subtotal - discNum);
+  const perkAmt = selectedMember ? Math.floor((baseForPerk * perkPct) / 100) : 0;
+  const total = Math.max(0, baseForPerk - perkAmt);
+  const cbPreview = selectedMember ? Math.floor((total * numSetting('cashback')) / 100) : 0;
+  const change = Math.max(0, receivedNum - total);
 
   async function saveMember() {
     if (!memberForm.name.trim()) {
@@ -432,6 +475,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         memberPhone: selectedMember?.phone ?? '',
         points: saved.points || 0,
         disc: discNum,
+        memberDiscount: saved.member_discount || 0,
+        cashback: saved.cashback || 0,
+        tier: saved.tier,
       });
     }
     setCart([]);
@@ -598,6 +644,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       customer: receipt.customer,
       member: receipt.memberName,
       discount: receipt.disc,
+      memberDiscount: receipt.memberDiscount,
+      cashback: receipt.cashback,
+      tier: receipt.tier,
       total: receipt.sale?.total ?? 0,
       pay: receipt.pay,
       received: receipt.received,
@@ -622,6 +671,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       customer: receipt.customer,
       member: receipt.memberName,
       discount: receipt.disc,
+      memberDiscount: receipt.memberDiscount,
+      cashback: receipt.cashback,
+      tier: receipt.tier,
       total: receipt.sale?.total ?? 0,
       pay: receipt.pay,
       received: receipt.received,
@@ -926,6 +978,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     .map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.name} {m.phone ? `(${m.phone})` : ''} · {m.points} poin
+                        {m.tier ? ` · ${m.tier === 'gold' ? 'Gold' : 'Silver'}` : ''}
                       </option>
                     ))}
                 </select>
@@ -938,9 +991,22 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 </button>
               </div>
               {selectedMember && (
-                <div className="mt-1 flex items-center justify-between rounded bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-600 dark:text-emerald-300 font-semibold">
-                  <span>★ Member: {selectedMember.name}</span>
-                  <span>{selectedMember.points} poin (+{Math.floor(total / pointsEvery)} poin)</span>
+                <div className="mt-1 space-y-0.5 rounded bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300">
+                  <div className="flex items-center justify-between">
+                    <span>★ Member: {selectedMember.name}</span>
+                    <span>
+                      {selectedMember.tier
+                        ? selectedMember.tier === 'gold'
+                          ? '🏆 Gold'
+                          : '🥈 Silver'
+                        : ''}
+                    </span>
+                  </div>
+                  <div>
+                    {selectedMember.points} poin (+{Math.floor(total / pointsEvery)} poin)
+                    {perkAmt > 0 ? ` · Diskon member −${rp(perkAmt)}${isBday ? ' (ultah 🎉)' : ''}` : ''}
+                    {cbPreview > 0 ? ` · Cashback +${rp(cbPreview)} ke saldo` : ''}
+                  </div>
                 </div>
               )}
             </div>
@@ -1046,6 +1112,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 <div className="flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
                   <span>Diskon</span>
                   <span>-{rp(discNum)}</span>
+                </div>
+              )}
+              {perkAmt > 0 && (
+                <div className="flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
+                  <span>Diskon member{isBday ? ' (ultah 🎉)' : ''}</span>
+                  <span>-{rp(perkAmt)}</span>
                 </div>
               )}
               <div className="flex items-center justify-between text-base font-extrabold text-slate-900 dark:text-slate-100">
@@ -1185,10 +1257,28 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <span>-{rp(receipt.disc)}</span>
                   </div>
                 )}
+                {receipt.memberDiscount > 0 && (
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                    <span>Diskon member</span>
+                    <span>-{rp(receipt.memberDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-extrabold text-sm">
                   <span>TOTAL</span>
                   <span>{rp(receipt.sale?.total ?? 0)}</span>
                 </div>
+                {receipt.cashback > 0 && (
+                  <div className="flex justify-between">
+                    <span>Cashback (saldo)</span>
+                    <span>+{rp(receipt.cashback)}</span>
+                  </div>
+                )}
+                {receipt.tier && (
+                  <div className="flex justify-between font-bold text-amber-600 dark:text-amber-400">
+                    <span>Tier member</span>
+                    <span>{receipt.tier === 'gold' ? 'Gold 🏆' : 'Silver 🥈'}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Metode Bayar</span>
                   <span>{PAY_LABEL[receipt.pay] || receipt.pay}</span>
@@ -1253,10 +1343,28 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <span>-{receipt.disc.toLocaleString('id-ID')}</span>
             </div>
           )}
+          {receipt.memberDiscount > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Diskon member</span>
+              <span>-{receipt.memberDiscount.toLocaleString('id-ID')}</span>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '13px' }}>
             <span>TOTAL</span>
             <span>Rp {(receipt.sale?.total ?? 0).toLocaleString('id-ID')}</span>
           </div>
+          {receipt.cashback > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Cashback (saldo)</span>
+              <span>+Rp {receipt.cashback.toLocaleString('id-ID')}</span>
+            </div>
+          )}
+          {receipt.tier && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
+              <span>Tier</span>
+              <span>{receipt.tier === 'gold' ? 'Gold' : 'Silver'}</span>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>Bayar ({PAY_LABEL[receipt.pay] || receipt.pay})</span>
             <span>Rp {(receipt.received ?? receipt.sale?.total ?? 0).toLocaleString('id-ID')}</span>

@@ -31,7 +31,7 @@ export async function GET(req: Request) {
   }
   const rows = await d
     .prepare(
-      `SELECT id, name, phone, address, points, total_spent, created_at FROM members${where} ORDER BY name COLLATE NOCASE LIMIT ? OFFSET ?`
+      `SELECT id, name, phone, address, points, total_spent, created_at, birth_date, tier, cashback_balance FROM members${where} ORDER BY name COLLATE NOCASE LIMIT ? OFFSET ?`
     )
     .all(...args, limit, offset);
   // Agregat global (seluruh tabel, bukan halaman) untuk kartu ringkasan.

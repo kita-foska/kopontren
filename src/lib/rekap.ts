@@ -107,6 +107,9 @@ export function strukWaText(o: {
   customer?: string;
   member?: string;
   discount?: number;
+  memberDiscount?: number;
+  cashback?: number;
+  tier?: string;
   total: number;
   pay: string;
   received?: number | null;
@@ -127,8 +130,17 @@ export function strukWaText(o: {
   if (o.discount && o.discount > 0) {
     lines.push('Diskon: -Rp ' + o.discount.toLocaleString('id-ID'));
   }
+  if (o.memberDiscount && o.memberDiscount > 0) {
+    lines.push('Diskon member: -Rp ' + o.memberDiscount.toLocaleString('id-ID'));
+  }
   lines.push('--------------------------------');
   lines.push('*TOTAL: Rp ' + o.total.toLocaleString('id-ID') + '*');
+  if (o.cashback && o.cashback > 0) {
+    lines.push('Cashback: +Rp ' + o.cashback.toLocaleString('id-ID') + ' (masuk saldo)');
+  }
+  if (o.tier) {
+    lines.push('Tier: ' + (o.tier === 'gold' ? 'Gold' : 'Silver'));
+  }
   lines.push('Bayar: ' + (PAY_LABEL[o.pay] || o.pay));
   if (o.pay === 'cash' && o.received != null) {
     lines.push('Diterima: Rp ' + o.received.toLocaleString('id-ID'));
