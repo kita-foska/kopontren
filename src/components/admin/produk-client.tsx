@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
+import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 
 type Product = {
@@ -43,6 +44,7 @@ export function ProdukClient() {
   const [bulkStock, setBulkStock] = useState('');
   const [bulkCat, setBulkCat] = useState('');
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [label, setLabel] = useState<Product | null>(null);
 
   const load = useCallback(async () => {
     const r = await api<Resp>('/api/products');
@@ -132,6 +134,15 @@ export function ProdukClient() {
     } else {
       showToast(r.error || 'Gagal menghapus produk');
     }
+  }
+
+  /** Buka overlay cetak label barcode produk (QR berisi nilai barcode). */
+  function openLabel(p: Product) {
+    if (!p.barcode) {
+      showToast('Isi dulu field Barcode / Kode SKU produk ini (tombol Ubah), lalu cetak label.');
+      return;
+    }
+    setLabel(p);
   }
 
   // ── Kelola massal ────────────────────────────────────────────────
@@ -440,6 +451,14 @@ export function ProdukClient() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         className="text-xs font-bold text-accent-500 hover:underline dark:text-accent-300"
+                        onClick={() => openLabel(p)}
+                        title={p.barcode ? 'Cetak label barcode produk' : 'Isi dulu barcode produk'}
+                      >
+                        Label
+                      </button>
+                      <span className="text-slate-300 dark:text-navy-600">|</span>
+                      <button
+                        className="text-xs font-bold text-accent-500 hover:underline dark:text-accent-300"
                         onClick={() => openEdit(p)}
                       >
                         Ubah
@@ -498,6 +517,7 @@ export function ProdukClient() {
           )}
         </div>
       </Modal>
+      {label && <ProductBarcodeLabel product={label} onClose={() => setLabel(null)} />}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

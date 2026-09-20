@@ -298,3 +298,23 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   + CRON_SECRET, repo tak kelola secret); purge manual admin
   (`DELETE /api/audit`) tetap tersedia. TODO [r] audit-purge
   ditutup.
+
+- **Label barcode produk (22 Sep 2026)**: tombol "Label" di tabel
+  /admin/produk (produk-client.tsx) membuka `ProductBarcodeLabel`
+  (`src/components/admin/product-label.tsx`): QR berisi nilai field
+  `barcode` produk — discan CameraScan kasir (jsQR, lookup
+  `addByBarcode`) atau diketik manual; nomor barcode juga dicetak
+  teks monospace utk scanner USB 1D / input manual. Grid 2 kolom A4,
+  pilihan 2–24 lembar, print window + `document.write` (pola
+  MemberQrBadge; semua nilai di-escape HTML). Produk tanpa barcode →
+  toast penunjuk ke tombol Ubah. Lib `qrcode` sudah ada di deps
+  (dipakai juga MemberQrBadge). TODO [x].
+
+- **QRIS masih MOCK (22 Sep 2026)**: modal QRIS POS = SVG acak +
+  NMID fiktif `ID102003004050`. QRIS asli BUTUH NMID resmi
+  (bank/agregator QRIS). Opsi A: payload EMVCo statis dibuat
+  client-side + `qrcode` — TIDAK butuh API; QR berisi nominal
+  transaksi, discan GoPay/OVO/Dana/bank apps; verifikasi pembayaran
+  manual oleh kasir (tanpa webhook). Opsi B: gateway dinamis
+  Xendit/Midtrans — butuh API key + webhook + route server.
+  DILAPORKAN 22 Sep, menunggu NMID/keputusan user. TODO [r].

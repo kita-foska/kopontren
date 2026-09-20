@@ -99,8 +99,20 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       (di luar cakupan).
 - [m] Pembayaran campuran dalam satu transaksi (tunai + transfer) —
       saat ini satu `pay_method` saja.
-- [r] QRIS asli (gateway/NMID resmi) — modal QRIS di POS masih mock SVG.
-- [r] Cetak label barcode produk (cetak struk & scan sudah ada).
+- [r] QRIS asli (gateway/NMID resmi) — modal QRIS di POS masih mock SVG
+      (NMID `ID102003004050` fiktif, 22 Sep). Butuh NMID resmi dari
+      bank/agregator QRIS. Opsi: (A) payload EMVCo statis dibuat
+      client-side + `qrcode` (tanpa API, cocok scanner GoPay/OVO/Dana;
+      verifikasi pembayaran manual oleh kasir) / (B) gateway dinamis
+      Xendit/Midtrans (butuh API key + webhook + route server).
+      DILAPORKAN 22 Sep, menunggu NMID/keputusan user.
+- [x] Cetak label barcode produk — SELESAI (22 Sep): tombol "Label" di
+      tabel /admin/produk membuka `ProductBarcodeLabel`
+      (`src/components/admin/product-label.tsx`): QR berisi nilai field
+      barcode produk (discan CameraScan kasir via jsQR / diketik
+      manual), grid 2 kolom A4, pilihan 2–24 lembar, print via
+      window + document.write (pola MemberQrBadge, nilai di-escape
+      HTML). Butuh field barcode terisi dulu (toast penunjuk).
 - [r] `debts` & `payables`: ringkasan `date('now')` (UTC) bisa meleset
       ±7 jam utk jatuh tempo tengah malam — badge per-baris sudah
       dihitung client-side WIB; agregat server opsional diperbaiki.
