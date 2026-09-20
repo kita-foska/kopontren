@@ -251,8 +251,11 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
 - GET `/api/audit` menampilkan `old_value/new_value` (termasuk
   PII member) ke tier pengurus — sesuai desain role internal;
   tinjau bila perlu.
-- Cetak struk / struk WA: nama customer/produk dari input POS
-  masuk HTML/URL — perlu verifikasi escaping (TODO [r]).
+- Cetak struk / struk WA: DIVERIFIKASI AMAN — nama customer/produk
+  masuk JSX React (auto-escape) + `window.print()` (CSS
+  `.receipt-print`, tanpa document.write/innerHTML/dangerously
+  SetInnerHTML); teks struk/rekap WA di-encodeURIComponent utk
+  `wa.me` (nomor disterilkan non-digit). Lihat TODO.md [x].
 - `audit_log` tumbuh tanpa auto-purge (purge manual admin,
   default 90 hari) — cron opsional.
 - Stale cache lintas instance Vercel ≤60 dtk (accepted,

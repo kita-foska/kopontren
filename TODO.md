@@ -38,9 +38,17 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       (20 Sep)
 - [r] `audit_log.ip_address` dari `x-forwarded-for` mentah — bisa di-forge
       (forensik saja, bukan auth).
-- [r] AUDIT 3x (21 Sep): struk cetak / struk WA — nama customer/produk
-      dari input POS masuk HTML/URL; verifikasi escaping
-      (XSS print-window).
+- [x] AUDIT 3x (21 Sep): struk cetak / struk WA — XSS print-window —
+      **DIVERIFIKASI AMAN**: cetak struk = JSX React
+      (auto-escape) + `window.print()` via CSS `.receipt-print`
+      (TIDAK ada document.write, innerHTML, `javascript:` URL, maupun
+      `dangerouslySetInnerHTML` di alur struk); struk WA & rekap WA =
+      teks polos di-encode `encodeURIComponent` utk `wa.me` (nomor
+      disterilkan `\D`); tombol salin = `clipboard.writeText`. Titik
+      diverifikasi: pos-client.tsx (`printStruk`, `handleSendWaStruk`,
+      `copyStrukText`), lib/rekap.ts (`strukWaText`, `shareWa`,
+      `shareRekap`), laporan-client.tsx (`shareRekap`), globals.css
+      `@media print`. Tanpa perubahan kode.
 - [r] AUDIT 3x (21 Sep): `audit_log` tak ada auto-purge (purge manual
       admin, default 90 hari) — pertimbangkan cron.
 - [r] AUDIT 3x (21 Sep): throttle login keyed `X-Forwarded-For`
