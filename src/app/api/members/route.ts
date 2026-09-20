@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     .run(name, String(b.phone || '').trim(), String(b.address || '').trim());
   await logAudit(user, 'member:create', 'members', Number(info.lastInsertRowid), undefined, {
     name,
-  });
+  }, req);
   invalidate('members:');
   return NextResponse.json({ ok: true, id: Number(info.lastInsertRowid) });
 }
@@ -104,7 +104,7 @@ export async function PUT(req: Request) {
     name: String(b.name ?? row.name),
     phone: String(b.phone ?? row.phone),
     address: String(b.address ?? row.address),
-  });
+  }, req);
   invalidate('members:');
   return NextResponse.json({ ok: true });
 }
@@ -124,7 +124,7 @@ export async function DELETE(req: Request) {
   if (!row) return NextResponse.json({ error: 'Member tidak ditemukan' }, { status: 404 });
   await d.prepare('DELETE FROM members WHERE id = ?').run(id);
   await d.prepare('UPDATE sales SET member_id = NULL WHERE member_id = ?').run(id);
-  await logAudit(user, 'member:delete', 'members', id, row, undefined);
+  await logAudit(user, 'member:delete', 'members', id, row, undefined, req);
   invalidate('members:');
   return NextResponse.json({ ok: true });
 }

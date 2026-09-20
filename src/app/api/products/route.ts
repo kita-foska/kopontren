@@ -93,7 +93,7 @@ export async function POST(req: Request) {
     base_price: Number(b.base_price) || 0,
     stock: Number(b.stock) || 0,
     barcode: barcode || undefined,
-  });
+  }, req);
   invalidate('products:');
   return NextResponse.json({ ok: true, id });
 }

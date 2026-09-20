@@ -131,7 +131,7 @@ export async function POST(req: Request) {
   await logAudit(user, 'kas:' + type, 'cash_entries', Number(info.lastInsertRowid), undefined, {
     label: String(b.label).trim(),
     amount,
-  });
+  }, req);
   invalidate('kas:');
   invalidate('reports:');
   // Cek kas menipis (best-effort, HANYA admin).
@@ -157,7 +157,7 @@ export async function DELETE(req: Request) {
     .get(id)) as { type: string; label: string; amount: number } | undefined;
   if (!entry) return NextResponse.json({ error: 'Jurnal tidak ditemukan' }, { status: 404 });
   await d.prepare('DELETE FROM cash_entries WHERE id = ?').run(id);
-  await logAudit(user, 'kas:delete', 'cash_entries', id, entry, undefined);
+  await logAudit(user, 'kas:delete', 'cash_entries', id, entry, undefined, req);
   invalidate('kas:');
   invalidate('reports:');
   // Cek kas menipis (best-effort, HANYA admin).

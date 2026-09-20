@@ -88,7 +88,7 @@ export async function POST(req: Request) {
       value: b.value !== undefined ? String(b.value) : undefined,
       delta: b.delta !== undefined ? Number(b.delta) : undefined,
       affected: out.changed,
-    });
+    }, req);
     invalidate('products:');
     return NextResponse.json({ ok: true, affected: out.changed });
   } catch (e) {

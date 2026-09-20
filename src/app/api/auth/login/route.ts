@@ -9,6 +9,7 @@ import {
   pinConfigured,
   expCookieOptions,
 } from '@/lib/auth';
+import { logAudit } from '@/lib/audit';
 
 // ── Anti brute-force (per-instansi) ─────────────────────────────────────────
 // Pembatasan percobaan login per username+IP: 10 kegagalan dalam 15 menit
@@ -94,6 +95,16 @@ export async function POST(req: Request) {
   loginThrottle.delete(key); // sukses -> bersihkan pencacat
 
   const token = await createSession(user.id);
+  // Audit trail: SIAPA login (per-user + IP + user-agent). Best-effort.
+  await logAudit({
+    userId: user.id,
+    userName: user.display_name,
+    userRole: user.role,
+    action: 'auth:login',
+    entity: 'auth',
+    entityId: null,
+    req,
+  });
   const res = NextResponse.json({
     ok: true,
     pin_configured: await pinConfigured(user.id),

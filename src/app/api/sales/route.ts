@@ -327,7 +327,7 @@ export async function POST(req: Request) {
       total: out.total,
       member_name: out.member_name || undefined,
       points: out.points,
-    });
+    }, req);
     // Transaksi mengubah stok, poin member, saldo kas & agregat laporan
     // -> buang cache agar pembacaan berikutnya segar.
     invalidate('members:');

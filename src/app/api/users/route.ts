@@ -59,7 +59,7 @@ export async function POST(req: Request) {
   await logAudit(user, 'user:create', 'users', Number(info.lastInsertRowid), undefined, {
     username,
     role,
-  });
+  }, req);
   return NextResponse.json({ ok: true });
 }
 
@@ -94,7 +94,7 @@ export async function PUT(req: Request) {
       hashPassword(next, salt),
       id
     );
-    await logAudit(user, 'user:password', 'users', id, undefined, { self: true });
+    await logAudit(user, 'user:password', 'users', id, undefined, { self: true }, req);
     return NextResponse.json({ ok: true });
   }
 
@@ -110,7 +110,7 @@ export async function PUT(req: Request) {
     );
     await logAudit(user, 'user:reset-password', 'users', id, undefined, {
       username: (target as { username?: string }).username,
-    });
+    }, req);
     return NextResponse.json({ ok: true });
   }
 
@@ -124,7 +124,7 @@ export async function PUT(req: Request) {
     }
     await logAudit(user, 'user:active', 'users', id, { active: 1 }, {
       active: b.active ? 1 : 0,
-    });
+    }, req);
     return NextResponse.json({ ok: true });
   }
 

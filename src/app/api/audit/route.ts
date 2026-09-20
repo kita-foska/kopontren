@@ -14,7 +14,8 @@ export async function GET(req: Request) {
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50));
   const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
   const d = await db();
-  let sql = `SELECT id, user_id, username, action, table_name, record_id, old_value, new_value, created_at
+  let sql = `SELECT id, user_id, username, user_name, user_role, action, table_name, record_id,
+                    old_value, new_value, ip_address, user_agent, created_at
              FROM audit_log WHERE 1=1`;
   const args: string[] = [];
   if (table) {

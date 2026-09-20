@@ -8,11 +8,15 @@ type Log = {
   id: number;
   user_id: number | null;
   username: string;
+  user_name: string;
+  user_role: string;
   action: string;
   table_name: string;
   record_id: number | null;
   old_value: string | null;
   new_value: string | null;
+  ip_address: string;
+  user_agent: string;
   created_at: string;
 };
 type Resp = { logs: Log[]; tables: string[]; limit?: number; offset?: number };
@@ -73,7 +77,11 @@ export function AuditClient() {
 
   const users = useMemo(() => {
     if (!data) return [];
-    return [...new Set(data.logs.map((l) => l.username).filter(Boolean))];
+    const seen = new Map<string, string>();
+    for (const l of data.logs) {
+      if (l.username && !seen.has(l.username)) seen.set(l.username, l.user_name || '');
+    }
+    return [...seen.entries()].map(([u, n]) => ({ value: u, label: n ? u + ' (' + n + ')' : u }));
   }, [data]);
 
   const logs = useMemo(() => {
@@ -97,8 +105,8 @@ export function AuditClient() {
           <select className="input" value={userF} onChange={(e) => setUserF(e.target.value)}>
             <option value="">Semua</option>
             {users.map((u) => (
-              <option key={u} value={u}>
-                {u}
+              <option key={u.value} value={u.value}>
+                {u.label}
               </option>
             ))}
           </select>
@@ -150,7 +158,22 @@ export function AuditClient() {
                 <td className="td text-xs text-slate-500 dark:text-slate-400">
                   {fmtDateTime(l.created_at)}
                 </td>
-                <td className="td text-sm font-bold">{l.username}</td>
+                <td className="td">
+                  <span
+                    className="block text-sm font-bold"
+                    title={
+                      l.ip_address
+                        ? 'IP: ' + l.ip_address + '\n' + l.user_agent
+                        : undefined
+                    }
+                  >
+                    {l.user_name || l.username}
+                  </span>
+                  <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                    ({l.username}
+                    {l.user_role ? ', ' + l.user_role : ''})
+                  </span>
+                </td>
                 <td className="td text-xs font-semibold text-accent-500 dark:text-accent-300">
                   {l.action}
                   {l.record_id ? ' #' + l.record_id : ''}

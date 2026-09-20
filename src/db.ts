@@ -162,11 +162,15 @@ CREATE TABLE IF NOT EXISTS audit_log (
   id INTEGER PRIMARY KEY,
   user_id INTEGER,
   username TEXT NOT NULL DEFAULT '',
+  user_name TEXT NOT NULL DEFAULT '',
+  user_role TEXT NOT NULL DEFAULT '',
   action TEXT NOT NULL,
   table_name TEXT NOT NULL DEFAULT '',
   record_id INTEGER,
   old_value TEXT,
   new_value TEXT,
+  ip_address TEXT NOT NULL DEFAULT '',
+  user_agent TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 CREATE TABLE IF NOT EXISTS purchases (
@@ -219,6 +223,7 @@ CREATE INDEX IF NOT EXISTS idx_consignments_status ON consignments(status);
 CREATE INDEX IF NOT EXISTS idx_sales_member ON sales(member_id);
 CREATE INDEX IF NOT EXISTS idx_shifts_kasir ON shifts(kasir_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_sales_created_status ON sales(created_at, status);
 CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id, product_id);
 CREATE INDEX IF NOT EXISTS idx_products_active ON products(active, category);
@@ -363,7 +368,7 @@ async function migrate(d: Db) {
   // multi-store support (default store seeded when missing)
   await d.exec("CREATE TABLE IF NOT EXISTS stores (id INTEGER PRIMARY KEY, name TEXT NOT NULL, address TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
   const firstStore = await d.prepare('SELECT id FROM stores LIMIT 1').get();
-  if (!firstStore) await d.exec("INSERT INTO stores (name, address) VALUES ('Kopontren Al Ittihad', 'Pondok Pesantren Al Ittihad')");
+  if (!firstStore) await d.exec("INSERT INTO stores (name, address) VALUES ('Kopontren AL ITTIHAD', 'Pondok Pesantren Al Ittihad')");
   // web-push subscriptions
   await d.exec("CREATE TABLE IF NOT EXISTS push_subscriptions (id INTEGER PRIMARY KEY, user_id INTEGER, endpoint TEXT NOT NULL, keys TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
   // loyalty ledger: point earn / redeem, cashback credit / use
@@ -390,6 +395,14 @@ async function migrate(d: Db) {
   await d.exec('CREATE INDEX IF NOT EXISTS idx_shifts_status_end ON shifts(status, end_time)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_consignments_created ON consignments(created_at)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_audit_table ON audit_log(table_name)');
+  // audit-trail batch (2026-09-18): snapshot SIAPA + konteks request di
+  // audit_log. user_name/user_role = snapshot (bukan FK) agar history tetap
+  // utuh walau user dihapus/role-nya berubah. Semua idempotent.
+  await execColumn(d, "ALTER TABLE audit_log ADD COLUMN user_name TEXT NOT NULL DEFAULT ''");
+  await execColumn(d, "ALTER TABLE audit_log ADD COLUMN user_role TEXT NOT NULL DEFAULT ''");
+  await execColumn(d, "ALTER TABLE audit_log ADD COLUMN ip_address TEXT NOT NULL DEFAULT ''");
+  await execColumn(d, "ALTER TABLE audit_log ADD COLUMN user_agent TEXT NOT NULL DEFAULT ''");
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id)');
   // POS offline-queue: client-generated idempotency key per transaksi. Retry
   // sinkronisasi offline tidak menciptakan duplikat (lookup O(1) via index
   // partial; baris legacy '' tidak terindeks).
@@ -522,7 +535,7 @@ const MEMBER_SETTING_DEFAULTS: Record<string, string> = {
  * Reads never throw; writes are admin-only (enforced in the API route).
  */
 export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
-  store_name: 'Kopontren Al Ittihad',
+  store_name: 'Kopontren AL ITTIHAD',
   store_address: '',
   store_phone: '',
   store_logo: '', // data-URL image (kept small: logo thumbnail)
@@ -691,7 +704,11 @@ export async function saveZakatSettings(
 // Bump v10 (2026): notifikasi admin — tabel notifications,
 // notification_settings, notification_logs (+ index). Idempotent, aman
 // utk DB existing.
-const SCHEMA_VERSION = 10;
+// Bump v11 (20 Sep 2026): audit trail per-user — audit_log +4 kolom
+// (user_name, user_role, ip_address, user_agent) + index idx_audit_user.
+// Dipakai execColumn idempoten di migrate(); DB existing (v10) akan
+// menjalankan fullInit sekali lagi pada cold start berikutnya.
+const SCHEMA_VERSION = 11;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

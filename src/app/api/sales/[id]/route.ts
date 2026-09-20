@@ -35,7 +35,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       .prepare("UPDATE sales SET status = 'unreported', reported_at = NULL WHERE id = ?")
       .run(sale.id);
   }
-  await logAudit(user, 'sales:status', 'sales', sale.id, { status: sale.status }, { status: b.status });
+  await logAudit(user, 'sales:status', 'sales', sale.id, { status: sale.status }, { status: b.status }, req);
   return NextResponse.json({ ok: true });
 }
 
@@ -84,7 +84,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
       }
     }
   });
-  await logAudit(user, 'sales:delete', 'sales', sale.id, { total: sale.total }, undefined);
+  await logAudit(user, 'sales:delete', 'sales', sale.id, { total: sale.total }, undefined, _req);
   // Hapus transaksi membatalkan efeknya: stok, poin member, kas, laporan.
   invalidate('members:');
   invalidate('products:');
