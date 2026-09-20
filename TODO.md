@@ -33,9 +33,17 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [x] Chip "Sesi: X menit" di header dihapus (file
       `session-countdown.tsx` dihapus; `SessionWatcher` tetap jadi
       pengaman expiry) — commit `851e219`, master+main (21 Sep)
-- [m] **Retur refund mengabaikan diskon baris** — hitung dari
-      effective price (subtotal−diskon)/qty, bukan `unit_price` mentah.
-      (20 Sep)
+- [x] **Retur refund mengabaikan diskon baris** - SELESAI commit
+      `2a34a8f` (22 Sep): refund dihitung dari harga efektif
+      `(subtotal - diskon)/qty_terjual x qty_retur` (returns/route.ts
+      + estimasi UI retur-client.tsx). TSC+build lolos, master+main.
+- [x] **Export CSV laporan tak terbatas** (22 Sep, batch 3):
+      `reports/csv/route.ts` membatasi `from` maks 365 hari ke
+      belakang + `LIMIT 50000` (default lama = sejak 1970).
+- [x] AUDIT bug scan 3x (22 Sep): tanpa temuan baru - zakat route
+      bounded (periode last_zakat_date), users list admin-only,
+      tak ada SQL string-concat, tak ada N+1 lain; CSV cap di atas
+      menutup item performa terakhir.
 - [r] `audit_log.ip_address` dari `x-forwarded-for` mentah — bisa di-forge
       (forensik saja, bukan auth).
 - [x] AUDIT 3x (21 Sep): struk cetak / struk WA — XSS print-window —
@@ -119,6 +127,10 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [ ] 10. Auth: manager GET 200 · POST 403
 
 ## Catatan
+- **Status produksi**: 17 fix live di Vercel (chain `851e219` →
+  `a4fdd00`). Test manual Makfi (12 langkah backup v3 + hardening)
+  DITUNDA — tetap wajib sebelum rilis fitur baru. XSS struk
+  print/WA sudah diverifikasi AMAN (commit `a4fdd00`).
 - BMT/zakat: berfungsi penuh; hutang dagang tijarah kini dihitung
   dalam total zakat (commit `6ef487b`).
 - Vercel: build dari `main`; setelah commit di `master`, mirror main

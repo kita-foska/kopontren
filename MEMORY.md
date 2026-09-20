@@ -260,7 +260,26 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   default 90 hari) — cron opsional.
 - Stale cache lintas instance Vercel ≤60 dtk (accepted,
   terdokumentasi).
-- Retur refund masih memakai `unit_price` mentah (abaikan
-  `sale_items.discount`) — TODO [m] masih terbuka.
+- Retur refund KININ dihitung dari harga efektif (commit
+  `2a34a8f`, 22 Sep) - TODO [m] ditutup.
 - `point_history` belum masuk backup/restore (TUNDA — 21 Sep
   2026, keputusan user, di luar cakupan perluasan backup).
+
+## Status Produksi & Uji (update sesi akhir)
+- 17 fix live di Vercel (chain `851e219` → `a4fdd00`; Batch A
+  `c02421b`+`d435f57`, Batch B `f280f60`, dst.). **Test manual
+  12 langkah DITUNDA** (Makfi sibuk) — checklist tetap terbuka;
+  import backup legacy v2 → skema v3 tetap berisiko data lama
+  (kolom notification/audit kosong), bukan error.
+- **XSS struk print/WA: DIVERIFIKASI AMAN** (commit dokumen
+  `a4fdd00`): cetak = JSX auto-escape + `window.print()` (tanpa
+  document.write/innerHTML/`javascript:` URL); struk/rekap WA =
+  teks polos `encodeURIComponent` di `wa.me`. Tanpa fix kode.
+- **Retur refund diskon baris: DISELESAIKAN** (commit `2a34a8f`
+  22 Sep) - refund = floor(qty_retur x (subtotal - diskon baris) /
+  qty_terjual); estimasi UI retur-client.tsx pakai rumus sama.
+- **Export CSV dibatasi** (batch 3, 22 Sep): `reports/csv/route.ts`
+  `from` kini maksimal 365 hari ke belakang + `LIMIT 50000`
+  (sebelumnya default sejak 1970, tanpa limit row).
+- **AUDIT bug scan 3x (22 Sep)**: tanpa temuan baru; item [r]
+  forensik (x-forwarded-for) & purge audit_log tetap terbuka.

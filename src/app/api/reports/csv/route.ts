@@ -8,7 +8,11 @@ export async function GET(req: Request) {
   if (!canAccess(user, 'laporan'))
     return NextResponse.json({ error: 'Hanya admin/manajer/pengurus' }, { status: 403 });
   const url = new URL(req.url);
-  const from = url.searchParams.get('from') || '1970-01-01 00:00:00';
+  // Batasi rentang export: maks 365 hari ke belakang (default lama = sejak 1970).
+  const rawFrom = url.searchParams.get('from')?.trim() ?? '';
+  const fromNorm = /^\d{4}-\d{2}-\d{2}$/.test(rawFrom) ? rawFrom : null;
+  const capStr = new Date(Date.now() - 365 * 86400_000).toISOString().slice(0, 10);
+  const from = fromNorm && fromNorm >= capStr ? fromNorm : capStr;
   const d = await db();
   const rows = (
     (await d
@@ -20,7 +24,8 @@ export async function GET(req: Request) {
        LEFT JOIN users u ON u.id = s.kasir_id
        JOIN sale_items si ON si.sale_id = s.id
        WHERE s.created_at >= ?
-       ORDER BY s.created_at DESC, si.id`
+        ORDER BY s.created_at DESC, si.id
+        LIMIT 50000`
       )
       .all(from)) as Record<string, unknown>[]
   );
