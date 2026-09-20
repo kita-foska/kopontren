@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, tx, getMemberSettings } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
@@ -24,6 +24,10 @@ type SaleRow = {
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  // Pembacaan transaksi: tier laporan (admin, manajer, pengurus) atau POS
+  // (admin, manajer, kasir utk retur/rekap). Peran lain ditolak.
+  if (!canAccess(user, 'laporan') && !canAccess(user, 'pos'))
+    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
   const url = new URL(req.url);
   const days = Number(url.searchParams.get('days') || '0');
   const status = url.searchParams.get('status') || 'all';
@@ -113,6 +117,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  // Tier: POS (admin, manajer, kasir). Pengurus/pembelian/gudang/member tidak boleh.
+  if (!canAccess(user, 'pos'))
+    return NextResponse.json({ error: 'Role Anda tidak dapat melakukan transaksi POS' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as {
     customer?: string;
     pay_method?: string;

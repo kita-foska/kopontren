@@ -36,9 +36,10 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
               {user.display_name || user.username}
               <span
                 className={
-                  user.role === 'kasir'
-                    ? 'rounded bg-slate-400 px-1.5 py-px text-[10px] font-bold text-white'
-                    : 'rounded bg-accent-500 px-1.5 py-px text-[10px] font-bold text-white'
+                  // Badge role: admin = aksen; semua peran lain = slate.
+                  user.role === 'admin'
+                    ? 'rounded bg-accent-500 px-1.5 py-px text-[10px] font-bold text-white'
+                    : 'rounded bg-slate-400 px-1.5 py-px text-[10px] font-bold text-white'
                 }
               >
                 {user.role.toUpperCase()}

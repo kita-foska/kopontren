@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!canAccess(user, 'laporan'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pengurus' }, { status: 403 });
   const url = new URL(req.url);
   const from = url.searchParams.get('from') || '1970-01-01 00:00:00';
   const d = await db();

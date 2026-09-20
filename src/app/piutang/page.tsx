@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 
@@ -17,8 +17,8 @@ export const dynamic = 'force-dynamic';
 export default async function PiutangPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
-  // Pengurus read-only: tidak ada menu piutang.
-  if (user.role === 'pengurus') redirect('/');
+  // Tier: piutang (admin, manajer, kasir). Pengurus read-only: tidak ada menu piutang.
+  if (!canAccess(user, 'piutang')) redirect('/');
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
@@ -28,7 +28,7 @@ export default async function PiutangPage() {
         Catat piutang pelanggan yang belum lunas & terima pembayaran cicilannya. Otomatis
         menjadi lunas saat sisa = 0.
       </p>
-      <PiutangClient admin={isAdmin(user)} />
+      <PiutangClient admin={canAccess(user, 'piutang')} />
     </Shell>
   );
 }

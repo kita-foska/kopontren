@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
 
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  // Sumber data loyalty POS (tier 'pos': admin, manajer, kasir). Peran lain
+  // tidak perlu membaca data member (PII).
+  if (!canAccess(user, 'pos'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/kasir' }, { status: 403 });
   const url = new URL(req.url);
   const q = String(url.searchParams.get('q') || '').trim();
   // Pagination: default & maksimal 50 (target Turso Rows Read); klien
@@ -50,6 +54,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  // Kasir membuat member saat transaksi POS; tier 'pos' (admin, manajer, kasir).
+  if (!canAccess(user, 'pos'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/kasir' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const name = String(b.name || '').trim();
   if (!name) return NextResponse.json({ error: 'Nama member wajib' }, { status: 400 });
@@ -69,7 +76,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
+  if (!canAccess(user, 'member'))
     return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const id = Number(b.id || 0);
@@ -105,7 +112,7 @@ export async function PUT(req: Request) {
 export async function DELETE(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
+  if (!canAccess(user, 'member'))
     return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
   const url = new URL(req.url);
   const id = Number(url.searchParams.get('id') || '0');

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 
 type ZakatHistoryRow = {
   id: number;
@@ -25,8 +25,8 @@ function csvEscape(v: string | number): string {
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!canAccess(user, 'zakat'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pengurus' }, { status: 403 });
 
   const d = await db();
   const rows = (

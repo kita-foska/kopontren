@@ -181,6 +181,10 @@ export function PenggunaClient() {
               >
                 <option value="kasir">Kasir</option>
                 <option value="pengurus">Pengurus</option>
+                <option value="manajer">Manajer</option>
+                <option value="gudang">Gudang</option>
+                <option value="pembelian">Pembelian</option>
+                <option value="member">Member</option>
                 <option value="admin">Admin</option>
               </select>
               <input

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { notifyCashBalance, notifyNewBelanja } from '@/lib/notify';
@@ -8,8 +8,8 @@ import { notifyCashBalance, notifyNewBelanja } from '@/lib/notify';
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!canAccess(user, 'supplier'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pembelian' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as {
     product_id?: number;
     qty?: number;

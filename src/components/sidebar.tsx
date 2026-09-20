@@ -184,46 +184,71 @@ export function Sidebar({
   );
 }
 
+/**
+ * Menu per role sesuai matriks permission (src/lib/auth.ts — FEATURE_MATRIX).
+ * Guard API & halaman tetap berlaku; menu ini hanya display.
+ */
 function groupsFor(role: Role): NavGroup[] {
   if (role === 'admin') return ADMIN_GROUPS;
+  if (role === 'manajer') {
+    // Manajer = operasional + laporan + produk/member (tanpa menu Sistem).
+    return ADMIN_GROUPS.filter((g) => g.title !== 'Sistem');
+  }
   if (role === 'pengurus') {
+    // Pengurus = pengawas: laporan + audit + zakat (read-only).
+    return [
+      {
+        title: 'Laporan & Pengawasan',
+        items: [
+          { href: '/laporan', label: 'Laporan & Rekap' },
+          { href: '/admin/laporan', label: 'Laporan Pengurus' },
+          { href: '/pengurus/dashboard', label: 'Dashboard Global' },
+          { href: '/admin/zakat', label: 'Zakat' },
+          { href: '/admin/audit', label: 'Audit' },
+        ],
+      },
+      { title: 'Utama', items: [{ href: '/', label: 'Ringkasan' }] },
+    ];
+  }
+  if (role === 'kasir') {
     return [
       {
         title: 'Utama',
         items: [
-          { href: '/admin/dashboard', label: 'Dashboard' },
           { href: '/', label: 'Ringkasan' },
           { href: '/kasir', label: 'Kasir' },
-          { href: '/laporan', label: 'Laporan & Rekap' },
+          { href: '/admin/shift', label: 'Shift & Kasir' },
+          { href: '/piutang', label: 'Piutang' },
+          { href: '/retur', label: 'Retur' },
         ],
-      },
-      {
-        title: 'Admin',
-        items: [
-          { href: '/admin/produk', label: 'Produk' },
-          { href: '/admin/belanja', label: 'Belanja' },
-          { href: '/admin/konsinyasi', label: 'Konsinyasi' },
-          { href: '/admin/kas', label: 'Kas' },
-          { href: '/admin/hutang', label: 'Hutang' },
-          { href: '/admin/member', label: 'Member' },
-        ],
-      },
-      {
-        title: 'Sistem',
-        items: [{ href: '/admin/laporan', label: 'Laporan Pengurus' }],
       },
     ];
   }
-  return [
-    {
-      title: 'Utama',
-      items: [
-        { href: '/', label: 'Ringkasan' },
-        { href: '/kasir', label: 'Kasir' },
-        { href: '/laporan', label: 'Laporan & Rekap' },
-      ],
-    },
-  ];
+  if (role === 'gudang') {
+    return [
+      {
+        title: 'Gudang',
+        items: [
+          { href: '/', label: 'Ringkasan' },
+          { href: '/admin/produk', label: 'Produk & Stok (Opname)' },
+        ],
+      },
+    ];
+  }
+  if (role === 'pembelian') {
+    return [
+      {
+        title: 'Pembelian',
+        items: [
+          { href: '/', label: 'Ringkasan' },
+          { href: '/admin/belanja', label: 'Belanja' },
+          { href: '/admin/hutang', label: 'Hutang Supplier' },
+        ],
+      },
+    ];
+  }
+  // member (default): dashboard pribadi saja.
+  return [{ title: 'Pribadi', items: [{ href: '/', label: 'Ringkasan' }] }];
 }
 
 /**

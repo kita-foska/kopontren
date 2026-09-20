@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
@@ -124,13 +124,17 @@ export default async function DashboardPage() {
         <div className="card fade-up p-4">
           <h2 className="mb-2 font-bold">Aksi cepat</h2>
           <div className="flex flex-wrap gap-2">
-            <a href="/kasir" className="btn-primary">
-              + Jual (POS)
-            </a>
-            <a href="/laporan" className="btn-ghost">
-              Laporan & Rekap
-            </a>
-            {isManager(user) && (
+            {canAccess(user, 'pos') && (
+              <a href="/kasir" className="btn-primary">
+                + Jual (POS)
+              </a>
+            )}
+            {canAccess(user, 'laporan') && (
+              <a href="/laporan" className="btn-ghost">
+                Laporan & Rekap
+              </a>
+            )}
+            {canAccess(user, 'supplier') && (
               <a href="/admin/belanja" className="btn-ghost">
                 Belanja & Stok
               </a>

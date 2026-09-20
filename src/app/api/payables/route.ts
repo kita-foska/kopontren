@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 type PayableRow = {
@@ -19,7 +19,7 @@ type PayableRow = {
 
 /**
  * Hutang (utang dagang) — daftar & pencatatan.
- * Role: admin + pengurus (halaman /admin/hutang sudah di-guard layout).
+ * Role: tier 'supplier' (admin, manajer, pembelian).
  * GET: daftar (filter status, cap 50 baris utk Rows Read) + ringkasan
  * terbuka / tunggak / jatuh tempo dalam 7 hari ke depan.
  * POST: catat utang baru (remaining = amount, status 'open').
@@ -27,8 +27,8 @@ type PayableRow = {
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya admin/pengurus' }, { status: 403 });
+  if (!canAccess(user, 'supplier'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pembelian' }, { status: 403 });
   const url = new URL(req.url);
   const status = url.searchParams.get('status') || 'all';
   // Cap 50 baris/halaman (target Rows Read Turso), senapas /api/debts.
@@ -79,8 +79,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya admin/pengurus' }, { status: 403 });
+  if (!canAccess(user, 'supplier'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pembelian' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as {
     supplier_name?: string;
     supplier_phone?: string;

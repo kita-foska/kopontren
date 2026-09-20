@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 import { PageSkeleton } from '@/components/ui';
@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminMemberPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
-  if (!isManager(user)) redirect('/');
+  if (!user || !canAccess(user, 'member')) redirect(user ? '/' : '/login');
 
   return (
     <Shell user={user}>

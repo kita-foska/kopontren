@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { cached } from '@/lib/ref-cache';
 
 /**
@@ -14,8 +14,8 @@ import { cached } from '@/lib/ref-cache';
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!canAccess(user, 'supplier'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pembelian' }, { status: 403 });
   const d = await db();
   // 50 transaksi terbaru sudah cukup (UI menampilkan scroll + tidak perlu riwayat panjang).
   // Turun dari 200: payload JSON & DOM lebih kecil → respons & render lebih cepat.

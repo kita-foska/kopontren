@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, type Db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { notifyShiftClosed, notifyShiftOpened } from '@/lib/notify';
 
@@ -60,6 +60,10 @@ async function windowStats(d: Db, kasirId: number, from: string, to?: string) {
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  // Tier 'shift' (admin, manajer, kasir). Non-manager hanya melihat shiftnya
+  // sendiri (ditangani query di bawah).
+  if (!canAccess(user, 'shift'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/kasir' }, { status: 403 });
   const url = new URL(req.url);
 
   if (url.searchParams.get('current') === '1') {
@@ -112,6 +116,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  if (!canAccess(user, 'shift'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/kasir' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as { label?: string };
   const d = await db();
   const open = (await d
@@ -140,6 +146,8 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  if (!canAccess(user, 'shift'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/kasir' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as { id?: number };
   const id = Number(b.id || 0);
   if (!id) return NextResponse.json({ error: 'id shift tidak valid' }, { status: 400 });

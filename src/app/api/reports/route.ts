@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
 import { cached } from '@/lib/ref-cache';
 
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!canAccess(user, 'laporan'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pengurus' }, { status: 403 });
   const url = new URL(req.url);
   const days = Number(url.searchParams.get('days') || '30');
   const from = days > 0 ? startOfDayJakarta(1 - days) : '1970-01-01 00:00:00';

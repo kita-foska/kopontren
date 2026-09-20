@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
@@ -11,11 +11,12 @@ export const dynamic = 'force-dynamic';
 /**
  * Dashboard admin: ringkasan operasional harian + prediksi stok menipis
  * + notifikasi stok via WhatsApp (deep-link, tanpa API credentials).
+ * Tier: laporan (admin, manajer, pengurus).
  */
 export default async function AdminDashboardPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
-  if (!isManager(user)) redirect('/');
+  if (!canAccess(user, 'laporan')) redirect('/');
   const d = await db();
   const today = startOfDayJakarta(0);
   const d7 = startOfDayJakarta(-6);

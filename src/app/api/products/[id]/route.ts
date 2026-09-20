@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { notifyStockChange } from '@/lib/notify';
@@ -8,10 +8,13 @@ import { notifyStockChange } from '@/lib/notify';
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
   const { id } = await params;
   const b = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  // Opname/quick stock adjust = tier 'stock' (boleh gudang); ubah data produk
+  // atau toggle aktif = tier 'products' (admin, manajer).
+  const stockAdjust = b.stock !== undefined && b.name === undefined;
+  if (!canAccess(user, stockAdjust ? 'stock' : 'products'))
+    return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 });
   const d = await db();
   const prod = (await d.prepare('SELECT * FROM products WHERE id = ?').get(Number(id))) as
     | {

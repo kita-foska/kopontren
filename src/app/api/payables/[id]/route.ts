@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
-import { currentUser, isAdmin, isManager } from '@/lib/auth';
+import { canAccess, currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 
@@ -24,8 +24,8 @@ const COLS =
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya admin/pengurus' }, { status: 403 });
+  if (!canAccess(user, 'supplier'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pembelian' }, { status: 403 });
   const { id } = await params;
   const d = await db();
   const row = (
@@ -38,8 +38,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya admin/pengurus' }, { status: 403 });
+  if (!canAccess(user, 'supplier'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pembelian' }, { status: 403 });
   const { id } = await params;
   const b = (await req.json().catch(() => ({}))) as {
     pay?: number;

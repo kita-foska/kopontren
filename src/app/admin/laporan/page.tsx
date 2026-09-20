@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 import { PageSkeleton } from '@/components/ui';
@@ -15,7 +15,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function LaporanAdminPage() {
   const user = await currentUser();
-  if (!user || !isManager(user)) redirect(user ? '/' : '/login');
+  // Tier: laporan (admin, manajer, pengurus).
+  if (!user || !canAccess(user, 'laporan')) redirect(user ? '/' : '/login');
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">

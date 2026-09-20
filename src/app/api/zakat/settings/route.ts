@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, getZakatSettings, saveZakatSettings } from '@/db';
-import { currentUser, isAdmin, isManager } from '@/lib/auth';
+import { canAccess, currentUser, isAdmin } from '@/lib/auth';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -8,8 +8,8 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!canAccess(user, 'zakat'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pengurus' }, { status: 403 });
   const s = await getZakatSettings();
   return NextResponse.json({
     gold_price: Number(s.gold_price) || 0,

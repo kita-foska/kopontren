@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { currentUser } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 
@@ -17,8 +17,8 @@ export const dynamic = 'force-dynamic';
 export default async function ReturPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
-  // Pengurus read-only: tidak ada menu retur.
-  if (user.role === 'pengurus') redirect('/');
+  // Tier: retur ikut POS (admin, manajer, kasir). Kasir hanya transaksi sendiri (API).
+  if (!canAccess(user, 'pos')) redirect('/');
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">

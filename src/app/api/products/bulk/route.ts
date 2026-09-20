@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 
@@ -18,8 +18,6 @@ import { invalidate } from '@/lib/ref-cache';
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
 
   const b = (await req.json().catch(() => ({}))) as {
     action?: string;
@@ -37,6 +35,18 @@ export async function POST(req: Request) {
   const action = String(b.action || '');
   if (!['stock', 'category', 'active', 'delete'].includes(action))
     return NextResponse.json({ error: 'Action tidak dikenal' }, { status: 400 });
+  // Opname massal (stock) boleh tier 'stock' (admin, manajer, gudang);
+  // aksi data produk (category/active/delete) = tier 'products' (admin, manajer).
+  if (!canAccess(user, action === 'stock' ? 'stock' : 'products'))
+    return NextResponse.json(
+      {
+        error:
+          action === 'stock'
+            ? 'Hanya admin/manajer/gudang yang boleh opname massal'
+            : 'Hanya admin/manajer',
+      },
+      { status: 403 }
+    );
 
   const d = await db();
   const inList = ids.map(() => '?').join(',');

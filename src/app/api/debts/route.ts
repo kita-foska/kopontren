@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 type DebtRow = {
@@ -19,6 +19,8 @@ type DebtRow = {
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  if (!canAccess(user, 'piutang'))
+    return NextResponse.json({ error: 'Role Anda tidak dapat melihat piutang' }, { status: 403 });
   const url = new URL(req.url);
   const status = url.searchParams.get('status') || 'all';
   // Cap 50 baris/halaman (target Rows Read); sebelumnya default 100, max 500.
@@ -54,8 +56,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (user.role === 'pengurus')
-    return NextResponse.json({ error: 'Pengurus hanya melihat, tidak dapat mencatat piutang' }, { status: 403 });
+  if (!canAccess(user, 'piutang'))
+    return NextResponse.json({ error: 'Role Anda tidak dapat mencatat piutang' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as {
     customer_name?: string;
     customer_phone?: string;

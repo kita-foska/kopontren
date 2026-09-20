@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, getZakatSettings, saveZakatSettings } from '@/db';
-import { currentUser, isAdmin, isManager } from '@/lib/auth';
+import { canAccess, currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { notifyNewZakat } from '@/lib/notify';
 
@@ -125,8 +125,8 @@ async function computeZakat(): Promise<ZakatCalculation> {
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isManager(user))
-    return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
+  if (!canAccess(user, 'zakat'))
+    return NextResponse.json({ error: 'Hanya admin/manajer/pengurus' }, { status: 403 });
   const calc = await computeZakat();
   return NextResponse.json(calc, { headers: { 'Cache-Control': 'no-store' } });
 }

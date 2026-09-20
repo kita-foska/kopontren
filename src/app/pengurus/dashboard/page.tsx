@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
@@ -16,7 +16,8 @@ export const dynamic = 'force-dynamic';
 export default async function PengurusDashboardPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
-  if (!isManager(user)) redirect('/');
+  // Tier: laporan (admin, manajer, pengurus).
+  if (!canAccess(user, 'laporan')) redirect('/');
   const d = await db();
 
   // KPI global 30 hari (server-side, tanpa fetch tambahan)

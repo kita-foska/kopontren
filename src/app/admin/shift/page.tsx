@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 
@@ -18,7 +18,8 @@ export default async function ShiftPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
   // Riwayat shift: admin (semua kasir) & kasir (shift sendiri). Pengurus tidak.
-  if (!isManager(user) && user.role !== 'kasir') redirect('/');
+  // Tier: shift (admin, manajer, kasir).
+  if (!canAccess(user, 'shift')) redirect('/');
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">

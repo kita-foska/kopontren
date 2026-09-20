@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db, tx } from '@/db';
-import { currentUser } from '@/lib/auth';
+import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { notifyNewRetur } from '@/lib/notify';
@@ -21,6 +21,8 @@ type ReturnRow = {
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
+  if (!canAccess(user, 'pos'))
+    return NextResponse.json({ error: 'Role Anda tidak dapat melihat retur' }, { status: 403 });
   const url = new URL(req.url);
   // Cap 50 baris/halaman (target Rows Read); sebelumnya cap 200.
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50));
@@ -44,8 +46,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (user.role === 'pengurus')
-    return NextResponse.json({ error: 'Pengurus hanya melihat, tidak dapat mencatat retur' }, {
+  if (!canAccess(user, 'pos'))
+    return NextResponse.json({ error: 'Role Anda tidak dapat mencatat retur' }, {
       status: 403,
     });
   const b = (await req.json().catch(() => ({}))) as {

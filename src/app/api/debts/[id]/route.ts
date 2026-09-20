@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { canAccess, currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 type DebtRow = {
@@ -18,8 +18,8 @@ type DebtRow = {
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (user.role === 'pengurus')
-    return NextResponse.json({ error: 'Pengurus hanya melihat, tidak dapat mengubah piutang' }, {
+  if (!canAccess(user, 'piutang'))
+    return NextResponse.json({ error: 'Role Anda tidak dapat mengubah piutang' }, {
       status: 403,
     });
   const { id } = await params;
