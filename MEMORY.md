@@ -202,7 +202,13 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
 
 **Batch A — `c02421b` (kritis + medium, 6 file):**
 - Backup diperluas: `debts`, `payables`, `returns` (+ kolom
-  `client_ref` di sales) masuk export/DELETE/INSERT import.
+  `client_ref` di sales) masuk export/DELETE/INSERT import;
+  dilanjutkan `d435f57`: + `notifications`, `notification_settings`,
+  `notification_logs` (export/DELETE/INSERT), import `audit_log`
+  kini 13 kolom skema v11 (user_name, user_role, ip_address,
+  user_agent) — bug PK collision tetap ditutup oleh
+  DELETE-before-INSERT; payload version 2 → 3. `point_history`
+  TUNDA (di luar cakupan, keputusan user).
 - Import `audit_log` kini DELETE-then-INSERT; urutan DELETE
   FK-safe (returns → sale_items → sales → … → debts/payables/
   audit_log) → bug PK collision selesai.
@@ -253,3 +259,5 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   terdokumentasi).
 - Retur refund masih memakai `unit_price` mentah (abaikan
   `sale_items.discount`) — TODO [m] masih terbuka.
+- `point_history` belum masuk backup/restore (TUNDA — 21 Sep
+  2026, keputusan user, di luar cakupan perluasan backup).

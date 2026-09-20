@@ -69,9 +69,14 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       /admin/pengaturan-member) tapi belum dipakai transaksi.
 - [m] Redemisi poin: tukar poin → Rupiah/diskon (ledger
       `point_history` sudah siap dipakai; butuh route + UI di POS/admin).
-- [x] Backup/restore memperluas cakupan: `debts`, `payables`,
-      `returns` — SELESAI (commit `c02421b`, 21 Sep 2026). Sisa
-      (low priority): `notifications` (+ log push) belum masuk.
+- [x] Backup/restore perluas cakupan PENUH: `debts`, `payables`,
+      `returns` (commit `c02421b`) + `notifications`,
+      `notification_settings`, `notification_logs`, audit_log
+      import 13 kolom skema v11 (commit `d435f57`, 21 Sep 2026;
+      (payload version 3). Keputusan user 21 Sep:
+      `notification_settings`, `notification_logs` SERTAKAN;
+      4 kolom audit_log v11 SERTAKAN; `point_history` TUNDA
+      (di luar cakupan).
 - [m] Pembayaran campuran dalam satu transaksi (tunai + transfer) —
       saat ini satu `pay_method` saja.
 - [r] QRIS asli (gateway/NMID resmi) — modal QRIS di POS masih mock SVG.
