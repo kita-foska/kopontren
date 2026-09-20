@@ -121,7 +121,7 @@ export function SessionCountdown() {
 
   return (
     <span
-      className={`rounded-full border px-3 py-1 text-xs font-semibold tabular-nums ${cls}`}
+      className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold tabular-nums ${cls}`}
       title="Sisa waktu sesi idle. Aktivitas memperpanjang sesi; habis -> verifikasi PIN."
     >
       {label}

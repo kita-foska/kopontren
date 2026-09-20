@@ -54,7 +54,7 @@ export function MemberQrBadge({
         .b small{display:block;margin-top:12px;font-size:11px;color:#64748b}
       </style></head><body>
       <div class="b">
-        <h1>KOPONTREN AL ITTIDHAD</h1>
+        <h1>KOPONTREN AL ITTIHAD</h1>
         <h2>${member.name}</h2>
         <img src="${dataUrl}" alt="QR"/>
         <p>${member.phone || "Tanpa nomor"}</p>

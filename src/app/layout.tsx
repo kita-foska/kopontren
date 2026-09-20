@@ -3,9 +3,9 @@ import './globals.css';
 import { SwRegister } from '@/components/sw-register';
 
 export const metadata: Metadata = {
-  title: 'Kopontren Al Ittihad — Kasir & Pembukuan',
+  title: 'Kopontren AL ITTIHAD — Kasir & Pembukuan',
   description:
-    'Kasir & pembukuan Kopontren Al Ittihad: POS, stok, belanja, kas, laporan, rekap WhatsApp.',
+    'Kasir & pembukuan Kopontren AL ITTIHAD: POS, stok, belanja, kas, laporan, rekap WhatsApp.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

@@ -58,7 +58,7 @@ export default function LoginPage() {
           />
           <div>
             <h1 className="text-lg font-extrabold leading-tight tracking-tight text-accent-700 dark:text-white">
-              Kopontren Al Ittihad
+              Kopontren AL ITTIHAD
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-300">Kasir &amp; Pembukuan</p>
           </div>

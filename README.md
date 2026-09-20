@@ -1,6 +1,6 @@
-# Kopontren Al Ittihad — Kasir & Pembukuan (PWA Fullstack)
+# Kopontren AL ITTIHAD — Kasir & Pembukuan (PWA Fullstack)
 
-Aplikasi toko kasir + pembukuan multi-user untuk Kopontren Al Ittihad, dibangun ulang dari
+Aplikasi toko kasir + pembukuan multi-user untuk Kopontren AL ITTIHAD, dibangun ulang dari
 versi Next.js lama dengan fitur lengkap (POS, stok, belanja, kas, laporan, backup) dan visual
 **Blue Notebook**.
 

@@ -48,7 +48,7 @@ export function buildRekapMsg(sales: RekapSale[], title = 'LAPORAN PENJUALAN KOP
   const lines: string[] = [];
   const latest = sales.length ? sales[sales.length - 1].created_at : new Date().toISOString();
   lines.push('*' + title + '*');
-  lines.push('Al Ittihad - ' + shortDate(latest));
+  lines.push('AL ITTIHAD - ' + shortDate(latest));
   lines.push('===========================');
   let grand = 0;
   let itemCount = 0;

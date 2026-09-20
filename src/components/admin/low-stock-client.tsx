@@ -25,7 +25,7 @@ export function LowStockClient({ items }: { items: Item[] }) {
   function waMessage(): string {
     const lines: string[] = [];
     lines.push('*ALERT STOK MENIPIS*');
-    lines.push('Kopontren Al Ittihad - ' + new Date().toLocaleDateString('id-ID'));
+    lines.push('Kopontren AL ITTIHAD - ' + new Date().toLocaleDateString('id-ID'));
     lines.push('===========================');
     for (const p of items) {
       const eta =

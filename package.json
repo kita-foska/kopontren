@@ -2,7 +2,7 @@
   "name": "kopontren-app",
   "version": "1.0.0",
   "private": true,
-  "description": "Kopontren Al Ittihad - Kasir & Pembukuan (PWA fullstack)",
+  "description": "Kopontren AL ITTIHAD - Kasir & Pembukuan (PWA fullstack)",
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/inject-sw-version.mjs && next build",
