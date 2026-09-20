@@ -10,7 +10,7 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   (`startOfDayJakarta()` kembalikan string UTC ISO, BUKAN format spasi WIB —
   jangan bandingkan string campur format).
 - `src/db.ts`: skema + migrasi idempoten + **gate `schema_version`**
-  (SAAT INI `SCHEMA_VERSION = 10`). Cold start: kalau versi DB < 10 →
+  (SAAT INI `SCHEMA_VERSION = 11`). Cold start: kalau versi DB < 11 →
   `fullInit` sekali; selain itu 1 SELECT saja. **Aturan: statement skema
   baru WAJIB diiringi bump `SCHEMA_VERSION`** (kalau tidak, DB lama tidak
   akan pernah dapat migrasi).
@@ -30,9 +30,13 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   **`changePin` juga menghitung kegagalan + lockout** (audit 18 Sep 2026).
 - Throttle login: per username+IP, 10 gagal/15 mnt → kunci 15 mnt
   (in-memory per instance, di `src/app/api/auth/login/route.ts`).
-- Role: `admin` ⊃ `pengurus` (isManager) ⊃ `kasir`. Kasir hanya bisa
-  mutasi data miliknya (sale.kasir_id === user.id, retur shift sendiri,
-  dll). Pengurus read-only utk piutang/retur.
+- Role: **7 role + matriks terpusat** (implementasi 18–20 Sep 2026,
+  commit `b83b75e`) — detail di bagian "## Matriks Permission 7 Role"
+  di bawah. `normRole` menormalkan nilai tak dikenal → `kasir`;
+  `isManager` = admin + manajer (pengurus keluar dari tier ops sejak
+  18 Sep — kini read-only). Kasir tetap hanya mutasi data miliknya
+  (sale.kasir_id === user.id, retur shift sendiri, retur hanya
+  transaksi sendiri).
 - `CRON_SECRET` dipbandingkan constant-time (`timingSafeEqual`) di
   `/api/notifications/cron`.
 
@@ -116,3 +120,43 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   worker baru ter-fetch setelah login. Karena aplikasi internal, ini
   **acceptable**; kalau kelak ingin PWA installable dari landing page,
   perlu me-whitelist `/sw.js` di session guard middleware.
+
+## Matriks Permission 7 Role (commit b83b75e, teruji manual 20 Sep 2026)
+- **7 role**: admin, manajer, pengurus, kasir, gudang, pembelian, member
+  (`ROLES` di `src/lib/auth.ts`; nilai tak dikenal → `kasir` via
+  `normRole`).
+- Matriks terpusat: `FEATURE_MATRIX` + `canAccess(user, feature)`
+  di `src/lib/auth.ts` (admin selalu lolos; guard API = 403; layout
+  admin cukup cek login; sidebar per role; `products/bulk` per-aksi —
+  stock tier gudang, lainnya tier products):
+
+  | Fitur (`Feature`) | Role |
+  |---|---|
+  | pos | admin, manajer, kasir |
+  | shift | admin, manajer, kasir |
+  | products (CRUD) | admin, manajer |
+  | stock (opname) | admin, manajer, gudang |
+  | supplier (supplier + payables + belanja) | admin, manajer, pembelian |
+  | piutang | admin, manajer, kasir |
+  | laporan | admin, manajer, pengurus |
+  | audit | admin, pengurus |
+  | zakat | admin, manajer, pengurus |
+  | member | admin, manajer |
+  | personal | semua 7 role |
+
+  Pengurus = read-only (laporan + audit + zakat), TIDAK operasional.
+- Commit dual-push 20 Sep 2026 (semua `master` + mirror `main`):
+  - `b83b75e` matriks 7 role + guard (author: kita-foska; teruji
+    manual: semua role berfungsi sesuai matriks).
+  - `eeb9a50` rename aplikasi "Kopontren AL ITTIHAD" + layout header.
+  - `83a29dd` audit trail per-user: `audit_log` +4 kolom
+    (user_name, user_role, ip_address, user_agent) + index
+    idx_audit_user; `logAudit` form objek `{fieldChanges, req}`
+    (diff per-field: `old_value`/`new_value` JSON `{field:{before,
+    after}}`) + form legacy tetap jalan; event LOGIN/LOGOUT
+    per-user; UI `/admin/audit` tampilkan snapshot "nama (role)" +
+    tooltip IP/UA. **`SCHEMA_VERSION` 10→11**: WAJIB, agar DB
+    prod (v10) menjalankan `fullInit`+`migrate()` sekali lagi saat
+    cold start berikutnya — tanpa bump, kolom baru tak akan pernah
+    sampai ke DB lama dan semua `logAudit` (INSERT 4 kolom) gagal
+    diam-diam.

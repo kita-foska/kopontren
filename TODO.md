@@ -73,3 +73,14 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
   dalam total zakat (commit `6ef487b`).
 - Vercel: build dari `main`; setelah commit di `master`, mirror main
   (reset --hard + push -f).
+- [x] Matriks permission 7 role (admin, manajer, pengurus, kasir,
+  gudang, pembelian, member) — teruji manual 20 Sep 2026, commit
+  `b83b75e`, dual-push master+main. Matriks terpusat
+  `FEATURE_MATRIX`/`canAccess` di `src/lib/auth.ts`; detail di
+  MEMORY.md (seksi "Matriks Permission 7 Role").
+- [x] Audit trail per-user (snapshot user_name/user_role + IP/UA,
+  diff per-field, event LOGIN/LOGOUT) — commit `83a29dd`;
+  SCHEMA_VERSION kini 11 (DB prod menjalankan migrate() saat cold
+  start berikutnya).
+- [x] Rename aplikasi "Kopontren AL ITTIHAD" + layout header —
+  commit `eeb9a50`.
