@@ -310,11 +310,10 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   toast penunjuk ke tombol Ubah. Lib `qrcode` sudah ada di deps
   (dipakai juga MemberQrBadge). TODO [x].
 
-- **QRIS masih MOCK (22 Sep 2026)**: modal QRIS POS = SVG acak +
-  NMID fiktif `ID102003004050`. QRIS asli BUTUH NMID resmi
-  (bank/agregator QRIS). Opsi A: payload EMVCo statis dibuat
-  client-side + `qrcode` — TIDAK butuh API; QR berisi nominal
-  transaksi, discan GoPay/OVO/Dana/bank apps; verifikasi pembayaran
-  manual oleh kasir (tanpa webhook). Opsi B: gateway dinamis
-  Xendit/Midtrans — butuh API key + webhook + route server.
-  DILAPORKAN 22 Sep, menunggu NMID/keputusan user. TODO [r].
+- **QRIS DITUNDA (keputusan user, 22 Sep 2026)**: QRIS mock (SVG acak +
+  NMID fiktif `ID102003004050`) hanyalah PLACEHOLDER — **belum
+  production-ready, jangan dipakai menerima pembayaran**. Makfi akan
+  mengurus NMID resmi (bank/agregator QRIS). Setelah NMID siap:
+  Opsi A payload EMVCo statis client-side + `qrcode` (tanpa API,
+  verifikasi manual kasir) / Opsi B gateway dinamis Xendit/Midtrans
+  (API key + webhook). TODO [r] terbuka.
