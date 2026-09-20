@@ -5,7 +5,7 @@ import { runCron } from '@/lib/notify';
 
 /**
  * POST /api/notifications/cron — jalankan pekerjaan terjadwal.
- * Query ?job= due|daily|weekly|monthly|all (default: due).
+ * Query ?job= due|daily|weekly|monthly|audit|all (default: due).
  *
  * Otorisasi (aman secara default):
  *  1. Jika env CRON_SECRET di-set DAN header `x-cron-secret` cocok ->

@@ -333,7 +333,16 @@ export async function notifyStockAfterSale(productIds: number[]) {
   const rows = (await d
     .prepare(`SELECT id, name, stock, unit FROM products WHERE id IN (${ph(unique.length)})`)
     .all(...unique)) as { id: number; name: string; stock: number; unit: string }[];
-  for (const p of rows) await notifyStockChange(p.id, p.stock, p.name, p.unit);
+  // Batasi deretan notifikasi per transaksi (audit [r]): hanya produk di
+  // bawah ambang (< 5) yang diperiksa, urutkan stok terendah dulu (habis
+  // diprioritaskan), dan cap 5 produk paling kritis agar transaksi ramai
+  // tidak memicu puluhan round-trip beruntun. Produk di luar cap tetap
+  // kebagian saat transaksi berikutnya (dedupe 60 mnt di notify()).
+  const critical = rows
+    .filter((p) => Number(p.stock || 0) < 5)
+    .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0))
+    .slice(0, 5);
+  for (const p of critical) await notifyStockChange(p.id, p.stock, p.name, p.unit);
 }
 
 /** Transaksi besar (> Rp 1.000.000). */
@@ -683,8 +692,21 @@ export async function runMonthlyReports(force = false): Promise<number> {
 /**
  * Jalankan pekerjaan terjadwal. Dipanggil scheduler eksternal (Vercel Cron /
  * crontab / GitHub Actions) via POST /api/notifications/cron.
- * job: 'due' | 'daily' | 'weekly' | 'monthly' | 'all' (default: due + prune).
+ * job: 'due' | 'daily' | 'weekly' | 'monthly' | 'audit' | 'all' (default: due + prune).
  */
+/**
+ * Auto-purge audit_log: hapus entri lebih lama dari days (default 90,
+ * konsisten dgn purge manual DELETE /api/audit?days=90). Job cron:
+ * ?job=audit atau ?job=all.
+ */
+export async function purgeAuditLog(days = 90): Promise<number> {
+  const n = Math.max(1, Math.floor(days));
+  const d = await db();
+  const cutoff = new Date(Date.now() - n * 86400000).toISOString();
+  const res = await d.prepare(`DELETE FROM audit_log WHERE created_at < ?`).run(cutoff);
+  invalidate('audit:');
+  return Number(res.changes);
+}
 export async function runCron(job?: string) {
   switch (job) {
     case 'daily':
@@ -693,13 +715,16 @@ export async function runCron(job?: string) {
       return { job: 'weekly', ran: await runWeeklyReport() };
     case 'monthly':
       return { job: 'monthly', ran: await runMonthlyReports() };
+    case 'audit':
+      return { job: 'audit', purged: await purgeAuditLog() };
     case 'all':
       await runDueDateSweep(true);
       await runDailyReports(true);
       await runWeeklyReport(true);
       await runMonthlyReports(true);
       await pruneOldNotifications(true);
-      return { job: 'all' };
+      const purged = await purgeAuditLog();
+      return { job: 'all', purged };
     case 'due':
     default:
       const due = await runDueDateSweep();

@@ -57,8 +57,12 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       `copyStrukText`), lib/rekap.ts (`strukWaText`, `shareWa`,
       `shareRekap`), laporan-client.tsx (`shareRekap`), globals.css
       `@media print`. Tanpa perubahan kode.
-- [r] AUDIT 3x (21 Sep): `audit_log` tak ada auto-purge (purge manual
-      admin, default 90 hari) — pertimbangkan cron.
+- [x] AUDIT 3x (21 Sep): `audit_log` auto-purge - SELESAI
+      (22 Sep): `purgeAuditLog` di lib/notify.ts (default 90 hari +
+      invalidasi cache) + cron job `audit` & diinklusi job `all`;
+      dipicu scheduler eksternal (Vercel Cron + CRON_SECRET, repo tak
+      kelola secret) via POST /api/notifications/cron?job=audit;
+      purge manual admin (`DELETE /api/audit`) tetap tersedia.
 - [r] AUDIT 3x (21 Sep): throttle login keyed `X-Forwarded-For`
       (per-instance Vercel, bisa dirotasi) — accepted risk; mitigasi
       PIN 3x salah → sesi dimusnahkan + lock 5 mnt.
@@ -109,10 +113,12 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       agregat di-cache 60 dtk + invalidasi, N+1 dibatch, gate
       `schema_version` (cold start 1 SELECT). `next build` 48 page,
       First Load JS maks ±123 kB (POS lazy).
-- [r] `notifyStockAfterSale` menjalankan loop per produk (tiap notify =
-      beberapa round-trip). Batasi: group/limit produk per transaksi.
-- [r] `reports/csv` tanpa batas baris (manager-only, aman, tapi
-      "sejak awal" = baca seluruh sale_items).
+- [x] `notifyStockAfterSale` limit per transaksi (22 Sep 2026): filter
+      di bawah ambang (< 5) + urut stok terendah dulu + cap 5 produk
+      paling kritis - loop berbatas, transaksi ramai tak lagi memicu
+      20+ round-trip beruntun.
+- [x] `reports/csv` tanpa batas baris - SUDAH DIFIX (`473c8d3`): `from`
+      cap 365 hari + `LIMIT 50000`; "sejak awal" tak mungkin lagi.
 
 ## Ceklis Uji Manual `/admin/zakat` (deploy Vercel `6ef487b`, 18 Sep 2026)
 - [ ] 1. Buka `/admin/zakat` → 4 StatCard load (Modal, Laba, Piutang, Hutang)

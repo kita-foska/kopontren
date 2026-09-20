@@ -256,8 +256,8 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   `.receipt-print`, tanpa document.write/innerHTML/dangerously
   SetInnerHTML); teks struk/rekap WA di-encodeURIComponent utk
   `wa.me` (nomor disterilkan non-digit). Lihat TODO.md [x].
-- `audit_log` tumbuh tanpa auto-purge (purge manual admin,
-  default 90 hari) — cron opsional.
+-`audit_log` auto-purge harian (job `audit` di cron; default 90
+  hari) - TODO [x] SELESAI; purge manual admin tetap tersedia.
 - Stale cache lintas instance Vercel ≤60 dtk (accepted,
   terdokumentasi).
 - Retur refund KININ dihitung dari harga efektif (commit
@@ -282,4 +282,19 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   `from` kini maksimal 365 hari ke belakang + `LIMIT 50000`
   (sebelumnya default sejak 1970, tanpa limit row).
 - **AUDIT bug scan 3x (22 Sep)**: tanpa temuan baru; item [r]
-  forensik (x-forwarded-for) & purge audit_log tetap terbuka.
+  forensik (x-forwarded-for) tetap terbuka; purge audit_log
+  SELESAI (22 Sep, auto-purge cron; lihat entri akhir).
+
+- **Notif stok pasca-penjualan dibatasi (22 Sep 2026)**:
+  `notifyStockAfterSale` kini hanya cek produk < 5 (stok terendah
+  dulu, cap 5 produk paling kritis) - TODO [r] "loop per produk"
+  selesai; item [r] `reports/csv` tanpa limit sudah fix di `473c8d3`
+  \(from max 365 hari \+ LIMIT 50000\)\.
+
+- **Auto-purge audit_log (22 Sep 2026)**: `purgeAuditLog`
+  di lib/notify.ts (hapus > 90 hari + invalidasi cache
+  `audit:log`+`audit:ops:50`+`audit:ops`); cron job `audit` &
+  diinklusi job `all`; dipicu scheduler eksternal (Vercel Cron
+  + CRON_SECRET, repo tak kelola secret); purge manual admin
+  (`DELETE /api/audit`) tetap tersedia. TODO [r] audit-purge
+  ditutup.
