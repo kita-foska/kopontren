@@ -27,3 +27,4 @@ _*.txt
 
 _pkremote.json
 /desktop-archive/
+tmp_*.txt
