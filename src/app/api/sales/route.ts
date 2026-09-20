@@ -185,7 +185,12 @@ export async function POST(req: Request) {
       let subtotal = 0;
       let lineDiscSum = 0;
       const prodStmt = d.prepare('SELECT * FROM products WHERE id = ?');
-      const decStmt = d.prepare('UPDATE products SET stock = stock - ? WHERE id = ?');
+      // Guarded decrement: update HANYA jalan bila stok masih cukup saat
+      // statement dieksekusi (menutup race window oversell antar transaksi
+      // paralel). Cek di loop bawah tetap sebagai guard UX cepat.
+      const decStmt = d.prepare(
+        'UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?'
+      );
       // [qty, name, pid, unit, price, sub, lineDisc, cost]
       const insertItems: [number, string, number, string, number, number, number, number][] = [];
       for (const it of items) {
@@ -222,7 +227,11 @@ export async function POST(req: Request) {
           if (Number.isFinite(dv) && dv > 0) lineDisc = Math.min(Math.floor(dv), sub);
         }
         lineDiscSum += lineDisc;
-        await decStmt.run(qty, prod.id);
+        const decRes = await decStmt.run(qty, prod.id, qty);
+        if (Number(decRes.changes) !== 1)
+          throw new Error(
+            'Stok ' + prod.name + ' tidak cukup (stok berubah — sisa ' + prod.stock + ')'
+          );
         const insertItemsRow: [number, string, number, string, number, number, number, number] = [
           qty,
           prod.name,

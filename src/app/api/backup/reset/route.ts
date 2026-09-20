@@ -12,7 +12,8 @@ export async function POST() {
   const d = await db();
   await tx(d, async () => {
     await d.exec(
-      `DELETE FROM sale_items;
+      `DELETE FROM returns;
+       DELETE FROM sale_items;
        DELETE FROM sales;
        DELETE FROM purchases;
        DELETE FROM expenses;
@@ -20,7 +21,11 @@ export async function POST() {
        DELETE FROM products;
        DELETE FROM consignments;
        DELETE FROM members;
-       DELETE FROM shifts;`
+       DELETE FROM shifts;
+       DELETE FROM debts;
+       DELETE FROM payables;`
+      // audit_log sengaja TIDAK dihapus: akun pengguna/session & rekam jejak
+      // audit bukan data operasional.
     );
   });
   await logAudit(user, 'data:reset', 'database', null, undefined, {

@@ -16,6 +16,9 @@ type Backup = {
   consignments?: unknown[];
   members?: unknown[];
   shifts?: unknown[];
+  debts?: unknown[];
+  payables?: unknown[];
+  returns?: unknown[];
   audit_log?: unknown[];
 };
 
@@ -49,7 +52,7 @@ export async function GET() {
     ),
     sales: await all(
       `SELECT id, kasir_id, customer, pay_method, status, note, total,
-              member_id, amount_paid, change, discount, member_points, created_at, reported_at
+              member_id, amount_paid, change, discount, member_points, created_at, reported_at, client_ref
        FROM sales`
     ),
     sale_items: await all(
@@ -63,6 +66,11 @@ export async function GET() {
     ),
     members: await all('SELECT * FROM members'),
     shifts: await all('SELECT * FROM shifts'),
+    debts: await all('SELECT * FROM debts'),
+    payables: await all('SELECT * FROM payables'),
+    returns: await all(
+      'SELECT id, sale_id, product_id, qty, reason, amount, created_at FROM returns'
+    ),
     audit_log: await all('SELECT * FROM audit_log ORDER BY id DESC LIMIT 5000'),
   };
   await logAudit(user, 'backup:export', 'database', null, undefined, {
@@ -96,8 +104,11 @@ export async function POST(req: Request) {
   const d = await db();
   try {
     await tx(d, async () => {
+      // Urutan FK-safe: returns merujuk sales (hapus dulu); debts/payables
+      // mandiri; audit_log DIHAPUS SEBELUM re-INSERT karena insert memakai
+      // ID eksplisit — tanpa clear, ID lama akan tabrakan PK (UNIQUE fail).
       await d.exec(
-        'DELETE FROM sale_items; DELETE FROM sales; DELETE FROM purchases; DELETE FROM expenses; DELETE FROM cash_entries; DELETE FROM products; DELETE FROM consignments; DELETE FROM members; DELETE FROM shifts;'
+        'DELETE FROM returns; DELETE FROM sale_items; DELETE FROM sales; DELETE FROM purchases; DELETE FROM expenses; DELETE FROM cash_entries; DELETE FROM products; DELETE FROM consignments; DELETE FROM members; DELETE FROM shifts; DELETE FROM debts; DELETE FROM payables; DELETE FROM audit_log;'
       );
       const insP = d.prepare(
         'INSERT INTO products (id, name, category, unit, base_price, cost_price, stock, active, barcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -117,8 +128,8 @@ export async function POST(req: Request) {
       }
       const insS = d.prepare(
         `INSERT INTO sales (id, kasir_id, customer, pay_method, status, note, total,
-                            member_id, amount_paid, change, discount, member_points, created_at, reported_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                            member_id, amount_paid, change, discount, member_points, created_at, reported_at, client_ref)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       );
       for (const s of (payload.sales as Record<string, unknown>[]) || []) {
         await insS.run(
@@ -135,7 +146,8 @@ export async function POST(req: Request) {
           Number(s.discount) || 0,
           Number(s.member_points) || 0,
           normTs(s.created_at, new Date().toISOString()),
-          s.reported_at != null ? normTs(s.reported_at) : null
+          s.reported_at != null ? normTs(s.reported_at) : null,
+          String(s.client_ref ?? '')
         );
       }
       const insI = d.prepare(
@@ -253,6 +265,57 @@ export async function POST(req: Request) {
           normTs(sh.created_at, new Date().toISOString())
         );
       }
+      // Retur (selesai di atas: sales + sale_items sudah terisi). ID eksplisit
+      // dipertahankan agar relasi sale_id/product_id tetap konsisten.
+      const insRet = d.prepare(
+        'INSERT INTO returns (id, sale_id, product_id, qty, reason, amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      );
+      for (const r of (payload.returns as Record<string, unknown>[]) || []) {
+        await insRet.run(
+          Number(r.id),
+          Number(r.sale_id),
+          r.product_id != null ? Number(r.product_id) : null,
+          Number(r.qty) || 0,
+          String(r.reason ?? ''),
+          Number(r.amount) || 0,
+          normTs(r.created_at, new Date().toISOString())
+        );
+      }
+      const insDebt = d.prepare(
+        'INSERT INTO debts (id, customer_name, customer_phone, amount, paid, remaining, due_date, status, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      );
+      for (const db2 of (payload.debts as Record<string, unknown>[]) || []) {
+        await insDebt.run(
+          Number(db2.id),
+          String(db2.customer_name ?? ''),
+          String(db2.customer_phone ?? ''),
+          Number(db2.amount) || 0,
+          Number(db2.paid) || 0,
+          Number(db2.remaining) || 0,
+          String(db2.due_date ?? ''),
+          String(db2.status ?? '') || 'open',
+          String(db2.note ?? ''),
+          normTs(db2.created_at, new Date().toISOString())
+        );
+      }
+      const insPay = d.prepare(
+        'INSERT INTO payables (id, supplier_name, supplier_phone, amount, paid, remaining, due_date, status, note, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      );
+      for (const py of (payload.payables as Record<string, unknown>[]) || []) {
+        await insPay.run(
+          Number(py.id),
+          String(py.supplier_name ?? ''),
+          String(py.supplier_phone ?? ''),
+          Number(py.amount) || 0,
+          Number(py.paid) || 0,
+          Number(py.remaining) || 0,
+          String(py.due_date ?? ''),
+          String(py.status ?? '') || 'open',
+          String(py.note ?? ''),
+          py.created_by != null ? Number(py.created_by) : null,
+          normTs(py.created_at, new Date().toISOString())
+        );
+      }
       const insA = d.prepare(
         `INSERT INTO audit_log (id, user_id, username, action, table_name, record_id, old_value, new_value, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -274,6 +337,9 @@ export async function POST(req: Request) {
     await logAudit(user, 'backup:import', 'database', null, undefined, {
       products: (payload.products as unknown[] | undefined)?.length ?? 0,
       sales: (payload.sales as unknown[] | undefined)?.length ?? 0,
+      debts: (payload.debts as unknown[] | undefined)?.length ?? 0,
+      payables: (payload.payables as unknown[] | undefined)?.length ?? 0,
+      returns: (payload.returns as unknown[] | undefined)?.length ?? 0,
     });
     // Import backup mengganti seluruh data operasional -> buang SEMUA cache
     // referensi (prefiks kosong = seluruh store).

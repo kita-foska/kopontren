@@ -91,6 +91,9 @@ export async function POST(req: Request) {
     );
   // Plafon: jumlah retur tidak boleh melebihi (qty terjual - yang sudah
   // diretur) agar stok tidak bisa digelembungkan lewat retur berlebihan.
+  // Cek di bawah hanya utk feedback cepat (UX); validasi FINAL diulang
+  // di dalam transaksi di bawah ini agar race 2 request paralel (same
+  // sale+product) tidak menembus plafon (TOCTOU).
   const already = (
     (await d
       .prepare('SELECT COALESCE(SUM(qty), 0) s FROM returns WHERE sale_id = ? AND product_id = ?')
@@ -106,22 +109,42 @@ export async function POST(req: Request) {
   const amount = Math.floor(item.unit_price * qty);
   const now = new Date().toISOString();
 
-  const newId = await tx(d, async () => {
-    const info = await d
-      .prepare(
-        'INSERT INTO returns (sale_id, product_id, qty, reason, amount, created_at) VALUES (?, ?, ?, ?, ?, ?)'
-      )
-      .run(saleId, productId, qty, reason, amount, now);
-    // Restock: kembalikan produk ke stok.
-    await d.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(qty, productId);
-    // Refund tunai: catat sebagai jurnal kas keluar agar pembukuan tetap akur.
-    if (refund) {
-      await d
-        .prepare("INSERT INTO cash_entries (type, label, amount, created_by) VALUES ('expense', ?, ?, ?)")
-        .run('Retur #' + saleId + ' · ' + item.product_name, amount, user.id);
-    }
-    return Number(info.lastInsertRowid);
-  });
+  let newId = 0;
+  try {
+    await tx(d, async () => {
+      // Re-validasi plafon DI DALAM tx (guard akhir setelah semua
+      // statement atomik committed — race window tertutup).
+      const alreadyTx = (
+        (await d
+          .prepare('SELECT COALESCE(SUM(qty), 0) s FROM returns WHERE sale_id = ? AND product_id = ?')
+          .get(saleId, productId)) as { s: number }
+      ).s;
+      const maxTx = Math.max(0, Number(item.qty || 0) - Number(alreadyTx));
+      if (qty > maxTx)
+        throw new Error(
+          'Jumlah retur melebihi sisa yang dapat diretur (' + maxTx + ' ' + item.product_name + ')'
+        );
+      const info = await d
+        .prepare(
+          'INSERT INTO returns (sale_id, product_id, qty, reason, amount, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+        )
+        .run(saleId, productId, qty, reason, amount, now);
+      newId = Number(info.lastInsertRowid);
+      // Restock: kembalikan produk ke stok.
+      await d.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(qty, productId);
+      // Refund tunai: catat sebagai jurnal kas keluar agar pembukuan tetap akur.
+      if (refund) {
+        await d
+          .prepare("INSERT INTO cash_entries (type, label, amount, created_by) VALUES ('expense', ?, ?, ?)")
+          .run('Retur #' + saleId + ' · ' + item.product_name, amount, user.id);
+      }
+    });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : 'Gagal mencatat retur' },
+      { status: 400 }
+    );
+  }
 
   await logAudit(user, 'retur:create', 'returns', newId, undefined, {
     sale_id: saleId,
