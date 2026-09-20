@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, tx } from '@/db';
 import { canAccess, currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { invalidate } from '@/lib/ref-cache';
 
 type DebtRow = {
   id: number;
@@ -44,16 +45,45 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const paid = row.paid + add;
     const remaining = Math.max(0, row.remaining - add);
     const status = remaining === 0 ? 'settled' : row.status;
-    await d
-      .prepare('UPDATE debts SET paid = ?, remaining = ?, status = ? WHERE id = ?')
-      .run(paid, remaining, status, row.id);
+    try {
+      await tx(d, async () => {
+        // Guarded update: atomik di level SQL — cegah overpay (double-submit
+        // / 2 request paralel melewati sisa).
+        const up = await d
+          .prepare(
+            `UPDATE debts SET paid = paid + ?, remaining = remaining - ?,
+                    status = CASE WHEN remaining - ? = 0 THEN 'settled' ELSE status END
+             WHERE id = ? AND remaining >= ?`
+          )
+          .run(add, add, add, row.id, add);
+        if (Number(up.changes) !== 1)
+          throw new Error('Piutang sudah lunas / data berubah — muat ulang');
+        // Uang masuk kas (pembayaran piutang customer) -> jurnal kas masuk,
+        // sejajar dengan "Bayar hutang" di payables (kas keluar).
+        await d
+          .prepare(
+            "INSERT INTO cash_entries (type, label, amount, note, created_by) VALUES ('income', ?, ?, ?, ?)"
+          )
+          .run('Bayar piutang · ' + row.customer_name, add, 'debts#' + row.id, user.id);
+      });
+    } catch (e) {
+      if (e instanceof Error && /muat ulang/.test(e.message))
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Gagal mencatat pembayaran: ' + (e instanceof Error ? e.message : '') },
+        { status: 500 }
+      );
+    }
+    // Jurnal kas berubah -> segarkan agregat kas & laporan.
+    invalidate('kas:');
+    invalidate('reports:');
     await logAudit(
       user,
       'debt:pay',
       'debts',
       row.id,
       { paid: row.paid, remaining: row.remaining, status: row.status },
-      { paid, remaining, status }
+      { paid, remaining, status, cash_in: add }
     );
     return NextResponse.json({ ok: true, paid, remaining, status });
   }

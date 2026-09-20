@@ -18,7 +18,10 @@ export async function GET(req: Request) {
   const unreadOnly = url.searchParams.get('unread') === '1';
   const d = await db();
   // Rutin bersihkan data > 30 hari (throttle 1 jam/instance, aman).
-  await pruneOldNotifications().catch(() => undefined);
+  await pruneOldNotifications().catch((e) => {
+    // Jangan diam-diam telan error (schema/koneksi) — catat utk diagnostik.
+    console.warn('[notif] prune notifikasi lama gagal:', e);
+  });
   const key = `notif:list:${user.id}:${limit}:${unreadOnly ? 'u' : 'a'}`;
   const rows = await cached(key, async () => {
     const where = ['user_id = ?'];

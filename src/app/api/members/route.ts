@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, tx } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
@@ -21,8 +21,12 @@ export async function GET(req: Request) {
   let where = '';
   const args: string[] = [];
   if (q) {
-    where = ` WHERE (name LIKE ? OR phone LIKE ? OR address LIKE ?)`;
-    const like = '%' + q + '%';
+    // Escape meta-char LIKE (% _ \) — input user menjadi pola literal,
+    // bukan wildcard. (Tidak SQLi: query tetap parameterized.)
+    const qEsc = q.replace(/[\\%_]/g, (ch) => '\\' + ch);
+    where =
+      ` WHERE (name LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\' OR address LIKE ? ESCAPE '\\')`;
+    const like = '%' + qEsc + '%';
     args.push(like, like, like);
   }
   const rows = await d
@@ -122,8 +126,13 @@ export async function DELETE(req: Request) {
     .prepare('SELECT * FROM members WHERE id = ?')
     .get(id)) as { id: number; name: string } | undefined;
   if (!row) return NextResponse.json({ error: 'Member tidak ditemukan' }, { status: 404 });
-  await d.prepare('DELETE FROM members WHERE id = ?').run(id);
-  await d.prepare('UPDATE sales SET member_id = NULL WHERE member_id = ?').run(id);
+  // Urutan FK-safe dalam 1 tx: net-kan relasi sales DULU, baru hapus
+  // member (order lama terbalik -> jeda orfan sales.member_id + poin
+  // ledger yatim bila proses terganggu di tengah).
+  await tx(d, async () => {
+    await d.prepare('UPDATE sales SET member_id = NULL WHERE member_id = ?').run(id);
+    await d.prepare('DELETE FROM members WHERE id = ?').run(id);
+  });
   await logAudit(user, 'member:delete', 'members', id, row, undefined, req);
   invalidate('members:');
   return NextResponse.json({ ok: true });

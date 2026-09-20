@@ -151,14 +151,24 @@ export async function POST(req: Request) {
             const remaining = row.qty_received - row.qty_sold - row.qty_returned;
             if (n > remaining)
               throw new Error('Jumlah melebihi sisa (' + remaining + ' ' + row.unit + ')');
-            if (b.action === 'sell')
-              await d
-                .prepare('UPDATE consignments SET qty_sold = qty_sold + ? WHERE id = ?')
-                .run(n, id);
-            else
-              await d
-                .prepare('UPDATE consignments SET qty_returned = qty_returned + ? WHERE id = ?')
-                .run(n, id);
+            // Guarded update: validasi ATOMIK di level SQL (menutup race
+            // double-submit / 2 request paralel menembus sisa barang).
+            const guard =
+              b.action === 'sell'
+                ? await d
+                    .prepare(
+                      `UPDATE consignments SET qty_sold = qty_sold + ?
+                       WHERE id = ? AND status = 'active' AND qty_sold + ? <= qty_received`
+                    )
+                    .run(n, id, n)
+                : await d
+                    .prepare(
+                      `UPDATE consignments SET qty_returned = qty_returned + ?
+                       WHERE id = ? AND status = 'active' AND qty_sold + qty_returned + ? <= qty_received`
+                    )
+                    .run(n, id, n);
+            if (Number(guard.changes) !== 1)
+              throw new Error('Jumlah melebihi sisa (data berubah — muat ulang)');
             const c = computed({
               ...row,
               qty_sold: b.action === 'sell' ? row.qty_sold + n : row.qty_sold,
@@ -173,9 +183,16 @@ export async function POST(req: Request) {
             const unpaid = row.qty_sold * row.agree_price - row.amount_paid;
             if (amount > unpaid)
               throw new Error('Nominal melebihi tagihan (Rp ' + unpaid.toLocaleString('id-ID') + ')');
-            await d
-              .prepare('UPDATE consignments SET amount_paid = amount_paid + ? WHERE id = ?')
-              .run(amount, id);
+            // Guarded update: cegah overpay (amount_paid > tagihan) akibat
+            // double-submit / 2 request paralel.
+            const payRes = await d
+              .prepare(
+                `UPDATE consignments SET amount_paid = amount_paid + ?
+                 WHERE id = ? AND status = 'active' AND amount_paid + ? <= qty_sold * agree_price`
+              )
+              .run(amount, id, amount);
+            if (Number(payRes.changes) !== 1)
+              throw new Error('Nominal melebihi tagihan (data berubah — muat ulang)');
             // uang keluar kas untuk pemilik -> tercatat di pembukuan kas
             await d
               .prepare(

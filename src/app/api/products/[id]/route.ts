@@ -79,8 +79,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     b.barcode !== undefined ? String(b.barcode || '').trim() : prod.barcode;
   const newCategory = String(b.category || '').trim();
   const newUnit = String(b.unit || 'pcs').trim() || 'pcs';
-  const newBasePrice = Number(b.base_price) || 0;
-  const newCostPrice = Number(b.cost_price) || 0;
+  // Clamp ≥0: harga/HPP negatif akan merusak laba, COGS & kalkulasi zakat.
+  const newBasePrice = Math.max(0, Math.floor(Number(b.base_price) || 0));
+  const newCostPrice = Math.max(0, Math.floor(Number(b.cost_price) || 0));
   await d
     .prepare(
       `UPDATE products SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, barcode = ? WHERE id = ?`

@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { SESSION_COOKIE, SESSION_EXP_COOKIE, currentUser, destroySession } from '@/lib/auth';
+import { SESSION_COOKIE, SESSION_EXP_COOKIE, currentUser, destroySession, findSessionUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 
 export async function POST(req: Request) {
   // Audit trail: catat SIAPA logout (snapshot user) sebelum sesi dimusnahkan.
-  const user = await currentUser();
+  // Fallback findSessionUser: sesi idle-expired (currentUser null) tetap
+  // tercatat log-out-nya.
+  const user = (await currentUser()) ?? (await findSessionUser());
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   await destroySession(token);

@@ -63,17 +63,34 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const paid = row.paid + add;
     const remaining = Math.max(0, row.remaining - add);
     const status = remaining === 0 ? 'settled' : row.status;
-    await tx(d, async () => {
-      await d
-        .prepare('UPDATE payables SET paid = ?, remaining = ?, status = ? WHERE id = ?')
-        .run(paid, remaining, status, row.id);
-      await d
-        .prepare(
-          `INSERT INTO cash_entries (type, label, amount, note, created_by)
-           VALUES ('expense', ?, ?, ?, ?)`
-        )
-        .run('Bayar hutang · ' + row.supplier_name, add, 'payables#' + row.id, user.id);
-    });
+    try {
+      await tx(d, async () => {
+        // Guarded update: cegah overpay (double-submit / race 2 request
+        // paralel melewati sisa).
+        const up = await d
+          .prepare(
+            `UPDATE payables SET paid = paid + ?, remaining = remaining - ?,
+                    status = CASE WHEN remaining - ? = 0 THEN 'settled' ELSE status END
+             WHERE id = ? AND remaining >= ?`
+          )
+          .run(add, add, add, row.id, add);
+        if (Number(up.changes) !== 1)
+          throw new Error('Hutang sudah lunas / data berubah — muat ulang');
+        await d
+          .prepare(
+            `INSERT INTO cash_entries (type, label, amount, note, created_by)
+             VALUES ('expense', ?, ?, ?, ?)`
+          )
+          .run('Bayar hutang · ' + row.supplier_name, add, 'payables#' + row.id, user.id);
+      });
+    } catch (e) {
+      if (e instanceof Error && /muat ulang/.test(e.message))
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Gagal mencatat pembayaran: ' + (e instanceof Error ? e.message : '') },
+        { status: 500 }
+      );
+    }
     // Segarkan agregat kas & laporan (ref-cache in-memory, TTL 60s backstop).
     invalidate('kas:');
     invalidate('reports:');

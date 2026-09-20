@@ -82,16 +82,16 @@ export async function POST(req: Request) {
       name,
       String(b.category || '').trim(),
       String(b.unit || 'pcs').trim() || 'pcs',
-      Number(b.base_price) || 0,
-      Number(b.cost_price) || 0,
-      Number(b.stock) || 0,
+      Math.max(0, Math.floor(Number(b.base_price) || 0)),
+      Math.max(0, Math.floor(Number(b.cost_price) || 0)),
+      Math.max(0, Math.floor(Number(b.stock) || 0)),
       barcode
     );
   const id = Number(info.lastInsertRowid);
   await logAudit(user, 'product:create', 'products', id, undefined, {
     name,
-    base_price: Number(b.base_price) || 0,
-    stock: Number(b.stock) || 0,
+    base_price: Math.max(0, Math.floor(Number(b.base_price) || 0)),
+    stock: Math.max(0, Math.floor(Number(b.stock) || 0)),
     barcode: barcode || undefined,
   }, req);
   invalidate('products:');

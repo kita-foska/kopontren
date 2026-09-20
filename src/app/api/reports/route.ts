@@ -10,8 +10,11 @@ export async function GET(req: Request) {
   if (!canAccess(user, 'laporan'))
     return NextResponse.json({ error: 'Hanya admin/manajer/pengurus' }, { status: 403 });
   const url = new URL(req.url);
-  const days = Number(url.searchParams.get('days') || '30');
-  const from = days > 0 ? startOfDayJakarta(1 - days) : '1970-01-01 00:00:00';
+  // Clamp 1–3650 hari: `days` ≤0 / NaN dulu memicu agregat sejak 1970
+  // (full-scan semua tabel — pemicu Rows Read Turso).
+  const daysRaw = Number(url.searchParams.get('days') || '30');
+  const days = Number.isFinite(daysRaw) ? Math.min(3650, Math.max(1, Math.floor(daysRaw))) : 30;
+  const from = startOfDayJakarta(1 - days);
 
   // Agregat per-periode (SUM/COUNT atas rentang waktu) dulu berjalan tiap
   // request -> pemicu Rows Read. Cache 60 dtk per periode (key: from);
