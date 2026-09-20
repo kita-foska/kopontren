@@ -317,3 +317,25 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   Opsi A payload EMVCo statis client-side + `qrcode` (tanpa API,
   verifikasi manual kasir) / Opsi B gateway dinamis Xendit/Midtrans
   (API key + webhook). TODO [r] terbuka.
+
+- **Perk member di POS (22 Sep 2026, commit `43098a4`)**:
+  POST `/api/sales` kini menerapkan `member_settings` saat transaksi
+  (server = sumber kebenaran; preview POS pakai rumus sama):
+  (1) diskon = `member_discount%` dari subtotal setelah diskon manual;
+  bila hari ulang tahun member & `birthday_active` aktif, pakai
+  MAX(`birthday_discount`, base) — yang paling untung (keputusan
+  user), cap 90%; (2) cashback = `cashback%` dari total SETELAH perk,
+  dikredit `members.cashback_balance` + ledger `point_history`
+  (reason 'cashback'); (3) poin dihitung dari total setelah perk
+  (dulu sebelum perk); (4) auto-tier (badge/status saja, tanpa
+  diskon tambahan — keputusan user): `members.tier` dihitung ulang
+  dari akumulasi `total_spent` vs `tier_silver`/`tier_gold` (bisa
+  turun ke silver/nona bila di bawah ambang). Kolom baru
+  `sales.member_discount` (pisahkan dari kolom `discount` manual).
+  GET `/api/members` kini kirim `birth_date`, `tier`,
+  `cashback_balance` (gate tier 'pos'). UI POS: chip perk preview
+  (badge tier, diskon, cashback) + struk (kartu/thermal/WA/salin):
+  baris diskon member / cashback / tier. GROSIR DITUNDA (keputusan
+  user: fokus perk dulu); redemsi poin & pemakaian
+  cashback_balance = langkah berikutnya (fitur 2, menunggu keputusan
+  user).

@@ -83,10 +83,17 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       laba zakat pakai UTC (±7 jam di ujung periode) — lihat MEMORY.md
 
 ## Fitur (gap fungsional)
-- [m] Terapkan perks member di alur POS: diskon member, cashback
-      (saldo member), promo ulang tahun, grosir, tier Silver/Gold.
-      Setting-nya sudah ada (`member_settings` + halaman
-      /admin/pengaturan-member) tapi belum dipakai transaksi.
+- [x] Terapkan perks member di alur POS: diskon member, cashback
+      (saldo member), promo ulang tahun, tier Silver/Gold — DITERAPKAN
+      (commit `43098a4`, 22 Sep 2026): ultah = MAX(birthday_discount,
+      base); tier = badge/status saja (tanpa diskon tambahan); poin
+      dihitung dari total SETELAH perk; cashback masuk
+      `members.cashback_balance` + ledger `point_history` (reason
+      'cashback'); kolom baru `sales.member_discount`; preview & struk
+      di POS. Grosir terpisah & ditunda (lihat item di bawah).
+- [m] GROSIR: setting `wholesale_min`/`wholesale_discount` global +
+      per produk (tabel `product_prices`) belum terpakai di
+      perhitungan — TUNDA (keputusan user 22 Sep: fokus perks dulu).
 - [m] Redemisi poin: tukar poin → Rupiah/diskon (ledger
       `point_history` sudah siap dipakai; butuh route + UI di POS/admin).
 - [x] Backup/restore perluas cakupan PENUH: `debts`, `payables`,
