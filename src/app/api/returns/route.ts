@@ -81,8 +81,18 @@ export async function POST(req: Request) {
     );
   const item = (
     (await d
-      .prepare('SELECT product_name, unit_price, qty FROM sale_items WHERE sale_id = ? AND product_id = ? LIMIT 1')
-      .all(saleId, productId))[0] as { product_name: string; unit_price: number; qty: number } | undefined
+      .prepare(
+        'SELECT product_name, unit_price, qty, subtotal, discount FROM sale_items WHERE sale_id = ? AND product_id = ? LIMIT 1'
+      )
+      .all(saleId, productId))[0] as
+      | {
+          product_name: string;
+          unit_price: number;
+          qty: number;
+          subtotal: number;
+          discount: number;
+        }
+      | undefined
   );
   if (!item)
     return NextResponse.json(
@@ -106,7 +116,17 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  const amount = Math.floor(item.unit_price * qty);
+  // Refund memakai HARGA EFEKTIF (net setelah diskon baris), bukan unit_price
+  // mentah: nilai bersih baris = subtotal − discount, dialokasikan proporsional
+  // qty_retur/qty_terjual. Tanpa diskon hasilnya identik rumus lama.
+  // (Fix audit [m] 20 Sep 2026 — dulu `Math.floor(unit_price * qty)` sehingga
+  // retur selalu refund harga katalog, mengabaikan diskon yang diterima customer.)
+  const soldQty = Math.max(1, Number(item.qty || 0));
+  const lineNet = Math.max(
+    0,
+    Number(item.subtotal || item.unit_price * soldQty) - Number(item.discount || 0)
+  );
+  const amount = Math.round((lineNet * qty) / soldQty);
   const now = new Date().toISOString();
 
   let newId = 0;

@@ -10,6 +10,8 @@ type SaleItem = {
   qty: number;
   unit: string;
   unit_price: number;
+  subtotal?: number;
+  discount?: number;
 };
 type Sale = {
   id: number;
@@ -59,7 +61,13 @@ export function ReturClient() {
   const selectedSale = sales.find((s) => String(s.id) === saleId);
   const items = (selectedSale?.items ?? []).filter((i) => i.product_id);
   const selItem = items.find((i) => String(i.product_id) === itemId);
-  const amount = selItem ? Math.floor(selItem.unit_price * qty) : 0;
+  // Estimasi refund memakai harga efektif (net setelah diskon baris), sinkron
+  // dgn server /api/returns — bukan unit_price mentah.
+  const soldQty = Math.max(1, selItem?.qty || 0);
+  const lineNet = selItem
+    ? Math.max(0, (selItem.subtotal ?? selItem.unit_price * soldQty) - (selItem.discount ?? 0))
+    : 0;
+  const amount = selItem ? Math.round((lineNet * qty) / soldQty) : 0;
 
   async function submit() {
     if (!saleId || !itemId || qty < 1) {
