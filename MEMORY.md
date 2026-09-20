@@ -95,8 +95,42 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   First Load JS terberat ~123 kB).
 - Modal QRIS di POS masih MOCK (NMID placeholder) — bukan gateway nyata.
 - Backup JSON (`/api/backup`) mencakup produk/penjualan/pembelian/kas/
-  konsinyasi/member/shift/audit — TIDAK debts/payables/returns/
-  notifications (lihat TODO.md).
+  konsinyasi/member/shift/audit + `debts`/`payables`/`returns` (sejak
+  commit `c02421b`, 21 Sep 2026) — sisa yang belum: notifications
+  (+ log push), member_settings/zakat (lihat TODO.md).
+
+## Audit Kode 3 Pass (20 Sep 2026)
+Audit menyeluruh request terakhir (fungsional / keamanan /
+performa-integritas). `tsc --noEmit` BERSIH. Temuan:
+
+- **🔴 Backup import `audit_log` PK collision (DIFIX):** import INSERT
+  baris `audit_log` dgn id eksplisit (`insA`), tapi daftar DELETE import
+  & `/api/backup/reset` TIDAK membersihkan `audit_log` → di DB live
+  (ada log audit), import gagal 500. Fix: DELETE-then-INSERT per tabel
+  (aman; audit = forensik, boleh terhapus saat restore).
+- **🟠 `sales/[id]` DELETE vs retur:** FK `returns.sale_id` (ON) —
+  jika transaksi punya retur, `DELETE FROM sales` bisa throw FK → 500;
+  meski lolos, retur sudah restock +1 dan delete restock penuh lagi
+  (stok dobel) & jurnal kas (sale/refund) tidak direverse.
+- **🟠 Race read-then-write:** plafon retur dibaca SEBELUM `tx`
+  (returns/route.ts:94→109) — 2 POST concurrent bisa melebihkan restock;
+  cek stok POS (`prod.stock < qty`) vs `UPDATE stock = stock - ?` bisa
+  oversell bila 2 transaksi concurrent. Probability rendah (kasir
+  tunggal), dampak integritas data.
+- **🟡 `debts/[id]` payment TIDAK masuk `cash_entries`** (bandingkan
+  `payables/[id]` yang tulis 'expense' dalam 1 tx + invalidasi kas) —
+  inkonsistensi pembukuan piutang vs hutang.
+- **🟡 Retur refund pakai `unit_price` asli baris, mengabaikan
+  `sale_items.discount`** → refund/jurnal bisa lebih besar dari yang
+  benar-benar dibayar pelanggan.
+- **⚪ `audit_log.ip_address` ambil `x-forwarded-for`/`x-real-ip` mentah**
+  — bisa di-forge klien (dampak forensik saja, bukan auth).
+- **✅ Diverifikasi BAIK:** matriks 7 role + guard tiap route konsisten
+  (DELETE debts/payables = admin-only; kasir hanya transaksi sendiri);
+  PIN lockout + timingSafeEqual; `CRON_SECRET` constant-time; SQL semua
+  parameterized; `sales.client_ref` punya UNIQUE index partial
+  (`idx_sales_client_ref WHERE client_ref != ''`) → dedupe offline queue
+  aman sampai di level DB; ref-cache berbatas 256 key + TTL 60 dtk.
 
 ## ZAKAT Tijarah & Known Issues (18 Sep 2026)
 - **Bug #1 DI-FIX** (commit `6ef487b`, dual-push master+main):
@@ -160,3 +194,62 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
     cold start berikutnya — tanpa bump, kolom baru tak akan pernah
     sampai ke DB lama dan semua `logAudit` (INSERT 4 kolom) gagal
     diam-diam.
+
+## Audit 3 Putaran — Hardening (21 Sep 2026)
+Lanjutan audit 3-pass (fungsional / keamanan / performa-integritas).
+Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
+(`tsc --noEmit` + `next build` BERSIH di kedua commit):
+
+**Batch A — `c02421b` (kritis + medium, 6 file):**
+- Backup diperluas: `debts`, `payables`, `returns` (+ kolom
+  `client_ref` di sales) masuk export/DELETE/INSERT import.
+- Import `audit_log` kini DELETE-then-INSERT; urutan DELETE
+  FK-safe (returns → sale_items → sales → … → debts/payables/
+  audit_log) → bug PK collision selesai.
+- `sales/[id]` DELETE: restock di-clamp qty sudah diretur (net),
+  jurnal `cash_entries` "Retur #id" dihapus, baris `returns`
+  dihapus → tidak ada lagi stok menggembung / kas terdistorsi.
+- `returns` POST: re-validasi plafon `SUM(qty)` DI DALAM `tx`
+  (TOCTOU tertutup); violasi → 400 + rollback.
+- `sales` POST: guarded decrement
+  `UPDATE … SET stock = stock - ? WHERE id = ? AND stock >= ?` +
+  cek `changes === 1` → race oversell tertutup, stok tak negatif.
+- `backup/reset`: + DELETE returns/debts/payables; `audit_log`
+  sengaja TIDAK dihapus (akun + rekam jejak audit).
+- UI `admin/data-client.tsx`: teks entitas & warning
+  import/reset disesuaikan.
+
+**Batch B — `f280f60` (minor hardening, 9 file):**
+- konsinyasi: guarded UPDATE sell/return/pay di level SQL
+  (`qty_sold + ? <= qty_received`, `amount_paid + ? <= tagihan`)
+  → double-submit tak lagi overpay/oversell.
+- debts/[id] pay: guarded update + jurnal kas MASUK
+  `cash_entries` "Bayar piutang · …" (sejajar payables
+  "Bayar hutang") + `invalidate('kas:','reports:')`.
+- payables/[id] pay: guarded update; data berubah → 400.
+- members: DELETE kini dalam `tx` + urutan FK-safe (null
+  `sales.member_id` dulu); pencarian LIKE escape meta-char
+  (`% _ \`) + `ESCAPE '\'`.
+- products POST/PUT: harga/HPP/stok clamp ≥0 (mencegah angka
+  negatif merusak laba, COGS & kalkulasi zakat).
+- reports GET: `days` clamp 1–3650 (dulu ≤0 → full-scan 1970).
+- logout: fallback `findSessionUser()` — logout sesi
+  idle-expired kini tetap tercatat di audit.
+- notifications GET: error `pruneOldNotifications` kini
+  `console.warn` (tak ditelan diam-diam).
+
+**Known issues (belum difix / accepted — 21 Sep 2026):**
+- Throttle login pakai `X-Forwarded-For` (per-instance, bisa
+  dirotasi); mitigasi: 3x salah PIN → sesi dimusnahkan + lock
+  5 mnt → accepted risk.
+- GET `/api/audit` menampilkan `old_value/new_value` (termasuk
+  PII member) ke tier pengurus — sesuai desain role internal;
+  tinjau bila perlu.
+- Cetak struk / struk WA: nama customer/produk dari input POS
+  masuk HTML/URL — perlu verifikasi escaping (TODO [r]).
+- `audit_log` tumbuh tanpa auto-purge (purge manual admin,
+  default 90 hari) — cron opsional.
+- Stale cache lintas instance Vercel ≤60 dtk (accepted,
+  terdokumentasi).
+- Retur refund masih memakai `unit_price` mentah (abaikan
+  `sale_items.discount`) — TODO [m] masih terbuka.

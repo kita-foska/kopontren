@@ -13,6 +13,42 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [x] `ref-cache` diberi cap 256 key (key `members:totals:<q>` dulu
       tak berujung) — SELESAI
 - [x] Retur: qty plafon = (qty terjual − sudah diretur) — SELESAI
+- [x] **AUDIT 3x: import backup `audit_log` PK collision** — SELESAI
+      (commit `c02421b`): import kini DELETE-then-INSERT, urutan
+      FK-safe, + cakupan `debts`/`payables`/`returns` (+ kolom
+      `client_ref` di sales). (21 Sep)
+- [x] **AUDIT 3x: `sales/[id]` DELETE vs retur** — SELESAI
+      (commit `c02421b`): restock di-clamp qty sudah diretur (net),
+      jurnal kas "Retur #id" dihapus, baris `returns` dihapus dalam
+      1 tx. Tidak ada lagi stok dobel / kas terdistorsi. (21 Sep)
+- [x] **AUDIT 3x: race read-then-write** — SELESAI (commit
+      `c02421b`): plafon retur divalidasi ulang DI DALAM `tx`;
+      decrement stok POS jadi guarded `WHERE stock >= ?` + cek
+      `changes === 1` (oversell race tertutup). (21 Sep)
+- [x] **AUDIT 3x: harmoni `debt:pay` ke `cash_entries`** — SELESAI
+      (commit `f280f60`): guarded update + jurnal kas MASUK
+      "Bayar piutang · …" dalam tx + invalidasi kas/laporan
+      (sejajar payables "Bayar hutang", yang juga di-hardening
+      guarded). (21 Sep)
+- [x] Chip "Sesi: X menit" di header dihapus (file
+      `session-countdown.tsx` dihapus; `SessionWatcher` tetap jadi
+      pengaman expiry) — commit `851e219`, master+main (21 Sep)
+- [m] **Retur refund mengabaikan diskon baris** — hitung dari
+      effective price (subtotal−diskon)/qty, bukan `unit_price` mentah.
+      (20 Sep)
+- [r] `audit_log.ip_address` dari `x-forwarded-for` mentah — bisa di-forge
+      (forensik saja, bukan auth).
+- [r] AUDIT 3x (21 Sep): struk cetak / struk WA — nama customer/produk
+      dari input POS masuk HTML/URL; verifikasi escaping
+      (XSS print-window).
+- [r] AUDIT 3x (21 Sep): `audit_log` tak ada auto-purge (purge manual
+      admin, default 90 hari) — pertimbangkan cron.
+- [r] AUDIT 3x (21 Sep): throttle login keyed `X-Forwarded-For`
+      (per-instance Vercel, bisa dirotasi) — accepted risk; mitigasi
+      PIN 3x salah → sesi dimusnahkan + lock 5 mnt.
+- [r] AUDIT 3x (21 Sep): GET `/api/audit` menampilkan
+      `old_value/new_value` (termasuk PII member) ke tier pengurus —
+      sesuai desain role internal; tinjau bila perlu.
 - [x] `CRON_SECRET` dipbandingkan constant-time — SELESAI
 - [x] `/api/products`: `role` dihapus dari payload yang di-cache
       browser — SELESAI
@@ -33,8 +69,9 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       /admin/pengaturan-member) tapi belum dipakai transaksi.
 - [m] Redemisi poin: tukar poin → Rupiah/diskon (ledger
       `point_history` sudah siap dipakai; butuh route + UI di POS/admin).
-- [m] Backup/restore memperluas cakupan: `debts`, `payables`, `returns`,
-      `notifications` (+ log push).
+- [x] Backup/restore memperluas cakupan: `debts`, `payables`,
+      `returns` — SELESAI (commit `c02421b`, 21 Sep 2026). Sisa
+      (low priority): `notifications` (+ log push) belum masuk.
 - [m] Pembayaran campuran dalam satu transaksi (tunai + transfer) —
       saat ini satu `pay_method` saja.
 - [r] QRIS asli (gateway/NMID resmi) — modal QRIS di POS masih mock SVG.
