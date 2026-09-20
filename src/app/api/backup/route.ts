@@ -19,6 +19,9 @@ type Backup = {
   debts?: unknown[];
   payables?: unknown[];
   returns?: unknown[];
+  notification_settings?: unknown[];
+  notification_logs?: unknown[];
+  notifications?: unknown[];
   audit_log?: unknown[];
 };
 
@@ -45,7 +48,7 @@ export async function GET() {
   const d = await db();
   const all = async (q: string) => await d.prepare(q).all();
   const payload: Backup = {
-    version: 2,
+    version: 3,
     exported_at: new Date().toISOString(),
     products: await all(
       'SELECT id, name, category, unit, base_price, cost_price, stock, active, barcode FROM products'
@@ -71,6 +74,9 @@ export async function GET() {
     returns: await all(
       'SELECT id, sale_id, product_id, qty, reason, amount, created_at FROM returns'
     ),
+    notification_settings: await all('SELECT * FROM notification_settings'),
+    notification_logs: await all('SELECT * FROM notification_logs'),
+    notifications: await all('SELECT * FROM notifications'),
     audit_log: await all('SELECT * FROM audit_log ORDER BY id DESC LIMIT 5000'),
   };
   await logAudit(user, 'backup:export', 'database', null, undefined, {
@@ -105,10 +111,12 @@ export async function POST(req: Request) {
   try {
     await tx(d, async () => {
       // Urutan FK-safe: returns merujuk sales (hapus dulu); debts/payables
-      // mandiri; audit_log DIHAPUS SEBELUM re-INSERT karena insert memakai
-      // ID eksplisit — tanpa clear, ID lama akan tabrakan PK (UNIQUE fail).
+      // mandiri; settings kv DIKECUALIKAN (katalog & setelan toko tetap).
+      // audit_log + notifikasi DIHAPUS SEBELUM re-INSERT karena insert
+      // memakai ID eksplisit — tanpa clear, ID lama akan tabrakan PK
+      // (UNIQUE fail).
       await d.exec(
-        'DELETE FROM returns; DELETE FROM sale_items; DELETE FROM sales; DELETE FROM purchases; DELETE FROM expenses; DELETE FROM cash_entries; DELETE FROM products; DELETE FROM consignments; DELETE FROM members; DELETE FROM shifts; DELETE FROM debts; DELETE FROM payables; DELETE FROM audit_log;'
+        'DELETE FROM notification_logs; DELETE FROM notification_settings; DELETE FROM notifications; DELETE FROM returns; DELETE FROM sale_items; DELETE FROM sales; DELETE FROM purchases; DELETE FROM expenses; DELETE FROM cash_entries; DELETE FROM products; DELETE FROM consignments; DELETE FROM members; DELETE FROM shifts; DELETE FROM debts; DELETE FROM payables; DELETE FROM audit_log;'
       );
       const insP = d.prepare(
         'INSERT INTO products (id, name, category, unit, base_price, cost_price, stock, active, barcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -316,20 +324,69 @@ export async function POST(req: Request) {
           normTs(py.created_at, new Date().toISOString())
         );
       }
+      const insNS = d.prepare(
+        'INSERT INTO notification_settings (id, user_id, type, enabled_in_app, enabled_push, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+      );
+      for (const ns of (payload.notification_settings as Record<string, unknown>[]) || []) {
+        await insNS.run(
+          Number(ns.id),
+          Number(ns.user_id),
+          String(ns.type ?? ''),
+          ns.enabled_in_app != null ? Number(ns.enabled_in_app) : 1,
+          ns.enabled_push != null ? Number(ns.enabled_push) : 0,
+          normTs(ns.created_at, new Date().toISOString())
+        );
+      }
+      const insNotif = d.prepare(
+        'INSERT INTO notifications (id, user_id, type, title, message, link, read, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      );
+      for (const n of (payload.notifications as Record<string, unknown>[]) || []) {
+        await insNotif.run(
+          Number(n.id),
+          Number(n.user_id),
+          String(n.type ?? ''),
+          String(n.title ?? ''),
+          String(n.message ?? ''),
+          String(n.link ?? ''),
+          n.read != null ? Number(n.read) : 0,
+          normTs(n.created_at, new Date().toISOString())
+        );
+      }
+      const insNL = d.prepare(
+        'INSERT INTO notification_logs (id, notification_id, channel, status, error, sent_at) VALUES (?, ?, ?, ?, ?, ?)'
+      );
+      for (const nl of (payload.notification_logs as Record<string, unknown>[]) || []) {
+        await insNL.run(
+          Number(nl.id),
+          nl.notification_id != null ? Number(nl.notification_id) : null,
+          String(nl.channel ?? ''),
+          String(nl.status ?? ''),
+          String(nl.error ?? ''),
+          normTs(nl.sent_at, new Date().toISOString())
+        );
+      }
+      // audit_log v11: insert KE 13 kolom (incl. user_name, user_role,
+      // ip_address, user_agent) — DELETE di atas sudah clear tabel, jadi
+      // ID eksplisit aman (autoincrement reset). Kolom v11 lama di file
+      // backup lama: fallback default '' (col NOT NULL DEFAULT '').
       const insA = d.prepare(
-        `INSERT INTO audit_log (id, user_id, username, action, table_name, record_id, old_value, new_value, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO audit_log (id, user_id, username, user_name, user_role, action, table_name, record_id, old_value, new_value, ip_address, user_agent, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       );
       for (const a of (payload.audit_log as Record<string, unknown>[]) || []) {
         await insA.run(
           Number(a.id),
           a.user_id != null ? Number(a.user_id) : null,
           String(a.username ?? ''),
+          a.user_name != null ? String(a.user_name) : '',
+          a.user_role != null ? String(a.user_role) : '',
           String(a.action ?? ''),
           String(a.table_name ?? ''),
           a.record_id != null ? Number(a.record_id) : null,
           a.old_value != null ? String(a.old_value) : null,
           a.new_value != null ? String(a.new_value) : null,
+          a.ip_address != null ? String(a.ip_address) : '',
+          a.user_agent != null ? String(a.user_agent) : '',
           normTs(a.created_at, new Date().toISOString())
         );
       }
@@ -340,6 +397,10 @@ export async function POST(req: Request) {
       debts: (payload.debts as unknown[] | undefined)?.length ?? 0,
       payables: (payload.payables as unknown[] | undefined)?.length ?? 0,
       returns: (payload.returns as unknown[] | undefined)?.length ?? 0,
+      notification_settings:
+        (payload.notification_settings as unknown[] | undefined)?.length ?? 0,
+      notifications: (payload.notifications as unknown[] | undefined)?.length ?? 0,
+      audit_log: (payload.audit_log as unknown[] | undefined)?.length ?? 0,
     });
     // Import backup mengganti seluruh data operasional -> buang SEMUA cache
     // referensi (prefiks kosong = seluruh store).

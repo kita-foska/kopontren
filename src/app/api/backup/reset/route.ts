@@ -12,7 +12,10 @@ export async function POST() {
   const d = await db();
   await tx(d, async () => {
     await d.exec(
-      `DELETE FROM returns;
+      `DELETE FROM notification_logs;
+       DELETE FROM notification_settings;
+       DELETE FROM notifications;
+       DELETE FROM returns;
        DELETE FROM sale_items;
        DELETE FROM sales;
        DELETE FROM purchases;
@@ -25,7 +28,7 @@ export async function POST() {
        DELETE FROM debts;
        DELETE FROM payables;`
       // audit_log sengaja TIDAK dihapus: akun pengguna/session & rekam jejak
-      // audit bukan data operasional.
+      // audit bukan data operasional; settings kv / kvs_shop juga dikecualikan.
     );
   });
   await logAudit(user, 'data:reset', 'database', null, undefined, {

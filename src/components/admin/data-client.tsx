@@ -75,7 +75,7 @@ export function DataClient() {
     if (!file) return;
     if (
       !confirm(
-        'Import akan MENGGANTIKAN seluruh data: produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal kas, member, shift & audit log. Lanjutkan?'
+        'Import akan MENGGANTIKAN seluruh data: produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal kas, member, shift, notifikasi (termasuk pengaturan) & audit log. Lanjutkan?'
       )
     )
       return;
@@ -90,7 +90,7 @@ export function DataClient() {
   async function resetAll() {
     if (
       !confirm(
-        'HAPUS SEMUA DATA operasi (produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal, konsinyasi, member)? Akun pengguna & audit log tetap ada. Tindakan ini TIDAK BISA DIBATALKAN!'
+        'HAPUS SEMUA DATA operasi (produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal, konsinyasi, member, notifikasi)? Akun pengguna, audit log & pengaturan tetap ada. Tindakan ini TIDAK BISA DIBATALKAN!'
       )
     )
       return;
@@ -139,7 +139,7 @@ export function DataClient() {
               </div>
               <h2 className="mb-1 font-bold">Backup JSON</h2>
               <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-                Unduh salinan lengkap seluruh database (produk, penjualan, retur, piutang, hutang dagang, kas, konsinyasi, member, shift & audit log) untuk arsip / pindah server.
+                Unduh salinan lengkap seluruh database (produk, penjualan, retur, piutang, hutang dagang, kas, konsinyasi, member, shift, notifikasi, pengaturan notifikasi & audit log) untuk arsip / pindah server.
               </p>
             </div>
             <button className="btn-primary w-full" onClick={exportJson}>
@@ -169,7 +169,7 @@ export function DataClient() {
               </div>
               <h2 className="mb-1 font-bold">Import Backup</h2>
               <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-                Pulihkan seluruh data dari file backup JSON Kopontren (termasuk piutang, hutang dagang & riwayat retur). Data saat ini akan ditimpa.
+                Pulihkan seluruh data dari file backup JSON Kopontren (termasuk piutang, hutang dagang, riwayat retur, notifikasi, pengaturan notifikasi & audit log). Data saat ini akan ditimpa.
               </p>
             </div>
             <input
@@ -195,7 +195,7 @@ export function DataClient() {
               </div>
               <h2 className="mb-1 font-bold text-rose-600 dark:text-rose-400">Reset Total Data</h2>
               <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-                Kosongkan seluruh data operasional (penjualan, retur, piutang, hutang dagang, stok, kas, konsinyasi). Akun login pengurus & audit log tetap aman.
+                Kosongkan seluruh data operasional (penjualan, retur, piutang, hutang dagang, stok, kas, konsinyasi, notifikasi). Akun login pengurus, audit log & pengaturan tetap aman.
               </p>
             </div>
             <button
