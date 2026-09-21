@@ -337,5 +337,113 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   (badge tier, diskon, cashback) + struk (kartu/thermal/WA/salin):
   baris diskon member / cashback / tier. GROSIR DITUNDA (keputusan
   user: fokus perk dulu); redemsi poin & pemakaian
-  cashback_balance = langkah berikutnya (fitur 2, menunggu keputusan
-  user).
+  cashback_balance = langkah berikutnya (fitur 2 — SELESAI 23 Sep,
+  commit `66a3db9` + fix `1b98a24`; detail di bagian di bawah).
+
+## Penjaga Margin Perk Member (commit `4dee370`, 23 Sep)
+- Modul murni `src/lib/perks.ts` = SATU-SATUNYA sumber rumus perk,
+  dipakai bersama POST /api/sales (otoritatif) + preview POS +
+  unit test `node scripts/test-margin.ts` (`npm run test:margin`,
+  57 test). JANGAN tambah import proyek di sini — harus tetap
+  bisa dieksekusi Node langsung (type-stripping).
+- Pipeline perk (urutan): (1) diskon member = % dari subtotal
+  SETELAH diskon manual, cap 90%; ultah aktif → MAX(birthday,
+  base); (2) redeem: nominal, poin (1 poin = `point_value` Rp)
+  dipakai DULU, sisa dari `cashback_balance`, cap di total
+  setelah diskon + ketersediaan saldo; (3) cashback = % dari
+  total SETELAH diskon & redeem → kredit saldo (liabilitas,
+  TIDAK mengurangi total saat ini); (4) poin = total /
+  `points_every`; (5) auto-tier dari akumulasi `total_spent`
+  (badge/status saja).
+- PENJAGA MARGIN (anti rugi): margin kotor = subtotal − Σ(cost×
+  qty); cap perk otomatis = max(0, margin − diskon manual);
+  pangkas berurutan cashback → redeem → diskon (diskon paling
+  "keras" utk pembeli → dipertahankan terakhir). Diskon manual
+  menembus margin = SOFT: flag `manual_over_margin` (audit
+  `sales:margin_clamped` / `sales:manual_over_margin` + notifikasi
+  admin `margin_alert`), penjualan TIDAK diblokir (keputusan
+  user). HPP produk = 0 → margin dianggap = subtotal (guard tak
+  pernah memotong — aman).
+- POST /api/sales kini balas blok `sale.margin` (diagnostik:
+  grossMargin, cap, clamped, clampedAmount, manualOutflow,
+  manualOverMargin) + ledger `point_history` reason: `earn`,
+  `cashback`, `redeem` (delta NEGATIF = poin terpakai),
+  `cashback_use` (delta NEGATIF = Rp terpakai), `void`,
+  `refund`, `refund_cash`. Kolom baru `sales.redeem` +
+  `sales.cashback`. UPDATE members guarded
+  `WHERE points ≥ ? AND cashback_balance ≥ ?` (race 2 transaksi
+  paralel satu member tak bisa oversell saldo).
+
+## Redemsi Poin + Saldo Cashback — rollback DELETE (baseline
+`66a3db9` + fix `1b98a24`, 23 Sep)
+- UI POS: checkbox "Tebus poin/saldo" (nominal `redeem`; poin
+  dulu lalu saldo) + 2 baris struk.
+- DELETE /api/sales/[id]: guard anti-double-delete — hapus baris
+  sales DULU, cek `changes === 1` baru restock/rollback member;
+  race 2 DELETE paralel → seluruh batch di-rollback (tak ada
+  restock/kredit dobel). Tier di-rehitung setelah
+  `total_spent` turun (badge tak stale). Rollback redemsi
+  terbaca PRESISI dari ledger (`SUM ABS(delta)` per reason +
+  `SUM(amount)`), jejak `refund`/`refund_cash`; jumlah `amount`
+  SAMA di earn/cashback/redeem/cashback_use agar agregat &
+  audit konsisten.
+- `.gitignore` + lokal: `_prod` (dump turso prod), `_ts.json`,
+  `db.txt` — JANGAN commit.
+
+## Bug check 3x utk perk/redemsi/DELETE (23 Sep — tanpa temuan
+blocking)
+- FUNGSIONAL: POST↔DELETE konsisten — ledger reason simetris,
+  jumlah `amount` per reason sama, re-hitung tier memakai ambang
+  `tier_silver`/`tier_gold` yang sama dgn `computePerks`. Edge
+  pre-ada (tercatat TODO [r]): `amount_paid`/`change` dipercaya
+  dari klien (tak di-cross-check vs total) — rencana Fitur 3
+  menutup utk transaksi bercampur (Σ split divalidasi server).
+- KEAMANAN: guard utuh (POST `canAccess 'pos'`; override harga,
+  diskon line & transaksi HANYA manager; DELETE `isManager`;
+  PATCH sales status sendiri-atau-manager); SQL tetap
+  parameterized; `redeem` di-floor + cap ketersediaan;
+  notifikasi margin best-effort tak memblokir/merollback.
+- PERFORMA: margin guard = murni hitungan (0 query tambahan);
+  guarded redeem UPDATE = 1 round-trip; re-hitung tier = mrow
+  (SELECT yang sudah ada) + `getMemberSettings()` (cache modul
+  30 dtk) + 1 UPDATE — tak ada N+1; agregat kas/laporan tetap
+  di-cache 60 dtk; `point_history(member_id)` terindeks.
+
+## Fitur 3 — Rencana Pembayaran Campuran (MENUNGGU APPROVAL USER)
+- 2 keputusan terbuka: (1) BAYAR SEBAGIAN → PIUTANG:
+  rekomendasi MULAI TIDAK ADA — split hanya memecah TOTAL yang
+  dibayar penuh ke ≥2 metode; piutang butuh status parsial +
+  pelunasan + rework laporan = fitur terpisah. (2) NAMING
+  METODE: whitelist sekarang {cash, tf, wa}; bila QRIS resmi
+  menyusul (item QRIS ditunda, butuh NMID), tambahkan `qris`
+  ke whitelist + `PAY_LABEL` di rekap/POS.
+- Skema: kolom `sales.pay_split` JSON TEXT NULL —
+  `[{"m":"cash","a":50000},{"m":"tf","a":50000}]`; baris lama
+  = NULL (fallback `pay_method` + `total`). Bump
+  SCHEMA_VERSION 12→13 (aturan wajib) + backup payload v3→v4
+  (export/import `pay_split`; import legacy tetap valid).
+- Validasi server POST /api/sales: metode ⊂ whitelist, nominal
+  integer ≥ 0, **Σ(split) = `total` persis** (porsi `change`
+  utk transaksi bercampur = 0), `pay_method` = metode
+  mayoritas utk kompatibilitas (baris lama & 1-metode tak
+  berubah).
+- Consumer terdampak (hasil audit 23 Sep, lengkap):
+  - `shifts/route.ts` `windowStats`: `cash_total` & `by_method`
+    harus agregat PER-METODE utk baris bercampur (JSON1
+    `json_each` / UNION query tambahan); rekap shift tetap 1
+    UPDATE.
+  - `reports/route.ts` L71 `GROUP BY pay_method` + L92
+    `cash_net`: agregat bercampur via `pay_split`.
+  - `lib/notify.ts` L574 (rekap shift utk notifikasi).
+  - `lib/rekap.ts`: struk/WA baris "Bayar: Tunai Rp… + Transfer
+    Rp…"; "uang kembali" hanya utk porsi tunai.
+  - `kas/route.ts`: label baris "(tunai+tf)"; saldo agregat
+    tetap Σ total semua penjualan (semantika tak berubah).
+  - `reports/csv/route.ts`: kolom `pay_method` (opsional: beri
+    label bercampur; default biarkan).
+  - `backup/route.ts`: export/import `pay_split` (payload v4).
+  - UI `pos-client.tsx` + `laporan-client.tsx` + antruan
+    offline: input multi-metode (nominal per metode, "isi
+    sisa"), payload ikut.
+- Estimasi: skema + validasi + ~7 consumer + UI ≈ 10 file;
+  QRIS resmi DI LUAR cakupan (TERTUNDA — NMID).

@@ -83,6 +83,16 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       laba zakat pakai UTC (±7 jam di ujung periode) — lihat MEMORY.md
 
 ## Fitur (gap fungsional)
+- [x] **Penjaga margin utk perk member (anti rugi)** — SELESAI
+      (commit `4dee370`, 23 Sep 2026): modul murni `src/lib/perks.ts`
+      (`computePerks` + `marginGuard`, 57 unit test `npm run test:margin`);
+      POST /api/sales clamp perk otomatis ke margin kotor produk
+      (urutan pangkas: cashback → redeem → diskon), diskon manual yang
+      menembus margin = soft flag (audit `sales:margin_clamped` /
+      `sales:manual_over_margin` + notifikasi admin `margin_alert`,
+      transaksi tetap jalan); PUT /api/member-settings accept+warn
+      (`memberSettingWarnings`); akumulasi `totalCost` HPP ikut
+      dihitung saat harga di-override. Dual-push master+main.
 - [x] Terapkan perks member di alur POS: diskon member, cashback
       (saldo member), promo ulang tahun, tier Silver/Gold — DITERAPKAN
       (commit `43098a4`, 22 Sep 2026): ultah = MAX(birthday_discount,
@@ -94,8 +104,14 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [m] GROSIR: setting `wholesale_min`/`wholesale_discount` global +
       per produk (tabel `product_prices`) belum terpakai di
       perhitungan — TUNDA (keputusan user 22 Sep: fokus perks dulu).
-- [m] Redemisi poin: tukar poin → Rupiah/diskon (ledger
-      `point_history` sudah siap dipakai; butuh route + UI di POS/admin).
+- [x] Redemisi poin + pemakaian saldo cashback — SELESAI (baseline
+      `66a3db9` + fix `1b98a24`, 23 Sep 2026): kolom `sales.redeem`/
+      `sales.cashback` + ledger `point_history` reason `redeem`/
+      `cashback_use`/`void`/`refund`/`refund_cash`; POST /api/sales
+      menebus poin dulu lalu saldo (cap ketersediaan + clamp penjaga
+      margin); UI POS checkbox "Tebus poin/saldo" + baris struk;
+      DELETE sales/[id] rollback presisi dari ledger + guard
+      anti-double-delete + re-hitung tier. Dual-push master+main.
 - [x] Backup/restore perluas cakupan PENUH: `debts`, `payables`,
       `returns` (commit `c02421b`) + `notifications`,
       `notification_settings`, `notification_logs`, audit_log
@@ -105,7 +121,12 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       4 kolom audit_log v11 SERTAKAN; `point_history` TUNDA
       (di luar cakupan).
 - [m] Pembayaran campuran dalam satu transaksi (tunai + transfer) —
-      saat ini satu `pay_method` saja.
+      saat ini satu `pay_method` saja. **Rencana siap (audit 23 Sep
+      2026), menunggu approval user**: kolom JSON `sales.pay_split`
+      `[{"m":"cash","a":50000},…]` + bump SCHEMA_VERSION 12→13;
+      agregasi per-metode di kas/shift-close/laporan/rekap/notif/
+      backup (payload v4); UI POS multi-metode + baris struk;
+      validasi Σ(split) = total (bayar sebagian → piutang = follow-up).
 - [r] QRIS asli (gateway/NMID resmi) — KEPUTUSAN 22 Sep: DITUNDA sampai
       user (Makfi) urus NMID resmi (bank/agregator QRIS). **QRIS mock SVG di
       POS = PLACEHOLDER — JANGAN DIPAKAI PRODUCTION** (NMID `ID102003004050`
@@ -125,6 +146,9 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [r] Notifikasi `cash_low`: pemicu `notifyCashBalance()` mengecek saldo
       kas penuh (5 query SUM) tiap jurnal — throttled dedupe 60 mnt,
       biarkan tapi pantau Rows Read.
+- [r] `amount_paid`/`change` POST /api/sales dipercaya dari klien
+      (tanpa cross-check vs `total`) — pre-ada; POS menghitungnya;
+      validasi server opsional (jangan rusak alur offline-queue).
 
 ## Performa (status: BERSIH)
 - [x] Target Turso Rows Read < 3.000 tercapai: list cap 50 baris,

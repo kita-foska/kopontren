@@ -28,3 +28,8 @@ _*.txt
 _pkremote.json
 /desktop-archive/
 tmp_*.txt
+
+# artifak lokal dev (dump DB / file sementara) — jangan di-commit
+_prod
+_ts.json
+db.txt
