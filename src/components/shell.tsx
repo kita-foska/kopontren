@@ -19,7 +19,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                 alt="Kopontren"
                 width={36}
                 height={36}
-                className="h-9 w-auto shrink-0"
+                className="h-9 w-auto shrink-0 rounded-lg bg-white object-contain p-1 shadow-sm ring-1 ring-black/5"
               />
               <div className="min-w-0 leading-tight">
                 <p className="truncate text-sm font-extrabold tracking-tight">
