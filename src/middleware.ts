@@ -17,15 +17,22 @@ export function middleware(req: NextRequest) {
     // Header no-store utk /api/* di-set via next.config headers (CDN level).
     return;
   }
-  // HTML & route dinamis: selalu revalidate supaya deploy baru menyajikan
-  // bundle terbaru (aset statis /public & /_next dikecualikan — mereka
-  // punya policy header sendiri di next.config).
-  const isStaticPublic =
-    /^\/_next\//.test(pathname) ||
-    /^(\/(sw\.js|manifest\.json|favicon\.ico|icon-|logo-kopontren))(\/|$)/.test(pathname) ||
+  // Aset statis publik (PWA: /sw.js + /manifest.json, ikon, logo, favicon,
+  // gambar): BEBAS TANPA SESI — dilewati begitu saja, TIDAK di-redirect.
+  // CRITICAL: /sw.js & /manifest.json yang di-redirect 307 ke /login saat
+  // belum login membuat service worker GAGAL register (respons = HTML
+  // /login, bukan JS) => PWA tidak bisa diinstal di HP.
+  const isPublicStatic =
+    /^\/(sw\.js|manifest\.json|favicon\.ico|icon-|logo-kopontren)(\/|$)/.test(pathname) ||
     /\.(svg|png|jpe?g|gif|webp|ico)$/i.test(pathname);
+  if (isPublicStatic) return;
+
+  // HTML & route dinamis: selalu revalidate supaya deploy baru menyajikan
+  // bundle terbaru (aset statis /public & /_next punya policy header sendiri
+  // di next.config; /_next/static & /_next/image dikecualikan matcher).
+  const isStatic = /^\/_next\//.test(pathname);
   const res = NextResponse.next();
-  if (!isStaticPublic) res.headers.set('Cache-Control', 'no-cache, must-revalidate');
+  if (!isStatic) res.headers.set('Cache-Control', 'no-cache, must-revalidate');
 
   if (pathname.startsWith('/login')) return res;
 

@@ -99,6 +99,27 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   commit `c02421b`, 21 Sep 2026) — sisa yang belum: notifications
   (+ log push), member_settings/zakat (lihat TODO.md).
 
+## PWA Installability (21 Sep 2026 — JANGAN dibalikkan)
+- `src/middleware.ts`: aset statis publik (`/sw.js`, `/manifest.json`,
+  `favicon.ico`, `icon-*`, `logo-kopontren*`, ekstensi gambar)
+  **early-return SEBELUM guard sesi**. /sw.js & /manifest.json yang
+  di-redirect 307 ke /login (respons HTML, bukan JS) saat belum login
+  membuat service worker GAGAL register => PWA tidak installable di HP
+  admin. Guard sesi tetap berlaku utk halaman HTML/app & semua selain
+  aset publik.
+- `src/components/sw-register.tsx`: register idempoten + retry saat
+  `visibilitychange`/`pageshow` (setelah login via navigasi
+  client-side, effect layout tidak re-run; register pertama di /login
+  bisa gagal).
+- Ikon PWA tervalidasi dimensi aktual (parse IHDR byte 16/20):
+  `icon-192.png`=192x192, `icon-512.png`=512x512 (purpose `any
+  maskable`), `icon-180.png`=180 (Apple). Jangan percaya field
+  `sizes` manifest saja.
+- Build lokal: `next build` langsung TIDAK men-stamp SW (stamp hanya
+  jalan via `npm run build` → `scripts/inject-sw-version.mjs`) ⇒
+  `public/sw.js` tak berubah di git saat test lokal; Vercel
+  men-stamp sendiri tiap deploy.
+
 ## Audit Kode 3 Pass (20 Sep 2026)
 Audit menyeluruh request terakhir (fungsional / keamanan /
 performa-integritas). `tsc --noEmit` BERSIH. Temuan:

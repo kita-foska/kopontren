@@ -53,6 +53,17 @@ tidak referenced runtime — lihat _Update atas).
 
 ## STATE
 ### DONE
+- [x] PWA INSTALLABLE FIX (21 Sep 2026) — laporan user: PWA tidak
+  bisa diinstal di HP admin. Root cause: `src/middleware.ts`
+  redirect /sw.js & /manifest.json ke /login (307, respons HTML)
+  saat belum ada cookie sesi => service worker gagal register =>
+  tidak installable. Fix: aset statis publik early-return SEBELUM
+  guard sesi (guard tetap utk halaman HTML & API). `sw-register.tsx`:
+  register idempoten + retry visibilitychange/pageshow. Verifikasi:
+  tsc EXIT 0, next build EXIT 0 (48 page); curl tanpa cookie:
+  /sw.js=200(application/javascript), /manifest.json=200,
+  /icon-512.png=200, / & /admin=307->/login, /api/products=401.
+  Ikon tervalidasi dimensi aktual (IHDR): 192x192 & 512x512 OK.
 - [x] OPTIMASI ROWS READ + CACHE (18 Sep 2026, session lanjutan) —
   laporan user: Turso "Rows Read" 8,202 (byok, 18 Sep). Temuan: 8/10
   index yang diminta SUDAH ada di kode; 2 hilang (`idx_sales_kasir`,
