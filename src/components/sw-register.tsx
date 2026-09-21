@@ -4,20 +4,28 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Register service worker /sw.js (hanya di konteks secure).
- * Retry saat dokumen aktif lagi (visibilitychange/pageshow) karena
- * register saat load pertama bisa gagal jika dokumen itu belum punya
- * sesi — register idempoten, flag mencegah spam.
+ * Register saat load pertama bisa gagal jika dokumen belum punya sesi /
+ * respons /sw.js belum siap — jadi retry saat dokumen aktif lagi
+ * (visibilitychange->visible / pageshow). Register idempoten; flag sukses
+ * + counter (MAKS_RETRY) mencegah spam. Kalau masih gagal setelah
+ * MAKS_RETRY, error di-log sekali agar bisa didiagnosa.
  */
+const MAKS_RETRY = 3;
+
 export function SwRegister() {
   const okRef = useRef(false);
+  const attemptsRef = useRef(0);
   useEffect(() => {
     const tryRegister = () => {
-      if (okRef.current) return;
+      if (okRef.current) return; // sudah sukses -> berhenti
+      if (attemptsRef.current >= MAKS_RETRY) return; // retry habis
       const secure =
         location.protocol === 'https:' ||
         location.hostname === 'localhost' ||
         location.hostname === '127.0.0.1';
+      // Tidak didukung / tidak secure: jangan buang retry.
       if (!('serviceWorker' in navigator) || !secure) return;
+      attemptsRef.current += 1;
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
@@ -28,13 +36,26 @@ export function SwRegister() {
           // langsung digantikan: install + skipWaiting + clientsClaim.
           reg.update().catch(() => {});
         })
-        .catch(() => {});
+        .catch((err) => {
+          // Gagal: retry akan terjadi lagi di visibilitychange/pageshow
+          // berikutnya. Kalau sudah MAKS_RETRY, log sekali.
+          if (attemptsRef.current >= MAKS_RETRY) {
+            console.error(
+              `[PWA] service worker gagal register setelah ${MAKS_RETRY}x percobaan:`,
+              err
+            );
+          }
+        });
+    };
+    // visibilitychange fire saat hide pun — hanya retry saat dokumen visible.
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') tryRegister();
     };
     tryRegister();
-    document.addEventListener('visibilitychange', tryRegister);
+    document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('pageshow', tryRegister);
     return () => {
-      document.removeEventListener('visibilitychange', tryRegister);
+      document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pageshow', tryRegister);
     };
   }, []);
