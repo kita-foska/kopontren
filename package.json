@@ -11,7 +11,8 @@
     "migrate": "node scripts/migrate-from-sqlite.mjs",
     "import:products": "node scripts/import-products.mjs",
     "import:excel": "node scripts/import-excel.mjs",
-    "fix:sales": "node scripts/fix-negative-sales.mjs"
+    "fix:sales": "node scripts/fix-negative-sales.mjs",
+    "test:margin": "node scripts/test-margin.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.0",

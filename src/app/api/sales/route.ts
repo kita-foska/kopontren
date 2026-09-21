@@ -4,7 +4,8 @@ import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
-import { notifyLargeTransaction, notifyStockAfterSale } from '@/lib/notify';
+import { notifyLargeTransaction, notifyMarginClamp, notifyStockAfterSale } from '@/lib/notify';
+import { computePerks, marginGuard, parsePerkConfig, type PerkResult } from '@/lib/perks';
 
 type SaleRow = {
   id: number;
@@ -188,6 +189,7 @@ export async function POST(req: Request) {
   try {
     const out = await tx(d, async () => {
       let subtotal = 0;
+      let totalCost = 0;
       let lineDiscSum = 0;
       const prodStmt = d.prepare('SELECT * FROM products WHERE id = ?');
       // Guarded decrement: update HANYA jalan bila stok masih cukup saat
@@ -225,6 +227,7 @@ export async function POST(req: Request) {
             : prod.base_price;
         const sub = price * qty;
         subtotal += sub;
+        totalCost += (prod.cost_price || 0) * qty;
         // Per-line discount: manager only, capped at the line total.
         let lineDisc = 0;
         if (manager) {
@@ -260,9 +263,16 @@ export async function POST(req: Request) {
       if (prePerk <= 0)
         throw new Error('Total setelah diskon tidak valid (diskon melebihi total)');
 
+      // PENJAGA MARGIN (anti rugi): margin kotor produk = subtotal − HPP.
+      // Keluaran perk otomatis (diskon member + redeem + cashback) dibatasi
+      // oleh margin tersebut (setelah dikurangi diskon manual) oleh
+      // computePerks; bila terpotong / diskon manual menembus margin,
+      // dicatat di audit + notifikasi admin. Penjualan TIDAK diblokir.
+      const margin = marginGuard(subtotal, totalCost, lineDiscSum, txDisc);
+
       // Member link + loyalty perks (diskon member/ulang tahun, cashback,
-      // poin, auto-tier). Semua perk dihitung server-side di sini — POS
-      // hanya memakai rumus yang sama untuk preview; server yang menjadi
+      // poin, auto-tier, redeem). Semua perk dihitung di modul murni
+      // src/lib/perks.ts — rumus SAMA dengan preview POS, server tetap
       // sumber kebenaran. Nilai tiap setting berasal dari pengaturan
       // member (/admin/pengaturan-member, cache 60 dtk).
       let total = prePerk;
@@ -276,6 +286,7 @@ export async function POST(req: Request) {
       let redeemPoints = 0;
       let redeemCash = 0;
       let redeemPtsValue = 0;
+      let perk: PerkResult | null = null;
       if (b.member_id && Number(b.member_id) > 0) {
         const mrow = (await d
           .prepare(
@@ -295,60 +306,33 @@ export async function POST(req: Request) {
         memberId = mrow.id;
         memberName = mrow.name;
         const mset = await getMemberSettings();
-        const num = (k: string) => {
-          const v = Math.floor(Number(mset[k]));
-          return Number.isFinite(v) && v > 0 ? v : 0;
-        };
-        // Perk 1 — diskon member: base member_discount%; saat hari ulang
-        // tahun (match MM-DD birth_date, zona Asia/Jakarta karena server
-        // Vercel UTC) & birthday_active aktif, berlaku MAKS(birthday_discount,
-        // base) — pilih yang paling untung untuk member. Cap 90% agar
-        // total tetap > 0.
+        // Cek ulang tahun: match MM-DD birth_date vs hari ini (zona Jakarta
+        // karena server Vercel UTC) — bila aktif, promo ultah memakai nilai
+        // MAKS(birthday_discount, diskon base) di dalam computePerks.
         const jktDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' })
           .format(new Date())
           .slice(5);
         const isBday = mrow.birth_date?.length === 10 && mrow.birth_date.slice(5) === jktDay;
-        let pct = num('member_discount');
-        if (isBday && mset.birthday_active === '1') pct = Math.max(pct, num('birthday_discount'));
-        pct = Math.min(90, pct);
-        memberDiscount = Math.floor((prePerk * pct) / 100);
-        total = prePerk - memberDiscount;
-        // Perk 4 — redemsi: nominal Rp dari poin member (pakai poin dulu,
-        // nilai = poin × point_value) lalu sisa dari cashback_balance,
-        // cap di total setelah perk. Sumber & cap sesuai keputusan user;
-        // server tetap otoritatif — POS hanya preview.
-        const availPoints = Math.max(0, Math.floor(Number(mrow.points) || 0));
-        const availCb = Math.max(0, Math.floor(Number(mrow.cashback_balance) || 0));
-        const pv = num('point_value');
-        const wantRedeem = Math.min(
-          Math.floor(Number(b.redeem) || 0),
-          total,
-          availPoints * pv + availCb
-        );
-        redeemPoints = pv > 0 ? Math.min(Math.floor(wantRedeem / pv), availPoints) : 0;
-        redeemCash = Math.min(wantRedeem - redeemPoints * pv, availCb);
-        redeemPtsValue = redeemPoints * pv;
-        redeem = redeemPtsValue + redeemCash;
-        total = Math.max(0, total - redeem);
-        // Perk 2 — cashback: % dari total SETELAH perk & redemsi, dikredit
-        // ke members.cashback_balance.
-        cashback = Math.floor((total * num('cashback')) / 100);
-        // Poin dihitung dari total setelah perk & redemsi, nilai per poin
-        // dari setting points_every (default Rp 10.000).
-        const pointsEvery = Math.max(1000, Math.floor(Number(mset.points_every) || 10000));
-        points = Math.floor(total / pointsEvery);
-        // Perk 3 — auto-tier: status dari akumulasi total_spent
-        // (gold > silver > nona); tier hanya badge/status, tanpa diskon
-        // tambahan (keputusan user).
-        const newSpent = (Number(mrow.total_spent) || 0) + total;
-        const silverMin = num('tier_silver');
-        const goldMin = num('tier_gold');
-        tier =
-          goldMin > 0 && newSpent >= goldMin
-            ? 'gold'
-            : silverMin > 0 && newSpent >= silverMin
-              ? 'silver'
-              : '';
+        perk = computePerks(parsePerkConfig(mset), {
+          subtotal,
+          totalCost,
+          lineDisc: lineDiscSum,
+          txDisc,
+          isBday,
+          memberPoints: Number(mrow.points) || 0,
+          memberCashbackBalance: Number(mrow.cashback_balance) || 0,
+          memberTotalSpent: Number(mrow.total_spent) || 0,
+          redeemRequested: Math.floor(Number(b.redeem) || 0),
+        });
+        total = perk.total;
+        points = perk.points;
+        memberDiscount = perk.memberDiscount;
+        cashback = perk.cashback;
+        tier = perk.tier;
+        redeem = perk.redeem;
+        redeemPoints = perk.redeemPoints;
+        redeemCash = perk.redeemCash;
+        redeemPtsValue = perk.redeemPtsValue;
       }
       const customer = String(b.customer || '').trim() || memberName;
       const amount_paid = Math.max(0, Math.floor(Number(b.amount_paid) || 0));
@@ -461,6 +445,19 @@ export async function POST(req: Request) {
         member_name: memberName,
         customer,
         product_ids: insertItems.map((x) => x[2]),
+        // Diagnostik penjaga margin (dipakai audit/notifikasi/POS utk
+        // menampilkan seberapa banyak perk terpotong & apakah diskon
+        // manual menembus margin).
+        margin: {
+          gross_margin: margin.grossMargin,
+          cap: margin.cap,
+          manual_outflow: margin.manualOutflow,
+          manual_over_margin: margin.manualOverMargin,
+          perk_raw_total: perk?.perkRawTotal ?? 0,
+          perk_total: perk?.perkTotal ?? 0,
+          clamped: perk?.clamped ?? false,
+          clamped_amount: perk?.clampedAmount ?? 0,
+        },
       };
     });
     await logAudit(user, 'sales:create', 'sales', Number(out.id), undefined, {
@@ -468,6 +465,29 @@ export async function POST(req: Request) {
       member_name: out.member_name || undefined,
       points: out.points,
     }, req);
+    // PENJAGA MARGIN: bila perk otomatis terpotong oleh margin kotor, atau
+    // keluaran manual (diskon) sudah melewati margin -> log khusus +
+    // peringatan admin. Penjualan tetap tercatat (keputusan "soft").
+    if (out.margin.clamped || out.margin.manual_over_margin) {
+      await logAudit(
+        user,
+        out.margin.clamped ? 'sales:margin_clamped' : 'sales:manual_over_margin',
+        'sales',
+        Number(out.id),
+        undefined,
+        {
+          total: out.total,
+          member_name: out.member_name || undefined,
+          gross_margin: out.margin.gross_margin,
+          cap: out.margin.cap,
+          perk_raw_total: out.margin.perk_raw_total,
+          perk_total: out.margin.perk_total,
+          clamped_amount: out.margin.clamped_amount,
+          manual_outflow: out.margin.manual_outflow,
+        },
+        req
+      );
+    }
     // Transaksi mengubah stok, poin member, saldo kas & agregat laporan
     // -> buang cache agar pembacaan berikutnya segar.
     invalidate('members:');
@@ -478,6 +498,17 @@ export async function POST(req: Request) {
     try {
       await notifyLargeTransaction(out.total, out.id, out.customer, method);
       await notifyStockAfterSale(out.product_ids);
+      if (out.margin.clamped || out.margin.manual_over_margin)
+        await notifyMarginClamp({
+          saleId: out.id,
+          total: out.total,
+          customer: out.customer,
+          grossMargin: out.margin.gross_margin,
+          clamped: out.margin.clamped,
+          clampedAmount: out.margin.clamped_amount,
+          manualOverMargin: out.margin.manual_over_margin,
+          manualOutflow: out.margin.manual_outflow,
+        });
     } catch (e) {
       console.warn('[notify] pemicu penjualan gagal:', e);
     }

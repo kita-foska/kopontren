@@ -20,6 +20,7 @@ export type NotifyType =
   | 'debt_due'
   | 'payable_due'
   | 'large_txn'
+  | 'margin_alert'
   | 'cash_low'
   | 'shift_open'
   | 'shift_close'
@@ -47,6 +48,7 @@ export const NOTIFY_TYPES: {
   { key: 'debt_due', label: 'Piutang Jatuh Tempo', priority: 1, link: '/piutang' },
   { key: 'payable_due', label: 'Hutang Jatuh Tempo', priority: 1, link: '/admin/hutang' },
   { key: 'large_txn', label: 'Transaksi Besar', priority: 1, link: '/admin/laporan' },
+  { key: 'margin_alert', label: 'Perk Dibatasi Margin', priority: 1, link: '/admin/laporan' },
   { key: 'cash_low', label: 'Kas Menipis', priority: 1, link: '/admin/kas' },
   { key: 'shift_open', label: 'Shift Dibuka', priority: 1, link: '/admin/shift' },
   { key: 'shift_close', label: 'Shift Ditutup', priority: 1, link: '/admin/shift' },
@@ -352,6 +354,45 @@ export async function notifyLargeTransaction(total: number, id: number, customer
     type: 'large_txn',
     title: 'Transaksi Besar',
     message: `Transaksi #${id} ${rp(total)}${customer ? ' · ' + customer : ''} (${method}).`,
+    link: '/admin/laporan',
+  });
+}
+
+/**
+ * Peringatan penjaga margin: perk otomatis (diskon member/redeem/cashback)
+ * memangkas keluaran karena melewati margin kotor produk, atau diskon
+ * manual saja sudah menembus margin. Media in-app + push (best-effort,
+ * tidak pernah throw — penjualan tetap tercatat).
+ */
+export async function notifyMarginClamp(params: {
+  saleId: number;
+  total: number;
+  customer: string;
+  grossMargin: number;
+  clamped: boolean;
+  clampedAmount: number;
+  manualOverMargin: boolean;
+  manualOutflow: number;
+}) {
+  const parts: string[] = [];
+  if (params.clamped)
+    parts.push(
+      `perk otomatis memangkas ${rp(params.clampedAmount)} (limit ${rp(
+        Math.max(0, params.grossMargin)
+      )} margin kotor)`
+    );
+  if (params.manualOverMargin)
+    parts.push(
+      `keluaran manual ${rp(params.manualOutflow)} menembus margin kotor ${rp(
+        params.grossMargin
+      )} — penjualan di bawah HPP`
+    );
+  await notify({
+    type: 'margin_alert',
+    title: 'Perk Dibatasi Margin',
+    message: `Transaksi #${params.saleId} ${rp(params.total)}${
+      params.customer ? ' · ' + params.customer : ''
+    }: ${parts.join('; ')}. Cek harga jual / HPP produk.`,
     link: '/admin/laporan',
   });
 }
