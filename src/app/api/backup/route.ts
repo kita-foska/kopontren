@@ -48,13 +48,13 @@ export async function GET() {
   const d = await db();
   const all = async (q: string) => await d.prepare(q).all();
   const payload: Backup = {
-    version: 3,
+    version: 4,
     exported_at: new Date().toISOString(),
     products: await all(
       'SELECT id, name, category, unit, base_price, cost_price, stock, active, barcode FROM products'
     ),
     sales: await all(
-      `SELECT id, kasir_id, customer, pay_method, status, note, total,
+      `SELECT id, kasir_id, customer, pay_method, pay_split, status, note, total,
               member_id, amount_paid, change, discount, member_points, created_at, reported_at, client_ref
        FROM sales`
     ),
@@ -135,9 +135,9 @@ export async function POST(req: Request) {
         );
       }
       const insS = d.prepare(
-        `INSERT INTO sales (id, kasir_id, customer, pay_method, status, note, total,
+        `INSERT INTO sales (id, kasir_id, customer, pay_method, pay_split, status, note, total,
                             member_id, amount_paid, change, discount, member_points, created_at, reported_at, client_ref)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       );
       for (const s of (payload.sales as Record<string, unknown>[]) || []) {
         await insS.run(
@@ -145,6 +145,7 @@ export async function POST(req: Request) {
           s.kasir_id != null ? Number(s.kasir_id) : null,
           String(s.customer ?? ''),
           String(s.pay_method ?? '') || 'cash',
+          typeof s.pay_split === 'string' && s.pay_split ? s.pay_split : null,
           String(s.status ?? '') || 'unreported',
           String(s.note ?? ''),
           Number(s.total) || 0,

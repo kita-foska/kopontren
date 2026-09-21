@@ -18,6 +18,7 @@ type QueuedSale = {
     redeem?: number;
     amount_paid: number;
     change: number;
+    pay_split?: { m: string; a: number }[];
     client_ref: string;
     items: { product_id: number; qty: number; unit_price: number }[];
   };
@@ -86,6 +87,7 @@ type SaleResp = {
     member_discount?: number;
     cashback?: number;
     redeem?: number;
+    pay_split?: { m: string; a: number }[];
     tier?: string;
     member_name?: string;
   };
@@ -124,6 +126,7 @@ type Receipt = {
   items: CartLine[];
   customer: string;
   pay: string;
+  paySplit?: { m: string; a: number }[];
   received: number | null;
   change: number;
   at: string;
@@ -151,6 +154,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [pay, setPay] = useState<'cash' | 'tf' | 'wa'>('cash');
   const [note, setNote] = useState('');
   const [received, setReceived] = useState('');
+  // Split pembayaran (fitur 3): nominal per metode, Σ harus = total.
+  const [mix, setMix] = useState(false);
+  const [mixCash, setMixCash] = useState('');
+  const [mixTf, setMixTf] = useState('');
+  const [mixWa, setMixWa] = useState('');
   const [members, setMembers] = useState<Member[]>([]);
   const [memberId, setMemberId] = useState('');
   const [mq, setMq] = useState('');
@@ -375,6 +383,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const subtotal = cart.reduce((s, l) => s + l.qty * l.price, 0);
   const discNum = admin ? Math.min(Number(disc.replace(/[^\d]/g, '')) || 0, subtotal) : 0;
   const receivedNum = received.trim() === '' ? 0 : Number(received.replace(/[^\d]/g, '')) || 0;
+  const mixAmt = (v: string) => Number(v.replace(/[^\d]/g, '')) || 0;
+  const mixSum = mix ? mixAmt(mixCash) + mixAmt(mixTf) + mixAmt(mixWa) : 0;
 
   const selectedMember = useMemo(
     () => members.find((m) => m.id === Number(memberId)),
@@ -431,7 +441,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
 
   async function checkout() {
     if (cart.length === 0) return;
-    if (pay === 'cash' && received.trim() !== '' && receivedNum < total) {
+    if (!mix && pay === 'cash' && received.trim() !== '' && receivedNum < total) {
       showToast(
         'Uang diterima kurang, kekurangan Rp ' +
           (total - receivedNum).toLocaleString('id-ID') +
@@ -439,21 +449,41 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       );
       return;
     }
+    if (mix && mixSum !== total) {
+      showToast(
+        'Split belum sama dengan total — selisih Rp ' +
+          Math.abs(total - mixSum).toLocaleString('id-ID') +
+          (mixSum < total ? ' (kurang)' : ' (lebih)') +
+          '. Lengkapi nominal tiap metode.'
+      );
+      return;
+    }
     setBusy(true);
-    const cashReceived = pay === 'cash' && received.trim() !== '';
+    const cashReceived = !mix && pay === 'cash' && received.trim() !== '';
+    // Split (fitur 3): bagian per metode (hanya nominal > 0); metode
+    // dominan (bagian terbesar) dikirim sebagai pay_method legacy.
+    const mixParts = mix
+      ? ([
+          { m: 'cash', a: mixAmt(mixCash) },
+          { m: 'tf', a: mixAmt(mixTf) },
+          { m: 'wa', a: mixAmt(mixWa) },
+        ].filter((p) => p.a > 0) as { m: string; a: number }[])
+      : [];
+    const payMethod = mixParts.length > 0 ? mixParts.reduce((x, y) => (y.a > x.a ? y : x)).m : pay;
     const clientRef =
       typeof crypto !== 'undefined' && 'randomUUID' in crypto
         ? crypto.randomUUID()
         : 'ref-' + Date.now() + '-' + Math.random().toString(36).slice(2);
     const payload: QueuedSale['payload'] = {
       customer: customer || (selectedMember ? selectedMember.name : ''),
-      pay_method: pay,
+      pay_method: payMethod,
       note,
       member_id: memberId ? Number(memberId) : undefined,
       discount: discNum || undefined,
       redeem: redeemAmt > 0 ? redeemAmt : undefined,
       amount_paid: cashReceived ? receivedNum : total,
       change: cashReceived ? change : 0,
+      pay_split: mixParts.length > 0 ? mixParts : undefined,
       client_ref: clientRef,
       items: cart.map((l) => ({ product_id: l.product.id, qty: l.qty, unit_price: l.price })),
     };
@@ -486,7 +516,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         sale: saved,
         items: [...cart],
         customer: customer || (selectedMember ? selectedMember.name : ''),
-        pay,
+        pay: payMethod,
+        paySplit: mixParts.length > 0 ? mixParts : saved.pay_split,
         received: cashReceived ? receivedNum : total,
         change: cashReceived ? change : 0,
         at: saved.created_at || new Date().toISOString(),
@@ -505,6 +536,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setCustomer('');
     setNote('');
     setReceived('');
+    setMix(false);
+    setMixCash('');
+    setMixTf('');
+    setMixWa('');
     setDisc('');
     setMemberId('');
     load();
@@ -574,7 +609,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         customerRef.current?.focus();
       } else if (e.key === 'F3') {
         e.preventDefault();
-        if (pay === 'cash' && total > 0) receivedRef.current?.focus();
+        if (!mix && pay === 'cash' && total > 0) receivedRef.current?.focus();
         else customerRef.current?.focus();
       } else if (e.key === 'F4') {
         e.preventDefault();
@@ -671,6 +706,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       tier: receipt.tier,
       total: receipt.sale?.total ?? 0,
       pay: receipt.pay,
+      paySplit: receipt.paySplit,
       received: receipt.received,
       change: receipt.change,
     });
@@ -699,6 +735,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       tier: receipt.tier,
       total: receipt.sale?.total ?? 0,
       pay: receipt.pay,
+      paySplit: receipt.paySplit,
       received: receipt.received,
       change: receipt.change,
     });
@@ -1070,10 +1107,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               ).map(([v, label]) => (
                 <button
                   key={v}
-                  onClick={() => setPay(v)}
+                  onClick={() => {
+                    setPay(v);
+                    setMix(false);
+                  }}
                   className={
                     'flex-1 rounded-lg px-2 py-2 text-xs font-bold transition ' +
-                    (pay === v
+                    (pay === v && !mix
                       ? 'bg-accent-500 text-white shadow-sm'
                       : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
                   }
@@ -1081,7 +1121,75 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   {label}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setMix(true);
+                  setReceived('');
+                }}
+                title="Pembayaran campur (split) tunai/transfer/QRIS"
+                className={
+                  'flex-1 rounded-lg px-2 py-2 text-xs font-bold transition ' +
+                  (mix
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
+                }
+              >
+                🔀 Campur
+              </button>
             </div>
+
+            {/* Split pembayaran (fitur 3): nominal tiap metode, Σ = total */}
+            {mix && total > 0 && (
+              <div className="space-y-1.5 rounded-lg bg-amber-500/10 p-2 text-xs">
+                <p className="font-bold text-amber-700 dark:text-amber-300">
+                  Split pembayaran — total {rp(total)} (lunas, tanpa piutang)
+                </p>
+                <div className="flex gap-1.5">
+                  <input
+                    className="input text-xs"
+                    inputMode="numeric"
+                    placeholder="Tunai (Rp)"
+                    value={mixCash}
+                    onChange={(e) => setMixCash(e.target.value)}
+                  />
+                  <input
+                    className="input text-xs"
+                    inputMode="numeric"
+                    placeholder="Transfer (Rp)"
+                    value={mixTf}
+                    onChange={(e) => setMixTf(e.target.value)}
+                  />
+                  <input
+                    className="input text-xs"
+                    inputMode="numeric"
+                    placeholder="QRIS/WA (Rp)"
+                    value={mixWa}
+                    onChange={(e) => setMixWa(e.target.value)}
+                  />
+                </div>
+                <div
+                  className={
+                    'flex items-center justify-between font-bold ' +
+                    (mixSum === total
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-rose-500 dark:text-rose-400')
+                  }
+                >
+                  <span>
+                    {mixSum === total
+                      ? 'Lunas ✔'
+                      : 'Selisih ' +
+                        (mixSum < total ? 'kurang' : 'lebih') +
+                        ' ' +
+                        rp(Math.abs(total - mixSum))}
+                  </span>
+                  <span>
+                    {rp(mixSum)} / {rp(total)}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Cash nominal buttons & input */}
             {pay === 'cash' && (
@@ -1170,7 +1278,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 <span>Total Belanja</span>
                 <span className="text-accent-500 dark:text-accent-300">{rp(total)}</span>
               </div>
-              {pay === 'cash' && received.trim() !== '' && (
+              {!mix && pay === 'cash' && received.trim() !== '' && (
                 <div
                   className={
                     'flex items-center justify-between text-sm font-bold ' +
@@ -1333,9 +1441,20 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 )}
                 <div className="flex justify-between">
                   <span>Metode Bayar</span>
-                  <span>{PAY_LABEL[receipt.pay] || receipt.pay}</span>
+                  <span>
+                    {receipt.paySplit && receipt.paySplit.length > 0
+                      ? 'Campur'
+                      : PAY_LABEL[receipt.pay] || receipt.pay}
+                  </span>
                 </div>
-                {receipt.pay === 'cash' && receipt.received != null && (
+                {receipt.paySplit && receipt.paySplit.length > 0 ? (
+                  receipt.paySplit.map((p) => (
+                    <div key={p.m} className="flex justify-between">
+                      <span>{PAY_LABEL[p.m] || p.m}</span>
+                      <span>{rp(p.a)}</span>
+                    </div>
+                  ))
+                ) : receipt.pay === 'cash' && receipt.received != null ? (
                   <>
                     <div className="flex justify-between">
                       <span>Diterima</span>
@@ -1346,7 +1465,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       <span>{rp(receipt.change)}</span>
                     </div>
                   </>
-                )}
+                ) : null}
                 {receipt.points > 0 && (
                   <div className="mt-1 flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
                     <span>Poin Didapat</span>
@@ -1424,15 +1543,24 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>Bayar ({PAY_LABEL[receipt.pay] || receipt.pay})</span>
+            <span>
+              Bayar ({receipt.paySplit && receipt.paySplit.length > 0 ? 'campur' : PAY_LABEL[receipt.pay] || receipt.pay})
+            </span>
             <span>Rp {(receipt.received ?? receipt.sale?.total ?? 0).toLocaleString('id-ID')}</span>
           </div>
-          {receipt.pay === 'cash' && receipt.received != null && (
+          {receipt.paySplit && receipt.paySplit.length > 0 ? (
+            receipt.paySplit.map((p) => (
+              <div key={p.m} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>├ {PAY_LABEL[p.m] || p.m}</span>
+                <span>Rp {p.a.toLocaleString('id-ID')}</span>
+              </div>
+            ))
+          ) : receipt.pay === 'cash' && receipt.received != null ? (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Kembali</span>
               <span>Rp {receipt.change.toLocaleString('id-ID')}</span>
             </div>
-          )}
+          ) : null}
           {receipt.points > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Poin Didapat</span>

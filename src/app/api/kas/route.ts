@@ -4,6 +4,7 @@ import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
 import { notifyCashBalance } from '@/lib/notify';
+import { parsePaySplit } from '@/lib/pay-methods';
 
 type KasAgg = { sales: number; purchases: number; expenses: number; cashIn: number; cashOut: number };
 
@@ -35,10 +36,17 @@ export async function GET() {
   const sales = (
     await d
       .prepare(
-        'SELECT id, total AS amount, customer, pay_method, created_at FROM sales ORDER BY created_at DESC LIMIT 50'
+        'SELECT id, total AS amount, customer, pay_method, pay_split, created_at FROM sales ORDER BY created_at DESC LIMIT 50'
       )
       .all()
-  ) as { id: number; amount: number; customer: string; pay_method: string; created_at: string }[];
+  ) as {
+    id: number;
+    amount: number;
+    customer: string;
+    pay_method: string;
+    pay_split?: string | null;
+    created_at: string;
+  }[];
   const purchases = (
     await d
       .prepare(
@@ -71,7 +79,12 @@ export async function GET() {
       id: s.id,
       kind: 'sale',
       sign: 1,
-      label: 'Jualan' + (s.customer ? ' · ' + s.customer : '') + ' (' + s.pay_method + ')',
+      label:
+        'Jualan' +
+        (s.customer ? ' · ' + s.customer : '') +
+        ' (' +
+        (parsePaySplit(s.pay_split).length > 0 ? s.pay_method + '+campur' : s.pay_method) +
+        ')',
       amount: s.amount,
       created_at: s.created_at,
     })),

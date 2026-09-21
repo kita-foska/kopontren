@@ -6,6 +6,7 @@ import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { notifyLargeTransaction, notifyMarginClamp, notifyStockAfterSale } from '@/lib/notify';
 import { computePerks, marginGuard, parsePerkConfig, type PerkResult } from '@/lib/perks';
+import { parsePaySplit } from '@/lib/pay-methods';
 
 type SaleRow = {
   id: number;
@@ -20,6 +21,7 @@ type SaleRow = {
   discount: number;
   member_points: number;
   created_at: string;
+  pay_split?: string | null;
 };
 
 export async function GET(req: Request) {
@@ -124,6 +126,7 @@ export async function POST(req: Request) {
   const b = (await req.json().catch(() => ({}))) as {
     customer?: string;
     pay_method?: string;
+    pay_split?: { m: string; a: number }[];
     note?: string;
     member_id?: number;
     amount_paid?: number;
@@ -136,7 +139,22 @@ export async function POST(req: Request) {
   const items = Array.isArray(b.items) ? b.items : [];
   if (items.length === 0)
     return NextResponse.json({ error: 'Keranjang kosong' }, { status: 400 });
-  const method = ['cash', 'tf', 'wa'].includes(String(b.pay_method)) ? String(b.pay_method) : 'cash';
+  let method = ['cash', 'tf', 'wa'].includes(String(b.pay_method)) ? String(b.pay_method) : 'cash';
+  // Split pembayaran (fitur 3): whitelist metode {cash, tf, wa} & nominal
+  // bulat > 0 per bagian; aturan Σa === total diverifikasi di dalam
+  // transaksi (setelah total final, termasuk perk member).
+  const splitIn: { m: string; a: number }[] = [];
+  if (Array.isArray(b.pay_split)) {
+    for (const p of b.pay_split) {
+      const m = String((p as { m?: unknown })?.m ?? '');
+      if (m !== 'cash' && m !== 'tf' && m !== 'wa')
+        return NextResponse.json({ error: 'Metode pembayaran campur tidak dikenal' }, { status: 400 });
+      const a = Math.floor(Number((p as { a?: unknown })?.a) || 0);
+      if (a > 0) splitIn.push({ m, a });
+    }
+    if (splitIn.length === 0)
+      return NextResponse.json({ error: 'Nominal pembayaran campur tidak valid' }, { status: 400 });
+  }
   const manager = isManager(user);
   const clientRef = String(b.client_ref || '').trim().slice(0, 64);
 
@@ -147,7 +165,7 @@ export async function POST(req: Request) {
   if (clientRef) {
     const dup = (await d
       .prepare(
-        `SELECT s.id, s.total, s.status, s.created_at, s.member_points points, s.cashback, s.redeem, s.member_id,
+        `SELECT s.id, s.total, s.status, s.created_at, s.member_points points, s.cashback, s.redeem, s.member_id, s.pay_split,
                 m.name member_name
          FROM sales s LEFT JOIN members m ON m.id = s.member_id
          WHERE s.client_ref = ?`
@@ -162,6 +180,7 @@ export async function POST(req: Request) {
           cashback: number;
           redeem: number;
           member_id: number | null;
+          pay_split?: string | null;
           member_name?: string;
         }
       | undefined;
@@ -181,6 +200,7 @@ export async function POST(req: Request) {
           points: dup.points,
           cashback: dup.cashback,
           redeem: dup.redeem,
+          pay_split: parsePaySplit(dup.pay_split),
           member_name: dup.member_name || '',
         },
       });
@@ -335,16 +355,37 @@ export async function POST(req: Request) {
         redeemPtsValue = perk.redeemPtsValue;
       }
       const customer = String(b.customer || '').trim() || memberName;
-      const amount_paid = Math.max(0, Math.floor(Number(b.amount_paid) || 0));
-      const change = Math.max(0, Math.floor(Number(b.change) || 0));
+      // Split penuh (fitur 3, tanpa piutang): Σa harus sama dengan total
+      // final (setelah perk member); metode dominan (bagian terbesar)
+      // ditulis ke kolom pay_method legacy; tanpa kembalian
+      // (amount_paid = total, change = 0).
+      let paySplitParts: { m: string; a: number }[] = [];
+      let paySplitJson: string | null = null;
+      if (splitIn.length > 0) {
+        const splitSum = splitIn.reduce((s, x) => s + x.a, 0);
+        if (splitSum !== total)
+          throw new Error(
+            'Pembayaran campur belum lunas — input Rp ' +
+              splitSum.toLocaleString('id-ID') +
+              ', total Rp ' +
+              total.toLocaleString('id-ID')
+          );
+        const dom = splitIn.reduce((x, y) => (y.a > x.a ? y : x));
+        method = dom.m;
+        paySplitParts = splitIn;
+        paySplitJson = JSON.stringify(splitIn.map((x) => ({ m: x.m, a: x.a })));
+      }
+      const amount_paid =
+        paySplitParts.length > 0 ? total : Math.max(0, Math.floor(Number(b.amount_paid) || 0));
+      const change = paySplitParts.length > 0 ? 0 : Math.max(0, Math.floor(Number(b.change) || 0));
 
       const created_at = new Date().toISOString();
       const sale = await d
         .prepare(
           `INSERT INTO sales (kasir_id, customer, pay_method, status, note, total,
                               member_id, amount_paid, change, discount, member_discount,
-                              member_points, cashback, redeem, created_at, client_ref)
-           VALUES (?, ?, ?, 'unreported', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                              member_points, cashback, redeem, pay_split, created_at, client_ref)
+           VALUES (?, ?, ?, 'unreported', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .run(
           user.id,
@@ -360,6 +401,7 @@ export async function POST(req: Request) {
           points,
           cashback,
           redeem,
+          paySplitJson,
           created_at,
           clientRef
         );
@@ -444,6 +486,7 @@ export async function POST(req: Request) {
         tier,
         member_name: memberName,
         customer,
+        pay_split: paySplitParts.length > 0 ? paySplitParts : undefined,
         product_ids: insertItems.map((x) => x[2]),
         // Diagnostik penjaga margin (dipakai audit/notifikasi/POS utk
         // menampilkan seberapa banyak perk terpotong & apakah diskon

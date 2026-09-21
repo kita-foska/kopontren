@@ -12,7 +12,7 @@
 // SW-BUILD marker di-stamp ulang setiap build oleh scripts/inject-sw-version.mjs
 // → konten file berubah → browser mendeteksi SW baru → install + skipWaiting
 // + clientsClaim → cache lama di-purge saat activate.
-// SW-BUILD:a67219f6ebe5
+// SW-BUILD:06f15f3a2c4c
 const CACHE = 'kopontren-v10';
 const PAGE_CACHE = 'kopontren-pages-v8';
 const OFFLINE_FALLBACK = '/login';

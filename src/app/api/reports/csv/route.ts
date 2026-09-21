@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
+import { parsePaySplit } from '@/lib/pay-methods';
 
 export async function GET(req: Request) {
   const user = await currentUser();
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
   const rows = (
     (await d
       .prepare(
-        `SELECT s.created_at, u.username AS kasir, s.customer, s.pay_method, s.status,
+        `SELECT s.created_at, u.username AS kasir, s.customer, s.pay_method, s.pay_split, s.status,
                 si.product_name, si.qty, si.unit, si.unit_price, si.discount AS item_disc,
                 si.subtotal, s.total AS sale_total, s.discount AS sale_disc
        FROM sales s
@@ -34,6 +35,7 @@ export async function GET(req: Request) {
     'kasir',
     'customer',
     'metode',
+    'pembayaran_campur',
     'status',
     'produk',
     'qty',
@@ -52,12 +54,15 @@ export async function GET(req: Request) {
     head.join(',') +
     '\n' +
     rows
-      .map((r) =>
-        [
+      .map((r) => {
+        // Split (fitur 3): mis. "cash=70000+tf=30000"; kosong bila tunggal.
+        const pp = parsePaySplit(r.pay_split);
+        return [
           r.created_at,
           r.kasir,
           r.customer,
           r.pay_method,
+          pp.length > 0 ? pp.map((p) => p.m + '=' + p.a).join('+') : '',
           r.status,
           r.product_name,
           r.qty,
@@ -67,10 +72,9 @@ export async function GET(req: Request) {
           r.subtotal,
           r.sale_total,
           r.sale_disc ?? 0,
-        ]
-          .map(esc)
-          .join(',')
-      )
+        ];
+      })
+      .map((cells) => cells.map(esc).join(','))
       .join('\n');
   // Sanitize the filename: Windows forbids ':' (and '/', '\\', ':', '?', etc.)
   const safeFrom = String(from).replace(/[^A-Za-z0-9._-]/g, '-');

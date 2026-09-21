@@ -409,41 +409,32 @@ blocking)
   30 dtk) + 1 UPDATE — tak ada N+1; agregat kas/laporan tetap
   di-cache 60 dtk; `point_history(member_id)` terindeks.
 
-## Fitur 3 — Rencana Pembayaran Campuran (MENUNGGU APPROVAL USER)
-- 2 keputusan terbuka: (1) BAYAR SEBAGIAN → PIUTANG:
-  rekomendasi MULAI TIDAK ADA — split hanya memecah TOTAL yang
-  dibayar penuh ke ≥2 metode; piutang butuh status parsial +
-  pelunasan + rework laporan = fitur terpisah. (2) NAMING
-  METODE: whitelist sekarang {cash, tf, wa}; bila QRIS resmi
-  menyusul (item QRIS ditunda, butuh NMID), tambahkan `qris`
-  ke whitelist + `PAY_LABEL` di rekap/POS.
-- Skema: kolom `sales.pay_split` JSON TEXT NULL —
-  `[{"m":"cash","a":50000},{"m":"tf","a":50000}]`; baris lama
-  = NULL (fallback `pay_method` + `total`). Bump
-  SCHEMA_VERSION 12→13 (aturan wajib) + backup payload v3→v4
-  (export/import `pay_split`; import legacy tetap valid).
+## Fitur 3 — Pembayaran Campuran (SELESAI — approval user)
+- Keputusan user: SPLIT PENUH saja (Σ = total, tanpa piutang;
+  bayar-sebagian = follow-up terpisah). Whitlist metode {cash,
+  tf, wa} (QRIS resmi menyusul bila NMID siap -> tambah `qris`
+  ke whitelist + PAY_LABEL).
+- Skema v13: `sales.pay_split` JSON TEXT NULL
+  (`[{"m":"cash","a":50000},{"m":"tf","a":50000}]`); baris lama /
+  1-metode = NULL (fallback `pay_method` + `total`).
 - Validasi server POST /api/sales: metode ⊂ whitelist, nominal
-  integer ≥ 0, **Σ(split) = `total` persis** (porsi `change`
-  utk transaksi bercampur = 0), `pay_method` = metode
-  mayoritas utk kompatibilitas (baris lama & 1-metode tak
-  berubah).
-- Consumer terdampak (hasil audit 23 Sep, lengkap):
-  - `shifts/route.ts` `windowStats`: `cash_total` & `by_method`
-    harus agregat PER-METODE utk baris bercampur (JSON1
-    `json_each` / UNION query tambahan); rekap shift tetap 1
-    UPDATE.
-  - `reports/route.ts` L71 `GROUP BY pay_method` + L92
-    `cash_net`: agregat bercampur via `pay_split`.
-  - `lib/notify.ts` L574 (rekap shift utk notifikasi).
-  - `lib/rekap.ts`: struk/WA baris "Bayar: Tunai Rp… + Transfer
-    Rp…"; "uang kembali" hanya utk porsi tunai.
-  - `kas/route.ts`: label baris "(tunai+tf)"; saldo agregat
-    tetap Σ total semua penjualan (semantika tak berubah).
-  - `reports/csv/route.ts`: kolom `pay_method` (opsional: beri
-    label bercampur; default biarkan).
-  - `backup/route.ts`: export/import `pay_split` (payload v4).
-  - UI `pos-client.tsx` + `laporan-client.tsx` + antruan
-    offline: input multi-metode (nominal per metode, "isi
-    sisa"), payload ikut.
-- Estimasi: skema + validasi + ~7 consumer + UI ≈ 10 file;
-  QRIS resmi DI LUAR cakupan (TERTUNDA — NMID).
+  integer > 0 per bagian; **Σ(split) = total final PERSIS**
+  (dicek di dalam tx, setelah perk member); `change` = 0 &
+  `amount_paid` = total; `pay_method` = metode dominan (bagian
+  terbesar) — baris lama tak berubah.
+- Agregasi per-metode TERPUSAT di `src/lib/pay-methods.ts`
+  (modul murni, aman diimpor klien): `parsePaySplit`,
+  `salesByMethod` & `salesCashPortion` (SQL UNION ALL +
+  `json_each`; WHERE tanpa alias, args diulang 2x). Dipakai
+  windowStats shifts (cash_total/by_method), by_method reports,
+  periodSales notify. Shift-close: kasir menyetor BAGIAN tunai
+  transaksi bercampur, bukan totalnya.
+- Consumer selesai: rekap/struk WA + struk POS modal/cetak
+  (rincian per metode), kas label "(cash+campur)", csv kolom
+  `pembayaran_campur`, backup export/import (payload v4, legacy
+  tetap valid), laporan baris "(campur)", UI POS: tombol "🔀
+  Campur" + input nominal per metode + indikator Lunas/Selisih
+  live; payload `pay_split` ikut antrean offline.
+- Uji: `npm run test:split` (node:sqlite in-memory — agregat
+  per-metode & cash-portion utk baris legacy + mixed, 15 check).
+- QRIS resmi DI LUAR cakupan (TERTUNDA — NMID).

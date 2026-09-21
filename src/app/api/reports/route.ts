@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
 import { cached } from '@/lib/ref-cache';
+import { salesByMethod } from '@/lib/pay-methods';
 
 export async function GET(req: Request) {
   const user = await currentUser();
@@ -63,17 +64,9 @@ export async function GET(req: Request) {
         .get(from)) as { v: number }
     ).v;
 
-    const byMethod = Object.fromEntries(
-      (
-        (
-          await d
-            .prepare(
-              `SELECT pay_method m, COALESCE(SUM(total),0) t FROM sales WHERE created_at >= ? GROUP BY pay_method`
-            )
-            .all(from)
-        ) as { m: string; t: number }[]
-      ).map((r) => [r.m, r.t])
-    );
+    // Per metode pembayaran: baris mixed (sales.pay_split, fitur 3)
+    // diperluas per bagian — lihat src/lib/pay-methods.ts.
+    const byMethod = await salesByMethod(d, 'created_at >= ?', [from]);
 
     const top = (
       (await d

@@ -1,4 +1,5 @@
 // Plain-ASCII WhatsApp rekap builder (safe on every WA version: no emoji, no Unicode).
+import { parsePaySplit } from './pay-methods';
 export type RekapItem = {
   product_name: string;
   qty: number;
@@ -10,6 +11,7 @@ export type RekapSale = {
   id: number;
   customer: string;
   pay_method: string;
+  pay_split?: string;
   total: number;
   created_at: string;
   items: RekapItem[];
@@ -53,7 +55,14 @@ export function buildRekapMsg(sales: RekapSale[], title = 'LAPORAN PENJUALAN KOP
   let grand = 0;
   let itemCount = 0;
   sales.forEach((s, i) => {
-    const method = PAY_LABEL[s.pay_method] || s.pay_method.toUpperCase();
+    // Split (fitur 3): bila pay_split ada, tampilkan nominal per bagian.
+    const parts = parsePaySplit(s.pay_split);
+    const method =
+      parts.length > 0
+        ? parts
+            .map((p) => (PAY_LABEL[p.m] || p.m.toUpperCase()) + ' Rp ' + p.a.toLocaleString('id-ID'))
+            .join(' + ')
+        : PAY_LABEL[s.pay_method] || s.pay_method.toUpperCase();
     lines.push('');
     lines.push('*' + (i + 1) + '. ' + cleanName(s.customer) + '*');
     lines.push('Bayar: ' + method);
@@ -113,6 +122,7 @@ export function strukWaText(o: {
   tier?: string;
   total: number;
   pay: string;
+  paySplit?: { m: string; a: number }[];
   received?: number | null;
   change?: number;
 }): string {
@@ -145,10 +155,19 @@ export function strukWaText(o: {
   if (o.tier) {
     lines.push('Tier: ' + (o.tier === 'gold' ? 'Gold' : 'Silver'));
   }
-  lines.push('Bayar: ' + (PAY_LABEL[o.pay] || o.pay));
-  if (o.pay === 'cash' && o.received != null) {
-    lines.push('Diterima: Rp ' + o.received.toLocaleString('id-ID'));
-    lines.push('Kembali: Rp ' + (o.change ?? 0).toLocaleString('id-ID'));
+  if (o.paySplit && o.paySplit.length > 0) {
+    lines.push(
+      'Bayar: ' +
+        o.paySplit
+          .map((p) => (PAY_LABEL[p.m] || p.m) + ' Rp ' + p.a.toLocaleString('id-ID'))
+          .join(' + ')
+    );
+  } else {
+    lines.push('Bayar: ' + (PAY_LABEL[o.pay] || o.pay));
+    if (o.pay === 'cash' && o.received != null) {
+      lines.push('Diterima: Rp ' + o.received.toLocaleString('id-ID'));
+      lines.push('Kembali: Rp ' + (o.change ?? 0).toLocaleString('id-ID'));
+    }
   }
   lines.push('--------------------------------');
   lines.push('Terima kasih. Mohon maaf atas ketidaknyamanannya.');

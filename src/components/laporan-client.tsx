@@ -4,12 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, Badge, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
+import { parsePaySplit } from '@/lib/pay-methods';
 
 type Sale = {
   id: number;
   kasir_name: string;
   customer: string;
   pay_method: string;
+  pay_split?: string;
   status: string;
   total: number;
   created_at: string;
@@ -272,7 +274,8 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
                   {s.customer || 'Pelanggan Umum'}
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  {PAY[s.pay_method] || s.pay_method} · {fmtDateTime(s.created_at)}
+                  {PAY[s.pay_method] || s.pay_method}
+                  {parsePaySplit(s.pay_split).length > 0 ? ' (campur)' : ''} · {fmtDateTime(s.created_at)}
                 </span>
               </div>
               <div className="flex items-center gap-2">

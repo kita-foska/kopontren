@@ -319,6 +319,10 @@ async function migrate(d: Db) {
   // tanpa bergantung nilai setting admin yang bisa berubah.
   await execColumn(d, 'ALTER TABLE sales ADD COLUMN cashback INTEGER NOT NULL DEFAULT 0');
   await execColumn(d, 'ALTER TABLE sales ADD COLUMN redeem INTEGER NOT NULL DEFAULT 0');
+  // Pembayaran campur (fitur 3): pay_split = JSON array [{m, a}] — m
+  // {cash,tf,wa}, Σa = total, split penuh (tanpa piutang). NULL/'' =
+  // metode tunggal -> kolom pay_method tetap rujukan (legacy).
+  await execColumn(d, 'ALTER TABLE sales ADD COLUMN pay_split TEXT');
   await d.exec('CREATE TABLE IF NOT EXISTS members (id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL DEFAULT \'\', address TEXT NOT NULL DEFAULT \'\', points INTEGER NOT NULL DEFAULT 0, total_spent INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
   await d.exec('CREATE TABLE IF NOT EXISTS shifts (id INTEGER PRIMARY KEY, kasir_id INTEGER NOT NULL, label TEXT NOT NULL DEFAULT \'\', status TEXT NOT NULL DEFAULT \'open\', start_time TEXT NOT NULL, end_time TEXT, sales_count INTEGER NOT NULL DEFAULT 0, sales_total INTEGER NOT NULL DEFAULT 0, cash_total INTEGER NOT NULL DEFAULT 0, by_method TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
   await d.exec('CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY, user_id INTEGER, username TEXT NOT NULL DEFAULT \'\', action TEXT NOT NULL, table_name TEXT NOT NULL DEFAULT \'\', record_id INTEGER, old_value TEXT, new_value TEXT, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
@@ -721,7 +725,11 @@ export async function saveZakatSettings(
 // sales.redeem (rekam nominal per transaksi utk rollback DELETE &
 // pelaporan). execColumn idempoten di migrate(); DB existing (v11) akan
 // menjalankan fullInit sekali lagi pada cold start berikutnya.
-const SCHEMA_VERSION = 12;
+// Bump v13 (2026): pembayaran campur (fitur 3) — sales.pay_split
+// (JSON array [{m,a}], Σa = total; NULL = single method, pay_method
+// rujukan). execColumn idempoten di migrate(); DB existing (v12) akan
+// menjalankan fullInit sekali lagi pada cold start berikutnya.
+const SCHEMA_VERSION = 13;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

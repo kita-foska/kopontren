@@ -120,13 +120,19 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       `notification_settings`, `notification_logs` SERTAKAN;
       4 kolom audit_log v11 SERTAKAN; `point_history` TUNDA
       (di luar cakupan).
-- [m] Pembayaran campuran dalam satu transaksi (tunai + transfer) —
-      saat ini satu `pay_method` saja. **Rencana siap (audit 23 Sep
-      2026), menunggu approval user**: kolom JSON `sales.pay_split`
-      `[{"m":"cash","a":50000},…]` + bump SCHEMA_VERSION 12→13;
-      agregasi per-metode di kas/shift-close/laporan/rekap/notif/
-      backup (payload v4); UI POS multi-metode + baris struk;
-      validasi Σ(split) = total (bayar sebagian → piutang = follow-up).
+- [x] Pembayaran campuran dalam satu transaksi (tunai + transfer) —
+      SELESAI (Fitur 3): kolom JSON `sales.pay_split`
+      `[{"m":"cash","a":50000},…]` + SCHEMA_VERSION 13. SPLIT
+      PENUH saja (Σ(split) = total divalidasi server; bayar
+      sebagian/piutang = follow-up terpisah); whitelist {cash,
+      tf, wa}. Agregasi per-metode terpusat di
+      `src/lib/pay-methods.ts` (UNION ALL + json_each) utk
+      shift-close/reports/notify; rekap + struk WA/POS
+      menampilkan rincian per metode; kas label "+campur";
+      csv kolom `pembayaran_campur`; backup payload v4; UI POS
+      tombol "🔀 Campur" (input per metode + indikator lunas)
+      + payload ikut antrean offline. Uji: `npm run test:split`
+      (15 check).
 - [r] QRIS asli (gateway/NMID resmi) — KEPUTUSAN 22 Sep: DITUNDA sampai
       user (Makfi) urus NMID resmi (bank/agregator QRIS). **QRIS mock SVG di
       POS = PLACEHOLDER — JANGAN DIPAKAI PRODUCTION** (NMID `ID102003004050`

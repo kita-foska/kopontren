@@ -3,6 +3,7 @@ import { db, type Db } from '@/db';
 import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { notifyShiftClosed, notifyShiftOpened } from '@/lib/notify';
+import { salesByMethod, salesCashPortion } from '@/lib/pay-methods';
 
 type ShiftRow = {
   id: number;
@@ -35,25 +36,20 @@ async function windowStats(d: Db, kasirId: number, from: string, to?: string) {
   const args: (string | number)[] = to ? [kasirId, from, to] : [kasirId, from];
   const cnt = (
     (await d
-      .prepare(
-        `SELECT COUNT(*) c, COALESCE(SUM(total),0) t,
-              COALESCE(SUM(CASE WHEN pay_method = 'cash' THEN total ELSE 0 END),0) cash
-       FROM sales WHERE ${where}`
-      )
-      .get(...args)) as { c: number; t: number; cash: number }
+      .prepare(`SELECT COUNT(*) c, COALESCE(SUM(total),0) t FROM sales WHERE ${where}`)
+      .get(...args)) as { c: number; t: number }
   );
-  const methods = (
-    (await d
-      .prepare(
-        `SELECT pay_method m, COALESCE(SUM(total),0) t FROM sales WHERE ${where} GROUP BY pay_method`
-      )
-      .all(...args)) as { m: string; t: number }[]
-  );
+  // Kas tunai & per-metode: baris mixed (sales.pay_split, fitur 3)
+  // diperluas per bagian — kasir menyetor bagian tunainya, bukan total.
+  const [cash_total, by_method] = await Promise.all([
+    salesCashPortion(d, where, args),
+    salesByMethod(d, where, args),
+  ]);
   return {
     sales_count: cnt.c,
     sales_total: cnt.t,
-    cash_total: cnt.cash,
-    by_method: Object.fromEntries(methods.map((x) => [x.m, x.t])),
+    cash_total,
+    by_method,
   };
 }
 

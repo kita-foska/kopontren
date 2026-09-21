@@ -2,6 +2,7 @@ import { db, getSettings, type Db } from '@/db';
 import { invalidate } from '@/lib/ref-cache';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import * as webpush from 'web-push';
+import { salesByMethod } from '@/lib/pay-methods';
 
 /**
  * Sistem notifikasi KOPONTREN — HANYA untuk ADMIN.
@@ -570,14 +571,14 @@ async function periodSales(d: Db, from: string, to?: string): Promise<PeriodAgg>
         .get(...args)) as { v: number }
     ).v
   );
-  const methods = (await d
-    .prepare(`SELECT pay_method m, COALESCE(SUM(total),0) t FROM sales WHERE ${where} GROUP BY pay_method`)
-    .all(...args)) as { m: string; t: number }[];
+  // Per metode: baris mixed (sales.pay_split) diperluas per bagian
+  // (src/lib/pay-methods.ts); baris legacy memakai kolom pay_method.
+  const byMethod = await salesByMethod(d, where, args);
   return {
     count: Number(cnt.c),
     total: Number(cnt.t),
     cogs,
-    byMethod: Object.fromEntries(methods.map((x) => [x.m, Number(x.t)])),
+    byMethod,
   };
 }
 
