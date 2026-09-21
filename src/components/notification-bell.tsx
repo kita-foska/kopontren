@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell, CheckCheck } from 'lucide-react';
 import { api } from '@/components/ui';
 
@@ -14,17 +15,26 @@ type Notif = {
   created_at: string;
 };
 
+/** Posisi panel relative ke viewport (diukur dari tombol lonceng saat dibuka). */
+type PanelPos = { top: number; left: number; width: number; maxHeight: number };
+
 /**
  * Ikon lonceng notifikasi (HANYA admin) di header: badge jumlah belum dibaca,
  * dropdown 8 notifikasi terbaru + tandai-dibaca. Poll count tiap 30 detik.
  * Klik item -> tandai dibaca + buka link terkait.
+ *
+ * Panel di-render via portal ke <body> dengan position:fixed + ukuran/clamp
+ * viewport: panel TIDAK lagi terjebak stacking-context header (backdrop-blur)
+ * maupun meluber keluar layar di HP — selalu pas di bawah tombol lonceng.
  */
 export function NotificationBell() {
   const [count, setCount] = useState(0);
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notif[]>([]);
   const [busy, setBusy] = useState(false);
+  const [pos, setPos] = useState<PanelPos | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const loadCount = useCallback(async () => {
     const res = await api<{ count: number }>('/api/notifications/count');
@@ -42,21 +52,53 @@ export function NotificationBell() {
     return () => clearInterval(t);
   }, [loadCount]);
 
-  // Tutup panel bila klik di luar.
+  // Tutup panel bila klik di luar (panel kini di-portal ke <body>,
+  // jadi cek kedua ref: tombol trigger + panel itu sendiri).
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t) || panelRef.current?.contains(t)) return;
+      setOpen(false);
     };
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
   }, [open]);
 
+  /** Ukur ulang posisi panel (di bawah lonceng, clamp ke tepi layar). */
+  const calcPos = useCallback((): PanelPos | null => {
+    const btn = rootRef.current?.querySelector('button');
+    if (!btn || typeof window === 'undefined') return null;
+    const r = btn.getBoundingClientRect();
+    const width = Math.min(352, Math.max(260, window.innerWidth - 24));
+    // Tepi kanan panel sejajar tombol lonceng; clamp biar tidak keluar
+    // layar kiri di HP sempit (margin 12px dua sisi).
+    const left = Math.min(Math.max(12, r.right - width), window.innerWidth - width - 12);
+    const top = Math.round(r.bottom + 8);
+    const maxHeight = Math.max(220, Math.round(window.innerHeight - top - 12));
+    return { top, left, width, maxHeight };
+  }, []);
+
+  // Ikuti header sticky saat resize/scroll selama panel terbuka.
+  useEffect(() => {
+    if (!open) return;
+    const onResize = () => setPos(calcPos());
+    window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', onResize, { passive: true });
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onResize);
+    };
+  }, [open, calcPos]);
+
   const toggle = async () => {
     const next = !open;
     setOpen(next);
     if (next) {
+      setPos(calcPos());
       await Promise.all([loadItems(), loadCount()]);
+    } else {
+      setPos(null);
     }
   };
 
@@ -105,8 +147,22 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-11 z-50 w-[min(92vw,22rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-navy-600 dark:bg-navy-800">
+      {open &&
+        createPortal(
+          <div
+            ref={panelRef}
+            className="fixed z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-navy-600 dark:bg-navy-800"
+            style={
+              pos
+                ? {
+                    top: pos.top,
+                    left: pos.left,
+                    width: pos.width,
+                    maxHeight: pos.maxHeight,
+                  }
+                : { top: 64, right: 12, width: 'min(92vw, 22rem)' }
+            }
+          >
           <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 dark:border-navy-600">
             <p className="text-sm font-bold">Notifikasi</p>
             <div className="flex items-center gap-1">
@@ -155,8 +211,9 @@ export function NotificationBell() {
           >
             Buka pusat notifikasi
           </a>
-        </div>
-      )}
+            </div>,
+            document.body
+          )}
     </div>
   );
 }

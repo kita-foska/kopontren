@@ -22,9 +22,15 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                 className="h-9 w-auto shrink-0"
               />
               <div className="min-w-0 leading-tight">
-                <p className="truncate text-sm font-extrabold tracking-tight">Kopontren AL ITTIHAD</p>
+                <p className="truncate text-sm font-extrabold tracking-tight">
+                  {/* Nama pendek di HP agar brand tidak terpotong; nama
+                      lengkap muncul mulai breakpoint sm. */}
+                  <span className="sm:hidden">Kopontren</span>
+                  <span className="hidden sm:inline">Kopontren AL ITTIHAD</span>
+                </p>
                 <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">
-                  Kasir & Pembukuan
+                  <span className="sm:hidden">Kasir</span>
+                  <span className="hidden sm:inline">Kasir &amp; Pembukuan</span>
                 </p>
               </div>
             </a>
