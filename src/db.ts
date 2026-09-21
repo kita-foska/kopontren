@@ -314,6 +314,11 @@ async function migrate(d: Db) {
   // tercatat terpisah dari kolom discount (manual/grosir) agar laporan
   // kasir bisa membedakan keduanya.
   await execColumn(d, 'ALTER TABLE sales ADD COLUMN member_discount INTEGER NOT NULL DEFAULT 0');
+  // Redemsi & cashback per transaksi (fitur 2): direkam di baris sales agar
+  // DELETE transaksi bisa membalikkan cashback_balance & redemsi member
+  // tanpa bergantung nilai setting admin yang bisa berubah.
+  await execColumn(d, 'ALTER TABLE sales ADD COLUMN cashback INTEGER NOT NULL DEFAULT 0');
+  await execColumn(d, 'ALTER TABLE sales ADD COLUMN redeem INTEGER NOT NULL DEFAULT 0');
   await d.exec('CREATE TABLE IF NOT EXISTS members (id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT NOT NULL DEFAULT \'\', address TEXT NOT NULL DEFAULT \'\', points INTEGER NOT NULL DEFAULT 0, total_spent INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
   await d.exec('CREATE TABLE IF NOT EXISTS shifts (id INTEGER PRIMARY KEY, kasir_id INTEGER NOT NULL, label TEXT NOT NULL DEFAULT \'\', status TEXT NOT NULL DEFAULT \'open\', start_time TEXT NOT NULL, end_time TEXT, sales_count INTEGER NOT NULL DEFAULT 0, sales_total INTEGER NOT NULL DEFAULT 0, cash_total INTEGER NOT NULL DEFAULT 0, by_method TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
   await d.exec('CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY, user_id INTEGER, username TEXT NOT NULL DEFAULT \'\', action TEXT NOT NULL, table_name TEXT NOT NULL DEFAULT \'\', record_id INTEGER, old_value TEXT, new_value TEXT, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))');
@@ -712,7 +717,11 @@ export async function saveZakatSettings(
 // (user_name, user_role, ip_address, user_agent) + index idx_audit_user.
 // Dipakai execColumn idempoten di migrate(); DB existing (v10) akan
 // menjalankan fullInit sekali lagi pada cold start berikutnya.
-const SCHEMA_VERSION = 11;
+// Bump v12 (2026): redemsi poin & cashback (fitur 2) — sales.cashback +
+// sales.redeem (rekam nominal per transaksi utk rollback DELETE &
+// pelaporan). execColumn idempoten di migrate(); DB existing (v11) akan
+// menjalankan fullInit sekali lagi pada cold start berikutnya.
+const SCHEMA_VERSION = 12;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

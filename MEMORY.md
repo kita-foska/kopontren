@@ -10,7 +10,7 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   (`startOfDayJakarta()` kembalikan string UTC ISO, BUKAN format spasi WIB —
   jangan bandingkan string campur format).
 - `src/db.ts`: skema + migrasi idempoten + **gate `schema_version`**
-  (SAAT INI `SCHEMA_VERSION = 11`). Cold start: kalau versi DB < 11 →
+  (SAAT INI `SCHEMA_VERSION = 12`). Cold start: kalau versi DB < 12 →
   `fullInit` sekali; selain itu 1 SELECT saja. **Aturan: statement skema
   baru WAJIB diiringi bump `SCHEMA_VERSION`** (kalau tidak, DB lama tidak
   akan pernah dapat migrasi).

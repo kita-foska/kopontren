@@ -47,12 +47,14 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const d = await db();
   const sale = (await d
-    .prepare('SELECT id, total, member_id, member_points FROM sales WHERE id = ?')
+    .prepare('SELECT id, total, member_id, member_points, cashback, redeem FROM sales WHERE id = ?')
     .get(Number(id))) as {
     id: number;
     total: number;
     member_id: number | null;
     member_points: number;
+    cashback: number;
+    redeem: number;
   } | undefined;
   if (!sale) return NextResponse.json({ error: 'Transaksi tidak ditemukan' }, { status: 404 });
 
@@ -89,9 +91,10 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     if (sale.member_id) {
       await d
         .prepare(
-          `UPDATE members SET points = MAX(points - ?, 0), total_spent = MAX(total_spent - ?, 0) WHERE id = ?`
+          `UPDATE members SET points = MAX(points - ?, 0), total_spent = MAX(total_spent - ?, 0),
+           cashback_balance = MAX(cashback_balance + ?, 0) WHERE id = ?`
         )
-        .run(sale.member_points, sale.total, sale.member_id);
+        .run(sale.member_points, sale.total, sale.cashback, sale.member_id);
       // Ledger: batal transaksi membatalkan poin yang sudah diberikan.
       if (sale.member_points > 0) {
         await d
@@ -100,6 +103,42 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
              VALUES (?, ?, 'void', ?, ?)`
           )
           .run(sale.member_id, -sale.member_points, sale.total, sale.id);
+      }
+      // Rollback redemsi transaksi ini: kembalikan bagian poin & cashback
+      // yang dipakai, terbaca presisi dari ledger (bukan setting saat ini),
+      // lalu jejak 'refund' untuk keterlacakan.
+      if (sale.redeem > 0) {
+        const rec = (await d
+          .prepare(
+            `SELECT COALESCE(SUM(CASE WHEN reason = 'redeem' THEN ABS(delta) ELSE 0 END), 0) p,
+                    COALESCE(SUM(CASE WHEN reason = 'cashback_use' THEN ABS(delta) ELSE 0 END), 0) c
+             FROM point_history WHERE member_id = ? AND sale_id = ?
+               AND reason IN ('redeem', 'cashback_use')`
+          )
+          .get(sale.member_id, sale.id)) as { p: number; c: number };
+        if (rec.p > 0 || rec.c > 0) {
+          await d
+            .prepare(
+              'UPDATE members SET points = points + ?, cashback_balance = cashback_balance + ? WHERE id = ?'
+            )
+            .run(rec.p, rec.c, sale.member_id);
+          if (rec.p > 0) {
+            await d
+              .prepare(
+                `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
+                 VALUES (?, ?, 'refund', ?, ?)`
+              )
+              .run(sale.member_id, rec.p, rec.p, sale.id);
+          }
+          if (rec.c > 0) {
+            await d
+              .prepare(
+                `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
+                 VALUES (?, ?, 'refund_cash', ?, ?)`
+              )
+              .run(sale.member_id, rec.c, rec.c, sale.id);
+          }
+        }
       }
     }
   });

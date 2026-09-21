@@ -15,6 +15,7 @@ type QueuedSale = {
     note: string;
     member_id?: number;
     discount?: number;
+    redeem?: number;
     amount_paid: number;
     change: number;
     client_ref: string;
@@ -84,6 +85,7 @@ type SaleResp = {
     points?: number;
     member_discount?: number;
     cashback?: number;
+    redeem?: number;
     tier?: string;
     member_name?: string;
   };
@@ -131,6 +133,7 @@ type Receipt = {
   points: number;
   disc: number;
   memberDiscount: number;
+  redeem: number;
   cashback: number;
   tier?: string;
 };
@@ -152,6 +155,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [memberId, setMemberId] = useState('');
   const [mq, setMq] = useState('');
   const [disc, setDisc] = useState('');
+  const [redeemOn, setRedeemOn] = useState(false);
   const [memberModal, setMemberModal] = useState(false);
   const [memberForm, setMemberForm] = useState({ name: '', phone: '', address: '' });
   const [busy, setBusy] = useState(false);
@@ -188,6 +192,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     const t = setTimeout(() => setQDeb(q), 300);
     return () => clearTimeout(t);
   }, [q]);
+  // Redemsi harus di-reset tiap ganti/kosongkan member: nominal yang
+  // dipreview milik member sebelumnya tidak boleh ikut checkout baru.
+  useEffect(() => setRedeemOn(false), [memberId]);
 
   const load = useCallback(async () => {
     const r = await api<ProductsResp>('/api/products?live=1');
@@ -388,7 +395,19 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   perkPct = Math.min(90, perkPct);
   const baseForPerk = Math.max(0, subtotal - discNum);
   const perkAmt = selectedMember ? Math.floor((baseForPerk * perkPct) / 100) : 0;
-  const total = Math.max(0, baseForPerk - perkAmt);
+  const totalPerk = Math.max(0, baseForPerk - perkAmt);
+  // Preview redemsi (fitur 2): sumber = poin member (× nilai point_value,
+  // dipakai dulu) lalu cashback_balance; cap di total setelah perk —
+  // identik dengan rumus server POST /api/sales.
+  const pointValue = numSetting('point_value');
+  const redeemMax = selectedMember
+    ? Math.min(
+        (selectedMember.points || 0) * pointValue + (selectedMember.cashback_balance || 0),
+        totalPerk
+      )
+    : 0;
+  const total = redeemOn && selectedMember ? Math.max(0, totalPerk - redeemMax) : totalPerk;
+  const redeemAmt = totalPerk - total;
   const cbPreview = selectedMember ? Math.floor((total * numSetting('cashback')) / 100) : 0;
   const change = Math.max(0, receivedNum - total);
 
@@ -432,6 +451,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       note,
       member_id: memberId ? Number(memberId) : undefined,
       discount: discNum || undefined,
+      redeem: redeemAmt > 0 ? redeemAmt : undefined,
       amount_paid: cashReceived ? receivedNum : total,
       change: cashReceived ? change : 0,
       client_ref: clientRef,
@@ -477,6 +497,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         disc: discNum,
         memberDiscount: saved.member_discount || 0,
         cashback: saved.cashback || 0,
+        redeem: saved.redeem || 0,
         tier: saved.tier,
       });
     }
@@ -645,6 +666,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       member: receipt.memberName,
       discount: receipt.disc,
       memberDiscount: receipt.memberDiscount,
+      redeem: receipt.redeem,
       cashback: receipt.cashback,
       tier: receipt.tier,
       total: receipt.sale?.total ?? 0,
@@ -672,6 +694,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       member: receipt.memberName,
       discount: receipt.disc,
       memberDiscount: receipt.memberDiscount,
+      redeem: receipt.redeem,
       cashback: receipt.cashback,
       tier: receipt.tier,
       total: receipt.sale?.total ?? 0,
@@ -1007,6 +1030,23 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     {perkAmt > 0 ? ` · Diskon member −${rp(perkAmt)}${isBday ? ' (ultah 🎉)' : ''}` : ''}
                     {cbPreview > 0 ? ` · Cashback +${rp(cbPreview)} ke saldo` : ''}
                   </div>
+                  <label className="flex items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 accent-emerald-500"
+                      checked={redeemOn}
+                      disabled={redeemMax <= 0}
+                      onChange={(e) => setRedeemOn(e.target.checked)}
+                    />
+                    <span className={redeemMax <= 0 ? 'text-slate-400 dark:text-slate-500' : ''}>
+                      Tebus poin/saldo
+                      {redeemMax > 0
+                        ? ` −${rp(redeemMax)} (${selectedMember.points} poin${
+                            pointValue > 0 ? ` × ${rp(pointValue)}` : ''
+                          } · saldo ${rp(selectedMember.cashback_balance || 0)})`
+                        : ' (tidak tersedia)'}
+                    </span>
+                  </label>
                 </div>
               )}
             </div>
@@ -1118,6 +1158,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 <div className="flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
                   <span>Diskon member{isBday ? ' (ultah 🎉)' : ''}</span>
                   <span>-{rp(perkAmt)}</span>
+                </div>
+              )}
+              {redeemAmt > 0 && (
+                <div className="flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
+                  <span>Tebus poin/saldo</span>
+                  <span>-{rp(redeemAmt)}</span>
                 </div>
               )}
               <div className="flex items-center justify-between text-base font-extrabold text-slate-900 dark:text-slate-100">
@@ -1263,6 +1309,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <span>-{rp(receipt.memberDiscount)}</span>
                   </div>
                 )}
+                {receipt.redeem > 0 && (
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                    <span>Tebus poin/saldo</span>
+                    <span>-{rp(receipt.redeem)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-extrabold text-sm">
                   <span>TOTAL</span>
                   <span>{rp(receipt.sale?.total ?? 0)}</span>
@@ -1347,6 +1399,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Diskon member</span>
               <span>-{receipt.memberDiscount.toLocaleString('id-ID')}</span>
+            </div>
+          )}
+          {receipt.redeem > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Tebus poin/saldo</span>
+              <span>-{receipt.redeem.toLocaleString('id-ID')}</span>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '13px' }}>

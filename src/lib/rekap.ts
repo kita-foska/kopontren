@@ -108,6 +108,7 @@ export function strukWaText(o: {
   member?: string;
   discount?: number;
   memberDiscount?: number;
+  redeem?: number;
   cashback?: number;
   tier?: string;
   total: number;
@@ -132,6 +133,9 @@ export function strukWaText(o: {
   }
   if (o.memberDiscount && o.memberDiscount > 0) {
     lines.push('Diskon member: -Rp ' + o.memberDiscount.toLocaleString('id-ID'));
+  }
+  if (o.redeem && o.redeem > 0) {
+    lines.push('Tebus poin/saldo: -Rp ' + o.redeem.toLocaleString('id-ID'));
   }
   lines.push('--------------------------------');
   lines.push('*TOTAL: Rp ' + o.total.toLocaleString('id-ID') + '*');

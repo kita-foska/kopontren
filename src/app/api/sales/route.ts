@@ -128,6 +128,7 @@ export async function POST(req: Request) {
     amount_paid?: number;
     change?: number;
     discount?: number;
+    redeem?: number;
     client_ref?: string;
     items?: { product_id: number; qty: number; unit_price?: number; discount?: number }[];
   };
@@ -145,7 +146,7 @@ export async function POST(req: Request) {
   if (clientRef) {
     const dup = (await d
       .prepare(
-        `SELECT s.id, s.total, s.status, s.created_at, s.member_points points, s.member_id,
+        `SELECT s.id, s.total, s.status, s.created_at, s.member_points points, s.cashback, s.redeem, s.member_id,
                 m.name member_name
          FROM sales s LEFT JOIN members m ON m.id = s.member_id
          WHERE s.client_ref = ?`
@@ -157,6 +158,8 @@ export async function POST(req: Request) {
           status: string;
           created_at: string;
           points: number;
+          cashback: number;
+          redeem: number;
           member_id: number | null;
           member_name?: string;
         }
@@ -175,6 +178,8 @@ export async function POST(req: Request) {
           status: dup.status,
           created_at: dup.created_at,
           points: dup.points,
+          cashback: dup.cashback,
+          redeem: dup.redeem,
           member_name: dup.member_name || '',
         },
       });
@@ -267,11 +272,24 @@ export async function POST(req: Request) {
       let memberDiscount = 0;
       let cashback = 0;
       let tier = '';
+      let redeem = 0;
+      let redeemPoints = 0;
+      let redeemCash = 0;
+      let redeemPtsValue = 0;
       if (b.member_id && Number(b.member_id) > 0) {
         const mrow = (await d
-          .prepare('SELECT id, name, birth_date, total_spent FROM members WHERE id = ?')
+          .prepare(
+            'SELECT id, name, birth_date, total_spent, points, cashback_balance FROM members WHERE id = ?'
+          )
           .get(Number(b.member_id))) as
-          | { id: number; name: string; birth_date: string; total_spent: number }
+          | {
+              id: number;
+              name: string;
+              birth_date: string;
+              total_spent: number;
+              points: number;
+              cashback_balance: number;
+            }
           | undefined;
         if (!mrow) throw new Error('Member tidak ditemukan');
         memberId = mrow.id;
@@ -295,11 +313,28 @@ export async function POST(req: Request) {
         pct = Math.min(90, pct);
         memberDiscount = Math.floor((prePerk * pct) / 100);
         total = prePerk - memberDiscount;
-        // Perk 2 — cashback: % dari total SETELAH perk, dikredit ke
-        // members.cashback_balance (redemisi = fitur menyusul).
+        // Perk 4 — redemsi: nominal Rp dari poin member (pakai poin dulu,
+        // nilai = poin × point_value) lalu sisa dari cashback_balance,
+        // cap di total setelah perk. Sumber & cap sesuai keputusan user;
+        // server tetap otoritatif — POS hanya preview.
+        const availPoints = Math.max(0, Math.floor(Number(mrow.points) || 0));
+        const availCb = Math.max(0, Math.floor(Number(mrow.cashback_balance) || 0));
+        const pv = num('point_value');
+        const wantRedeem = Math.min(
+          Math.floor(Number(b.redeem) || 0),
+          total,
+          availPoints * pv + availCb
+        );
+        redeemPoints = pv > 0 ? Math.min(Math.floor(wantRedeem / pv), availPoints) : 0;
+        redeemCash = Math.min(wantRedeem - redeemPoints * pv, availCb);
+        redeemPtsValue = redeemPoints * pv;
+        redeem = redeemPtsValue + redeemCash;
+        total = Math.max(0, total - redeem);
+        // Perk 2 — cashback: % dari total SETELAH perk & redemsi, dikredit
+        // ke members.cashback_balance.
         cashback = Math.floor((total * num('cashback')) / 100);
-        // Poin dihitung dari total setelah perk, nilai per poin dari
-        // setting points_every (default Rp 10.000).
+        // Poin dihitung dari total setelah perk & redemsi, nilai per poin
+        // dari setting points_every (default Rp 10.000).
         const pointsEvery = Math.max(1000, Math.floor(Number(mset.points_every) || 10000));
         points = Math.floor(total / pointsEvery);
         // Perk 3 — auto-tier: status dari akumulasi total_spent
@@ -323,8 +358,9 @@ export async function POST(req: Request) {
       const sale = await d
         .prepare(
           `INSERT INTO sales (kasir_id, customer, pay_method, status, note, total,
-                              member_id, amount_paid, change, discount, member_discount, member_points, created_at, client_ref)
-           VALUES (?, ?, ?, 'unreported', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                              member_id, amount_paid, change, discount, member_discount,
+                              member_points, cashback, redeem, created_at, client_ref)
+           VALUES (?, ?, ?, 'unreported', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .run(
           user.id,
@@ -338,6 +374,8 @@ export async function POST(req: Request) {
           lineDiscSum + txDisc,
           memberDiscount,
           points,
+          cashback,
+          redeem,
           created_at,
           clientRef
         );
@@ -350,12 +388,27 @@ export async function POST(req: Request) {
         await insItem.run(sid, pid, name, qty, unit, price, sub, lineDisc, cost);
       }
       if (memberId) {
+        if (redeem > 0) {
+          // Guard anti-race: balance harus masih cukup saat UPDATE
+          // berjalan, bukan saat SELECT di atas — mencegah oversell
+          // poin/saldo bila dua transaksi paralel memakai member sama.
+          const guard = (await d
+            .prepare(
+              'SELECT points, cashback_balance FROM members WHERE id = ? AND points >= ? AND cashback_balance >= ?'
+            )
+            .get(memberId, redeemPoints, redeemCash)) as {
+            points: number;
+            cashback_balance: number;
+          } | undefined;
+          if (!guard)
+            throw new Error('Poin/saldo member tidak mencukupi untuk redemsi');
+        }
         await d
           .prepare(
-            `UPDATE members SET points = points + ?, total_spent = total_spent + ?,
-             tier = ?, cashback_balance = cashback_balance + ? WHERE id = ?`
+            `UPDATE members SET points = MAX(points + ? - ?, 0), total_spent = total_spent + ?,
+             tier = ?, cashback_balance = MAX(cashback_balance + ? - ?, 0) WHERE id = ?`
           )
-          .run(points, total, tier, cashback, memberId);
+          .run(points, redeemPoints, total, tier, cashback, redeemCash, memberId);
         // Jejak ledger poin (dulu tabel point_history tidak pernah tertulis).
         if (points > 0) {
           await d
@@ -375,6 +428,25 @@ export async function POST(req: Request) {
             )
             .run(memberId, cashback, total, sid);
         }
+        // Jejak ledger redemsi: bagian poin (reason 'redeem') & bagian
+        // cashback (reason 'cashback_use') sebagai delta NEGATIF, agar
+        // DELETE transaksi bisa membalikkan saldo secara presisi.
+        if (redeemPoints > 0) {
+          await d
+            .prepare(
+              `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
+               VALUES (?, ?, 'redeem', ?, ?)`
+            )
+            .run(memberId, -redeemPoints, redeemPtsValue, sid);
+        }
+        if (redeemCash > 0) {
+          await d
+            .prepare(
+              `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
+               VALUES (?, ?, 'cashback_use', ?, ?)`
+            )
+            .run(memberId, -redeemCash, redeemCash, sid);
+        }
       }
       return {
         id: sid,
@@ -384,6 +456,7 @@ export async function POST(req: Request) {
         points,
         member_discount: memberDiscount,
         cashback,
+        redeem,
         tier,
         member_name: memberName,
         customer,
