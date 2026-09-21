@@ -120,21 +120,26 @@ body {
     position: absolute;
     left: 0;
     top: 0;
-    width: 320px;
+    width: 58mm;
+    margin: 0;
+    padding: 2mm;
     background: #fff;
     color: #000;
     font-family: 'Courier New', ui-monospace, monospace;
-    font-size: 12px;
-    line-height: 1.5;
-    padding: 12px;
+    font-size: 9pt;
+    line-height: 1.3;
   }
   /* Cetakan halaman (mis. /admin/zakat): SEMUA konten tersembunyi oleh
      aturan receipt di atas, kecuali elemen ber-kelas .print-area (opt-in
      "cetak halaman penuh" — dipakai /admin/zakat). Selebihnya sembunyikan
      chrome aplikasi dan paksa skema terang agar hemat tinta & terbaca. */
   .print-area, .print-area * { visibility: visible; }
+  /* Elemen yang memang tidak boleh ikut terprint (mis. chrome / tombol). */
+  .print-hidden { display: none !important; }
   header { display: none; }
   body { background: #fff !important; }
   .card { background: #fff !important; }
-  @page { margin: 8mm; }
+  /* Default halaman: A4 utk laporan penuh (.print-area). Struk thermal 
+     override ke 58mm/0mm HANYA saat print struk via printReceipt() di pos-client. */
+  @page { size: A4; margin: 8mm; }
 }
