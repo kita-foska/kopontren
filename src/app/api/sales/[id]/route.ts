@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { db, tx } from '@/db';
+import { db, tx, getMemberSettings } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { parsePerkConfig } from '@/lib/perks';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
@@ -64,6 +65,14 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   // ("Retur #id" di cash_entries) & riwayat returns ikut dihapus.
   let returnedQty = 0;
   await tx(d, async () => {
+    // Guard anti-double-delete (race 2 DELETE paralel / double submit):
+    // hapus baris transaksi DULU dan pastikan changes === 1. Semua
+    // rollback di bawah (stok, poin, saldo, ledger) baru terjadi untuk
+    // transaksi yang memang masih ada; penghapus ganda throw → seluruh
+    // batch di-rollback (tidak ada restock/kredit dobel).
+    const delRes = await d.prepare('DELETE FROM sales WHERE id = ?').run(sale.id);
+    if (Number(delRes.changes) !== 1)
+      throw new Error('Transaksi sudah dihapus — batalkan penghapusan ganda');
     const items = (
       await d.prepare('SELECT product_id, qty FROM sale_items WHERE sale_id = ?').all(sale.id)
     ) as { product_id: number | null; qty: number }[];
@@ -87,14 +96,29 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     // Riwayat retur yang merujuk sale ini.
     await d.prepare('DELETE FROM returns WHERE sale_id = ?').run(sale.id);
     await d.prepare('DELETE FROM sale_items WHERE sale_id = ?').run(sale.id);
-    await d.prepare('DELETE FROM sales WHERE id = ?').run(sale.id);
     if (sale.member_id) {
+      const mrow = (await d
+        .prepare('SELECT total_spent FROM members WHERE id = ?')
+        .get(sale.member_id)) as { total_spent: number } | undefined;
       await d
         .prepare(
           `UPDATE members SET points = MAX(points - ?, 0), total_spent = MAX(total_spent - ?, 0),
            cashback_balance = MAX(cashback_balance + ?, 0) WHERE id = ?`
         )
         .run(sale.member_points, sale.total, sale.cashback, sale.member_id);
+      // Rehitung auto-tier setelah total_spent turun — tanpa ini badge
+      // tier member tetap stale (mis. gold) sampai transaksi berikutnya.
+      if (mrow) {
+        const cfg = parsePerkConfig(await getMemberSettings());
+        const newSpent = Math.max(0, Math.floor(Number(mrow.total_spent) || 0) - sale.total);
+        const newTier =
+          cfg.tierGold > 0 && newSpent >= cfg.tierGold
+            ? 'gold'
+            : cfg.tierSilver > 0 && newSpent >= cfg.tierSilver
+              ? 'silver'
+              : '';
+        await d.prepare('UPDATE members SET tier = ? WHERE id = ?').run(newTier, sale.member_id);
+      }
       // Ledger: batal transaksi membatalkan poin yang sudah diberikan.
       if (sale.member_points > 0) {
         await d
@@ -111,11 +135,18 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
         const rec = (await d
           .prepare(
             `SELECT COALESCE(SUM(CASE WHEN reason = 'redeem' THEN ABS(delta) ELSE 0 END), 0) p,
-                    COALESCE(SUM(CASE WHEN reason = 'cashback_use' THEN ABS(delta) ELSE 0 END), 0) c
+                    COALESCE(SUM(CASE WHEN reason = 'cashback_use' THEN ABS(delta) ELSE 0 END), 0) c,
+                    COALESCE(SUM(CASE WHEN reason = 'redeem' THEN amount ELSE 0 END), 0) p_amount,
+                    COALESCE(SUM(CASE WHEN reason = 'cashback_use' THEN amount ELSE 0 END), 0) c_amount
              FROM point_history WHERE member_id = ? AND sale_id = ?
                AND reason IN ('redeem', 'cashback_use')`
           )
-          .get(sale.member_id, sale.id)) as { p: number; c: number };
+          .get(sale.member_id, sale.id)) as {
+          p: number;
+          c: number;
+          p_amount: number;
+          c_amount: number;
+        };
         if (rec.p > 0 || rec.c > 0) {
           await d
             .prepare(
@@ -128,7 +159,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
                 `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
                  VALUES (?, ?, 'refund', ?, ?)`
               )
-              .run(sale.member_id, rec.p, rec.p, sale.id);
+              .run(sale.member_id, rec.p, rec.p_amount, sale.id);
           }
           if (rec.c > 0) {
             await d
@@ -136,7 +167,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
                 `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
                  VALUES (?, ?, 'refund_cash', ?, ?)`
               )
-              .run(sale.member_id, rec.c, rec.c, sale.id);
+              .run(sale.member_id, rec.c, rec.c_amount, sale.id);
           }
         }
       }
@@ -153,6 +184,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     note:
       'Stok dikembalikan' +
       (returnedQty > 0 ? ' (net after ' + returnedQty + ' qty sudah diretur)' : '') +
-      (sale.member_id ? ' & poin member dibatalkan' : ''),
+      (sale.member_id ? (sale.redeem > 0 ? ' & poin + redemsi dibatalkan' : ' & poin member dibatalkan') : ''),
   });
 }
