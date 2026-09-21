@@ -6,6 +6,28 @@ import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
 
+/**
+ * Cetak struk thermal 58mm: sementara switch @page jadi 58mm/0mm
+ * (default global @page adalah A4 utk laporan penuh .print-area), lalu
+ * kembalikan setelah dialog print ditutup. Dipakai semua jalur cetak struk
+ * POS: auto-print, hotkey F5, dan tombol "Cetak Struk".
+ */
+let receipt58Seq = 0;
+function printReceipt() {
+  const id = '__kopontren_receipt58__' + ++receipt58Seq;
+  const style = document.createElement('style');
+  style.id = id;
+  style.textContent = '@page { size: 58mm auto; margin: 0; }';
+  document.head.appendChild(style);
+  const remove = () => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  };
+  window.addEventListener('afterprint', remove, { once: true });
+  setTimeout(remove, 4000); // fallback bila afterprint tak ber-fires
+  window.print();
+}
+
 type QueuedSale = {
   ref: string;
   at: string;
@@ -163,7 +185,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [memberId, setMemberId] = useState('');
   const [mq, setMq] = useState('');
   const [disc, setDisc] = useState('');
-  const [redeemOn, setRedeemOn] = useState(false);
+  const [redeemInput, setRedeemInput] = useState('');
   const [memberModal, setMemberModal] = useState(false);
   const [memberForm, setMemberForm] = useState({ name: '', phone: '', address: '' });
   const [busy, setBusy] = useState(false);
@@ -202,7 +224,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   }, [q]);
   // Redemsi harus di-reset tiap ganti/kosongkan member: nominal yang
   // dipreview milik member sebelumnya tidak boleh ikut checkout baru.
-  useEffect(() => setRedeemOn(false), [memberId]);
+  useEffect(() => setRedeemInput(''), [memberId]);
 
   const load = useCallback(async () => {
     const r = await api<ProductsResp>('/api/products?live=1');
@@ -416,8 +438,17 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         totalPerk
       )
     : 0;
-  const total = redeemOn && selectedMember ? Math.max(0, totalPerk - redeemMax) : totalPerk;
-  const redeemAmt = totalPerk - total;
+  // Follow-up (a): kasir input nominal tebus (Rp), bukan auto-max. Nominal
+  // di-clamp ke redeemMax (ketersediaan saldo & plafon total). Server memakai
+  // rumus SAMA (perks.ts): poin dipakai dulu, sisanya saldo cashback.
+  const redeemInputNum = Math.max(0, Math.floor(Number(redeemInput.replace(/[^\d]/g, '')) || 0));
+  const redeemAmt = selectedMember ? Math.min(redeemInputNum, redeemMax) : 0;
+  const total = selectedMember ? Math.max(0, totalPerk - redeemAmt) : totalPerk;
+  // Breakdown preview (rumus identik server): N poin dulu, sisanya cashback.
+  const availPts = selectedMember?.points || 0;
+  const availCb = selectedMember?.cashback_balance || 0;
+  const redeemPts = pointValue > 0 ? Math.min(Math.floor(redeemAmt / pointValue), availPts) : 0;
+  const redeemCb = Math.min(redeemAmt - redeemPts * pointValue, availCb);
   const cbPreview = selectedMember ? Math.floor((total * numSetting('cashback')) / 100) : 0;
   const change = Math.max(0, receivedNum - total);
 
@@ -545,7 +576,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     load();
     loadShift();
     // Auto-cetak struk setelah transaksi (bisa dimatikan di modal struk).
-    if (r.data.sale && !r.data.deduped && autoPrint) setTimeout(() => window.print(), 900);
+    if (r.data.sale && !r.data.deduped && autoPrint) setTimeout(() => printReceipt(), 900);
   }
 
   /** Sinkronkan antrean transaksi offline (dipanggil otomatis saat online). */
@@ -616,7 +647,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         if (!busy && cart.length > 0) void checkout();
       } else if (e.key === 'F5') {
         e.preventDefault();
-        if (receipt) window.print();
+        if (receipt) printReceipt();
       } else if (e.key === 'Escape') {
         if (scanModal) {
           setScanModal(false);
@@ -681,7 +712,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   }
 
   function printStruk() {
-    window.print();
+    printReceipt();
   }
 
   function handleSendWaStruk() {
@@ -1067,23 +1098,49 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     {perkAmt > 0 ? ` · Diskon member −${rp(perkAmt)}${isBday ? ' (ultah 🎉)' : ''}` : ''}
                     {cbPreview > 0 ? ` · Cashback +${rp(cbPreview)} ke saldo` : ''}
                   </div>
-                  <label className="flex items-center gap-1.5">
-                    <input
-                      type="checkbox"
-                      className="h-3.5 w-3.5 accent-emerald-500"
-                      checked={redeemOn}
-                      disabled={redeemMax <= 0}
-                      onChange={(e) => setRedeemOn(e.target.checked)}
-                    />
+                  <div className="flex items-center gap-1.5">
                     <span className={redeemMax <= 0 ? 'text-slate-400 dark:text-slate-500' : ''}>
                       Tebus poin/saldo
-                      {redeemMax > 0
-                        ? ` −${rp(redeemMax)} (${selectedMember.points} poin${
-                            pointValue > 0 ? ` × ${rp(pointValue)}` : ''
-                          } · saldo ${rp(selectedMember.cashback_balance || 0)})`
-                        : ' (tidak tersedia)'}
                     </span>
-                  </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="input w-24 text-xs"
+                      placeholder="Rp 0"
+                      value={redeemInput}
+                      disabled={redeemMax <= 0}
+                      onChange={(e) => setRedeemInput(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="btn-ghost px-1.5 py-0.5 text-[11px]"
+                      disabled={redeemMax <= 0}
+                      onClick={() => setRedeemInput(String(redeemMax))}
+                      title="Tebus semua (maksimal)"
+                    >
+                      Maks
+                    </button>
+                  </div>
+                  <div
+                    className={
+                      redeemAmt > 0
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }
+                  >
+                    {redeemMax <= 0
+                      ? 'Tidak tersedia (saldo poin & cashback habis)'
+                      : redeemAmt > 0
+                        ? `Tebus −${rp(redeemAmt)} (${redeemPts} poin + Rp ${rp(redeemCb)} cashback)`
+                        : `Saldo: ${selectedMember.points} poin${
+                            pointValue > 0 ? ` × ${rp(pointValue)}` : ''
+                          } · cashback ${rp(selectedMember.cashback_balance || 0)} · maks ${rp(redeemMax)}`}
+                  </div>
+                  {redeemInputNum > redeemMax && redeemMax > 0 && (
+                    <div className="text-amber-600 dark:text-amber-400">
+                      Nominal melebihi saldo — ditinjau ke maksimal {rp(redeemMax)}.
+                    </div>
+                  )}
                 </div>
               )}
             </div>

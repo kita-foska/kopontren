@@ -397,8 +397,10 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
 
 ## Redemsi Poin + Saldo Cashback — rollback DELETE (baseline
 `66a3db9` + fix `1b98a24`, 23 Sep)
-- UI POS: checkbox "Tebus poin/saldo" (nominal `redeem`; poin
-  dulu lalu saldo) + 2 baris struk.
+- UI POS: dulu checkbox "Tebus poin/saldo" (auto-max); KINI input
+  nominal bebas + tombol "Maks" (follow-up — lihat seksi "Redemsi
+  Parsial" di bawah); nominal `redeem`; poin dulu lalu saldo;
+  + 2 baris struk.
 - DELETE /api/sales/[id]: guard anti-double-delete — hapus baris
   sales DULU, cek `changes === 1` baru restock/rollback member;
   race 2 DELETE paralel → seluruh batch di-rollback (tak ada
@@ -410,6 +412,18 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   audit konsisten.
 - `.gitignore` + lokal: `_prod` (dump turso prod), `_ts.json`,
   `db.txt` — JANGAN commit.
+
+## Redemsi Parsial — input nominal (follow-up UI, 24 Sep 2026)
+- Checkbox "Tebus poin/saldo" (auto-max) GANTI jadi input nominal
+  Rp (`redeemInput`) di POS: kasir ketik nominal bebas, di-clamp ≤
+  `redeemMax` (= poin×point_value + cashback_balance, plafon total).
+  Tombol "Maks" = perilaku auto-max lama (shortcut).
+- Preview live "Tebus −Rp X (N poin + Rp Y cashback)" pakai rumus
+  SAMA server (perks.ts): `N=min(floor(redeem/pointValue),
+  availPoints)`, `Y=min(redeem−N·pointValue, availCb)`. Nominal >
+  saldo → warning + auto-clamp. Backend TIDAK berubah (POST
+  /api/sales sudah terima `b.redeem` nominal sejak baseline Fitur 2).
+  TSC + `next build` lolos. **Fitur 2 (redemsi) 100% selesai.**
 
 ## Bug check 3x utk perk/redemsi/DELETE (23 Sep — tanpa temuan
 blocking)

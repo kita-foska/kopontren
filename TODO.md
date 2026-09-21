@@ -200,3 +200,10 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
   start berikutnya).
 - [x] Rename aplikasi "Kopontren AL ITTIHAD" + layout header —
   commit `eeb9a50`.
+
+## Fitur
+- [x] **Redemsi parsial — input nominal (24 Sep 2026):** POS ganti
+  checkbox auto-max jadi input nominal Rp + tombol "Maks" + preview
+  live "Tebus −Rp X (N poin + Rp Y cashback)". Backend tak berubah
+  (POST /api/sales `b.redeem` nominal). TSC + `next build` lolos.
+  **Fitur 2 (redemsi) 100% SELESAI.**
