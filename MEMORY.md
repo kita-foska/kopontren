@@ -14,9 +14,12 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   `fullInit` sekali; selain itu 1 SELECT saja. **Aturan: statement skema
   baru WAJIB diiringi bump `SCHEMA_VERSION`** (kalau tidak, DB lama tidak
   akan pernah dapat migrasi).
-- Transaksi: `tx(d, fn)` — Turso: batch atomik 1 round-trip; `file:` lokal:
-  sekuensial auto-commit (bug @libsql/client 0.15 — tx file LOST, jangan
-  pakai lokal utk test integritas).
+- Transaksi: `tx(d, fn)` — Turso: `c.transaction('write')` lalu
+  `commit()` bila sukses / `rollback()` bila gagal (perbaikan 24 Sep:
+  dulu close() saja DROP transaksi → write `tx()` hilang di produksi;
+  kini eksplisit commit/rollback). `file:` lokal: sekuensial
+  auto-commit (bug @libsql/client 0.15 — tx file LOST, jangan pakai
+  lokal utk test integritas).
 
 ## Keamanan (jaga konsistensinya)
 - Password: scrypt + salt per user (`hashPassword`/`randomSalt` di

@@ -798,10 +798,17 @@ export function db(): Promise<Db> {
 
 /**
  * Run fn inside a transaction.
- * Remote (Turso): libSQL's `client.transaction(mode)` returns a Transaction
- * logical connection; all statements issued on it are shipped as one
- * atomic batch and committed when it closes. We temporarily point the
- * DbShim at that transaction so the call sites can keep using `d` as-is.
+ *
+ * Remote (Turso, libsql://): `client.transaction('write')` opens a server-side
+ * transaction; statements issued on it are shipped as one atomic batch that is
+ * applied ONLY on an explicit `commit()`. We temporarily point the DbShim at
+ * that transaction so call sites keep using `d` as-is, then:
+ *   - success -> await t.commit()  (persists the batch; propagates errors)
+ *   - failure -> await t.rollback() (discards the batch; original error wins)
+ * A bare close() would DROP the open transaction, which is the historical bug
+ * that silently lost every tx() write in production.
+ *
+ * Local (file:): run fn() sequentially (auto-commit per statement) — safe.
  */
 export async function tx<T>(d: Db, fn: () => Promise<T> | T): Promise<T> {
   const shim = d as DbShim;
@@ -810,7 +817,11 @@ export async function tx<T>(d: Db, fn: () => Promise<T> | T): Promise<T> {
   // SILENTLY LOST — statement dalam tx dibuang saat close() tanpa commit
   // (diverifikasi: INSERT/UPDATE dalam tx tidak persist di file backend).
   // Jalankan sekuensial (auto-commit per statement) — safe utk dev lokal.
-  // Turso remote: transaction = logical connection, batch atomik 1 round-trip.
+  // Turso remote (libsql:// / ?ws=1): c.transaction('write') membuka transaksi
+  // di SERVER. Statement dalam fn() di-batch; batch baru terapply saat
+  // COMMIT eksplisit. close() saja TIDAK commit -> write DIBUANG (bug lama:
+  // semua write via tx() hilang di produksi, sementara audit/produk (db()
+  // auto-commit) tetap persist).
   const rawUrl = (process.env.DATABASE_URL || '').trim();
   if (rawUrl.startsWith('file:')) return fn();
   if (typeof c.transaction === 'function') {
@@ -824,18 +835,19 @@ export async function tx<T>(d: Db, fn: () => Promise<T> | T): Promise<T> {
       return r;
     } finally {
       shim.c = orig;
-      if (!ok) {
-        // fn failed: roll back before closing so the batch is not committed
+      if (ok) {
+        // Persist transaksi. JANGAN swallow error commit: bila gagal, propagasi
+        // ke caller agar route mengembalikan error (bukan sukses palsu + data
+        // hilang). commit() juga menutup stream.
+        await t.commit();
+      } else {
+        // fn() gagal: buang batch. rollback() menutup stream; error-nya
+        // tidak boleh menimpa error asli fn() -> biarkan propagasi.
         try {
-          await t.execute('ROLLBACK');
+          await t.rollback();
         } catch {
-          /* transaction may already be aborted */
+          /* error asli fn() tetap propagasi */
         }
-      }
-      try {
-        await t.close();
-      } catch {
-        /* already closed */
       }
     }
   }
