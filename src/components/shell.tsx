@@ -14,23 +14,21 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <HamburgerNav role={user.role} />
             <a href="/" className="flex min-w-0 items-center gap-2.5">
-              <Image
-                src="/logo-kopontren.svg"
-                alt="Kopontren"
-                width={36}
-                height={36}
-                className="h-9 w-auto shrink-0 rounded-lg bg-white object-contain p-1 shadow-sm ring-1 ring-black/5"
-              />
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm ring-1 ring-black/5">
+                <Image
+                  src="/logo-kopontren.svg"
+                  alt="Kopontren AL ITTIHAD"
+                  width={36}
+                  height={36}
+                  className="h-full w-full object-contain"
+                />
+              </span>
               <div className="min-w-0 leading-tight">
                 <p className="truncate text-sm font-extrabold tracking-tight">
-                  {/* Nama pendek di HP agar brand tidak terpotong; nama
-                      lengkap muncul mulai breakpoint sm. */}
-                  <span className="sm:hidden">Kopontren</span>
-                  <span className="hidden sm:inline">Kopontren AL ITTIHAD</span>
+                  Kopontren AL ITTIHAD
                 </p>
                 <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">
-                  <span className="sm:hidden">Kasir</span>
-                  <span className="hidden sm:inline">Kasir &amp; Pembukuan</span>
+                  Kasir &amp; Pembukuan
                 </p>
               </div>
             </a>
