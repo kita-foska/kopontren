@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import jsQR from 'jsqr';
+import { useRouter } from 'next/navigation';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
+import { useHotkeys } from '@/lib/useHotkeys';
 
 /**
  * Cetak struk thermal 58mm: sementara switch @page jadi 58mm/0mm
@@ -134,6 +136,29 @@ const PAY_LABEL: Record<string, string> = {
   wa: 'QRIS / Non-Tunai',
 };
 
+/** Daftar pintasan lengkap kasir — tampil di panel cheatsheet (tombol/? key ?). */
+const CHEAT_ROWS: [string, string][] = [
+  ['F1', 'Fokus pencarian produk'],
+  ['F2', 'Fokus nama pembeli'],
+  ['F3', 'Uang diterima (tunai) / nama pembeli'],
+  ['F4', 'Simpan transaksi (checkout)'],
+  ['F5', 'Cetak struk terakhir'],
+  ['F6', 'Nyalakan/matikan split pembayaran (campur)'],
+  ['F7', 'Buka / tutup shift kasir'],
+  ['F8', 'Fokus pilih member'],
+  ['F9', 'Fokus diskon (pengurus/admin)'],
+  ['↑ / ↓', 'Pindah seleksi di keranjang'],
+  ['+ / −', 'Tambah / kurangi qty item terpilih'],
+  ['Del', 'Hapus item terpilih'],
+  ['Enter', 'Di kolom uang diterima: checkout langsung'],
+  ['Ctrl+P', 'Cetak struk'],
+  ['Ctrl+M', 'Fokus pilih member'],
+  ['Ctrl+H', 'Buka riwayat (Laporan & Rekap)'],
+  ['Ctrl+R', 'Reset pesanan (tanpa transaksi)'],
+  ['ESC', 'Batal / tutup modal'],
+  ['?', 'Buka / tutup panel ini'],
+];
+
 /**
  * Tanggal hari ini (YYYY-MM-DD) zona Asia/Jakarta — dipakai cek ulang
  * tahun. Server jalan UTC (Vercel), jadi match zona sama agar tidak
@@ -216,7 +241,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [shiftLabel, setShiftLabel] = useState('');
   const [closingSummary, setClosingSummary] = useState<ShiftInfo | null>(null);
 
+  // Hotkey batch 5: seleksi item keranjang (↑/↓/+/-/Del) + panel cheatsheet.
+  const [selIdx, setSelIdx] = useState(0);
+  const [cheatOpen, setCheatOpen] = useState(false);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const memberSelRef = useRef<HTMLSelectElement>(null);
+  const discRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setQDeb(q), 300);
@@ -664,6 +695,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           setShiftModalOpen(false);
         } else if (memberModal) {
           setMemberModal(false);
+        } else if (cheatOpen) {
+          setCheatOpen(false);
         } else if (receipt) {
           setReceipt(null);
         } else {
@@ -684,8 +717,144 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     qrisModal,
     shiftModalOpen,
     memberModal,
+    cheatOpen,
     checkout,
   ]);
+
+  // ── Hotkey standar kasir (batch 5): F6–F9, Ctrl-*, panah/qty/Del,
+  // cheatsheet '?'. F1–F5 & ESC tetap di handler di atas (memori otot
+  // tidak berubah). useHotkeys stabil via useRef: listener didaftarkan
+  // sekali, isi map ikut render terbaru (bebas closure stale).
+  const router = useRouter();
+
+  /** true bila target keydown adalah elemen ketik (input/textarea/select). */
+  function inTextTarget(t: EventTarget | null): boolean {
+    if (!(t instanceof HTMLElement)) return false;
+    const tag = t.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable;
+  }
+  /** true bila salah satu modal POS terbuka — hotkey item di-disable. */
+  function anyModalOpen(): boolean {
+    return (
+      scanModal || qrisModal || shiftModalOpen || memberModal || !!closingSummary || cheatOpen
+    );
+  }
+  function selIdxSafe(): number {
+    const i = selIdx >= cart.length ? 0 : selIdx;
+    return i < 0 || i >= cart.length ? -1 : i;
+  }
+  /** ↑/↓ geser seleksi item keranjang — aturan: hanya di luar input & modal. */
+  function moveSel(e: KeyboardEvent, dir: number) {
+    if (anyModalOpen() || inTextTarget(e.target) || cart.length === 0) return;
+    e.preventDefault();
+    setSelIdx((i) => {
+      const cur = i >= cart.length ? 0 : i;
+      return Math.max(0, Math.min(cart.length - 1, cur + dir));
+    });
+  }
+  /** + / - ubah qty item terpilih (clamp stok via setQty). */
+  function adjSelQty(e: KeyboardEvent, delta: number) {
+    if (anyModalOpen() || inTextTarget(e.target)) return;
+    const i = selIdxSafe();
+    if (i < 0) return;
+    e.preventDefault();
+    setQty(cart[i].product.id, cart[i].qty + delta);
+  }
+  /** Delete hapus item terpilih. */
+  function delSel(e: KeyboardEvent) {
+    if (anyModalOpen() || inTextTarget(e.target)) return;
+    const i = selIdxSafe();
+    if (i < 0) return;
+    e.preventDefault();
+    remove(cart[i].product.id);
+  }
+  /** Ctrl+R: reset pesanan TANPA transaksi (antrean offline tidak disentuh). */
+  function resetOrder(): boolean {
+    if (
+      cart.length === 0 &&
+      !customer &&
+      !note &&
+      !received &&
+      !mix &&
+      !disc &&
+      !memberId &&
+      !mq
+    ) {
+      return false;
+    }
+    setCart([]);
+    setCustomer('');
+    setNote('');
+    setReceived('');
+    setMix(false);
+    setMixCash('');
+    setMixTf('');
+    setMixWa('');
+    setDisc('');
+    setMemberId('');
+    setRedeemInput('');
+    setSelIdx(0);
+    setQ('');
+    setQDeb('');
+    setMq('');
+    return true;
+  }
+
+  useHotkeys({
+    f6: (e) => {
+      if (anyModalOpen() || cart.length === 0) return;
+      e.preventDefault();
+      setMix((m) => !m);
+    },
+    f7: (e) => {
+      e.preventDefault();
+      setShiftModalType(currentShift ? 'close' : 'open');
+      setShiftModalOpen(true);
+    },
+    f8: () => {
+      if (!anyModalOpen()) memberSelRef.current?.focus();
+    },
+    f9: () => {
+      if (!anyModalOpen() && admin) discRef.current?.focus();
+    },
+    '?': (e) => {
+      // '?' yang diketik di kolom pencarian/pembeli tidak boleh membuka panel.
+      if (inTextTarget(e.target)) return;
+      e.preventDefault();
+      setCheatOpen((c) => !c);
+    },
+    'ctrl+p': (e) => {
+      if (!receipt) return; // tanpa struk: biarkan cetak browser biasa
+      e.preventDefault();
+      printReceipt();
+    },
+    'ctrl+m': (e) => {
+      if (anyModalOpen()) return;
+      e.preventDefault();
+      memberSelRef.current?.focus();
+    },
+    'ctrl+h': (e) => {
+      if (inTextTarget(e.target)) return;
+      // Catatan: di Chrome shortcut ini ditahan browser (bisa dicegah di
+      // Firefox/Edge) — bila tak aktif, riwayat tetap bisa via menu.
+      e.preventDefault();
+      router.push('/laporan');
+    },
+    'ctrl+r': (e) => {
+      if (inTextTarget(e.target)) return;
+      const did = resetOrder();
+      if (did) {
+        e.preventDefault();
+        showToast('Pesanan di-reset');
+      }
+    },
+    arrowup: (e) => moveSel(e, -1),
+    arrowdown: (e) => moveSel(e, 1),
+    '+': (e) => adjSelQty(e, 1),
+    '=': (e) => adjSelQty(e, 1),
+    '-': (e) => adjSelQty(e, -1),
+    delete: (e) => delSel(e),
+  });
 
   // Shift Management
   async function handleOpenShift() {
@@ -980,6 +1149,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <h2 className="font-bold flex items-center gap-2">
               Keranjang Kasir
               {cart.length > 0 && <Badge tone="blue">{cart.length} item</Badge>}
+              <button
+                type="button"
+                onClick={() => setCheatOpen(true)}
+                title="Pintasan keyboard (?)"
+                aria-label="Pintasan keyboard"
+                className="grid h-5 w-5 place-items-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 hover:bg-slate-200 dark:bg-navy-700 dark:text-slate-300 dark:hover:bg-navy-600"
+              >
+                ?
+              </button>
             </h2>
             {cart.length > 0 && (
               <button
@@ -993,10 +1171,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
 
           {/* Cart items list */}
           <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-            {cart.map((l) => (
+            {cart.map((l, idx) => (
               <div
                 key={l.product.id}
-                className="rounded-lg border border-slate-200 p-2.5 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/30"
+                className={
+                  'rounded-lg border p-2.5 bg-slate-50/50 dark:bg-navy-900/30 ' +
+                  (idx === (selIdx >= cart.length ? 0 : selIdx)
+                    ? 'border-accent-500 ring-2 ring-accent-500/20'
+                    : 'border-slate-200 dark:border-navy-700')
+                }
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-xs font-bold leading-tight text-slate-800 dark:text-slate-200">
@@ -1063,6 +1246,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <div>
               <div className="flex gap-1.5">
                 <select
+                  ref={memberSelRef}
                   className="input flex-1 text-xs"
                   value={memberId}
                   onChange={(e) => setMemberId(e.target.value)}
@@ -1262,9 +1446,17 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   ref={receivedRef}
                   className="input text-sm font-bold"
                   inputMode="numeric"
-                  placeholder="Uang diterima (Rp) · F3"
+                  placeholder="Uang diterima (Rp) · F3 · Enter = checkout"
                   value={received}
                   onChange={(e) => setReceived(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Enter di kolom uang diterima = checkout langsung
+                    // (guard uang kurang tetap jalan → toast).
+                    if (e.key === 'Enter' && !mix && pay === 'cash' && total > 0) {
+                      e.preventDefault();
+                      void checkout();
+                    }
+                  }}
                 />
                 {total > 0 && (
                   <div className="flex flex-wrap gap-1">
@@ -1306,9 +1498,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             {/* Admin discount */}
             {admin && (
               <input
+                ref={discRef}
                 className="input text-xs"
                 inputMode="numeric"
-                placeholder="Diskon khusus pengurus (Rp)"
+                placeholder="Diskon khusus pengurus (Rp) · F9"
                 value={disc}
                 onChange={(e) => setDisc(e.target.value)}
               />
@@ -1357,7 +1550,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
 
             {/* Petunjuk hotkey (desktop) */}
             <p className="hidden text-[10px] font-medium text-slate-400 lg:block dark:text-slate-500">
-              F1 Cari · F2 Pembeli · F3 Bayar · F4 Simpan · F5 Cetak · ESC Batal
+              F1 Cari · F2 Pembeli · F3 Bayar · F4 Simpan · F5 Cetak · F6 Split · F7 Shift
+              · ? Semua
             </p>
 
             {/* Checkout Button */}
@@ -1840,6 +2034,28 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             Setiap kelipatan Rp 10.000 belanja otomatis mendapat 1 poin loyalitas.
           </p>
         </div>
+      </Modal>
+
+      {/* Cheatsheet: semua pintasan keyboard kasir (tombol ? / tekan ?) */}
+      <Modal open={cheatOpen} title="Pintasan Keyboard Kasir" onClose={() => setCheatOpen(false)}>
+        <div className="grid grid-cols-1 gap-1.5 text-xs sm:grid-cols-2">
+          {CHEAT_ROWS.map(([k, d]) => (
+            <div
+              key={k}
+              className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5 dark:bg-navy-900/40"
+            >
+              <span className="shrink-0 font-mono font-bold text-accent-500 dark:text-accent-300">
+                {k}
+              </span>
+              <span className="text-right text-slate-600 dark:text-slate-300">{d}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[10px] leading-relaxed text-slate-400 dark:text-slate-500">
+          Panah / + / − / Del hanya aktif di luar kolom ketik &amp; saat modal tertutup.
+          Ctrl+H bisa ditahan browser tertentu (Chrome) — riwayat tetap bisa dibuka lewat
+          menu Laporan &amp; Rekap.
+        </p>
       </Modal>
 
       <Toast msg={toast} onClose={() => showToast('')} />
