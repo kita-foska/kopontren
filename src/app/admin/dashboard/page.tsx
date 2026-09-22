@@ -146,8 +146,8 @@ export default async function AdminDashboardPage() {
 
   return (
     <Shell user={user}>
-      {/* Hero gradien (glassmorphism ringan) */}
-      <div className="grad-hero mb-5 rounded-2xl p-5 text-white shadow-md">
+      {/* Hero flat (design system: tanpa gradient/shadow — PHASE 1) */}
+      <div className="grad-hero mb-5 rounded-2xl p-5 text-white">
         <h1 className="text-2xl font-extrabold tracking-tight">
           Dashboard <span className="text-white/80">Admin</span>
         </h1>
@@ -165,14 +165,14 @@ export default async function AdminDashboardPage() {
             key={c.label}
             href={c.href}
             className={
-              'card fade-up p-4 transition hover:-translate-y-0.5 hover:shadow-md ' +
+              'card fade-up p-4 transition hover:-translate-y-0.5 ' +
               (c.warn ? 'border-amber-500/50' : '')
             }
           >
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {c.label}
             </p>
-            <p className="mt-1 text-xl font-extrabold text-accent-500 dark:text-accent-300">
+            <p className="mt-1 text-2xl font-extrabold text-accent-500 dark:text-accent-300">
               {c.value}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">{c.sub}</p>

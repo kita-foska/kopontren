@@ -3,6 +3,7 @@ import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
+import { StatusBadge } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,41 @@ export default async function DashboardPage() {
       )
       .get(dayStart, dayStart, dayStart, dayStart, dayStart)) as { inn: number; out: number }
   );
+
+  // PHASE 2 — dashboard kasir: transaksi terakhir (read-only, 5 baris).
+  const lastSales = (await d
+    .prepare(
+      `SELECT id, total, pay_method, status, created_at FROM sales ORDER BY created_at DESC LIMIT 5`
+    )
+    .all()) as {
+    id: number;
+    total: number;
+    pay_method: string;
+    status: string;
+    created_at: string;
+  }[];
+
+  const dateLine = new Intl.DateTimeFormat('id-ID', {
+    dateStyle: 'full',
+    timeZone: 'Asia/Jakarta',
+  }).format(new Date());
+
+  const txTime = (iso: string) =>
+    new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Jakarta',
+    }).format(new Date(iso));
+
+  const methodLabel: Record<string, string> = {
+    cash: 'Tunai',
+    wa: 'QRIS',
+    qris: 'QRIS',
+    transfer: 'Transfer',
+    split: 'Campur',
+  };
   return (
     <Shell user={user}>
       {user.pw_default === 1 && (
@@ -64,17 +100,99 @@ export default async function DashboardPage() {
           )}
         </div>
       )}
-      <div className="grad-hero mb-5 rounded-2xl p-5 text-white shadow-md">
-        <h1 className="text-2xl font-extrabold tracking-tight">
-          Ringkasan <span className="text-white/80">Hari Ini</span>
-        </h1>
-        <p className="mt-1 text-sm text-white/70">
-          {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
-            new Date()
-          )}{' '}
-          · login sebagai {user.display_name || user.username} ({user.role})
-        </p>
-      </div>
+      {user.role === 'kasir' ? (
+        /* ===== Layout KASIR (PHASE 2): CTA MULAI JUAL + 2 stat + BELUM DILAPORKAN +
+           TRANSAKSI TERAKHIR (read-only). ===== */
+        <div className="space-y-4">
+          <div className="card fade-up p-4 sm:p-5">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Sesi kasir · {dateLine}
+            </p>
+            <a
+              href="/kasir"
+              className="btn-primary mt-3 flex w-full items-center justify-center gap-2 py-4 text-base font-bold"
+            >
+              MULAI JUAL <span className="text-sm font-semibold opacity-70">(POS)</span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="card fade-up p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Penjualan hari ini
+              </p>
+              <p className="mt-1 text-2xl font-extrabold text-accent-500 dark:text-accent-300">
+                {rp(salesToday.t)}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{salesToday.c} transaksi</p>
+            </div>
+            <div className="card fade-up p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Stok menipis (&lt; 5)
+              </p>
+              <p className="mt-1 text-2xl font-extrabold text-amber-500">{lowStock.length}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                dari {activeProducts} produk aktif
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={'card fade-up p-4 ' + (unreported.c > 0 ? 'border-amber-500/50' : '')}
+          >
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Belum dilaporkan
+            </p>
+            <p className="mt-1 text-2xl font-extrabold text-amber-500">{unreported.c}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {rp(unreported.t)} menunggu rekap oleh admin/pengurus
+            </p>
+          </div>
+
+          <div className="card fade-up p-4">
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Transaksi terakhir
+            </h2>
+            {lastSales.length === 0 ? (
+              <p className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                Belum ada transaksi.
+              </p>
+            ) : (
+              <ul className="divide-y divide-slate-100 dark:divide-navy-700">
+                {lastSales.map((s) => (
+                  <li
+                    key={s.id}
+                    className="flex items-center justify-between gap-3 py-2.5 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">
+                        {methodLabel[s.pay_method] || s.pay_method}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {txTime(s.created_at)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <StatusBadge status={s.status} />
+                      <span className="font-extrabold">{rp(s.total)}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* ===== Layout lain (admin/manajer/pengurus/member): ringkasan penuh. ===== */
+        <div className="space-y-4">
+          <div className="grad-hero mb-5 rounded-2xl p-5 text-white">
+            <h1 className="text-2xl font-extrabold tracking-tight">
+              Ringkasan <span className="text-white/80">Hari Ini</span>
+            </h1>
+            <p className="mt-1 text-sm text-white/70">
+              {dateLine} · login sebagai {user.display_name || user.username} ({user.role})
+            </p>
+          </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div className="card fade-up p-4">
@@ -164,10 +282,12 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
-      <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-        Menu pengurus (Produk, Belanja, Konsinyasi, Kas, Laporan Pengurus, Pengguna, Data &amp;
-        Backup) tersedia di navigasi atas.
-      </p>
+        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+          Menu pengurus (Produk, Belanja, Konsinyasi, Kas, Laporan Pengurus, Pengguna, Data &amp;
+          Backup) tersedia di navigasi atas.
+        </p>
+      </div>
+      )}
     </Shell>
   );
 }
