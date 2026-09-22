@@ -282,3 +282,18 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       3. Install ulang PWA → cek logo nang taskbar & Start menu
       4. Bila masih gagal: hapus cache ikon Windows manual → restart
          → install maneh → LAPOR hasilnya
+
+## Produk / Stok — revisi pendekatan (23 Sep 2026)
+- [x] Generate CSV stok dari DB dev (`file:./data/kopontren.db`):
+      `stok-export-20260923.csv` (237 baris, semua `aktif`; UTF-8 tanpa
+      BOM; header `id,nama_produk,barcode,kategori,stok,hpp,harga_jual,status`;
+      field ber-koma di-quote). Generator `_gen-stok-csv.mjs` (scratch
+      gitignored) bisa di-run ulang. Catatan: baris 237 = `ZZ-GUARD-TEST`
+      (baris uji manual, tidak ada di codebase) — hapus sebelum upload
+      bila di Turso produksi tidak ada baris tsb.
+- [ ] **User upload CSV ke Turso sendiri (PENDING):** pendekatan baru =
+      Cline TIDAK lagi akses Turso langsung / tidak perlu credential
+      Turso di `.env` lokal. Setelah user upload: verifikasi jumlah
+      baris di Turso (ekspektasi 237, atau 236 bila `ZZ-GUARD-TEST`
+      dihapus).
+

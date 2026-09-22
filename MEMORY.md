@@ -580,3 +580,25 @@ blocking)
   belum dimulai, `point_history` backup TUNDA (keputusan 21 Sep: di luar
   cakupan). File scratch sesi di-gitignore (`_*` pola + `scripts/zz-*`);
   bukti di-retain lokal: `_txlib.mjs`, `_probe4.mjs`.
+
+## Produk & Stok — Revisi Pendekatan (23 Sep 2026)
+- Cline TIDAK lagi butuh akses Turso langsung utk fetch stok/import
+  (credential Turso di `.env` lokal tidak diperlukan). Pendekatan:
+  Cline generate CSV stok dari DB dev, USER upload sendiri ke Turso.
+- Artefak: `stok-export-YYYYMMDD.csv` di root project (untracked,
+  jangan di-commit — user ambil lokal). Header:
+  `id,nama_produk,barcode,kategori,stok,hpp,harga_jual,status`.
+- Mapping kolom DB→CSV: `products.name`→nama_produk,
+  `products.category`→kategori (kategori = TEXT langsung di tabel
+  `products`, bukan join tabel `categories`), `products.cost_price`→hpp,
+  `products.base_price`→harga_jual, `products.active`→status
+  (1='aktif' / 0='nonaktif'), `products.barcode`→barcode (banyak
+  masih kosong → field dibiarkan kosong).
+- Generator: `_gen-stok-csv.mjs` (scratch gitignored, re-runnable):
+  buka `data/kopontren.db` read-only via `node:sqlite`, tulis UTF-8
+  TANPA BOM + quoting RFC-4180 (field mengandung koma/quote
+  di-wrap tanda kutip, quote internal dobel). Contoh nyata:
+  produk `double tap 1,2 cm` (id 127) ter-export dgn benar.
+- Ekspor 23 Sep: 237 baris (semua aktif). Baris 237 = `ZZ-GUARD-TEST`
+  (baris uji manual di DB dev, tidak ada di codebase) — flag:
+  hapus sebelum upload bila Turso produksi tak punya baris tsb.
