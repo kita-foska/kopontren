@@ -2,13 +2,18 @@
 
 import type { AppUser } from '@/lib/auth';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { HamburgerNav } from './sidebar';
+import { BottomNav } from './bottom-nav';
 import { SessionWatcher } from './session-watcher';
 import { NotificationBell } from './notification-bell';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
+  // Bottom nav (mobile) tampil di semua halaman Shell kecuali /kasir —
+  // POS punya sticky bottom bar sendiri (jangan sampai jadi dua bar).
+  const showBottomNav = pathname !== '/kasir';
 
   // Ganti tema: sinkron state class 'dark' + cookie (logika sama persis
   // dengan ThemeToggle lama agar preferensi tema tidak hilang).
@@ -28,7 +33,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-navy-700 dark:bg-navy-900/90">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <HamburgerNav role={user.role} onToggleTheme={toggleTheme} onLogout={handleLogout} />
             <a href="/" className="flex min-w-0 items-center gap-2.5">
@@ -69,7 +74,14 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-5 pb-16">{children}</main>
+      <main
+        className={
+          'mx-auto max-w-6xl px-4 py-5 ' + (showBottomNav ? 'pb-28 md:pb-16' : 'pb-16')
+        }
+      >
+        {children}
+      </main>
+      {showBottomNav && <BottomNav role={user.role} />}
       <SessionWatcher />
     </div>
   );

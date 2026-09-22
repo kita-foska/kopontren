@@ -151,12 +151,28 @@ export function useToast(): [string, (m: string) => void, () => void] {
   return [msg, setMsg, () => setMsg('')];
 }
 
-export function Empty({ text }: { text: string }) {
+export function Empty({ text, action }: { text: string; action?: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-navy-600 dark:text-slate-400">
+    <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-navy-600 dark:text-slate-400">
       {text}
+      {action && <div className="mt-3 flex justify-center">{action}</div>}
     </div>
   );
+}
+
+/**
+ * Badge status terpadu (design system): mapping status -> tone + label
+ * baku, supaya semua halaman menampilkan status dengan warna yang sama.
+ * Status tak dikenal: tone gray, label = nilai mentah (aman).
+ */
+const STATUS_MAP: Record<string, { tone: 'green' | 'amber' | 'gray'; label: string }> = {
+  reported: { tone: 'green', label: 'Sudah Dilaporkan' },
+  unreported: { tone: 'amber', label: 'Belum Dilaporkan' },
+};
+
+export function StatusBadge({ status }: { status: string }) {
+  const m = STATUS_MAP[status] ?? { tone: 'gray' as const, label: status };
+  return <Badge tone={m.tone}>{m.label}</Badge>;
 }
 
 /**

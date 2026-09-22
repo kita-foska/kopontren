@@ -7,12 +7,12 @@
   --nsurface: #221015;
   --nborder: #3a1d24;
   --ntext: #f1f5f9;
-  --nsub: #e5a3b1;
+  --nsub: #e19db6;
   --lbg: #faf5f6;
   --lsurface: #ffffff;
   --lborder: #e9d5d8;
   --ltext: #170a0e;
-  --lsub: #8a1538;
+  --lsub: #7a1835;
 }
 
 html {
@@ -34,13 +34,16 @@ body {
 
 @layer components {
   .card {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-navy-700 dark:bg-navy-800;
+    /* radius 16px (rounded-2xl) — design system */
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-navy-700 dark:bg-navy-800;
   }
   .input {
     @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500/30 dark:border-navy-600 dark:bg-navy-900 dark:text-slate-100;
+    min-height: 44px; /* target sentuh a11y (standar 44px) */
   }
   .btn {
     @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    min-height: 44px; /* target sentuh a11y (standar 44px) */
   }
   .btn-primary {
     @apply btn bg-accent-500 text-white hover:bg-accent-600;
@@ -66,18 +69,17 @@ body {
   .table-row {
     @apply border-t border-slate-100 dark:border-navy-700;
   }
-  /* ===== Modernisasi UI: hero gradien + micro-animations ===== */
+  /* ===== Modernisasi UI: hero FLAT (tanpa gradient) + micro-animasi 0.2s ===== */
   .grad-hero {
-    background:
-      radial-gradient(120% 160% at 0% 0%, rgba(255, 255, 255, 0.16) 0%, transparent 55%),
-      linear-gradient(135deg, #7a1f3d 0%, #4f1225 55%, #2d0b16 100%);
+    /* Solid flat #7A1835 (token burgundy) — aturan: tanpa gradient/shadow. */
+    background: #7a1835;
   }
   .fade-up {
-    animation: fade-up 0.45s ease both;
+    animation: fade-up 0.2s ease both;
   }
   .chart-bar {
     transform-origin: bottom;
-    animation: grow-up 0.5s ease both;
+    animation: grow-up 0.2s ease both;
   }
 }
 
