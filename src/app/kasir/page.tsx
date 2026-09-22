@@ -12,13 +12,12 @@ export default async function KasirPage() {
   if (!canAccess(user, 'pos')) redirect('/');
   return (
     <Shell user={user}>
-      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
+      <h1 className="mb-4 text-2xl font-extrabold tracking-tight">
         Kasir <span className="text-accent-500 dark:text-accent-300">POS</span>
+        <span className="ml-2 text-sm font-semibold text-slate-400 dark:text-slate-500">
+          · transaksi otomatis menunggu laporan
+        </span>
       </h1>
-      <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-        Pilih produk, isi nama pembeli & metode bayar, lalu simpan. Transaksi otomatis berstatus
-        menunggu laporan.
-      </p>
       <PosLazy admin={isManager(user)} cashier={user.display_name || user.username} />
     </Shell>
   );
