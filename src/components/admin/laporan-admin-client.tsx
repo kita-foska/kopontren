@@ -40,7 +40,7 @@ export function LaporanAdminClient() {
 
   const cards = [
     { label: 'Penjualan', value: rp(s.sales_total), sub: s.sales_count + ' transaksi', cls: 'text-accent-500 dark:text-accent-300' },
-    { label: 'HPP (biaya produk)', value: rp(s.cogs), sub: 'basis harga beli', cls: 'text-amber-500' },
+    { label: 'HPP (biaya produk)', value: rp(s.cogs), sub: 'basis harga beli', cls: 'text-amber-600 dark:text-amber-400' },
     { label: 'Laba kotor', value: rp(s.profit), sub: 'penjualan − HPP', cls: s.profit >= 0 ? 'text-emerald-500' : 'text-rose-500' },
     { label: 'Kas keluar (belanja)', value: rp(s.purchases_total), sub: 'stok masuk', cls: 'text-rose-500' },
     { label: 'Pengeluaran', value: rp(s.expenses_total), sub: 'listrik, operasional', cls: 'text-rose-500' },

@@ -130,7 +130,7 @@ export default async function DashboardPage() {
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Stok menipis (&lt; 5)
               </p>
-              <p className="mt-1 text-2xl font-extrabold text-amber-500">{lowStock.length}</p>
+              <p className="mt-1 text-2xl font-extrabold text-amber-600 dark:text-amber-400">{lowStock.length}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 dari {activeProducts} produk aktif
               </p>
@@ -143,7 +143,7 @@ export default async function DashboardPage() {
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Belum dilaporkan
             </p>
-            <p className="mt-1 text-2xl font-extrabold text-amber-500">{unreported.c}</p>
+            <p className="mt-1 text-2xl font-extrabold text-amber-600 dark:text-amber-400">{unreported.c}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {rp(unreported.t)} menunggu rekap oleh admin/pengurus
             </p>
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Belum dilaporkan
           </p>
-          <p className="mt-1 text-2xl font-extrabold text-amber-500">{unreported.c}</p>
+          <p className="mt-1 text-2xl font-extrabold text-amber-600 dark:text-amber-400">{unreported.c}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {rp(unreported.t)} menunggu rekap
           </p>
@@ -273,7 +273,7 @@ export default async function DashboardPage() {
               {lowStock.map((p) => (
                 <li key={p.name} className="flex items-center justify-between text-sm">
                   <span>{p.name}</span>
-                  <span className="font-semibold text-amber-500">
+                  <span className="font-semibold text-amber-600 dark:text-amber-400">
                     {p.stock} {p.unit}
                   </span>
                 </li>

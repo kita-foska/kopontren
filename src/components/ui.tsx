@@ -152,6 +152,78 @@ export function useToast(): [string, (m: string) => void, () => void] {
   return [msg, setMsg, () => setMsg('')];
 }
 
+/**
+ * useConfirm — pengganti window.confirm() native dengan Modal design system
+ * (focus-trap, ESC, bottom-sheet di mobile). Dipakai untuk aksi destruktif.
+ *
+ * Dipakai di komponen client:
+ *   const { ask, host } = useConfirm();
+ *   ...
+ *   ask({
+ *     title: 'Hapus produk',
+ *     message: 'Hapus "X"? Jika ada riwayat transaksi, produk dinonaktifkan aman.',
+ *     confirmLabel: 'Hapus',
+ *     proceed: async () => { ...hapus...; },
+ *   });
+ *   // render {host} di dekat <Toast/>
+ */
+export function useConfirm() {
+  type Req = {
+    title: string;
+    message: string;
+    confirmLabel: string;
+    proceed: () => void | Promise<void>;
+  };
+  const [req, setReq] = useState<Req | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  function ask(o: { title?: string; message: string; confirmLabel?: string; proceed: () => void | Promise<void> }) {
+    setReq({
+      title: o.title ?? 'Konfirmasi',
+      message: o.message,
+      confirmLabel: o.confirmLabel ?? 'Lanjutkan',
+      proceed: o.proceed,
+    });
+  }
+
+  function cancel() {
+    if (!busy) setReq(null);
+  }
+
+  async function onConfirm() {
+    if (!req || busy) return;
+    setBusy(true);
+    try {
+      await req.proceed();
+    } finally {
+      setBusy(false);
+      setReq(null);
+    }
+  }
+
+  const host = req ? (
+    <Modal
+      open
+      title={req.title}
+      onClose={cancel}
+      footer={
+        <>
+          <button type="button" className="btn-ghost" onClick={cancel} disabled={busy}>
+            Batal
+          </button>
+          <button type="button" className="btn-danger" onClick={onConfirm} disabled={busy}>
+            {busy ? 'Memproses…' : req.confirmLabel}
+          </button>
+        </>
+      }
+    >
+      <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">{req.message}</p>
+    </Modal>
+  ) : null;
+
+  return { ask, host };
+}
+
 export function Empty({ text, action }: { text: string; action?: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-navy-600 dark:text-slate-400">

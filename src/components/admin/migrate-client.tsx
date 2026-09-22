@@ -17,6 +17,12 @@ type BatchResult = {
 };
 
 const BATCH_SIZE = 50;
+
+/** Pangsa "Baris N (nama): " di awal pesan supaya kolom "Alasan" tabel rapi. */
+function stripBaris(m: string): string {
+  const t = m.replace(/^Baris \d+(?: \([^)]*\))?:\s*/, '');
+  return t || m;
+}
 const rp = (n: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n || 0);
 
@@ -209,13 +215,26 @@ export function MigrateClient() {
           )}
           {rowErrors.length > 0 && (
             <div className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-300">
-              <b>{rowErrors.length} baris dilewati:</b>
-              <ul className="mt-1 list-disc pl-4">
-                {rowErrors.slice(0, 20).map((e, i) => (
-                  <li key={i}>{e.message}</li>
-                ))}
-                {rowErrors.length > 20 && <li>… dan {rowErrors.length - 20} lagi</li>}
-              </ul>
+              <p className="font-bold">{rowErrors.length} baris dilewati:</p>
+              <div className="mt-1 max-h-48 overflow-y-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-slate-500 dark:text-slate-400">
+                      <th className="pr-3 font-bold">Baris</th>
+                      <th className="font-bold">Alasan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rowErrors.slice(0, 20).map((e, i) => (
+                      <tr key={i} className="border-t border-red-500/10">
+                        <td className="pr-3 align-top font-mono">{e.line}</td>
+                        <td className="align-top">{stripBaris(e.message)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {rowErrors.length > 20 && <p className="mt-1">… dan {rowErrors.length - 20} lagi</p>}
             </div>
           )}
           <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
@@ -300,12 +319,25 @@ export function MigrateClient() {
           )}
           {summary.failed.length > 0 && (
             <div className="mt-2 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-300">
-              <b>{summary.failed.length} baris gagal di database:</b>
-              <ul className="mt-1 list-disc pl-4">
-                {summary.failed.slice(0, 10).map((e, i) => (
-                  <li key={i}>{e.message}</li>
-                ))}
-              </ul>
+              <p className="font-bold">{summary.failed.length} baris gagal di database:</p>
+              <div className="mt-1 max-h-48 overflow-y-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-slate-500 dark:text-slate-400">
+                      <th className="pr-3 font-bold">Baris</th>
+                      <th className="font-bold">Alasan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.failed.map((e, i) => (
+                      <tr key={i} className="border-t border-red-500/10">
+                        <td className="pr-3 align-top font-mono">{e.line}</td>
+                        <td className="align-top">{stripBaris(e.message)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

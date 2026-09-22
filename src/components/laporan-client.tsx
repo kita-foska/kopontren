@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { api, Badge, Toast, useToast } from '@/components/ui';
+import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit } from '@/lib/pay-methods';
@@ -28,6 +28,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<number | null>(null);
   const [toast, showToast] = useToast();
+  const { ask, host: confirmHost } = useConfirm();
   const [undoMsg, setUndoMsg] = useState('');
   const [undoIds, setUndoIds] = useState<number[]>([]);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -91,15 +92,21 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
     load();
   }
 
-  async function remove(id: number) {
-    if (!confirm('Hapus transaksi #' + id + '? Stok akan dikembalikan.')) return;
-    const r = await api('/api/sales/' + id, { method: 'DELETE' });
-    if (r.ok) {
-      showToast('Transaksi #' + id + ' dihapus & stok dikembalikan');
-      load();
-    } else {
-      showToast(r.error || 'Gagal menghapus');
-    }
+  function remove(id: number) {
+    ask({
+      title: 'Hapus transaksi',
+      message: 'Hapus transaksi #' + id + '? Stok akan dikembalikan.',
+      confirmLabel: 'Hapus',
+      proceed: async () => {
+        const r = await api('/api/sales/' + id, { method: 'DELETE' });
+        if (r.ok) {
+          showToast('Transaksi #' + id + ' dihapus & stok dikembalikan');
+          load();
+        } else {
+          showToast(r.error || 'Gagal menghapus');
+        }
+      },
+    });
   }
 
   async function markAll() {
@@ -341,6 +348,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
           </div>
         )}
       </div>
+      {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

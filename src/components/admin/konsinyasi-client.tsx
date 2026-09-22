@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Toast, useToast } from '@/components/ui';
+import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Kons = {
@@ -44,6 +44,7 @@ export function KonsinyasiClient() {
   const [tab, setTab] = useState<'active' | 'done'>('active');
   const [data, setData] = useState<Resp | null>(null);
   const [toast, showToast] = useToast();
+  const { ask, host: confirmHost } = useConfirm();
   const [f, setF] = useState(EMPTY_FORM);
   const [acts, setActs] = useState<Record<number, { qty: number; pay: number }>>({});
   const [loadingMore, setLoadingMore] = useState(false);
@@ -119,8 +120,12 @@ export function KonsinyasiClient() {
     );
   }
   function tutup(k: Kons) {
-    if (window.confirm('Tutup konsinyasi ' + k.item_name + ' milik ' + k.owner + '?'))
-      post({ action: 'close', id: k.id }, 'Konsinyasi ditutup');
+    ask({
+      title: 'Tutup konsinyasi',
+      message: 'Tutup konsinyasi ' + k.item_name + ' milik ' + k.owner + '?',
+      confirmLabel: 'Tutup',
+      proceed: () => post({ action: 'close', id: k.id }, 'Konsinyasi ditutup'),
+    });
   }
   function bukaLagi(k: Kons) {
     post({ action: 'reopen', id: k.id }, 'Dibuka kembali');
@@ -354,6 +359,7 @@ export function KonsinyasiClient() {
           </button>
         </div>
       )}
+      {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

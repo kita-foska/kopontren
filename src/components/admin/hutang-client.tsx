@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
+import { api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Payable = {
@@ -44,6 +44,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
   const [filter, setFilter] = useState<'open' | 'settled' | 'all'>('open');
   const [data, setData] = useState<PayableResp | null>(null);
   const [toast, showToast] = useToast();
+  const { ask, host: confirmHost } = useConfirm();
   const [form, setForm] = useState({
     supplier_name: '',
     supplier_phone: '',
@@ -97,14 +98,19 @@ export function HutangClient({ admin }: { admin: boolean }) {
     } else showToast(r.error || 'Gagal');
   }
 
-  async function del(id: number) {
-    if (!window.confirm('Hapus hutang ini? Riwayat di log audit & kas tetap tersimpan.'))
-      return;
-    const r = await api('/api/payables/' + id, { method: 'DELETE' });
-    if (r.ok) {
-      showToast('Hutang dihapus');
-      load();
-    } else showToast(r.error || 'Gagal');
+  function del(id: number) {
+    ask({
+      title: 'Hapus hutang',
+      message: 'Hapus hutang ini? Riwayat di log audit & kas tetap tersimpan.',
+      confirmLabel: 'Hapus',
+      proceed: async () => {
+        const r = await api('/api/payables/' + id, { method: 'DELETE' });
+        if (r.ok) {
+          showToast('Hutang dihapus');
+          load();
+        } else showToast(r.error || 'Gagal');
+      },
+    });
   }
 
   const payables = data?.payables ?? [];
@@ -125,7 +131,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Utang terbuka
           </p>
-          <p className="mt-1 text-2xl font-extrabold text-amber-500">{rp(open)}</p>
+          <p className="mt-1 text-2xl font-extrabold text-amber-600 dark:text-amber-400">{rp(open)}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">{openCount} supplier</p>
           {(overdue > 0 || dueSoon > 0) && (
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -311,7 +317,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
               onChange={(ev) => setPayAmt(Number(ev.target.value))}
             />
             {payAmt > payFor.remaining && (
-              <p className="mt-1 text-xs text-amber-500">
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
                 Melebihi sisa — hanya {rp(payFor.remaining)} yang akan diterapkan.
               </p>
             )}
@@ -323,6 +329,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
         )}
       </Modal>
 
+      {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

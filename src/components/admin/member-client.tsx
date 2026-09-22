@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
+import { api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Member = {
@@ -46,6 +46,7 @@ export function MemberClient() {
   const [form, setForm] = useState({ ...emptyForm });
   const [show, setShow] = useState(false);
   const [toast, showToast] = useToast();
+  const { ask, host: confirmHost } = useConfirm();
   const [loadingMore, setLoadingMore] = useState(false);
   const [scrollTop, setScrollTop] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -134,15 +135,21 @@ export function MemberClient() {
     }
   }
 
-  async function remove(m: Member) {
-    if (!confirm(`Hapus member "${m.name}"? Poin dan riwayat belanja akan diarsipkan.`)) return;
-    const r = await api('/api/members?id=' + m.id, { method: 'DELETE' });
-    if (r.ok) {
-      showToast('Member dihapus');
-      await load(qDeb);
-    } else {
-      showToast(r.error || 'Gagal menghapus');
-    }
+  function remove(m: Member) {
+    ask({
+      title: 'Hapus member',
+      message: `Hapus member "${m.name}"? Poin dan riwayat belanja akan diarsipkan.`,
+      confirmLabel: 'Hapus',
+      proceed: async () => {
+        const r = await api('/api/members?id=' + m.id, { method: 'DELETE' });
+        if (r.ok) {
+          showToast('Member dihapus');
+          await load(qDeb);
+        } else {
+          showToast(r.error || 'Gagal menghapus');
+        }
+      },
+    });
   }
 
 
@@ -345,6 +352,7 @@ export function MemberClient() {
         </div>
       </Modal>
 
+      {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

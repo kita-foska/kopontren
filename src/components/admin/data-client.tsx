@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, Badge, Toast, useToast } from '@/components/ui';
+import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { fmtDateTime } from '@/lib/format';
 import { AlertTriangle, Download, FileSpreadsheet, Package } from 'lucide-react';
 
@@ -22,6 +22,7 @@ export function DataClient() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState('');
   const [toast, showToast] = useToast();
+  const { ask, host: confirmHost } = useConfirm();
   const [activeTab, setActiveTab] = useState<'backup' | 'audit'>('backup');
 
   // Audit log states
@@ -70,37 +71,40 @@ export function DataClient() {
     window.open('/api/reports/csv?from=1970-01-01', '_blank');
   }
 
-  async function importJson(ev: React.ChangeEvent<HTMLInputElement>) {
+  function importJson(ev: React.ChangeEvent<HTMLInputElement>) {
     const file = ev.target.files?.[0];
     ev.target.value = '';
     if (!file) return;
-    if (
-      !confirm(
-        'Import akan MENGGANTIKAN seluruh data: produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal kas, member, shift, notifikasi (termasuk pengaturan) & audit log. Lanjutkan?'
-      )
-    )
-      return;
-    setBusy('import');
-    const text = await file.text();
-    const r = await api('/api/backup', { method: 'POST', body: text });
-    setBusy('');
-    if (r.ok) showToast('Backup berhasil diimport');
-    else showToast(r.error || 'Import gagal');
+    ask({
+      title: 'Import backup JSON',
+      message:
+        'Import akan MENGGANTIKAN seluruh data: produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal kas, member, shift, notifikasi (termasuk pengaturan) & audit log. Lanjutkan?',
+      confirmLabel: 'Import & Ganti Data',
+      proceed: async () => {
+        setBusy('import');
+        const text = await file.text();
+        const r = await api('/api/backup', { method: 'POST', body: text });
+        setBusy('');
+        if (r.ok) showToast('Backup berhasil diimport');
+        else showToast(r.error || 'Import gagal');
+      },
+    });
   }
 
-  async function resetAll() {
-    if (
-      !confirm(
-        'HAPUS SEMUA DATA operasi (produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal, konsinyasi, member, notifikasi)? Akun pengguna, audit log & pengaturan tetap ada. Tindakan ini TIDAK BISA DIBATALKAN!'
-      )
-    )
-      return;
-    if (!confirm('Konfirmasi terakhir: data HILANG PERMANEN (kecuali file backup). Lanjut?')) return;
-    setBusy('reset');
-    const r = await api('/api/backup/reset', { method: 'POST' });
-    setBusy('');
-    if (r.ok) showToast('Semua data operasional dihapus');
-    else showToast(r.error || 'Gagal menghapus');
+  function resetAll() {
+    ask({
+      title: 'Reset seluruh data',
+      message:
+        'HAPUS SEMUA DATA operasi (produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal, konsinyasi, member, notifikasi)? Akun pengguna, audit log & pengaturan tetap ada.\nKonfirmasi terakhir: data HILANG PERMANEN (kecuali file backup). Tindakan ini TIDAK BISA DIBATALKAN!',
+      confirmLabel: 'Hapus Semua',
+      proceed: async () => {
+        setBusy('reset');
+        const r = await api('/api/backup/reset', { method: 'POST' });
+        setBusy('');
+        if (r.ok) showToast('Semua data operasional dihapus');
+        else showToast(r.error || 'Gagal menghapus');
+      },
+    });
   }
 
   return (
@@ -301,6 +305,7 @@ export function DataClient() {
         </div>
       )}
 
+      {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, Toast, useToast } from '@/components/ui';
+import { api, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { fmtDateTime } from '@/lib/format';
 
 type Log = {
@@ -32,6 +32,16 @@ function truncate(s: string | null, n = 60): string {
   return clean.length > n ? clean.slice(0, n) + '…' : clean;
 }
 
+/** Pretty-print JSON string (fallback: raw string). Dipakai di modal detail perubahan. */
+function prettyJson(v: string | null): string {
+  if (!v) return '';
+  try {
+    return JSON.stringify(JSON.parse(v), null, 2);
+  } catch {
+    return v;
+  }
+}
+
 export function AuditClient() {
   const [data, setData] = useState<Resp | null>(null);
   const [userF, setUserF] = useState('');
@@ -39,7 +49,9 @@ export function AuditClient() {
   const [sinceF, setSinceF] = useState('');
   const [loadingMore, setLoadingMore] = useState(false);
   const [canMore, setCanMore] = useState(false);
+  const [viewLog, setViewLog] = useState<Log | null>(null);
   const [toast, showToast] = useToast();
+  const { ask, host: confirmHost } = useConfirm();
 
   const load = useCallback(async (offset = 0, append = false) => {
     // Server cap 50 baris/halaman (target Rows Read); tombol "Muat
@@ -66,13 +78,19 @@ export function AuditClient() {
     setLoadingMore(false);
   }
 
-  async function purge(days: number) {
-    if (!confirm('Hapus log audit lebih tua dari ' + days + ' hari?')) return;
-    const r = await api('/api/audit?days=' + days, { method: 'DELETE' });
-    if (r.ok) {
-      showToast('Log lama dihapus');
-      load();
-    } else showToast(r.error || 'Gagal');
+  function purge(days: number) {
+    ask({
+      title: 'Bersihkan log audit',
+      message: 'Hapus log audit lebih tua dari ' + days + ' hari?\nTindakan ini permanen.',
+      confirmLabel: 'Bersihkan',
+      proceed: async () => {
+        const r = await api('/api/audit?days=' + days, { method: 'DELETE' });
+        if (r.ok) {
+          showToast('Log lama dihapus');
+          load();
+        } else showToast(r.error || 'Gagal');
+      },
+    });
   }
 
   const users = useMemo(() => {
@@ -179,16 +197,26 @@ export function AuditClient() {
                   {l.record_id ? ' #' + l.record_id : ''}
                 </td>
                 <td className="td text-xs text-slate-500 dark:text-slate-400">{l.table_name}</td>
-                <td className="td text-xs text-slate-500 dark:text-slate-400">
-                  {l.old_value ? (
-                    <span title={l.old_value} className="mr-1 text-slate-400">
-                      lama: {truncate(l.old_value, 40)} →
-                    </span>
-                  ) : null}
-                  {l.new_value ? (
-                    <span title={l.new_value}>{truncate(l.new_value, 60)}</span>
+                <td className="td max-w-xs text-xs text-slate-500 dark:text-slate-400">
+                  {l.old_value || l.new_value ? (
+                    <button
+                      type="button"
+                      onClick={() => setViewLog(l)}
+                      className="block w-full max-w-xs truncate text-left hover:text-accent-500 hover:underline dark:hover:text-accent-300"
+                    >
+                      {l.old_value ? (
+                        <span className="text-slate-400 dark:text-slate-500">
+                          lama: {truncate(l.old_value, 40)} →{' '}
+                        </span>
+                      ) : null}
+                      {l.new_value ? (
+                        <span>{truncate(l.new_value, 40)}</span>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-500">(hapus)</span>
+                      )}
+                    </button>
                   ) : (
-                    <span className="text-slate-400">-</span>
+                    <span className="text-slate-400 dark:text-slate-500">—</span>
                   )}
                 </td>
               </tr>
@@ -210,6 +238,46 @@ export function AuditClient() {
           </button>
         </div>
       )}
+      {viewLog && (
+        <Modal
+          open
+          title={viewLog.table_name + ' #' + (viewLog.record_id ?? '?') + ' — detail perubahan'}
+          onClose={() => setViewLog(null)}
+        >
+          <div className="max-h-[60vh] space-y-3 overflow-y-auto">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {fmtDateTime(viewLog.created_at)} · {viewLog.user_name || viewLog.username} ·{' '}
+              {viewLog.action}
+            </p>
+            {viewLog.old_value && (
+              <div>
+                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-400">
+                  Sebelum
+                </p>
+                <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-red-50 p-3 font-mono text-xs text-red-900 dark:bg-red-500/10 dark:text-red-200">
+                  {prettyJson(viewLog.old_value)}
+                </pre>
+              </div>
+            )}
+            {viewLog.new_value && (
+              <div>
+                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                  Sesudah
+                </p>
+                <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-emerald-50 p-3 font-mono text-xs text-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-200">
+                  {prettyJson(viewLog.new_value)}
+                </pre>
+              </div>
+            )}
+            {!viewLog.old_value && !viewLog.new_value && (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Tidak ada detail perubahan yang tercatat untuk aksi ini.
+              </p>
+            )}
+          </div>
+        </Modal>
+      )}
+      {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

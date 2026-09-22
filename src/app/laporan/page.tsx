@@ -21,7 +21,7 @@ export default async function LaporanPage() {
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
-        Laporan & <span className="text-amber-500">Rekap</span>
+        Laporan & <span className="text-amber-600 dark:text-amber-400">Rekap</span>
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         Daftar transaksi, tandai sudah/belum dilapor, dan kirim rekap ke WhatsApp pengurus.

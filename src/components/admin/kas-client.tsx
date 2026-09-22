@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Toast, useToast } from '@/components/ui';
+import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Row = {
@@ -22,6 +22,7 @@ export function KasClient() {
   const [data, setData] = useState<KasResp | null>(null);
   const [form, setForm] = useState({ type: 'income', label: '', amount: 0 });
   const [toast, showToast] = useToast();
+  const { ask, host: confirmHost } = useConfirm();
 
   const load = useCallback(async () => {
     const r = await api<KasResp>('/api/kas');
@@ -44,10 +45,16 @@ export function KasClient() {
     } else showToast(r.error || 'Gagal');
   }
 
-  async function removeEntry(id: number) {
-    if (!confirm('Hapus jurnal manual ini?')) return;
-    await api('/api/kas?entry_id=' + id, { method: 'DELETE' });
-    load();
+  function removeEntry(id: number) {
+    ask({
+      title: 'Hapus jurnal kas manual',
+      message: 'Hapus jurnal manual ini?',
+      confirmLabel: 'Hapus',
+      proceed: async () => {
+        await api('/api/kas?entry_id=' + id, { method: 'DELETE' });
+        load();
+      },
+    });
   }
 
   if (!data) return <p className="text-sm text-slate-500">Memuat…</p>;
@@ -167,6 +174,7 @@ export function KasClient() {
           </tbody>
         </table>
       </div>
+      {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Toast, useToast } from '@/components/ui';
+import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Shift = {
@@ -25,6 +25,7 @@ const METHOD_LABEL: Record<string, string> = { cash: 'Tunai', tf: 'Transfer', wa
 export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
   const [data, setData] = useState<Resp | null>(null);
   const [toast, showToast] = useToast();
+  const { ask, host: confirmHost } = useConfirm();
   const [busy, setBusy] = useState('');
   const [loadingMore, setLoadingMore] = useState(false);
   const [canMore, setCanMore] = useState(false);
@@ -53,15 +54,21 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
     setLoadingMore(false);
   }
 
-  async function close(id: number) {
-    if (!confirm('Tutup shift #' + id + ' dan kunci rekapnya?')) return;
-    setBusy('close' + id);
-    const r = await api<Resp>('/api/shifts', { method: 'PATCH', body: JSON.stringify({ id }) });
-    setBusy('');
-    if (r.ok) {
-      showToast('Shift #' + id + ' ditutup & direkap');
-      load();
-    } else showToast(r.error || 'Gagal menutup shift');
+  function close(id: number) {
+    ask({
+      title: 'Tutup shift',
+      message: 'Tutup shift #' + id + ' dan kunci rekapnya?',
+      confirmLabel: 'Tutup',
+      proceed: async () => {
+        setBusy('close' + id);
+        const r = await api<Resp>('/api/shifts', { method: 'PATCH', body: JSON.stringify({ id }) });
+        setBusy('');
+        if (r.ok) {
+          showToast('Shift #' + id + ' ditutup & direkap');
+          load();
+        } else showToast(r.error || 'Gagal menutup shift');
+      },
+    });
   }
 
   async function setor(id: number, on: boolean) {
@@ -183,6 +190,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
           </button>
         </div>
       )}
+      {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );

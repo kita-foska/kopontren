@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
+import { api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 import { Download } from 'lucide-react';
@@ -36,6 +36,7 @@ export function ProdukClient() {
   const [form, setForm] = useState({ ...emptyForm });
   const [show, setShow] = useState(false);
   const [toast, showToast] = useToast();
+  const { ask, host: confirmHost } = useConfirm();
   const [stockEdits, setStockEdits] = useState<Record<number, string>>({});
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
@@ -124,17 +125,23 @@ export function ProdukClient() {
     load();
   }
 
-  async function deleteProduct(p: Product) {
-    if (!confirm(`Hapus produk "${p.name}"? Jika ada riwayat transaksi, produk akan dinonaktifkan secara aman.`)) return;
-    const r = await api<{ ok: boolean; message?: string; archived?: boolean }>('/api/products/' + p.id, {
-      method: 'DELETE',
+  function deleteProduct(p: Product) {
+    ask({
+      title: 'Hapus produk',
+      message: `Hapus produk "${p.name}"? Jika ada riwayat transaksi, produk akan dinonaktifkan secara aman.`,
+      confirmLabel: 'Hapus',
+      proceed: async () => {
+        const r = await api<{ ok: boolean; message?: string; archived?: boolean }>('/api/products/' + p.id, {
+          method: 'DELETE',
+        });
+        if (r.ok) {
+          showToast(r.data?.message || 'Produk berhasil diproses');
+          load();
+        } else {
+          showToast(r.error || 'Gagal menghapus produk');
+        }
+      },
     });
-    if (r.ok) {
-      showToast(r.data?.message || 'Produk berhasil diproses');
-      load();
-    } else {
-      showToast(r.error || 'Gagal menghapus produk');
-    }
   }
 
   /** Buka overlay cetak label barcode produk (QR berisi nilai barcode). */
@@ -308,10 +315,14 @@ export function ProdukClient() {
           <button
             className="btn-danger px-2.5 py-1 text-xs"
             disabled={bulkBusy}
-            onClick={() => {
-              if (confirm('Hapus massal: ' + selected.size + ' produk akan DINONAKTIFKAN (aman utk riwayat)?'))
-                void bulk('delete');
-            }}
+            onClick={() =>
+              ask({
+                title: 'Hapus massal produk',
+                message: 'Hapus massal: ' + selected.size + ' produk akan DINONAKTIFKAN (aman utk riwayat).',
+                confirmLabel: 'Hapus Massal',
+                proceed: () => bulk('delete'),
+              })
+            }
           >
             Hapus Massal
           </button>
@@ -520,6 +531,7 @@ export function ProdukClient() {
         </div>
       </Modal>
       {label && <ProductBarcodeLabel product={label} onClose={() => setLabel(null)} />}
+      {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
   );
