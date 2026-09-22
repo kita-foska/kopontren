@@ -314,6 +314,17 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   forensik (x-forwarded-for) tetap terbuka; purge audit_log
   SELESAI (22 Sep, auto-purge cron; lihat entri akhir).
 
+- **Audit 4-fase otonom (perbarui terkini)**: sweep ulang delta
+  (margin guard, split payment, redemsi parsial, returns guard,
+  migrasi idx_sales_member, tx() commit, PWA whitelist/retry,
+  print 58mm) — tanpa 🔴/🟠 baru; 🟡 kelengkapan jejak `pay_split`
+  di audit `sales:create` difix (`4431e80`). Perf terukur:
+  First Load JS maks 133 kB (< target 150), shared 103 kB,
+  Middleware 34 kB, 48 page. FASE UI/UX = laporan menunggu
+  approval (Modal ✕ <44px + tanpa ESC/focus-trap; kontras teks
+  skeleton rendah; belum ada panel bantuan hotkey POS) — kode UI
+  belum diubah apa pun.
+
 - **Notif stok pasca-penjualan dibatasi (22 Sep 2026)**:
   `notifyStockAfterSale` kini hanya cek produk < 5 (stok terendah
   dulu, cap 5 produk paling kritis) - TODO [r] "loop per produk"

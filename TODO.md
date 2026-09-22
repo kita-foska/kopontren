@@ -145,6 +145,16 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       90 dtk + `changes===1` pada INSERT retur & restock, race-safe);
       index dipindah dari SCHEMA statis ke `migrate()` (DB lama tanpa
       kolom `member_id` tak lagi 500; diverifikasi skrip zz-retain-*).
+- [x] Audit 4-fase: 🟡 jejak `pay_split` di audit `sales:create` —
+      FIXED (`4431e80`). Sweep delta (margin/split/redemsi/returns/
+      tx()/PWA/print) tanpa bug 🔴/🟠 baru; perf FLJS maks 133 kB.
+- [r] UI/UX menunggu approval (laporan audit 4-fase): Modal `✕`
+      <44px + tanpa ESC/focus-trap/aria-modal; kontras teks skeleton
+      (`slate-400/500`) rendah; belum ada panel bantuan hotkey POS
+      (F1–F5); Toast tanpa `aria-live`. Kode UI belum diubah.
+- [r] Validasi `pay_split` saat IMPORT backup (🟠, laporan review
+      Fitur 3) — menunggu approval: normalisasi via `parsePaySplit`
+      + Σ=total; non-valid → null (legacy).
 - [r] QRIS asli (gateway/NMID resmi) — KEPUTUSAN 22 Sep: DITUNDA sampai
       user (Makfi) urus NMID resmi (bank/agregator QRIS). **QRIS mock SVG di
       POS = PLACEHOLDER — JANGAN DIPAKAI PRODUCTION** (NMID `ID102003004050`
