@@ -1432,8 +1432,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               onChange={(e) => setCustomer(e.target.value)}
             />
 
-            {/* Payment Method Selector — Fix 3: hotkey 1/2/3/4 */}
-            <div className="flex gap-1.5">
+            {/* Payment Method Selector — Fix 3: hotkey 1/2/3/4
+                Mobile: grid 2×2 (ora 4-in-1-baris → label "QRIS / Non-Tunai"
+                mrah 3 baris + badge nomer mrayang). Konten tiap kartu sadermigena
+                (konstan): icon + label + nomer fixed ing tengen, setinggi
+                seragam. Desktop uga konsisten 2×2 (kartu luwih lapang). */}
+            <div className="grid grid-cols-2 gap-1.5">
               {(
                 [
                   { v: 'cash', label: 'Tunai', Icon: Banknote },
@@ -1449,17 +1453,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     setMix(false);
                   }}
                   className={
-                    'flex-1 rounded-lg px-2 py-2 text-xs font-bold transition ' +
+                    'flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold transition ' +
                     (pay === v && !mix
                       ? 'bg-accent-500 text-white shadow-sm'
                       : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
                   }
                 >
-                  <span className="inline-flex items-center gap-1">
-                    <Icon className="h-3.5 w-3.5 shrink-0" />
-                    {label}
-                  </span>
-                  <span className="ml-1 align-super text-[9px] font-extrabold opacity-60">
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="min-w-0 truncate">{label}</span>
+                  <span className="ml-auto shrink-0 text-[9px] font-extrabold opacity-60">
                     {i + 1}
                   </span>
                 </button>
@@ -1472,17 +1474,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 }}
                 title="4. Pembayaran campur (split) tunai/transfer/QRIS"
                 className={
-                  'flex-1 rounded-lg px-2 py-2 text-xs font-bold transition ' +
+                  'flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold transition ' +
                   (mix
                     ? 'bg-amber-500 text-white shadow-sm'
                     : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
                 }
               >
-                <span className="inline-flex items-center gap-1">
-                  <Shuffle className="h-3.5 w-3.5 shrink-0" />
-                  Campur
-                </span>
-                <span className="ml-1 align-super text-[9px] font-extrabold opacity-60">4</span>
+                <Shuffle className="h-3.5 w-3.5 shrink-0" />
+                <span className="min-w-0 truncate">Campur</span>
+                <span className="ml-auto shrink-0 text-[9px] font-extrabold opacity-60">4</span>
               </button>
             </div>
 
