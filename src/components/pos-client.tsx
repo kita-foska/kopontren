@@ -1919,9 +1919,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <rect width="100" height="100" fill="white" />
               <path d="M10 10h30v30h-30z M60 10h30v30h-30z M10 60h30v30h-30z" fill="#170a0e" />
               <path d="M15 15h20v20h-20z M65 15h20v20h-20z M15 65h20v20h-20z" fill="white" />
-              <path d="M20 20h10v10h-10z M70 20h10v10h-10z M20 70h10v10h-10z" fill="#8a1538" />
+              <path d="M20 20h10v10h-10z M70 20h10v10h-10z M20 70h10v10h-10z" fill="#7a1835" />
               <path d="M45 15h10v10h-10z M45 35h10v20h-10z M60 55h15v10h-15z M60 75h10v15h-10z M75 65h15v25h-15z M35 60h10v10h-10z" fill="#170a0e" />
-              <circle cx="50" cy="50" r="8" fill="#8a1538" />
+              <circle cx="50" cy="50" r="8" fill="#7a1835" />
             </svg>
           </div>
           <div>
