@@ -253,7 +253,8 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       + `9782a89` (Backspace utk Mac)
 - [x] REGRESI DB: migrasi `sales.kasir_id` utk DB existing
       (`execColumn` idempoten + `SCHEMA_VERSION 14`) — `3724e36`
-- [ ] **Uji manual pasca-deploy (Vercel auto dari `main`):**
+- [ ] **Uji manual pasca-deploy (Vercel auto dari `main`) — HANDLED USER
+      NANG HP (22 Sep 2026):** status: PENDING hasil.
       1. Hamburger → "Ganti Tema" (ikon berubah sesuai mode) +
          "Keluar" (sesi habis, lompat /login) di HP & desktop
       2. POS: F6 split (Σ nominal), F7 shift, F8 member, F9 diskon

@@ -546,3 +546,13 @@ blocking)
   `test:split` 15/15 · `test:margin` 57/57 · dual-push master+main
   `9782a89` (ff juga membawa 7 commit main tertinggal). `public/sw.js`
   tetap tidak di-commit (stamp di-inject lokal saat build).
+- **STATUS LIVE (22 Sep 2026):** 8 commit (`95c70b5`…`f0d17c8`) sudah
+  di master + main; Vercel auto-deploy dari `main`. **skema v14 terpasang
+  pada cold start pertama pasca-deploy** — buktinya = smoke test transaksi
+  POS baru di HP user: INSERT `kasir_id` jalan tanpa "no such column".
+  (Query `schema_version` tak bisa dari lokal: `.env` lokal hanya
+  `DATABASE_URL` dev-DB; token Turso produksi hanya di Vercel env.)
+- **Keputusan sisa item:** QRIS asli TUNDA (NMID), grosir/perks member
+  belum dimulai, `point_history` backup TUNDA (keputusan 21 Sep: di luar
+  cakupan). File scratch sesi di-gitignore (`_*` pola + `scripts/zz-*`);
+  bukti di-retain lokal: `_txlib.mjs`, `_probe4.mjs`.
