@@ -220,7 +220,6 @@ CREATE INDEX IF NOT EXISTS idx_sales_created ON sales(created_at);
 CREATE INDEX IF NOT EXISTS idx_si_sale ON sale_items(sale_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_consignments_status ON consignments(status);
-CREATE INDEX IF NOT EXISTS idx_sales_member ON sales(member_id);
 CREATE INDEX IF NOT EXISTS idx_shifts_kasir ON shifts(kasir_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
 CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);
