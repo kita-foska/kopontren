@@ -268,3 +268,17 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
          menjalankan fullInit sekali
       5. Smoke: 1 transaksi POS baru (INSERT `kasir_id` jalan, tak ada
          "no such column")
+
+## PWA / Favicon (22 Sep 2026, commit `046b80c`)
+- [x] `public/favicon.ico` multi-size VALID (4 entry: 16/32/48/64) +
+      SW cache v11 — dual-push master+main. Akar masalah = favicon
+      lama KORUP (detail: MEMORY.md, seksi "PWA Favicon"). Produksi
+      Vercel LIVE: favicon served 5.635 byte = persis file lokal
+      (verifikasi HTTP 22 Sep, https://kopontren-gamma.vercel.app).
+- [ ] **Test manual ikon PWA taskbar — HANDLED USER NANG EDGE LAPTOP
+      (PENDING hasil):**
+      1. Tunggu Vercel deploy `046b80c` Ready
+      2. Uninstall PWA di Edge → clear site data → restart Explorer
+      3. Install ulang PWA → cek logo nang taskbar & Start menu
+      4. Bila masih gagal: hapus cache ikon Windows manual → restart
+         → install maneh → LAPOR hasilnya

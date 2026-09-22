@@ -128,6 +128,30 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   `public/sw.js` tak berubah di git saat test lokal; Vercel
   men-stamp sendiri tiap deploy.
 
+## PWA Favicon — Ikon Taskbar/Start Menu (22 Sep 2026, commit `046b80c`)
+- **Akar masalah:** `public/favicon.ico` lama KORUP (10.861 byte, ICO
+  tidak valid) → Edge tak bisa ekstrak ikon aplikasi PWA; ikon taskbar
+  & Start menu tampil default/generic.
+- **Fix (046b80c):** generate ulang `public/favicon.ico` = ICO
+  multi-size VALID (4 entry: 16/32/48/64) dari `icon-512.png` via
+  `sharp` (`scripts/_gen-favicon.mjs`), hasil 5.635 byte;
+  + bump cache `public/sw.js` → v11 (paksa SW lama re-fetch aset).
+- **Verifikasi LIVE (22 Sep):** `https://kopontren-gamma.vercel.app`
+  menyajikan `/favicon.ico` = 5.635 byte (`image/vnd.microsoft.icon`),
+  PERSIS file lokal → deploy `046b80c` Ready & produksi live
+  (halaman login app + manifest.json valid: icon-180/192/512,
+  theme `#8A1538`).
+- **Test client-side (DIANGKAT USER, Edge laptop — PENDING hasil):**
+  tunggu deploy → uninstall PWA di Edge → clear site data → restart
+  Explorer → install ulang PWA → cek logo nang taskbar/Start menu.
+  Bila masih gagal: hapus cache ikon Windows manual + restart +
+  install ulang, lalu laporkan. Cache ikon taskbar milik sisi
+  Windows — fix server baru terlihat setelah PWA di-install ulang /
+  cache ikon dibersihkan.
+- `scripts/_gen-favicon.mjs` & bukti sementara = file scratch (pola
+  `_`, tak di-commit); `public/favicon.ico` & `public/sw.js` hasil
+  `046b80c` sudah dual-push master+main.
+
 ## Audit Kode 3 Pass (20 Sep 2026)
 Audit menyeluruh request terakhir (fungsional / keamanan /
 performa-integritas). `tsc --noEmit` BERSIH. Temuan:
