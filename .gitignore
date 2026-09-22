@@ -33,3 +33,18 @@ tmp_*.txt
 _prod
 _ts.json
 db.txt
+
+# scratch/probe sesi Cline (lokal only). Bukti yg di-retain: _txlib.mjs, _probe4.mjs
+_*.cmd
+_*.ps1
+_*.diff
+_*.mjs
+_*.json
+_*.txt
+_*.exit
+_*.log
+_cleanup.txt
+_cleanupd.txt
+scripts/zz-*
+
+
