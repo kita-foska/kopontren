@@ -239,3 +239,31 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
   live "Tebus −Rp X (N poin + Rp Y cashback)". Backend tak berubah
   (POST /api/sales `b.redeem` nominal). TSC + `next build` lolos.
   **Fitur 2 (redemsi) 100% SELESAI.**
+
+## Batch UI + Hotkey (21 Sep 2026, HEAD `9782a89`, dual-push)
+- [x] Logo chip persegi + brand penuh (bug #14) — commit `95c70b5`
+- [x] Tema + Keluar pindah ke hamburger menu (ikon Sun/Moon dinamis,
+      logout tetap `POST /api/auth/logout` + `/login`) — `c3ce06c`
+      + `f03d6b7` (hapus themetoggle/logout.tsx tak terpakai)
+- [x] UI a11y: Modal (ESC + focus-trap + close ≥44px + role dialog),
+      Toast `aria-live` persisten, PageSkeleton kontras — `c364b2c`
+- [x] Hotkey kasir: F6 split, F7 shift, F8 member, F9 diskon (admin),
+      ↑/↓ seleksi item, +/- qty, Del hapus, Enter checkout, Ctrl+P/M/H/R,
+      cheatsheet `?` (tombol + key), hook `useHotkeys` stabil — `7ab05d2`
+      + `9782a89` (Backspace utk Mac)
+- [x] REGRESI DB: migrasi `sales.kasir_id` utk DB existing
+      (`execColumn` idempoten + `SCHEMA_VERSION 14`) — `3724e36`
+- [ ] **Uji manual pasca-deploy (Vercel auto dari `main`):**
+      1. Hamburger → "Ganti Tema" (ikon berubah sesuai mode) +
+         "Keluar" (sesi habis, lompat /login) di HP & desktop
+      2. POS: F6 split (Σ nominal), F7 shift, F8 member, F9 diskon
+         (admin), ↑/↓ pilih item (+/+− qty/Del hapus), Enter di
+         uang diterima → checkout, `?` buka cheatsheet
+      3. Retur: kasir hanya bisa retur transaksi `kasir_id` miliknya
+         (transaksi lama NULL → kasir 403, pengurus/admin tetap leluwa)
+      4. Setelah deploy v14: cek di Turso `PRAGMA table_info(sales)`
+         punya kolom `kasir_id` + `idx_sales_kasir` terbuat (cek
+         `sqlite_master`) — jika belum, cold start Vercel akan
+         menjalankan fullInit sekali
+      5. Smoke: 1 transaksi POS baru (INSERT `kasir_id` jalan, tak ada
+         "no such column")

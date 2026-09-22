@@ -10,7 +10,7 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   (`startOfDayJakarta()` kembalikan string UTC ISO, BUKAN format spasi WIB —
   jangan bandingkan string campur format).
 - `src/db.ts`: skema + migrasi idempoten + **gate `schema_version`**
-  (SAAT INI `SCHEMA_VERSION = 12`). Cold start: kalau versi DB < 12 →
+  (SAAT INI `SCHEMA_VERSION = 14`). Cold start: kalau versi DB < 14 →
   `fullInit` sekali; selain itu 1 SELECT saja. **Aturan: statement skema
   baru WAJIB diiringi bump `SCHEMA_VERSION`** (kalau tidak, DB lama tidak
   akan pernah dapat migrasi).
@@ -500,3 +500,49 @@ blocking)
 - Uji: `npm run test:split` (node:sqlite in-memory — agregat
   per-metode & cash-portion utk baris legacy + mixed, 15 check).
 - QRIS resmi DI LUAR cakupan (TERTUNDA — NMID).
+
+## Batch UI + Hotkey (21 Sep 2026) — 7 commit, HEAD `9782a89`
+- **Logo (95c70b5):** chip persegi `h-9 w-9` (Image `h-full w-full object-contain`)
+  + brand "Kopontren AL ITTIHAD" semua lebar — perbaikan bug #14
+  (atribut width/height 36 mengunci aspect ratio).
+- **Batch 3 (c3ce06c): tema + keluar pindah ke hamburger.** `shell.tsx`
+  kini `'use client'` (+ `useRouter`): handler `toggleTheme` (logika cookie
+  identik ThemeToggle lama) & `handleLogout` (POST `/api/auth/logout` +
+  `router.push('/login')`) di-pass ke `HamburgerNav` → `Sidebar`. Di bawah
+  nav panel: item "Ganti Tema" (ikon dinamis CSS: dark→Sun, light→Moon) +
+  "Keluar" (rose). `themetoggle.tsx` & `logout.tsx` DIHAPUS (f03d6b7).
+  Header kini: hamburger + logo/brand | nama+badge role + bell (admin).
+- **Batch 4 (c364b2c): a11y.** `Modal` (ui.tsx): ESC tutup, focus-trap
+  Tab/Shift+Tab, fokus awal elemen pertama + restore saat tutup,
+  `role="dialog" aria-modal aria-label`, tombol ✕ min 44px (`min-h-11
+  min-w-11`). `Toast`: live region `role="status" aria-live="polite"`
+  PERSISTEN (kosong = sr-only, jangan unmount — SR tak mau live region
+  baru). `PageSkeleton`: kontras naik (`bg-slate-300`/`dark:bg-navy-500`,
+  label slate-500).
+- **Batch 5 (7ab05d2 + 9782a89): hotkey kasir.** Hook baru
+  `src/lib/useHotkeys.ts` (map handler stabil via useRef: listener 1x,
+  isi map fresh tiap render; handler yang preventDefault — di luar aksi
+  input teks & shortcut browser tetap normal). F1–F5 + ESC TIDAK berubah
+  (memori otot). Baru: F6 toggle split (cart tidak kosong, di luar modal),
+  F7 buka/tutup shift (modal sesuai `currentShift`), F8 fokus select
+  member, F9 fokus input diskon (hanya admin), panah ↑/↓ seleksi item
+  keranjang (+ highlight ring, clamp), +/- qty item terpilih (clamp stok
+  via setQty), Del/Backspace hapus item, Enter di kolom uang diterima =
+  checkout (guard uang kurang tetap jalan), Ctrl+P cetak struk, Ctrl+M
+  member, Ctrl+H → `/laporan` (CATATAN: Chrome menahan Ctrl+H — tak
+  bisa dicegah page-side; Firefox/Edge OK; fallback = menu), Ctrl+R reset
+  pesanan tanpa transaksi (antrean offline TIDAK disentuh). Cheatsheet:
+  tombol `?` di judul keranjang + key `?` (guard: ketik `?` di input teks
+  tidak membuka panel).
+- **REGRESI DB (3724e36) — temuan bug check, PENTING:** `sales.kasir_id`
+  cuma ada di `CREATE TABLE` (tak berlaku utk DB existing) + tak ada
+  `execColumn` → di Turso produksi kolom HILANG: `CREATE INDEX
+  idx_sales_kasir` gagal, `INSERT INTO sales (kasir_id,…)` & guard retur
+  `SELECT … kasir_id` = "no such column". FIX: `execColumn(d, 'ALTER
+  TABLE sales ADD COLUMN kasir_id INTEGER')` (idempoten) + bump
+  `SCHEMA_VERSION 14`. Baris lama kasir_id NULL = transaksi historis
+  tanpa atribusi; guard hanya membatasi role kasir (pengurus/admin leluwa).
+- **Verifikasi:** `tsc --noEmit` exit 0 · `next build` 48/48 ·
+  `test:split` 15/15 · `test:margin` 57/57 · dual-push master+main
+  `9782a89` (ff juga membawa 7 commit main tertinggal). `public/sw.js`
+  tetap tidak di-commit (stamp di-inject lokal saat build).
