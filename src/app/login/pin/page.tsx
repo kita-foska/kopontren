@@ -111,7 +111,7 @@ export default function PinReauthPage() {
               Verifikasi PIN
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-300">
-              {user ? 'Masuk lagi tanpa password' : 'Kasir &amp; Pembukuan'}
+              {user ? 'Masuk lagi tanpa password' : 'Kasir & Pembukuan'}
             </p>
           </div>
         </div>
