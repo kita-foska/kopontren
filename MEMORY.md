@@ -20,6 +20,11 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   kini eksplisit commit/rollback). `file:` lokal: sekuensial
   auto-commit (bug @libsql/client 0.15 — tx file LOST, jangan pakai
   lokal utk test integritas).
+  **Caveat (diterima, pre-existing):** `tx()` memakai singleton
+  `DbShim.c` bersama — dua `tx()` benar-benar paralel di satu process
+  Vercel hangat bisa interleave; kalau muncul anomali lintas-request,
+  follow-up: shim fresh per transaksi. Bukti semantik lib: `_txlib.mjs`
+  (close = 0 baris, commit = 1 baris). Probe produksi: `_probe4.mjs`.
 
 ## Keamanan (jaga konsistensinya)
 - Password: scrypt + salt per user (`hashPassword`/`randomSalt` di

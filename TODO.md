@@ -133,6 +133,18 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       tombol "🔀 Campur" (input per metode + indikator lunas)
       + payload ikut antrean offline. Uji: `npm run test:split`
       (15 check).
+- [x] Bug kritis `tx()` (write transaksi hilang di produksi) — FIXED
+      (`91802a5`): Turso `transaction().close()` TANPA commit
+      membatalkan batch → sales/member/konsinyasi tampak sukses tapi
+      data hilang. Kini `tx()` eksplisit `commit()`/`rollback()`;
+      semantik lib dibuktikan `_txlib.mjs` (close=0, commit=1);
+      produksi live (manifest `bfa7aa8`) + probe `_probe4.mjs`
+      POST→GET→audit→DELETE→stok balik.
+- [x] Guard anti double-return + fix migrasi `idx_sales_member` —
+      FIXED (`2b084a4` + `8a616a1`): retur dobel ditolak in-tx (dedup
+      90 dtk + `changes===1` pada INSERT retur & restock, race-safe);
+      index dipindah dari SCHEMA statis ke `migrate()` (DB lama tanpa
+      kolom `member_id` tak lagi 500; diverifikasi skrip zz-retain-*).
 - [r] QRIS asli (gateway/NMID resmi) — KEPUTUSAN 22 Sep: DITUNDA sampai
       user (Makfi) urus NMID resmi (bank/agregator QRIS). **QRIS mock SVG di
       POS = PLACEHOLDER — JANGAN DIPAKAI PRODUCTION** (NMID `ID102003004050`
