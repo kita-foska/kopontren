@@ -507,6 +507,7 @@ export async function POST(req: Request) {
       total: out.total,
       member_name: out.member_name || undefined,
       points: out.points,
+      pay_split: out.pay_split ?? undefined,
     }, req);
     // PENJAGA MARGIN: bila perk otomatis terpotong oleh margin kotor, atau
     // keluaran manual (diskon) sudah melewati margin -> log khusus +
