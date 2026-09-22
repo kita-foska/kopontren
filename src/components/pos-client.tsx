@@ -854,6 +854,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     '=': (e) => adjSelQty(e, 1),
     '-': (e) => adjSelQty(e, -1),
     delete: (e) => delSel(e),
+    backspace: (e) => delSel(e), // Mac: tombol hapus = Backspace
   });
 
   // Shift Management
