@@ -147,6 +147,7 @@ const CHEAT_ROWS: [string, string][] = [
   ['F7', 'Buka / tutup shift kasir'],
   ['F8', 'Fokus pilih member'],
   ['F9', 'Fokus diskon (pengurus/admin)'],
+  ['1 / 2 / 3 / 4', 'Pilih metode bayar: Tunai / QRIS / Transfer / Campur'],
   ['↑ / ↓', 'Pindah seleksi di keranjang'],
   ['+ / −', 'Tambah / kurangi qty item terpilih'],
   ['Del', 'Hapus item terpilih'],
@@ -248,6 +249,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const searchInputRef = useRef<HTMLInputElement>(null);
   const memberSelRef = useRef<HTMLSelectElement>(null);
   const discRef = useRef<HTMLInputElement>(null);
+  // Fix 1: target sticky bottom bar mobile — scroll ke keranjang ini.
+  const cartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setQDeb(q), 300);
@@ -800,6 +803,20 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     return true;
   }
 
+  // Fix 3: hotkey 1/2/3/4 untuk memilih metode pembayaran
+  // (Tunai / QRIS / Transfer / Campur). Dijaga agar tidak memicu saat
+  // kasir sedang mengetik di kolom apa pun (pencarian, uang diterima,
+  // dsb.) atau saat modal terbuka — mengetikan nominal tetap normal.
+  function selectPayMethod(e: KeyboardEvent, which: 'cash' | 'wa' | 'tf' | 'mix') {
+    if (inTextTarget(e.target) || anyModalOpen()) return;
+    e.preventDefault();
+    if (which === 'mix') setMix(true);
+    else {
+      setPay(which);
+      setMix(false);
+    }
+  }
+
   useHotkeys({
     f6: (e) => {
       if (anyModalOpen() || cart.length === 0) return;
@@ -817,6 +834,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     f9: () => {
       if (!anyModalOpen() && admin) discRef.current?.focus();
     },
+    // Fix 3: 1=Tunai · 2=QRIS · 3=Transfer · 4=Campur (di luar kolom ketik).
+    '1': (e) => selectPayMethod(e, 'cash'),
+    '2': (e) => selectPayMethod(e, 'wa'),
+    '3': (e) => selectPayMethod(e, 'tf'),
+    '4': (e) => selectPayMethod(e, 'mix'),
     '?': (e) => {
       // '?' yang diketik di kolom pencarian/pembeli tidak boleh membuka panel.
       if (inTextTarget(e.target)) return;
@@ -951,8 +973,22 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     showToast('Teks struk berhasil disalin ke clipboard');
   }
 
+  // Fix 1: sticky bottom bar (mobile) — ketuk bar → scroll halus ke
+  // keranjang & fokus ke kolom "Uang diterima" agar kasir langsung bisa
+  // mengetik nominal bayar tanpa mengulir halaman sampai bawah.
+  function goToCart() {
+    cartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    receivedRef.current?.focus({ preventScroll: true });
+  }
+
   return (
-    <div className="space-y-4">
+    <div
+      className={
+        // pb-24 mobile hanya saat ada item di keranjang: memberi ruang
+        // agar konten tidak tertutup sticky bottom bar (hilang di desktop).
+        'space-y-4' + (cart.length > 0 ? ' pb-24 lg:pb-0' : '')
+      }
+    >
       {/* Shift Banner */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white/80 p-3 text-xs shadow-sm backdrop-blur dark:border-navy-700 dark:bg-navy-900/80">
         <div className="flex items-center gap-2">
@@ -1068,12 +1104,18 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               📷 Scan Barcode
             </button>
 
-            {/* Category pills */}
-            <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1">
+            {/* Category pills — Fix 2: 1 baris + scroll horizontal
+                (scrollbar disembunyikan via .no-scrollbar) agar hemat
+                2–3 baris vertikal; kategori tetap bisa digulir. */}
+            <div
+              className="no-scrollbar flex flex-nowrap gap-1.5 overflow-x-auto pb-1"
+              role="tablist"
+              aria-label="Kategori produk"
+            >
               <button
                 onClick={() => setCat('')}
                 className={
-                  'rounded-full px-3 py-1 text-xs font-bold transition ' +
+                  'shrink-0 rounded-full px-3 py-1 text-xs font-bold transition ' +
                   (!cat
                     ? 'bg-accent-500 text-white shadow-sm'
                     : 'border border-slate-300 text-slate-600 hover:border-slate-400 dark:border-navy-600 dark:text-slate-300')
@@ -1086,7 +1128,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   key={c}
                   onClick={() => setCat(c)}
                   className={
-                    'rounded-full px-3 py-1 text-xs font-bold transition ' +
+                    'shrink-0 rounded-full px-3 py-1 text-xs font-bold transition ' +
                     (cat === c
                       ? 'bg-accent-500 text-white shadow-sm'
                       : 'border border-slate-300 text-slate-600 hover:border-slate-400 dark:border-navy-600 dark:text-slate-300')
@@ -1145,7 +1187,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         </div>
 
         {/* Right Column: Order Cart & Payment */}
-        <div className="card h-fit p-4 lg:sticky lg:top-24">
+        <div ref={cartRef} className="card h-fit p-4 lg:sticky lg:top-24">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-bold flex items-center gap-2">
               Keranjang Kasir
@@ -1345,7 +1387,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               onChange={(e) => setCustomer(e.target.value)}
             />
 
-            {/* Payment Method Selector */}
+            {/* Payment Method Selector — Fix 3: hotkey 1/2/3/4 */}
             <div className="flex gap-1.5">
               {(
                 [
@@ -1353,9 +1395,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   ['wa', '📱 QRIS / Non-Tunai'],
                   ['tf', '🏦 Transfer'],
                 ] as const
-              ).map(([v, label]) => (
+              ).map(([v, label], i) => (
                 <button
                   key={v}
+                  title={i + 1 + '. ' + label}
                   onClick={() => {
                     setPay(v);
                     setMix(false);
@@ -1368,6 +1411,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   }
                 >
                   {label}
+                  <span className="ml-1 align-super text-[9px] font-extrabold opacity-60">
+                    {i + 1}
+                  </span>
                 </button>
               ))}
               <button
@@ -1376,7 +1422,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   setMix(true);
                   setReceived('');
                 }}
-                title="Pembayaran campur (split) tunai/transfer/QRIS"
+                title="4. Pembayaran campur (split) tunai/transfer/QRIS"
                 className={
                   'flex-1 rounded-lg px-2 py-2 text-xs font-bold transition ' +
                   (mix
@@ -1385,6 +1431,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 }
               >
                 🔀 Campur
+                <span className="ml-1 align-super text-[9px] font-extrabold opacity-60">4</span>
               </button>
             </div>
 
@@ -1464,9 +1511,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <button
                       type="button"
                       onClick={() => setReceived(String(total))}
+                      title="Fix 4: isi otomatis nominal total — lunas tanpa kembalian"
                       className="rounded bg-slate-100 px-2 py-1 text-[11px] font-bold hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-200"
                     >
-                      Uang Pas
+                      Lunas
                     </button>
                     {[10000, 20000, 50000, 100000].map((nom) => (
                       <button
@@ -1552,7 +1600,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             {/* Petunjuk hotkey (desktop) */}
             <p className="hidden text-[10px] font-medium text-slate-400 lg:block dark:text-slate-500">
               F1 Cari · F2 Pembeli · F3 Bayar · F4 Simpan · F5 Cetak · F6 Split · F7 Shift
-              · ? Semua
+              · 1–4 Metode · ? Semua
             </p>
 
             {/* Checkout Button */}
@@ -2058,6 +2106,30 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           menu Laporan &amp; Rekap.
         </p>
       </Modal>
+
+      {/* Fix 1: sticky bottom bar — mobile/tablet (<lg) saja, tampil
+          hanya saat ada item di keranjang. Ketuk → lompat ke
+          keranjang + fokus "Uang diterima". Desktop: tidak tampil. */}
+      {cart.length > 0 && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-accent-600/40 bg-accent-500 shadow-[0_-2px_12px_rgba(0,0,0,0.18)] lg:hidden"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <button
+            type="button"
+            onClick={goToCart}
+            aria-label="Lihat keranjang dan pembayaran"
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-white transition active:bg-accent-600"
+          >
+            <span className="min-w-0 truncate text-sm font-bold">
+              🛒 {cart.length} item · {rp(total)}
+            </span>
+            <span className="shrink-0 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-bold">
+              Lihat Keranjang →
+            </span>
+          </button>
+        </div>
+      )}
 
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
