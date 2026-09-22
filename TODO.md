@@ -93,6 +93,16 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       transaksi tetap jalan); PUT /api/member-settings accept+warn
       (`memberSettingWarnings`); akumulasi `totalCost` HPP ikut
       dihitung saat harga di-override. Dual-push master+main.
+- [x] **Struk thermal 58mm + @page kondisional** — SELESAI
+      (commit `82fccdb` + helper `printReceipt()` di pos-client):
+      `.receipt-print` kini 58mm/padding 2mm/9pt/line-height 1.3
+      (dulu 320px ≈ 84mm — kelewat lebar); `@page` global tetap A4
+      8mm utk laporan `.print-area` (zakat/dll), dan SAAT cetak struk
+      `printReceipt()` meng-inject `@page { size: 58mm auto; margin: 0 }`
+      lalu menghapusnya saat `afterprint` — satu-satunya jalur
+      `window.print()` struk (auto-print, F5, tombol Cetak). Plus
+      `.print-hidden` utk chrome yang tak boleh tercetak. Semua jalur
+      cetak struk rewired ke `printReceipt()`.
 - [x] Terapkan perks member di alur POS: diskon member, cashback
       (saldo member), promo ulang tahun, tier Silver/Gold — DITERAPKAN
       (commit `43098a4`, 22 Sep 2026): ultah = MAX(birthday_discount,

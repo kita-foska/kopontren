@@ -325,6 +325,14 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   skeleton rendah; belum ada panel bantuan hotkey POS) — kode UI
   belum diubah apa pun.
 
+- **Struk thermal 58mm + @page kondisional (perbarui)**: `.receipt-print`
+  = 58mm/2mm/9pt/1.3 (commit `82fccdb`); `@page` global A4 8mm utk
+  laporan `.print-area`; saat cetak struk `printReceipt()` (pos-client)
+  inject `@page 58mm/0mm` + hapus saat `afterprint` (fallback 4 dtk) —
+  semua jalur cetak struk (auto-print, F5, tombol) lewat helper ini;
+  `.print-hidden` utk chrome. Catatan uji Makfi: cek spacing, jumlah
+  item per roll, margin tepi di mesin kasir fisik.
+
 - **Notif stok pasca-penjualan dibatasi (22 Sep 2026)**:
   `notifyStockAfterSale` kini hanya cek produk < 5 (stok terendah
   dulu, cap 5 produk paling kritis) - TODO [r] "loop per produk"
