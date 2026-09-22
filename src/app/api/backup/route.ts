@@ -3,6 +3,7 @@ import { db, tx } from '@/db';
 import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { parsePaySplit } from '@/lib/pay-methods';
 
 type Backup = {
   version: number;
@@ -140,12 +141,23 @@ export async function POST(req: Request) {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       );
       for (const s of (payload.sales as Record<string, unknown>[]) || []) {
+        // Guard import pay_split (review Fitur 3 🟠): JSON harus well-formed,
+        // metode whitelisted (parsePaySplit), Σ bagian === total baris.
+        // Gagal validasi → null (baris jadi legacy pay_method) — JSON rusak
+        // tidak boleh masuk, supaya json_each di sisi baca tidak pecah.
+        const rowTotal = Number(s.total) || 0;
+        let paySplitDb: string | null = null;
+        if (typeof s.pay_split === 'string' && s.pay_split) {
+          const parts = parsePaySplit(s.pay_split);
+          const splitSum = parts.reduce((t, x) => t + x.a, 0);
+          if (parts.length > 0 && splitSum === rowTotal) paySplitDb = JSON.stringify(parts);
+        }
         await insS.run(
           Number(s.id),
           s.kasir_id != null ? Number(s.kasir_id) : null,
           String(s.customer ?? ''),
           String(s.pay_method ?? '') || 'cash',
-          typeof s.pay_split === 'string' && s.pay_split ? s.pay_split : null,
+          paySplitDb,
           String(s.status ?? '') || 'unreported',
           String(s.note ?? ''),
           Number(s.total) || 0,

@@ -50,6 +50,8 @@ export async function salesByMethod(
              CAST(json_extract(j.value, '$.a') AS INTEGER) a
         FROM sales s, json_each(s.pay_split) j
         WHERE ${where} AND s.pay_split IS NOT NULL AND s.pay_split != ''
+          AND json_valid(s.pay_split)
+          AND CAST(json_extract(j.value, '$.m') AS TEXT) IN ('cash', 'tf', 'wa')
     ) GROUP BY m`;
   const rows = (await d.prepare(q).all(...args, ...args)) as { m: string; t: number }[];
   const out: Record<string, number> = {};
@@ -75,6 +77,7 @@ export async function salesCashPortion(
         FROM sales s, json_each(s.pay_split) j
         WHERE ${where}
           AND s.pay_split IS NOT NULL AND s.pay_split != ''
+          AND json_valid(s.pay_split)
           AND CAST(json_extract(j.value, '$.m') AS TEXT) = 'cash'
     )`;
   const row = (await d.prepare(q).get(...args, ...args)) as { c: number };

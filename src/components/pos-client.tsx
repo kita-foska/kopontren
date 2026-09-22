@@ -536,7 +536,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         });
         showToast('⚡ Offline — transaksi tercatat, akan otomatis tersinkron saat internet pulih.');
       } else {
-        showToast(r.error || 'Gagal menyimpan transaksi.');
+        // Hint UX (review Fitur 3 🟡): server menolak split bila Σ ≠ total
+        // final (total bisa bergeser oleh perk member/redemsi) — arahkan
+        // kasir memperbarui nominal campur.
+        const hint =
+          mix && r.error && r.error.startsWith('Pembayaran campur belum lunas')
+            ? ' — Total bisa berubah (diskon/poin). Perbarui nominal campur, lalu coba lagi.'
+            : '';
+        showToast((r.error || 'Gagal menyimpan transaksi.') + hint);
       }
       return;
     }
