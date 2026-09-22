@@ -390,6 +390,13 @@ async function migrate(d: Db) {
   await d.exec('CREATE INDEX IF NOT EXISTS idx_debts_status ON debts(status)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_stock_opname_created ON stock_opname(created_at)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_point_history_member ON point_history(member_id)');
+  // Batch 2 (2026-09-21, guard retur kasir): kolom kasir_id sudah masuk
+  // CREATE TABLE sales — tetapi CREATE TABLE IF NOT EXISTS TIDAK diterapkan
+  // ke DB existing (tabel lama). Tanpa execColumn ini, index idx_sales_kasir
+  // di bawah + INSERT/SELECT sales.kasir_id (POS & guard retur) akan error
+  // "no such column" di DB produksi. Baris lama tetap NULL = transaksi
+  // historis tanpa atribusi kasir; guard hanya membatasi role kasir.
+  await execColumn(d, 'ALTER TABLE sales ADD COLUMN kasir_id INTEGER');
   // perf batch 3 (2026-09-18): close the remaining hot-query gaps from the
   // Rows-Read audit. idx_sales_kasir: per-cashier sales (shift close,
   // cashier filters). idx_returns_sale: sales -> returns joins (rekap retur).
@@ -728,7 +735,11 @@ export async function saveZakatSettings(
 // (JSON array [{m,a}], Σa = total; NULL = single method, pay_method
 // rujukan). execColumn idempoten di migrate(); DB existing (v12) akan
 // menjalankan fullInit sekali lagi pada cold start berikutnya.
-const SCHEMA_VERSION = 13;
+// Bump v14 (2026-09-21): guard retur kasir — execColumn sales.kasir_id
+// utk DB existing (CREATE TABLE baru tidak menambah kolom ke tabel lama).
+// DB existing (v13) menjalankan fullInit sekali lagi; index
+// idx_sales_kasir kini aman dibuat.
+const SCHEMA_VERSION = 14;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
