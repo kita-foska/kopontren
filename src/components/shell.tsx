@@ -1,18 +1,36 @@
+'use client';
+
 import type { AppUser } from '@/lib/auth';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { HamburgerNav } from './sidebar';
-import { ThemeToggle } from './themetoggle';
-import { LogoutButton } from './logout';
 import { SessionWatcher } from './session-watcher';
 import { NotificationBell } from './notification-bell';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
+  const router = useRouter();
+
+  // Ganti tema: sinkron state class 'dark' + cookie (logika sama persis
+  // dengan ThemeToggle lama agar preferensi tema tidak hilang).
+  function toggleTheme() {
+    const el = document.documentElement;
+    const next = el.classList.contains('dark') ? 'light' : 'dark';
+    el.classList.toggle('dark', next === 'dark');
+    document.cookie = 'theme=' + next + '; path=/; max-age=31536000; samesite=lax';
+  }
+
+  // Logout: invalidasi sesi di server, lalu lempar ke /login.
+  async function handleLogout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+  }
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-navy-700 dark:bg-navy-900/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
-            <HamburgerNav role={user.role} />
+            <HamburgerNav role={user.role} onToggleTheme={toggleTheme} onLogout={handleLogout} />
             <a href="/" className="flex min-w-0 items-center gap-2.5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white p-1 shadow-sm ring-1 ring-black/5">
                 <Image
@@ -48,8 +66,6 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
               </span>
             </span>
             {user.role === 'admin' && <NotificationBell />}
-            <ThemeToggle />
-            <LogoutButton />
           </div>
         </div>
       </header>

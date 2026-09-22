@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { LogOut, Menu, Moon, Sun, X } from 'lucide-react';
 import type { Role } from '@/lib/auth';
 
 // Prefetch selektif: menu utama + halaman admin yang paling sering dibuka.
@@ -81,10 +81,14 @@ export function Sidebar({
   role,
   open,
   onClose,
+  onToggleTheme,
+  onLogout,
 }: {
   role: Role;
   open: boolean;
   onClose: () => void;
+  onToggleTheme: () => void;
+  onLogout: () => void;
 }) {
   const pathname = usePathname();
 
@@ -178,6 +182,33 @@ export function Sidebar({
             </div>
           ))}
         </nav>
+        {/* Aksi panel (dipindah dari header): ganti tema + keluar.
+            Ikon dinamis: dark → Sun (klik = ke light), light → Moon (klik = ke dark). */}
+        <div className="mt-2 space-y-1 border-t border-slate-200 px-2 pb-2 pt-2 dark:border-navy-600">
+          <button
+            type="button"
+            onClick={() => {
+              onToggleTheme();
+              onClose();
+            }}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700"
+          >
+            <Sun className="hidden h-5 w-5 text-amber-500 dark:block" />
+            <Moon className="h-5 w-5 text-slate-400 dark:hidden" />
+            Ganti Tema
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              void onLogout();
+            }}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-navy-700/60"
+          >
+            <LogOut className="h-5 w-5" />
+            Keluar
+          </button>
+        </div>
       </aside>
     </>,
     document.body
@@ -255,7 +286,15 @@ function groupsFor(role: Role): NavGroup[] {
  * Uncontrolled wrapper: tombol trigger ikon menu + Sidebar (state owned here).
  * Place the button in the header; the drawer renders fixed over the page.
  */
-export function HamburgerNav({ role }: { role: Role }) {
+export function HamburgerNav({
+  role,
+  onToggleTheme,
+  onLogout,
+}: {
+  role: Role;
+  onToggleTheme: () => void;
+  onLogout: () => void | Promise<void>;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -267,7 +306,13 @@ export function HamburgerNav({ role }: { role: Role }) {
       >
         <Menu className="h-5 w-5" />
       </button>
-      <Sidebar role={role} open={open} onClose={() => setOpen(false)} />
+      <Sidebar
+        role={role}
+        open={open}
+        onClose={() => setOpen(false)}
+        onToggleTheme={onToggleTheme}
+        onLogout={onLogout}
+      />
     </>
   );
 }
