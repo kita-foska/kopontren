@@ -7,6 +7,27 @@ import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
 import { useHotkeys } from '@/lib/useHotkeys';
+import {
+  Banknote,
+  CameraOff,
+  Check,
+  Copy,
+  Landmark,
+  Medal,
+  MessageCircle,
+  Package,
+  Printer,
+  Radio,
+  ScanBarcode,
+  Search,
+  Shuffle,
+  ShoppingCart,
+  Smartphone,
+  Star,
+  Trophy,
+  X,
+  Zap,
+} from 'lucide-react';
 
 /**
  * Cetak struk thermal 58mm: sementara switch @page jadi 58mm/0mm
@@ -568,7 +589,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           }
           return next;
         });
-        showToast('⚡ Offline — transaksi tercatat, akan otomatis tersinkron saat internet pulih.');
+        showToast('Offline — transaksi tercatat, akan otomatis tersinkron saat internet pulih.');
       } else {
         // Hint UX (review Fitur 3 🟡): server menolak split bila Σ ≠ total
         // final (total bisa bergeser oleh perk member/redemsi) — arahkan
@@ -647,7 +668,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     load();
     loadShift();
     if (remaining.length === 0 && q.length > 0)
-      showToast('Semua transaksi offline berhasil tersinkron ✔');
+      showToast('Semua transaksi offline berhasil tersinkron');
   }
 
   // Deteksi offline/online: sinkron otomatis saat internet pulih.
@@ -1046,14 +1067,16 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
 
       {/* Antrean transaksi offline: sinkron otomatis saat internet pulih */}
       {!isOnline && (
-        <div className="rounded-xl border border-sky-500/40 bg-sky-500/10 px-4 py-2.5 text-xs font-semibold text-sky-600 dark:text-sky-300">
-          📡 Mode offline — POS tetap berjalan. Transaksi akan tersimpan & tersinkron otomatis.
+        <div className="flex items-center gap-2 rounded-xl border border-sky-500/40 bg-sky-500/10 px-4 py-2.5 text-xs font-semibold text-sky-600 dark:text-sky-300">
+          <Radio className="h-4 w-4 shrink-0" />
+          Mode offline — POS tetap berjalan. Transaksi akan tersimpan & tersinkron otomatis.
         </div>
       )}
       {offlineQueue.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
-          <span>
-            ⚡ {offlineQueue.length} transaksi offline menunggu sinkronisasi…
+          <span className="inline-flex items-center gap-1.5">
+            <Zap className="h-3.5 w-3.5 shrink-0" />
+            {offlineQueue.length} transaksi offline menunggu sinkronisasi…
           </span>
           <button
             onClick={() => void flushQueue()}
@@ -1073,7 +1096,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                🔍
+                <Search className="h-4 w-4" />
               </span>
               <input
                 ref={searchInputRef}
@@ -1089,7 +1112,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-slate-400 hover:text-slate-600"
                   onClick={() => setQ('')}
                 >
-                  ✕
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -1101,7 +1124,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-[0.98] dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
               title="Arahkan kamera ke barcode produk"
             >
-              📷 Scan Barcode
+              <span className="inline-flex items-center gap-1.5">
+                <ScanBarcode className="h-4 w-4" />
+                Scan Barcode
+              </span>
             </button>
 
             {/* Category pills — Fix 2: 1 baris + scroll horizontal
@@ -1179,7 +1205,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             })}
             {visible.length === 0 && (
               <div className="col-span-full py-12 text-center text-sm text-slate-500">
-                <p className="text-2xl mb-1">📦</p>
+                <div className="mb-2 flex justify-center">
+                  <Package className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                </div>
                 <p>Tidak ada produk yang cocok dengan pencarian.</p>
               </div>
             )}
@@ -1233,7 +1261,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     className="text-[11px] text-slate-400 hover:text-rose-500"
                     title="Hapus item"
                   >
-                    ✕
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
@@ -1278,7 +1306,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             ))}
             {cart.length === 0 && (
               <div className="py-8 text-center text-xs text-slate-400">
-                <p className="text-xl mb-1">🛒</p>
+                <div className="mb-1 flex justify-center">
+                  <ShoppingCart className="h-7 w-7 text-slate-300 dark:text-slate-600" />
+                </div>
                 Pilih produk di sebelah kiri atau scan barcode.
               </div>
             )}
@@ -1318,18 +1348,29 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               {selectedMember && (
                 <div className="mt-1 space-y-0.5 rounded bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300">
                   <div className="flex items-center justify-between">
-                    <span>★ Member: {selectedMember.name}</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Star className="h-3 w-3 shrink-0" />
+                      Member: {selectedMember.name}
+                    </span>
                     <span>
                       {selectedMember.tier
-                        ? selectedMember.tier === 'gold'
-                          ? '🏆 Gold'
-                          : '🥈 Silver'
+                        ? selectedMember.tier === 'gold' ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Trophy className="h-3 w-3" />
+                              Gold
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1">
+                              <Medal className="h-3 w-3" />
+                              Silver
+                            </span>
+                          )
                         : ''}
                     </span>
                   </div>
                   <div>
                     {selectedMember.points} poin (+{Math.floor(total / pointsEvery)} poin)
-                    {perkAmt > 0 ? ` · Diskon member −${rp(perkAmt)}${isBday ? ' (ultah 🎉)' : ''}` : ''}
+                    {perkAmt > 0 ? ` · Diskon member −${rp(perkAmt)}${isBday ? ' (ultah)' : ''}` : ''}
                     {cbPreview > 0 ? ` · Cashback +${rp(cbPreview)} ke saldo` : ''}
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -1391,11 +1432,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <div className="flex gap-1.5">
               {(
                 [
-                  ['cash', '💵 Tunai'],
-                  ['wa', '📱 QRIS / Non-Tunai'],
-                  ['tf', '🏦 Transfer'],
+                  { v: 'cash', label: 'Tunai', Icon: Banknote },
+                  { v: 'wa', label: 'QRIS / Non-Tunai', Icon: Smartphone },
+                  { v: 'tf', label: 'Transfer', Icon: Landmark },
                 ] as const
-              ).map(([v, label], i) => (
+              ).map(({ v, label, Icon }, i) => (
                 <button
                   key={v}
                   title={i + 1 + '. ' + label}
@@ -1410,7 +1451,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
                   }
                 >
-                  {label}
+                  <span className="inline-flex items-center gap-1">
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    {label}
+                  </span>
                   <span className="ml-1 align-super text-[9px] font-extrabold opacity-60">
                     {i + 1}
                   </span>
@@ -1430,7 +1474,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
                 }
               >
-                🔀 Campur
+                <span className="inline-flex items-center gap-1">
+                  <Shuffle className="h-3.5 w-3.5 shrink-0" />
+                  Campur
+                </span>
                 <span className="ml-1 align-super text-[9px] font-extrabold opacity-60">4</span>
               </button>
             </div>
@@ -1473,12 +1520,17 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   }
                 >
                   <span>
-                    {mixSum === total
-                      ? 'Lunas ✔'
-                      : 'Selisih ' +
+                    {mixSum === total ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Check className="h-3.5 w-3.5" />
+                        Lunas
+                      </span>
+                    ) : (
+                      'Selisih ' +
                         (mixSum < total ? 'kurang' : 'lebih') +
                         ' ' +
-                        rp(Math.abs(total - mixSum))}
+                        rp(Math.abs(total - mixSum))
+                    )}
                   </span>
                   <span>
                     {rp(mixSum)} / {rp(total)}
@@ -1570,7 +1622,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               )}
               {perkAmt > 0 && (
                 <div className="flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
-                  <span>Diskon member{isBday ? ' (ultah 🎉)' : ''}</span>
+                  <span>Diskon member{isBday ? ' (ultah)' : ''}</span>
                   <span>-{rp(perkAmt)}</span>
                 </div>
               )}
@@ -1623,15 +1675,27 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         footer={
           <div className="w-full space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <button className="btn-ghost text-xs" onClick={copyStrukText}>
-                📋 Salin Struk
+              <button
+                className="btn-ghost inline-flex items-center gap-1.5 text-xs"
+                onClick={copyStrukText}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                Salin Struk
               </button>
               <div className="ml-auto flex items-center gap-2">
-                <button className="btn-ghost text-xs font-bold" onClick={handleSendWaStruk}>
-                  💬 Kirim WA
+                <button
+                  className="btn-ghost inline-flex items-center gap-1.5 text-xs font-bold"
+                  onClick={handleSendWaStruk}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  Kirim WA
                 </button>
-                <button className="btn-primary text-xs font-bold" onClick={printStruk}>
-                  🖨️ Cetak Struk (F5)
+                <button
+                  className="btn-primary inline-flex items-center gap-1.5 text-xs font-bold"
+                  onClick={printStruk}
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  Cetak Struk (F5)
                 </button>
                 <button className="btn-ghost text-xs" onClick={() => setReceipt(null)}>
                   Tutup
@@ -1743,7 +1807,19 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 {receipt.tier && (
                   <div className="flex justify-between font-bold text-amber-600 dark:text-amber-400">
                     <span>Tier member</span>
-                    <span>{receipt.tier === 'gold' ? 'Gold 🏆' : 'Silver 🥈'}</span>
+                    <span>
+                      {receipt.tier === 'gold' ? (
+                        <span className="inline-flex items-center gap-1">
+                          <Trophy className="h-3.5 w-3.5" />
+                          Gold
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1">
+                          <Medal className="h-3.5 w-3.5" />
+                          Silver
+                        </span>
+                      )}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between">
@@ -2019,7 +2095,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         {closingSummary && (
           <div className="space-y-3 text-sm">
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">
-              ✓ Shift <b>{closingSummary.label || '#' + closingSummary.id}</b> telah ditutup dan siap untuk serah terima kasir.
+              <Check className="mr-1 h-3.5 w-3.5 align-[-3px]" /> Shift <b>{closingSummary.label || '#' + closingSummary.id}</b> telah ditutup dan siap untuk serah terima kasir.
             </div>
             <div className="space-y-1 text-xs">
               <div className="flex justify-between">
@@ -2121,8 +2197,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             aria-label="Lihat keranjang dan pembayaran"
             className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-white transition active:bg-accent-600"
           >
-            <span className="min-w-0 truncate text-sm font-bold">
-              🛒 {cart.length} item · {rp(total)}
+            <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold">
+              <ShoppingCart className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 truncate">
+                {cart.length} item · {rp(total)}
+              </span>
             </span>
             <span className="shrink-0 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-bold">
               Lihat Keranjang →
@@ -2210,7 +2289,9 @@ function CameraScan({ onCode, onClose }: { onCode: (code: string) => void; onClo
   if (status === 'denied' || status === 'unavailable') {
     return (
       <div className="py-6 text-center text-sm">
-        <p className="text-xl mb-2">📵</p>
+        <div className="mb-2 flex justify-center">
+          <CameraOff className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+        </div>
         <p className="font-semibold text-slate-700 dark:text-slate-200">
           {status === 'denied'
             ? 'Izin kamera ditolak. Buka izin kamera di browser, lalu coba lagi.'

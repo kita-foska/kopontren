@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
+import { Download } from 'lucide-react';
 
 type Product = {
   id: number;
@@ -255,8 +256,9 @@ export function ProdukClient() {
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
             {filtered.length} dari {products.length} produk
           </span>
-          <button className="btn-ghost" onClick={exportCsv}>
-            ⬇ Export CSV
+          <button className="btn-ghost inline-flex items-center gap-1.5" onClick={exportCsv}>
+            <Download className="h-4 w-4" />
+            Export CSV
           </button>
           <button className="btn-primary" onClick={() => openEdit()}>
             + Tambah Produk

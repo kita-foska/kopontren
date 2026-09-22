@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { X } from 'lucide-react';
 
 const tones: Record<string, string> = {
   blue: 'bg-accent-500/15 text-accent-600 dark:text-accent-300',
@@ -113,7 +114,7 @@ export function Modal({
             aria-label="Tutup dialog"
             className="grid min-h-11 min-w-11 place-items-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
         <div>{children}</div>

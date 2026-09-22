@@ -5,6 +5,7 @@ import { api, Badge, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit } from '@/lib/pay-methods';
+import { ChevronDown, FileDown, FileText, Smartphone } from 'lucide-react';
 
 type Sale = {
   id: number;
@@ -228,14 +229,20 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
             className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
             title="Download laporan transaksi format Excel/CSV"
           >
-            📊 Unduh CSV
+            <span className="inline-flex items-center gap-1.5">
+              <FileDown className="h-3.5 w-3.5" />
+              Unduh CSV
+            </span>
           </button>
           <button
             onClick={shareWa}
             disabled={unreported.length === 0}
             className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
           >
-            📱 Rekap WA ({unreported.length})
+            <span className="inline-flex items-center gap-1.5">
+              <Smartphone className="h-3.5 w-3.5" />
+              Rekap WA ({unreported.length})
+            </span>
           </button>
           {admin && (
             <button
@@ -282,7 +289,12 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
                 <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
                   {rp(s.total)}
                 </span>
-                <span className="text-xs text-slate-400">{open === s.id ? '▲' : '▼'}</span>
+                <ChevronDown
+                  className={
+                    'h-4 w-4 text-slate-400 transition-transform ' +
+                    (open === s.id ? 'rotate-180' : '')
+                  }
+                />
               </div>
             </button>
             {open === s.id && (
@@ -322,7 +334,9 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
         ))}
         {filteredSales.length === 0 && (
           <div className="card py-12 text-center text-sm text-slate-500">
-            <p className="text-2xl mb-1">📄</p>
+            <div className="mb-1 flex justify-center">
+              <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+            </div>
             {q ? 'Tidak ada transaksi yang cocok dengan filter pencarian.' : 'Belum ada transaksi pada periode ini.'}
           </div>
         )}
