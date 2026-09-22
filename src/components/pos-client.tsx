@@ -1089,12 +1089,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       )}
 
       {/* Main POS layout */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_24rem]">
+      {/* minmax(0,1fr) + min-w-0: grid item default min-width:auto — bila
+          baris kategori (whitespace-nowrap) mbiyungahaké track, kaca HP
+          mungsor menyang tengen (semua elemen cut-off). minmax(0,…) ngunci. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
         {/* Left Column: Product catalog & Search */}
-        <div>
+        <div className="min-w-0">
           {/* Search bar & Barcode input */}
-          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="relative min-w-0 flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                 <Search className="h-4 w-4" />
               </span>
@@ -1121,12 +1124,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <button
               type="button"
               onClick={() => setScanModal(true)}
-              className="shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-[0.98] dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
+              className="inline-flex h-11 shrink-0 items-center justify-center rounded-lg border border-slate-300 p-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-[0.98] dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700 sm:justify-start sm:px-3"
               title="Arahkan kamera ke barcode produk"
             >
               <span className="inline-flex items-center gap-1.5">
                 <ScanBarcode className="h-4 w-4" />
-                Scan Barcode
+                {/* Mobile: ikon wadha (hemat lebar); label mucun nganti sm. */}
+                <span className="hidden sm:inline">Scan Barcode</span>
               </span>
             </button>
 
@@ -1215,7 +1219,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         </div>
 
         {/* Right Column: Order Cart & Payment */}
-        <div ref={cartRef} className="card h-fit p-4 lg:sticky lg:top-24">
+        <div ref={cartRef} className="card h-fit min-w-0 p-4 lg:sticky lg:top-24">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-bold flex items-center gap-2">
               Keranjang Kasir
