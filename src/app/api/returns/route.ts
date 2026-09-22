@@ -144,14 +144,44 @@ export async function POST(req: Request) {
         throw new Error(
           'Jumlah retur melebihi sisa yang dapat diretur (' + maxTx + ' ' + item.product_name + ')'
         );
+      // Guard anti double-return (double-submit / double-tap / network retry):
+      // retur identik (sale+product+qty+amount sama) yang tercatat dalam
+      // 90 detik terakhir hampir pasti peristiwa fisik yang sama -> tolak,
+      // supaya tidak ada restock dobel & refund 2x. Retur parsial yang sah
+      // (hari lain / qty berbeda) tidak terpengaruh — plafon di atas tetap
+      // berlaku. Cek ini DI DALAM tx: di Turso write-transaction
+      // diserialisasi, sehingga dua request paralel yang identik tidak
+      // mungkin lolos keduanya (race window tertutup).
+      const dupSince = new Date(Date.now() - 90_000).toISOString();
+      const dup = (
+        (await d
+          .prepare(
+            'SELECT COUNT(*) c FROM returns WHERE sale_id = ? AND product_id = ? AND qty = ? AND amount = ? AND created_at >= ?'
+          )
+          .get(saleId, productId, qty, amount, dupSince)) as { c: number }
+      ).c;
+      if (Number(dup) > 0)
+        throw new Error('Retur dobel ditolak: retur identik baru saja tercatat (double-submit?)');
       const info = await d
         .prepare(
           'INSERT INTO returns (sale_id, product_id, qty, reason, amount, created_at) VALUES (?, ?, ?, ?, ?, ?)'
         )
         .run(saleId, productId, qty, reason, amount, now);
+      // Guard (pattern DELETE /api/sales/[id]): pastikan baris retur
+      // benar-benar tercatat (changes === 1) SEBELUM efek samping
+      // (restock & refund) berjalan. changes === 0 -> throw -> seluruh
+      // tx di-rollback; tidak ada restock/refund tanpa baris retur.
+      if (Number(info.changes) !== 1)
+        throw new Error('Gagal mencatat retur (guard anti double-return)');
       newId = Number(info.lastInsertRowid);
-      // Restock: kembalikan produk ke stok.
-      await d.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(qty, productId);
+      // Restock: kembalikan produk ke stok. Guard changes === 1: baris
+      // produk harus memang ada (baris hilang -> changes 0 -> abort:
+      // refund tanpa restock tidak boleh terjadi).
+      const restock = await d
+        .prepare('UPDATE products SET stock = stock + ? WHERE id = ?')
+        .run(qty, productId);
+      if (Number(restock.changes) !== 1)
+        throw new Error('Produk tidak ditemukan — retur dibatalkan (guard restock)');
       // Refund tunai: catat sebagai jurnal kas keluar agar pembukuan tetap akur.
       if (refund) {
         await d
