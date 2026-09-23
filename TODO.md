@@ -81,6 +81,17 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [r] ZAKAT known issues (terdokumentasi, belum difix): export CSV
       timestamp UTC vs tampilan WIB (±7 jam, kosmetik); batas periode
       laba zakat pakai UTC (±7 jam di ujung periode) — lihat MEMORY.md
+- [x] **Phone duplicate guard format-insensitive** — SELESAI (commit
+      `f2b398e`, 23 Sep 2026, dual-push master+main): helper bersama
+      `phoneOwner` + `canonicalPhone` di `src/lib/phone.ts` — duplikat
+      beda penulisan ("+62 812…" vs "0812…") tertangkap di lapisan
+      aplikasi → POST/PUT member balas 409/400 pesan jelas (bukan
+      error constraint mentah HTTP 500 "Kesalahan jaringan.").
+      Test: `npm run test:phone` — **26 checks, 0 gagal**
+      (`scripts/test-members-phone.ts`). TSC exit 0.
+- [x] **`purchases.unit_cost` pecahan** — SELESAI (commit `6b4b179`,
+      23 Sep 2026): `Math.floor` ke rupiah penuh — qty×unit_cost selalu
+      bilangan bulat → agregat kas/laporan & harga modal konsisten.
 
 ## Fitur (gap fungsional)
 - [x] **Penjaga margin utk perk member (anti rugi)** — SELESAI

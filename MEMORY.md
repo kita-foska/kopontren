@@ -602,3 +602,33 @@ blocking)
 - Ekspor 23 Sep: 237 baris (semua aktif). Baris 237 = `ZZ-GUARD-TEST`
   (baris uji manual di DB dev, tidak ada di codebase) — flag:
   hapus sebelum upload bila Turso produksi tak punya baris tsb.
+
+## Phone guard format-insensitive + purchases floor (23 Sep 2026)
+- **Commit `f2b398e` fix(members): phone duplicate guard
+  format-insensitive + test 26 checks** (dual-push master+main):
+  - `src/lib/phone.ts`: `canonicalPhone` (normalize "+62/62/0" →
+    digit kanonik) + `phoneOwner(d, phone, exceptId)` — pemilik nomor
+    selain `exceptId` lewat pembanding DUA bentuk (teks apa adanya
+    sesuai kolom/index `idx_members_phone_uniq` + bentuk kanonik),
+    parameterized IN(...) — duplikat beda penulisan tertangkap di
+    lapisan aplikasi SEBELUM constraint mentah (dulu: HTTP 500
+    "Kesalahan jaringan." di POS).
+  - `src/app/api/members/route.ts`: helper lokal `phoneOwner` dihapus,
+    import dari `@/lib/phone`; POST guard 409 + try/catch fallback
+    400, PUT guard (kecuali diri sendiri) 409.
+  - `scripts/test-members-phone.ts` (`npm run test:phone`): **26
+    checks, 0 gagal** — index unik tolak teks mentah, index terima
+    teks beda kanonik sama (bukti guard app wajib), query kanonik vs
+    tersimpan "+62…", kecuali diri → null, dll.
+  - Verifikasi: `tsc --noEmit` exit 0 · `test:phone` 26/26.
+- **Commit `6b4b179` fix(purchases): floor unit_cost ke rupiah penuh**
+  — `Math.max(0, Math.floor(...))`: nominal pecahan tak lagi membuat
+  `qty×unit_cost` pecahan → agregat kas/laporan & harga modal
+  konsisten.
+- `public/sw.js` TIDAK di-commit (stamp lokal `ea8ac407f7aa` =
+  artefak build lokal; Vercel re-stamp saat build). CSV stok
+  (`stok-export/import-20260923.csv`, `_products_update.csv`)
+  tetap untracked — user upload sendiri (PENDING).
+- **Vercel**: auto-deploy dari `main` pasca-push `6b4b179`; baseline
+  stamp produksi sebelum deploy = `SW-BUILD:7706b506c8ab` (berubah
+  = deploy baru Ready — cara verifikasi tanpa Vercel CLI/token).
