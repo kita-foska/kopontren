@@ -1,5 +1,5 @@
 // Plain-ASCII WhatsApp rekap builder (safe on every WA version: no emoji, no Unicode).
-import { parsePaySplit } from './pay-methods';
+import { parsePaySplit, payMethodLabel } from './pay-methods';
 export type RekapItem = {
   product_name: string;
   qty: number;
@@ -15,12 +15,6 @@ export type RekapSale = {
   total: number;
   created_at: string;
   items: RekapItem[];
-};
-
-const PAY_LABEL: Record<string, string> = {
-  cash: 'CASH',
-  tf: 'TRANSFER',
-  wa: 'WA',
 };
 
 function shortDate(utcIso: string): string {
@@ -60,9 +54,9 @@ export function buildRekapMsg(sales: RekapSale[], title = 'LAPORAN PENJUALAN KOP
     const method =
       parts.length > 0
         ? parts
-            .map((p) => (PAY_LABEL[p.m] || p.m.toUpperCase()) + ' Rp ' + p.a.toLocaleString('id-ID'))
+            .map((p) => payMethodLabel(p.m) + ' Rp ' + p.a.toLocaleString('id-ID'))
             .join(' + ')
-        : PAY_LABEL[s.pay_method] || s.pay_method.toUpperCase();
+        : payMethodLabel(s.pay_method);
     lines.push('');
     lines.push('*' + (i + 1) + '. ' + cleanName(s.customer) + '*');
     lines.push('Bayar: ' + method);
@@ -159,11 +153,11 @@ export function strukWaText(o: {
     lines.push(
       'Bayar: ' +
         o.paySplit
-          .map((p) => (PAY_LABEL[p.m] || p.m) + ' Rp ' + p.a.toLocaleString('id-ID'))
+          .map((p) => payMethodLabel(p.m) + ' Rp ' + p.a.toLocaleString('id-ID'))
           .join(' + ')
     );
   } else {
-    lines.push('Bayar: ' + (PAY_LABEL[o.pay] || o.pay));
+    lines.push('Bayar: ' + payMethodLabel(o.pay));
     if (o.pay === 'cash' && o.received != null) {
       lines.push('Diterima: Rp ' + o.received.toLocaleString('id-ID'));
       lines.push('Kembali: Rp ' + (o.change ?? 0).toLocaleString('id-ID'));

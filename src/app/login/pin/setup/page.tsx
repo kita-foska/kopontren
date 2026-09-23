@@ -19,6 +19,7 @@ export default function PinSetupPage() {
   const [pinDraft, setPinDraft] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [checkFailed, setCheckFailed] = useState(false);
   const done = useRef(false);
   const pwRef = useRef('');
 
@@ -32,8 +33,17 @@ export default function PinSetupPage() {
         const res = await fetchTimeout('/api/auth/session', { cache: 'no-store' });
         const s = await res.json();
         if (s.status === 'active' || s.status === 'timeout') setReady(true);
+        else {
+          // Status tak dikenal: jangan nyangkut di "Memeriksa sesi…" —
+          // validasi sesi diulang server-side saat POST.
+          setCheckFailed(true);
+          setReady(true);
+        }
       } catch {
-        /* tetap tampilkan UI; POST akan menolak bila sesi hilang */
+        // Cek sesi gagal (timeout 10 dtk / jaringan): tetap tampilkan UI
+        // + hint; POST akan menolak bila sesi memang hilang.
+        setCheckFailed(true);
+        setReady(true);
       }
     })();
   }, []);
@@ -134,6 +144,12 @@ export default function PinSetupPage() {
 
         {ready && (
           <>
+            {checkFailed && (
+              <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-600 dark:text-amber-300">
+                Tak bisa cek sesi — lanjutkan saja; validasi sesi tetap jalan
+                saat simpan.
+              </p>
+            )}
             <div className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">
               {step === 'pin' ? 'PIN' : 'Ulangi PIN'}
             </div>

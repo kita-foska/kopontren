@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { StatusBadge } from '@/components/ui';
+import { payMethodLabel } from '@/lib/pay-methods';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,13 +74,6 @@ export default async function DashboardPage() {
       timeZone: 'Asia/Jakarta',
     }).format(new Date(iso));
 
-  const methodLabel: Record<string, string> = {
-    cash: 'Tunai',
-    wa: 'QRIS',
-    qris: 'QRIS',
-    transfer: 'Transfer',
-    split: 'Campur',
-  };
   return (
     <Shell user={user}>
       {user.pw_default === 1 && (
@@ -166,7 +160,7 @@ export default async function DashboardPage() {
                   >
                     <div className="min-w-0">
                       <p className="truncate font-semibold">
-                        {methodLabel[s.pay_method] || s.pay_method}
+                        {payMethodLabel(s.pay_method)}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         {txTime(s.created_at)}

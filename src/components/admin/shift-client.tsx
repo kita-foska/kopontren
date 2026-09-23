@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
+import { payMethodLabel } from '@/lib/pay-methods';
 
 type Shift = {
   id: number;
@@ -19,8 +20,6 @@ type Shift = {
   setor?: number;
 };
 type Resp = { shifts: Shift[]; open: Shift | null; open_all?: Shift[]; limit?: number; offset?: number };
-
-const METHOD_LABEL: Record<string, string> = { cash: 'Tunai', tf: 'Transfer', wa: 'QRIS/WA' };
 
 export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
   const [data, setData] = useState<Resp | null>(null);
@@ -153,7 +152,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
                 <td className="td text-xs text-slate-500 dark:text-slate-400">
                   {Object.entries(s.by_method || {})
                     .filter(([, v]) => (v as number) > 0)
-                    .map(([k, v]) => (METHOD_LABEL[k] || k) + ' ' + rp(v as number))
+                    .map(([k, v]) => payMethodLabel(k) + ' ' + rp(v as number))
                     .join(' · ') || '-'}
                 </td>
                 <td className="td">
@@ -219,7 +218,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               {Object.entries(s.by_method || {})
                 .filter(([, v]) => (v as number) > 0)
-                .map(([k, v]) => (METHOD_LABEL[k] || k) + ' ' + rp(v as number))
+                .map(([k, v]) => payMethodLabel(k) + ' ' + rp(v as number))
                 .join(' · ') || '-'}
             </p>
           </div>

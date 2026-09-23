@@ -8,6 +8,22 @@ import type { Db } from '@/db';
 
 export type PayPart = { m: string; a: number };
 
+/** Label metode pembayaran (tayangan UI) — SATU sumber. Key DB
+ * `cash`/`tf`/`wa`; `qris`/`transfer`/`split` = alias legacy. Fallback
+ * unknown key: uppercase (tak pernah kosong). */
+export const PAY_METHOD_LABEL: Record<string, string> = {
+  cash: 'Tunai',
+  tf: 'Transfer',
+  wa: 'QRIS / WA',
+  qris: 'QRIS / WA',
+  transfer: 'Transfer',
+  split: 'Campur',
+};
+
+export function payMethodLabel(m: string): string {
+  return PAY_METHOD_LABEL[m] || m.toUpperCase();
+}
+
 /** Parse sales.pay_split (string JSON) — [] bila legacy / kosong / rusak. */
 export function parsePaySplit(v: unknown): PayPart[] {
   if (!v || typeof v !== 'string' || !v.trim()) return [];

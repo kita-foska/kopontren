@@ -19,7 +19,10 @@ export default async function BelanjaPage() {
   if (!user || !canAccess(user, 'supplier')) redirect(user ? '/' : '/login');
   return (
     <Shell user={user}>
-      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">Belanja & Pengeluaran</h1>
+      <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
+        Belanja &{' '}
+        <span className="text-accent-500 dark:text-accent-300">Pengeluaran</span>
+      </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         Stok masuk menambah stok & memperbarui HPP. Pengeluaran tercatat di pembukuan kas.
       </p>

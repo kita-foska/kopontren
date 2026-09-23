@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PageSkeleton, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
-import { parsePaySplit } from '@/lib/pay-methods';
+import { parsePaySplit, payMethodLabel } from '@/lib/pay-methods';
 import { ChevronDown, FileDown, FileText, Smartphone } from 'lucide-react';
 
 type Sale = {
@@ -19,7 +19,6 @@ type Sale = {
   items: { product_name: string; qty: number; unit: string; unit_price: number; subtotal: number }[];
 };
 type ListResp = { sales: Sale[]; total?: number };
-const PAY: Record<string, string> = { cash: 'Tunai', tf: 'Transfer', wa: 'QRIS / WA' };
 
 export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?: 'all' | 'today' }) {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -160,9 +159,27 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
     await shareRekap(msg);
   }
 
-  function downloadCsv() {
+  async function downloadCsv() {
     const fromDate = period > 0 ? new Date(Date.now() - period * 86400000).toISOString() : '1970-01-01';
-    window.open('/api/reports/csv?from=' + fromDate, '_blank');
+    // Blob download: tanpa tab baru/flicker (window.open dulu buka tab kosong).
+    try {
+      const r = await fetch('/api/reports/csv?from=' + fromDate);
+      if (!r.ok) {
+        showToast('Gagal unduh CSV (HTTP ' + r.status + ')');
+        return;
+      }
+      const blob = await r.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl;
+      a.download = 'penjualan-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
+    } catch {
+      showToast('Gagal unduh CSV (jaringan)');
+    }
   }
 
   if (loading && sales.length === 0) return <PageSkeleton />;
@@ -302,7 +319,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
                   {s.customer || 'Pelanggan Umum'}
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  {PAY[s.pay_method] || s.pay_method}
+                  {payMethodLabel(s.pay_method)}
                   {parsePaySplit(s.pay_split).length > 0 ? ' (campur)' : ''} · {fmtDateTime(s.created_at)}
                 </span>
               </div>

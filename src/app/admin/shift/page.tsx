@@ -2,13 +2,12 @@ import { redirect } from 'next/navigation';
 import { canAccess, currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
+import { PageSkeleton } from '@/components/ui';
 
 const ShiftClient = lazy(
   () => import('@/components/admin/shift-client').then((m) => m.ShiftClient),
   {
-    loading: () => (
-      <p className="text-sm text-slate-500 dark:text-slate-400">Memuat komponen…</p>
-    ),
+    loading: () => <PageSkeleton />,
   }
 );
 

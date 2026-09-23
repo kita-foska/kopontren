@@ -31,9 +31,27 @@ export function LaporanAdminClient() {
     load();
   }, [load]);
 
-  function csv() {
+  async function csv() {
     const from = startOfDayJakarta(Number(period) === 0 ? -3650 : -Number(period) + 1);
-    window.open('/api/reports/csv?from=' + encodeURIComponent(from), '_blank');
+    // Blob download: tanpa tab baru/flicker (window.open dulu buka tab kosong).
+    try {
+      const r = await fetch('/api/reports/csv?from=' + encodeURIComponent(from));
+      if (!r.ok) {
+        showToast('Gagal unduh CSV (HTTP ' + r.status + ')');
+        return;
+      }
+      const blob = await r.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl;
+      a.download = 'penjualan-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
+    } catch {
+      showToast('Gagal unduh CSV (jaringan)');
+    }
   }
 
   if (!s) return <p className="text-sm text-slate-500">Memuat…</p>;

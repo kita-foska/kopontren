@@ -90,7 +90,11 @@ export function LowStockClient({ items }: { items: Item[] }) {
                   {p.stock} {p.unit}
                 </span>
                 <Badge tone={p.stock <= 0 ? 'red' : p.days_left != null && p.days_left <= 2 ? 'red' : 'amber'}>
-                  {p.days_left == null ? '14hr: 0/j' : '±' + p.days_left + ' hr'}
+                  {p.days_left == null ? (
+                'belum ada penjualan 14 hari'
+              ) : (
+                'habis dalam ±' + p.days_left + ' hr'
+              )}
                 </Badge>
               </span>
             </li>

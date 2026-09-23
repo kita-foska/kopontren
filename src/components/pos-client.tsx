@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
+import { payMethodLabel } from '@/lib/pay-methods';
 import { useHotkeys } from '@/lib/useHotkeys';
 import {
   Banknote,
@@ -152,12 +153,6 @@ type Member = {
   cashback_balance?: number;
 };
 type MembersResp = { members: Member[] };
-
-const PAY_LABEL: Record<string, string> = {
-  cash: 'Tunai',
-  tf: 'Transfer Bank',
-  wa: 'QRIS / Non-Tunai',
-};
 
 /** Daftar pintasan lengkap kasir — tampil di panel cheatsheet (tombol/? key ?). */
 const CHEAT_ROWS: [string, string][] = [
@@ -1846,13 +1841,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   <span>
                     {receipt.paySplit && receipt.paySplit.length > 0
                       ? 'Campur'
-                      : PAY_LABEL[receipt.pay] || receipt.pay}
+                      : payMethodLabel(receipt.pay)}
                   </span>
                 </div>
                 {receipt.paySplit && receipt.paySplit.length > 0 ? (
                   receipt.paySplit.map((p) => (
                     <div key={p.m} className="flex justify-between">
-                      <span>{PAY_LABEL[p.m] || p.m}</span>
+                      <span>{payMethodLabel(p.m)}</span>
                       <span>{rp(p.a)}</span>
                     </div>
                   ))
@@ -1946,14 +1941,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span>
-              Bayar ({receipt.paySplit && receipt.paySplit.length > 0 ? 'campur' : PAY_LABEL[receipt.pay] || receipt.pay})
+              Bayar ({receipt.paySplit && receipt.paySplit.length > 0 ? 'campur' : payMethodLabel(receipt.pay)})
             </span>
             <span>Rp {(receipt.received ?? receipt.sale?.total ?? 0).toLocaleString('id-ID')}</span>
           </div>
           {receipt.paySplit && receipt.paySplit.length > 0 ? (
             receipt.paySplit.map((p) => (
               <div key={p.m} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>├ {PAY_LABEL[p.m] || p.m}</span>
+                <span>├ {payMethodLabel(p.m)}</span>
                 <span>Rp {p.a.toLocaleString('id-ID')}</span>
               </div>
             ))

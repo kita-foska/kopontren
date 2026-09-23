@@ -5,6 +5,7 @@ import { SalesBarChart, type DailyPoint } from '@/components/charts';
 import { PageSkeleton, Toast, api, useToast } from '@/components/ui';
 import { fmtDate, rp } from '@/lib/format';
 import { shareWa } from '@/lib/rekap';
+import { payMethodLabel } from '@/lib/pay-methods';
 
 type ReportPayload = {
   from: string;
@@ -29,8 +30,6 @@ const PERIODS: { days: number; label: string }[] = [
   { days: 30, label: '30 hari' },
   { days: 365, label: '1 tahun' },
 ];
-
-const PAY_LABEL: Record<string, string> = { cash: 'CASH', tf: 'TF', wa: 'WA' };
 
 function csvCell(v: string | number): string {
   const s = String(v);
@@ -84,7 +83,7 @@ export function PengurusDashboardClient() {
     L.push(['Arus kas bersih (Rp)', data.cash_net]);
     L.push([]);
     L.push(['METODE BAYAR']);
-    Object.entries(data.by_method).forEach(([m, v]) => L.push([PAY_LABEL[m] || m, v]));
+    Object.entries(data.by_method).forEach(([m, v]) => L.push([payMethodLabel(m), v]));
     L.push([]);
     L.push(['TOP PRODUK']);
     L.push(['Produk', 'Qty', 'Omzet']);
@@ -120,7 +119,7 @@ export function PengurusDashboardClient() {
         ['Arus kas bersih (Rp)', data.cash_net],
         [],
         ['METODE BAYAR'],
-        ...Object.entries(data.by_method).map(([m, v]) => [PAY_LABEL[m] || m, v] as string[]),
+        ...Object.entries(data.by_method).map(([m, v]) => [payMethodLabel(m), v] as string[]),
         [],
         ['TOP PRODUK'],
         ['Produk', 'Qty', 'Omzet'],
@@ -179,7 +178,7 @@ export function PengurusDashboardClient() {
       }
       lines.push('METODE BAYAR:');
       Object.entries(data.by_method).forEach(([m, v]) =>
-        lines.push((PAY_LABEL[m] || m) + ': ' + rp(v))
+        lines.push(payMethodLabel(m) + ': ' + rp(v))
       );
       lines.push('===========================');
       lines.push('Mohon diperiksa - terima kasih.');
@@ -299,7 +298,7 @@ export function PengurusDashboardClient() {
                 const pct = data.sales_total > 0 ? Math.round((v / data.sales_total) * 100) : 0;
                 return (
                   <div key={m} className="flex items-center gap-2 text-sm">
-                    <span className="w-14 font-bold">{PAY_LABEL[m] || m}</span>
+                    <span className="w-14 font-bold">{payMethodLabel(m)}</span>
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-navy-700">
                       <div className="h-full bg-accent-500" style={{ width: pct + '%' }} />
                     </div>

@@ -2,13 +2,12 @@ import { redirect } from 'next/navigation';
 import { canAccess, currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
+import { PageSkeleton } from '@/components/ui';
 
 const PiutangClient = lazy(
   () => import('@/components/piutang-client').then((m) => m.PiutangClient),
   {
-    loading: () => (
-      <p className="text-sm text-slate-500 dark:text-slate-400">Memuat komponen…</p>
-    ),
+    loading: () => <PageSkeleton />,
   }
 );
 

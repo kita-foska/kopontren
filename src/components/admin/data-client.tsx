@@ -63,12 +63,53 @@ export function DataClient() {
     }
   }, [activeTab, loadLogs]);
 
+  /** Unduh via fetch -> Blob -> objectURL: tanpa tab baru/flicker,
+   *  dengan busy-state & toast. (window.open('/api/...') membuka tab
+   *  kosong dulu sebelum download — pengalaman buruk di browser modern.) */
+  async function downloadFile(url: string, filename: string) {
+    if (busy) return;
+    setBusy('dl');
+    try {
+      const r = await fetch(url);
+      if (!r.ok) {
+        let msg = 'HTTP ' + r.status;
+        try {
+          const j = (await r.json()) as { error?: string };
+          if (j.error) msg = j.error;
+        } catch {
+          /* respons non-JSON */
+        }
+        showToast('Gagal unduh: ' + msg);
+        return;
+      }
+      const blob = await r.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
+      showToast('Unduhan dimulai: ' + filename);
+    } catch {
+      showToast('Gagal unduh (jaringan)');
+    } finally {
+      setBusy('');
+    }
+  }
+
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+
   function exportJson() {
-    window.open('/api/backup', '_blank');
+    void downloadFile('/api/backup', 'kopontren-backup-' + todayStr() + '.json');
   }
 
   function exportSalesCsv() {
-    window.open('/api/reports/csv?from=1970-01-01', '_blank');
+    void downloadFile(
+      '/api/reports/csv?from=1970-01-01',
+      'penjualan-' + todayStr() + '.csv'
+    );
   }
 
   function importJson(ev: React.ChangeEvent<HTMLInputElement>) {
@@ -147,8 +188,12 @@ export function DataClient() {
                 Unduh salinan lengkap seluruh database (produk, penjualan, retur, piutang, hutang dagang, kas, konsinyasi, member, shift, notifikasi, pengaturan notifikasi & audit log) untuk arsip / pindah server.
               </p>
             </div>
-            <button className="btn-primary w-full" onClick={exportJson}>
-              Unduh Backup JSON
+            <button
+              className="btn-primary w-full"
+              disabled={busy === 'dl'}
+              onClick={exportJson}
+            >
+              {busy === 'dl' ? 'Mengunduh…' : 'Unduh Backup JSON'}
             </button>
           </div>
 
@@ -162,8 +207,12 @@ export function DataClient() {
                 Unduh rekap detail semua transaksi item penjualan format CSV yang bisa dibuka langsung di Microsoft Excel.
               </p>
             </div>
-            <button className="btn-ghost w-full font-bold" onClick={exportSalesCsv}>
-              Unduh CSV Penjualan
+            <button
+              className="btn-ghost w-full font-bold"
+              disabled={busy === 'dl'}
+              onClick={exportSalesCsv}
+            >
+              {busy === 'dl' ? 'Mengunduh…' : 'Unduh CSV Penjualan'}
             </button>
           </div>
 
