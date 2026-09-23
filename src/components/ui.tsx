@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 
 const tones: Record<string, string> = {
   blue: 'bg-accent-500/15 text-accent-600 dark:text-accent-300',
@@ -318,19 +319,27 @@ export function PageSkeleton() {
   );
 }
 
-/** Fetch JSON helper with json error surfacing. */
+/**
+ * Fetch JSON helper with json error surfacing + timeout abort 10 detik
+ * (fetchTimeout) agar request yang pending tidak membuat spinner nyangkut
+ * selamanya. Menutup semua caller klien yang memakai api().
+ */
 export async function api<T = unknown>(
   url: string,
   init?: RequestInit
 ): Promise<{ ok: boolean; data: T; error?: string }> {
   try {
-    const res = await fetch(url, {
+    const res = await fetchTimeout(url, {
       ...init,
       headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
     });
     const data = (await res.json()) as T & { error?: string };
     return { ok: res.ok, data: data as T, error: (data as { error?: string }).error };
-  } catch {
-    return { ok: false, data: undefined as T, error: 'Kesalahan jaringan.' };
+  } catch (e) {
+    return {
+      ok: false,
+      data: undefined as T,
+      error: isAbort(e) ? 'Waktu koneksi habis. Silakan coba lagi.' : 'Kesalahan jaringan.',
+    };
   }
 }

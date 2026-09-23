@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { api, Badge, Empty, Toast, useToast } from '@/components/ui';
+import { fetchTimeout } from '@/lib/fetch-util';
 import { fmtDate, rp } from '@/lib/format';
 
 type ZakatCalc = {
@@ -150,7 +151,7 @@ export function ZakatClient() {
 
   async function exportCsv() {
     try {
-      const res = await fetch('/api/zakat/history?csv=1');
+      const res = await fetchTimeout('/api/zakat/history?csv=1');
       if (!res.ok) {
         showToast('Gagal mengekspor CSV');
         return;

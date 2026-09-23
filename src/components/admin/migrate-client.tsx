@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { parseImport, importWarnings, type ImportRow, type RowError } from '@/lib/product-import';
+import { fetchTimeout } from '@/lib/fetch-util';
 
 type BatchResult = {
   inserted: number;
@@ -70,11 +71,18 @@ export function MigrateClient() {
     for (let i = 0; i < total; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
       try {
-        const res = await fetch('/api/migrate/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rows: batch, total }),
-        });
+        // Toleransi batch import 60 dtk (di luar default 10 dtk): 1 batch =
+        // 50 baris; Turso yang lambat tidak boleh memotong import di tengah
+        // jalan (progress bar + state fatal sudah menangani kegagalannya).
+        const res = await fetchTimeout(
+          '/api/migrate/products',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rows: batch, total }),
+          },
+          60_000
+        );
         const j = (await res.json().catch(() => ({}))) as BatchResult & { error?: string };
         if (!res.ok) {
           setFatal(j.error || `HTTP ${res.status}`);

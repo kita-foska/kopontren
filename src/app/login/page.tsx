@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -14,7 +15,7 @@ export default function LoginPage() {
     setErr('');
     setBusy(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetchTimeout('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username.trim(), password }),
@@ -34,8 +35,8 @@ export default function LoginPage() {
       } else {
         window.location.replace('/');
       }
-    } catch {
-      setErr('Terjadi kesalahan jaringan.');
+    } catch (e) {
+      setErr(isAbort(e) ? 'Waktu koneksi habis. Silakan coba lagi.' : 'Terjadi kesalahan jaringan.');
     } finally {
       setBusy(false);
     }

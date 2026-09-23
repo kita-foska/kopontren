@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { PinDots, PinPad } from '@/components/pin-pad';
+import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 
 /**
  * Halaman setup / reset PIN (ditempuh setelah login — `?reset`/belum ada PIN).
@@ -25,7 +26,10 @@ export default function PinSetupPage() {
     pwRef.current = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('__kop_pw') || '' : '';
     (async () => {
       try {
-        const res = await fetch('/api/auth/session', { cache: 'no-store' });
+        // Timeout 10 dtk: tanpa ini, Vercel cold start + Turso lambat membuat
+        // halaman setup PIN nyangkut tanpa indikasi (ready tetap false ->
+        // POST ditolak server bila sesi memang hilang, sama seperti catch).
+        const res = await fetchTimeout('/api/auth/session', { cache: 'no-store' });
         const s = await res.json();
         if (s.status === 'active' || s.status === 'timeout') setReady(true);
       } catch {
@@ -40,7 +44,7 @@ export default function PinSetupPage() {
     setErr('');
     const body: Record<string, string> = { pin: pinDraft, confirm: pinDraft };
     if (pwRef.current) body.password = pwRef.current;
-    fetch('/api/auth/pin/setup', {
+    fetchTimeout('/api/auth/pin/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -58,7 +62,9 @@ export default function PinSetupPage() {
           setPinDraft('');
         }
       })
-      .catch(() => setErr('Kesalahan jaringan.'))
+      .catch((e) =>
+        setErr(isAbort(e) ? 'Waktu koneksi habis. Silakan coba lagi.' : 'Kesalahan jaringan.')
+      )
       .finally(() => setBusy(false));
   }
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { PinDots, PinPad } from '@/components/pin-pad';
+import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 
 type PUser = { username: string; display_name: string };
 type Session = {
@@ -63,7 +64,7 @@ export default function PinReauthPage() {
     setBusy(true);
     setErr('');
     try {
-      const res = await fetch('/api/auth/pin/verify', {
+      const res = await fetchTimeout('/api/auth/pin/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: value }),
@@ -85,8 +86,8 @@ export default function PinReauthPage() {
         data.error || 'PIN salah' + (data.remaining ? ` · Sisa ${data.remaining} percobaan` : '')
       );
       setValue('');
-    } catch {
-      setErr('Kesalahan jaringan.');
+    } catch (e) {
+      setErr(isAbort(e) ? 'Waktu koneksi habis. Silakan coba lagi.' : 'Kesalahan jaringan.');
     } finally {
       setBusy(false);
     }

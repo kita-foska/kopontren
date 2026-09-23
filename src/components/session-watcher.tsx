@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { fetchTimeout } from '@/lib/fetch-util';
 
 /**
  * Penjaga sesi di sisi klien (dikomponen Shell / halaman yang butuh login):
@@ -19,7 +20,9 @@ export function SessionWatcher() {
   async function poll() {
     if (redirected.current) return;
     try {
-      const res = await fetch('/api/auth/session', { cache: 'no-store' });
+      // Timeout 10 dtk: polling tidak boleh menggantung (cold start);
+      // error/abort tetap diabaikan — polling berikutnya 30 dtk lagi.
+      const res = await fetchTimeout('/api/auth/session', { cache: 'no-store' });
       if (!res.ok) return;
       const s = await res.json();
       if (redirected.current) return;
@@ -41,7 +44,7 @@ export function SessionWatcher() {
     const now = Date.now();
     if (now - lastRefresh.current < 60_000) return;
     lastRefresh.current = now;
-    fetch('/api/auth/refresh', { method: 'POST' }).catch(() => undefined);
+    fetchTimeout('/api/auth/refresh', { method: 'POST' }).catch(() => undefined);
   }
 
   useEffect(() => {

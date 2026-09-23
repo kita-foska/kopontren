@@ -8,6 +8,7 @@ import { BottomNav } from './bottom-nav';
 import { SessionWatcher } from './session-watcher';
 import { NotificationBell } from './notification-bell';
 import { Avatar, ROLE_LABEL } from './ui';
+import { fetchTimeout } from '@/lib/fetch-util';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   const router = useRouter();
@@ -27,7 +28,13 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
 
   // Logout: invalidasi sesi di server, lalu lempar ke /login.
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    // Timeout 10 dtk + catch: invalidasi sesi best-effort — tetap redirect
+    // ke /login walau gagal (sesi server berakhir lewat idle/cookie expiry).
+    try {
+      await fetchTimeout('/api/auth/logout', { method: 'POST' });
+    } catch {
+      /* abaikan */
+    }
     router.push('/login');
   }
 
