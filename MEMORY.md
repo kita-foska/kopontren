@@ -24,6 +24,23 @@
   `c392237`). `public/sw.js` TIDAK ikut commit (aturan: Vercel
   stamp sendiri). Test PWA Edge taskbar masih **PENDING hasil**
   (lihat TODO seksi "PWA / Favicon").
+- **Catatan lingkungan dev (verified 24 Sep 2026, diuji 4×):**
+  - Proses panjang (mis. `npm run build`, `tsc`) **kudu** dijalankan via
+    **`Register-ScheduledTask`** (trigger *Once* di now+2 detik,
+    RunLevel Limited, `-ExecutionPolicy Bypass` di dalam action
+    `cmd.exe /c`). Satu-satunya mekanisme yg survive close terminal
+    di environment Cline chat ini.
+  - **Jangan andalkan `Start-Process`, anak proses, atau
+    `schtasks /create /on`** — mereka mati setiap terminal session
+    ditutup (build-nya tidak jalan, hanya script pembuatnya yg
+    sempat jalan).
+  - Jebakan: `Unregister-ScheduledTask -TaskName X` memunculkan
+    prompt interaktif konfirmasi `[U/Y/A/C]` (tanpa `-Force`) —
+    pakai `-Force` / jawab `Y`.
+  - Pola task: action = `cmd.exe /c "cd /d <repo> & tsc --noEmit
+    > .o.txt 2>&1 & npm run build >> .o.txt 2>&1 & exit /b 0 >
+    .done.txt"`; verifikasi lewat file output, karena command
+    foreground akan timeout sebelum build selesai.
 
 ## 2026-09-23
 ### Batch E: keyboard-nav tablist (APG) + sync audit a11y
