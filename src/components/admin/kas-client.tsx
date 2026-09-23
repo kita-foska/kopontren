@@ -76,8 +76,8 @@ export function KasClient() {
           className={
             'text-3xl font-extrabold ' +
             (data.balance >= 0
-              ? 'text-emerald-500'
-              : 'text-rose-500')
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : 'text-rose-600 dark:text-rose-400')
           }
         >
           {rp(data.balance)}
@@ -144,7 +144,7 @@ export function KasClient() {
                   {r.kind === 'entry' && (
                     <button
                       onClick={() => removeEntry(r.id)}
-                      className="ml-2 text-[10px] text-slate-400 underline hover:text-rose-500"
+                      className="ml-2 text-[10px] text-slate-400 underline hover:text-rose-600 dark:hover:text-rose-400"
                     >
                       hapus
                     </button>
@@ -157,7 +157,7 @@ export function KasClient() {
                 <td
                   className={
                     'td text-right font-bold ' +
-                    (r.sign > 0 ? 'text-emerald-500' : 'text-rose-500')
+                    (r.sign > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')
                   }
                 >
                   {r.sign > 0 ? '+' : '−'} {rp(r.amount)}

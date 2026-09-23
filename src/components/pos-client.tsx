@@ -1237,7 +1237,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             {cart.length > 0 && (
               <button
                 onClick={() => setCart([])}
-                className="text-xs text-rose-500 hover:underline"
+                className="text-xs text-rose-600 dark:text-rose-400 hover:underline"
               >
                 Kosongkan
               </button>
@@ -1262,7 +1262,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   </p>
                   <button
                     onClick={() => remove(l.product.id)}
-                    className="text-[11px] text-slate-400 hover:text-rose-500"
+                    className="text-[11px] text-slate-400 hover:text-rose-600 dark:hover:text-rose-400"
                     title="Hapus item"
                   >
                     <X className="h-3.5 w-3.5" />
@@ -1644,7 +1644,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 <div
                   className={
                     'flex items-center justify-between text-sm font-bold ' +
-                    (receivedNum < total ? 'text-rose-500' : 'text-emerald-600 dark:text-emerald-400')
+                    (receivedNum < total ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400')
                   }
                 >
                   <span>{receivedNum < total ? 'Kekurangan' : 'Kembalian'}</span>

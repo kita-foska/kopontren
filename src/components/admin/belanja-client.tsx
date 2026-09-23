@@ -201,7 +201,7 @@ export function BelanjaClient() {
             </div>
           </div>
           <div className="card p-3 text-sm">
-            Total pengeluaran: <b className="text-rose-500">{rp(outTotal)}</b>{' '}
+            Total pengeluaran: <b className="text-rose-600 dark:text-rose-400">{rp(outTotal)}</b>{' '}
             <span className="text-xs text-slate-400">(50 pengeluaran terbaru)</span>
             <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto">
               {data.expenses.map((x) => (

@@ -226,7 +226,7 @@ export function KonsinyasiClient() {
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Tagihan belum dibayar
           </p>
-          <p className="mt-1 text-2xl font-extrabold text-rose-500">{rp(data.totals.unpaid)}</p>
+          <p className="mt-1 text-2xl font-extrabold text-rose-600 dark:text-rose-400">{rp(data.totals.unpaid)}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">kepada pemilik</p>
         </div>
         <div className="card p-3">

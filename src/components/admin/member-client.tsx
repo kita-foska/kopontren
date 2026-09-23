@@ -170,7 +170,7 @@ export function MemberClient() {
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Total Poin Beredar
           </p>
-          <p className="mt-1 text-2xl font-extrabold text-emerald-500">
+          <p className="mt-1 text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
             {totalPoints.toLocaleString('id-ID')}
           </p>
           <p className="text-xs text-slate-500">Loyalty Poin Belanja</p>
@@ -268,7 +268,7 @@ export function MemberClient() {
                     </button>
                     <span className="text-slate-300 dark:text-navy-600">|</span>
                     <button
-                      className="text-xs font-bold text-rose-500 hover:underline"
+                      className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
                       onClick={() => remove(m)}
                     >
                       Hapus

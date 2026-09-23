@@ -217,7 +217,7 @@ export function ZakatClient() {
                 <span className="ml-1 text-xs text-slate-400">sejak {fmtDate(c.period_start)}</span>
               ) : null}
             </span>
-            <span className={`font-bold ${c && c.laba < 0 ? 'text-rose-500' : ''}`}>
+            <span className={`font-bold ${c && c.laba < 0 ? 'text-rose-600 dark:text-rose-400' : ''}`}>
               {c ? rp(c.laba) : '—'}
             </span>
           </li>

@@ -478,7 +478,7 @@ export function ProdukClient() {
                       </button>
                       <span className="text-slate-300 dark:text-navy-600">|</span>
                       <button
-                        className="text-xs font-bold text-rose-500 hover:underline"
+                        className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
                         onClick={() => deleteProduct(p)}
                       >
                         Hapus
