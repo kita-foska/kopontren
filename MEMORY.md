@@ -41,6 +41,37 @@
     > .o.txt 2>&1 & npm run build >> .o.txt 2>&1 & exit /b 0 >
     .done.txt"`; verifikasi lewat file output, karena command
     foreground akan timeout sebelum build selesai.
+- **FINAL (24 Sep 2026) — konfirmasi 4 commit, engineering TUTUP 0 sisa.**
+  Head `8ba2885` (`origin/master` = `origin/main`): `1a07ed1`
+  (integrity) · `c392237` (tz WIB) · `f6ccfbc` (docs Batch F) ·
+  `8ba2885` (docs lingkungan). FASE 2+3, Batch B–F: semua live.
+- **Sisa `[r]` risiko rendah (diterima, BUKAN bug — TODO.md L98–232):**
+  1. throttle login keyed `X-Forwarded-For` (per-instance, bisa
+     dirotasi) — accepted; mitigasi PIN 3× salah → sesi dimusnahkan
+     + lock 5 mnt.
+  2. GET `/api/audit` menampilkan `old_value/new_value` (termasuk
+     PII member) ke tier pengurus — sesuai desain role internal;
+     tinjau bila perlu.
+  3. `cash_low`: pemicu `notifyCashBalance()` hanya monitoring,
+     tanpa aksi otomatis — diterima.
+  4. Validasi `pay_split` saat IMPORT backup (🟠 review) —
+     opsional; POST /api/sales kini sudah dinormalisasi (`1a07ed1`),
+     import backup punya guard dasar.
+  5. ZAKAT known issues (TODO L113): export CSV riwayat + boundary
+     periode laba masih basis UTC (`created_at >= date-only`
+     leksikografis) → meleset ±7 jam; **`c392237` TIDAK menutup
+     ini** (6 file: payables/reports-csv/2-client/laporan-client/
+     format.ts saja). Sisa tracked [r].
+- **TUNDA (keputusan user, 3 fitur):** QRIS resmi (NMID belum
+  siap) · grosir/perks member · `point_history` (loyalty).
+- **User-test PENDING hasil (4):** (1) test ikon taskbar PWA di
+  Edge — user handle 24 Sep: uninstall → clear site data → restart
+  Explorer → install ulang → cek logo; jika gagal → debug sesuai
+  TODO L333–343 (`chrome://serviceworker-internals`,
+  `chrome://components`, flag `edge-automatic-https-encryption-
+  disabled`). (2) uji manual pasca-deploy nang HP (22 Sep).
+  (3) checklist `/admin/zakat` 10 item (TODO L259–268).
+  (4) upload CSV ke Turso sendiri.
 
 ## 2026-09-23
 ### Batch E: keyboard-nav tablist (APG) + sync audit a11y
