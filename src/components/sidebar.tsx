@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react';
 import type { Role } from '@/lib/auth';
+import { Avatar, ROLE_LABEL } from './ui';
 
 // Prefetch selektif: menu utama + halaman admin yang paling sering dibuka.
 // Halaman jarang (kontrakan, piutang, retur, audit, data, dsb.) tidak di-prefetch
@@ -78,12 +79,14 @@ const ADMIN_GROUPS: NavGroup[] = [
  * - Active page highlighted with accent background.
  */
 export function Sidebar({
+  name,
   role,
   open,
   onClose,
   onToggleTheme,
   onLogout,
 }: {
+  name: string;
   role: Role;
   open: boolean;
   onClose: () => void;
@@ -141,12 +144,21 @@ export function Sidebar({
           (open ? 'translate-x-0' : '-translate-x-full')
         }
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-navy-700">
-          <p className="text-sm font-extrabold tracking-tight">Menu</p>
+        {/* Kartu profil user (profil kepala): avatar + nama + role menggantikan judul polos "Menu". */}
+        <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 px-4 py-3 dark:border-navy-700">
+          <Avatar name={name} />
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate text-sm font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
+              {name}
+            </p>
+            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              {ROLE_LABEL[role] ?? role.toUpperCase()}
+            </p>
+          </div>
           <button
             onClick={onClose}
             aria-label="Tutup menu"
-            className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-sm text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-700"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-slate-200 text-sm text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-700"
           >
             <X className="h-4 w-4" />
           </button>
@@ -287,10 +299,12 @@ function groupsFor(role: Role): NavGroup[] {
  * Place the button in the header; the drawer renders fixed over the page.
  */
 export function HamburgerNav({
+  name,
   role,
   onToggleTheme,
   onLogout,
 }: {
+  name: string;
   role: Role;
   onToggleTheme: () => void;
   onLogout: () => void | Promise<void>;
@@ -307,6 +321,7 @@ export function HamburgerNav({
         <Menu className="h-5 w-5" />
       </button>
       <Sidebar
+        name={name}
         role={role}
         open={open}
         onClose={() => setOpen(false)}

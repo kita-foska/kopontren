@@ -29,6 +29,44 @@ export function Badge({
   );
 }
 
+/** Inisial maksimal 2 huruf dari nama — dipakai avatar di header + drawer. */
+export function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/**
+ * Avatar lingkaran berisi inisial nama — identitas user di header + drawer.
+ * `sm` = 28px (header), `md` = 36px (kartu profil drawer).
+ */
+export function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
+  const dim = size === 'sm' ? 'h-7 w-7 text-xs' : 'h-9 w-9 text-sm';
+  return (
+    <span
+      aria-hidden="true"
+      className={
+        'flex shrink-0 select-none items-center justify-center rounded-full bg-accent-500 font-extrabold text-white ' +
+        dim
+      }
+    >
+      {initials(name)}
+    </span>
+  );
+}
+
+/** Label role ramah (tampilan profil/identitas). Default = role.toUpperCase(). */
+export const ROLE_LABEL: Record<string, string> = {
+  admin: 'Admin',
+  manajer: 'Manajer',
+  pengurus: 'Pengurus',
+  kasir: 'Kasir',
+  gudang: 'Gudang',
+  pembelian: 'Pembelian',
+  member: 'Member',
+};
+
 export function Modal({
   open,
   title,
