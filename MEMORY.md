@@ -1,4 +1,29 @@
-# MEMORY — Kopontren Al Ittihad (kasir & pembukuan)
+# MEMORY
+
+## 2026-09-23
+### Batch E: keyboard-nav tablist (APG) + sync audit a11y
+- `4545e4d` (master) — helper `useTablistNav` di `ui.tsx` (ArrowRight/Left
+  wrap + Home/End, aktivasi otomatis focus+click+setKey, import type
+  alias `ReactKeyboardEvent` agar tak shadow DOM KeyboardEvent Modal);
+  4 grup: admin/belanja-client (in/out L107), admin/data-client
+  (backup/audit L160), admin/konsinyasi-client (active/done L333),
+  POS kategori (tablist L1154 + pill `role="tab"`/`aria-selected`,
+  getKey i→i===0?'':categories[i-1]). tsc EXIT 0, next build EXIT 0
+  (compile 4.8 s, Overall passed, route /admin/* ter-build).
+- TODO L204: item audit a11y UI lama (Modal ✕/ESC/focus-trap,
+  skeleton kontras, panel hotkey, Toast aria-live) ditandai [x] —
+  sudah live @ `c364b2c` (+ batch 5 hotkey POS F6–F9 & cheatsheet `?`),
+  diverifikasi 23 Sep: grep 0 sisa + `git merge-base --is-ancestor`.
+- ⚠️ TRAP KETEMU: working copy pagi ini sempat berisi modifikasi
+  BELUM ter-commit (belanja-client 2-tablist inTab/outTab ~550 baris
+  vs HEAD 266 baris single-tab; imports ui.tsx beda). Semua kerja
+  di atas berbasis HEAD `46708a1`. Jika ada perubahan lokal yg
+  belum di-commit di mesin lain, itu belum masuk repo.
+- Vercel: live production @ `46708a1` terkonfirmasi (HTTP 307→/login,
+  buildId baru `UOsfn6k55w3NuzxN8AV64`, bukan pre-21 Sep
+  `GCE-OvNduy2JlV5shvyiS`). Dashboard "Ready @ 46708a1" = cek user.
+
+## 2026-09-21 — Kopontren Al Ittihad (kasir & pembukuan)
 
 Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
 `state.txt`; daftar kerja yang belum: `TODO.md`.

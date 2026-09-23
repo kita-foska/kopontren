@@ -201,10 +201,12 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [x] Audit 4-fase: 🟡 jejak `pay_split` di audit `sales:create` —
       FIXED (`4431e80`). Sweep delta (margin/split/redemsi/returns/
       tx()/PWA/print) tanpa bug 🔴/🟠 baru; perf FLJS maks 133 kB.
-- [r] UI/UX menunggu approval (laporan audit 4-fase): Modal `✕`
-      <44px + tanpa ESC/focus-trap/aria-modal; kontras teks skeleton
-      (`slate-400/500`) rendah; belum ada panel bantuan hotkey POS
-      (F1–F5); Toast tanpa `aria-live`. Kode UI belum diubah.
+- [x] UI/UX (laporan audit 4-fase) — **SELESAI**: Modal `✕` ≥44px +
+      ESC + focus-trap + `aria-modal`; kontras skeleton dinaikkan;
+      panel bantuan hotkey POS ada (cheatsheet `?`, F1–F9 + Ctrl-*);
+      Toast `aria-live`. Live @ `c364b2c` (+ batch 5 hotkey POS),
+      divalidasi ulang 23 Sep (grep + `git merge-base`). Keyboard-nav
+      tablist (APG, 4 grup) dilanjut di Batch E.
 - [r] Validasi `pay_split` saat IMPORT backup (🟠, laporan review
       Fitur 3) — menunggu approval: normalisasi via `parsePaySplit`
       + Σ=total; non-valid → null (legacy).
