@@ -717,9 +717,65 @@ blocking)
   - Belum teruji di UI langsung (butuh deploy + klik di perangkat);
     logika double-tap sudah dipertahankan di level guard + disabled.
 
+   - **Test manual 4 poin Batch A nang HP: SEMUA OK (23 Sep, hasil
+     user):** (1) double-tap form → tap ke-2 diabaikan ✓,
+     (2) label total belanja "dari semua data" ✓,
+     (3) footer "Menampilkan X dari N transaksi" ✓,
+     (4) toast kas + pengguna ✓. → Batch B di-approve.
+- **FASE 2 BATCH B (mobile tabel→card): DISELESAIKAN — commit
+  `cb792aa` (23 Sep 2026).** 5 file, +273/-8, MURNI RENDER LAYER
+  (state/logika/data tak disentuh): kas, shift, produk, member,
+  audit. Pola: tabel `hidden sm:block` + card list `sm:hidden`
+  memakai source data yang sama (`data.rows`, `all` + `openList`,
+  `filtered`, `shown` jendela virtual member — spacer
+  `padTop`/`padBottom` diduplikat di card agar scroll container
+  virtual tetap akurat, `logs` audit). Hit-area 44px: tombol aksi
+  card `h-11` mobile / `sm:h-9` desktop; `.btn`/`.input` sudah
+  bawa `min-height:44px` sehingga tombol `.btn-*` lama tak perlu
+  diubah. Fix khusus Batch B: (a) hapus jurnal kas di card = ikon
+  `Trash2` (lucide) 44×44 + `aria-label` (tabel desktop tetap link
+  teks "hapus"), (b) toggle Aktif/Nonaktif produk kini TERGUNA
+  di mobile lewat card (dulu hanya tabel desktop; checkbox
+  "Setor kas" shift di card 44px utk admin, load-more 44px).
+  `public/sw.js` sengaja TIDAK di-commit (prebuild `npm run build`
+  me-stamp ulang: stamp lokal kini `01d183d5d618`).
+  Verifikasi: `tsc --noEmit` exit 0 (output kosong), `npm run
+  build` exit 0 (rute export lengkap, First Load JS shared
+  103 kB). Dual-push `master` + `main` @ `cb792aa`.
+
 ## Konvensi fetch klien (23 Sep 2026)
 - Klien: SEMUA fetch lewat `fetchTimeout` (`@/lib/fetch-util`),
   default 10 dtk; pesan galat timeout via `isAbort(e)`. Jangan buat
   helper terpisah per halaman. (`checkSession` di `/login/pin` sudah
   punya AbortController sendiri + abort saat unmount — biarkan, sudah
   patuh aturan 10 dtk.)
+
+## Re-Verifikasi LIVE — Batch A `bf52f63` (23 Sep 2026, 19.00)
+- **URL produksi = `https://kopontren-gamma.vercel.app`** (project
+  Vercel terhubung `kita-foska/kopontren`, build dari `main`).
+  ⚠️ `kopontren-app-sapiens-ai.vercel.app` (URL lama di dokumen awal)
+  sekarang **404 semua path**, dan `kopontren-app.vercel.app` masih
+  menyajikan build **lawas (pra-21 Sep)**: `/sw.js`, `/manifest.json`,
+  `/api/*` → 307 `/login`, `/login/pin*` → 404, buildId
+  `GCE-OvNduy2JlV5shvyiS`. Keduanya BUKAN produksi — JANGAN dipakai
+  utk verifikasi.
+- Vercel dashboard (screenshot user 23 Sep): `bf52f63`, `9ef700e`,
+  `c46f4fa`, `bd86ffa`, `e0aed83` semua **Ready + Production** ✓.
+- Fingerprint LIVE ✓ (HTTP 23 Sep, `kopontren-gamma`): `/sw.js` 200
+  (baru, bukan 307), `/manifest.json` 200, `/api/shifts` &
+  `/api/sales` → **401 JSON** (middleware passthrough — behavior
+  post-`db10160` ✓), `/login/pin` 200, `/login/pin/setup` 200.
+- **Semantik stamp SW-BUILD**: `// SW-BUILD:<12hex>` =
+  `sha1(.next/BUILD_ID + Date.now())` yang ditulis
+  `scripts/inject-sw-version.mjs` SAAT BUILD (vercel.json
+  `buildCommand`). **BUKAN hash git** — tak bisa di-resolve `git log`
+  (jangan kejar). Stamp live saat ini `7c86f8f64937` vs
+  `db032f04f915` ter-commit lokal — NORMAL (tiap build men-stamp
+  ulang; isi file 137 baris selain stempelnya IDENTIK).
+- Cold start v15: terpenuhi pada **akses pertama dari HP setelah
+  deploy ini** — browser deteksi diff /sw.js → install SW baru →
+  `skipWaiting` → activate purge cache lama → `fullInit` sekali.
+- Koreksi bagian "Batch A" di atas: sejak `c46f4fa` (commit
+  `public/sw.js` + `scripts/inject-sw-version.mjs`), `public/sw.js`
+  **DI-COMMIT** (dengan stamp); build Vercel men-stamp ulang tiap
+  build, jadi diff git per push tetap ada.

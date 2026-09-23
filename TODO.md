@@ -494,8 +494,25 @@ konsistensi.
   "(dari semua data)" (tab in & out) + toast removeEntry (kas) &
   toggleActive (pengguna) + footer "Menampilkan X dari N transaksi"
   (GET /api/sales + kolom `total`).
-- **Batch B (mobile):** tabel → card di <sm (kas, shift, produk,
-  member, audit) + hit-area aksi baris + tombol hapus kas.
+- **Batch B (mobile) — SELESAI, commit `cb792aa` (23 Sep):**
+  tabel → card di <sm (kas, shift, produk, member, audit) +
+  hit-area 44px. Pola yang dieksekusi: tabel `hidden sm:block` +
+  card list `sm:hidden` (sumber data sama; state/logika tak diubah),
+  tombol aksi card `h-11` mobile / `sm:h-9` desktop. Fix khusus:
+  hapus jurnal kas di card = ikon `Trash2` 44×44 + aria-label;
+  toggle Aktif/Nonaktif produk kini bisa di mobile (lewat card);
+  checkbox "Setor kas" shift + tombol load-more 44px. Verifikasi:
+  `tsc --noEmit` exit 0 + `npm run build` exit 0, dual-push
+  master+main. Rincian lengkap: MEMORY.md seksi FASE 2.
+- [x] **Test manual Batch A nang HP (23 Sep, pasca-deploy `bf52f63`) —
+  HANDLED USER, SEMUA 4 POKIN OK (hasil user 23 Sep):** (1) double-tap button form (piutang/hutang/kas/dll)
+  → tap ke-2 diabaikan (tidak ada request dobel), (2) label total
+  belanja "(dari semua data)" di tab in & out, (3) footer laporan
+  "Menampilkan X dari N transaksi", (4) toast sukses/hapus jurnal kas
+  & toggle pengguna. **Bagian Vercel "Ready" = TER-VERIFIKASI**
+  (dashboard user: `bf52f63` Ready+Production; fingerprint LIVE
+  `kopontren-gamma` ✓ — detail: MEMORY.md seksi "Re-Verifikasi LIVE").
+  Test lulus → **Batch B di-approve & dieksekusi @ `cb792aa`**.
 - **Batch C (komunikasi/konsistensi):** map label metode bayar
   terpusat + fallback skeleton seragam + label LowStock + aksen
   h1 seragam + hint pin/setup + backup window.open → blob.
