@@ -25,7 +25,10 @@ export async function POST(req: Request) {
     | { id: number; name: string }
     | undefined;
   if (!prod) return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 });
-  const cost = Math.max(0, Number(b.unit_cost) || 0);
+  // Harga beli dibulatkan ke rupiah penuh (Math.floor): nominal pecahan
+  // (mis. 4500.5) akan membuat purchases.qty*unit_cost bukan bilangan bulat
+  // sehingga agregat kas/laporan & harga modal jadi tidak konsisten.
+  const cost = Math.max(0, Math.floor(Number(b.unit_cost) || 0));
   const info = await tx(d, async () => {
     const ins = await d
       .prepare(
