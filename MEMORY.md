@@ -630,13 +630,16 @@ blocking)
   (`stok-export/import-20260923.csv`, `_products_update.csv`)
   tetap untracked — user upload sendiri (PENDING).
 - **Vercel: DEPLOY TERKONFIRMASI LIVE (23 Sep):** stamp produksi
-  berubah `SW-BUILD:7706b506c8ab` -> `1d0b1c0f67b6`. Catatan:
-  stamp di-seed `BUILD_ID + Date.now()` per build (lihat
+  berubah `SW-BUILD:7706b506c8ab` -> `1d0b1c0f67b6` (build s/d
+  `c4d77e4`) -> `3d3c7a7f47e6` @ 00:04 (build s/d `e0aed83`,
+  diff konten vs sw.js lokal tanpa baris stamp = 0 baris).
+  Catatan: stamp di-seed `BUILD_ID + Date.now()` per build (lihat
   `scripts/inject-sw-version.mjs`), jadi stamp prod TIDAK PERNAH
-  = stamp lokal — kriteria sukses = stamp prod BERUBAH dari
-  baseline, bukan match lokal. Cara verifikasi ini tanpa
-  Vercel CLI/token: `curl https://kopontren-gamma.vercel.app/sw.js`
-  lalu grep `SW-BUILD:`.
+  = stamp lokal DAN re-stamp tiap deploy — kriteria sukses =
+  stamp prod BERUBAH dari baseline + konten non-stamp identik
+  lokal, bukan match stamp. Cara verifikasi tanpa Vercel CLI/token:
+  `curl https://kopontren-gamma.vercel.app/sw.js` lalu grep
+  `SW-BUILD:` + Compare-Object vs `public/sw.js` (skip baris stamp).
 - **AUDIT 3x (23 Sep): tanpa bug kritis baru** — detail + temuan
   minor (schema mati `stock_opname`, `invalidate('kas:')` no-op,
   fetch klien tanpa timeout) tercatat di TODO.md. Semua key
