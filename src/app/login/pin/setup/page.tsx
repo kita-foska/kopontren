@@ -133,7 +133,7 @@ export default function PinSetupPage() {
             <p className="text-center text-sm text-slate-600 dark:text-slate-300">
               Memeriksa sesi… bila tidak dilanjutkan, silakan login.
             </p>
-            <button
+            <button type="button"
               className="btn-ghost w-full"
               onClick={() => (window.location.href = '/login?reset=1')}
             >
@@ -166,7 +166,7 @@ export default function PinSetupPage() {
               }}
               disabled={busy}
             />
-            <button
+            <button type="button"
               className="btn-primary mt-4 w-full shadow-md shadow-accent-500/20"
               disabled={busy || value.length < 4}
               onClick={() => keypressAuto()}

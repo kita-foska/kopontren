@@ -156,12 +156,12 @@ export function MigrateClient() {
           />
           {fileName && <span className="text-sm text-slate-500 dark:text-slate-400">{fileName}</span>}
           {phase === 'preview' && rows.length > 0 && (
-            <button className="btn-primary" onClick={() => void startImport()}>
+            <button type="button" className="btn-primary" onClick={() => void startImport()}>
               Import {rows.length} baris
             </button>
           )}
           {phase === 'done' && summary && (
-            <button className="btn-ghost" onClick={downloadReport}>
+            <button type="button" className="btn-ghost" onClick={downloadReport}>
               Unduh Laporan (JSON)
             </button>
           )}
@@ -270,7 +270,7 @@ export function MigrateClient() {
       {phase === 'error' && (
         <div className="card border-red-500/40 p-4 text-sm text-red-600 dark:text-red-300">
           <p>Gagal: {fatal}</p>
-          <button
+          <button type="button"
             className="btn-ghost mt-3"
             onClick={() => {
               setPhase('preview');

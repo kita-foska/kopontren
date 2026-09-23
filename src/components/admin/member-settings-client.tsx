@@ -129,7 +129,7 @@ export function MemberSettingsClient() {
         ))}
       </div>
       <div className="mt-4 flex items-center gap-2">
-        <button className="btn-primary" onClick={save} disabled={busy}>
+        <button type="button" className="btn-primary" onClick={save} disabled={busy}>
           {busy ? 'Menyimpan…' : 'Simpan Pengaturan'}
         </button>
       </div>

@@ -109,7 +109,7 @@ export function NotificationListClient() {
     <div className="space-y-3">
       <div className="card flex flex-wrap items-center justify-between gap-2 p-3">
         <div className="flex items-center gap-1">
-          <button
+          <button type="button"
             onClick={() => setFilter('all')}
             className={
               'rounded-lg px-3 py-1.5 text-xs font-bold ' +
@@ -120,7 +120,7 @@ export function NotificationListClient() {
           >
             Semua
           </button>
-          <button
+          <button type="button"
             onClick={() => setFilter('unread')}
             className={
               'rounded-lg px-3 py-1.5 text-xs font-bold ' +
@@ -133,14 +133,14 @@ export function NotificationListClient() {
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={load}
             className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-700"
           >
             <RefreshCw className="h-3.5 w-3.5" /> Segarkan
           </button>
           {unread > 0 && (
-            <button
+            <button type="button"
               onClick={markAll}
               disabled={busy}
               className="flex items-center gap-1 rounded-lg bg-accent-500 px-3 py-1.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50"
@@ -177,7 +177,7 @@ export function NotificationListClient() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   {n.link && (
-                    <button
+                    <button type="button"
                       onClick={() => open(n)}
                       className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-bold text-accent-600 hover:bg-accent-500/10 dark:text-accent-300"
                     >
@@ -185,7 +185,7 @@ export function NotificationListClient() {
                     </button>
                   )}
                   {!n.read && (
-                    <button
+                    <button type="button"
                       onClick={() => markOne(n.id)}
                       className="rounded-md px-2 py-1 text-[11px] font-bold text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700"
                     >

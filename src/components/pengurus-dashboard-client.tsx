@@ -193,7 +193,7 @@ export function PengurusDashboardClient() {
     return (
       <div className="card p-4">
         <p className="text-sm text-rose-600 dark:text-rose-300">{err}</p>
-        <button className="btn-ghost mt-2" onClick={() => void load(days)}>
+        <button type="button" className="btn-ghost mt-2" onClick={() => void load(days)}>
           Ulangi
         </button>
       </div>
@@ -208,7 +208,7 @@ export function PengurusDashboardClient() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="inline-flex overflow-hidden rounded-lg border border-slate-200 dark:border-navy-600">
             {PERIODS.map((p) => (
-              <button
+              <button type="button"
                 key={p.days}
                 onClick={() => setDays(p.days)}
                 className={
@@ -223,16 +223,16 @@ export function PengurusDashboardClient() {
             ))}
           </div>
           <div className="flex flex-wrap gap-2 print:hidden">
-            <button className="btn-ghost" onClick={exportCsv}>
+            <button type="button" className="btn-ghost" onClick={exportCsv}>
               Export CSV
             </button>
-            <button className="btn-ghost" onClick={() => void exportXlsx()} disabled={busy === 'xlsx'}>
+            <button type="button" className="btn-ghost" onClick={() => void exportXlsx()} disabled={busy === 'xlsx'}>
               {busy === 'xlsx' ? 'Membuat…' : 'Export Excel'}
             </button>
-            <button className="btn-ghost" onClick={printPdf}>
+            <button type="button" className="btn-ghost" onClick={printPdf}>
               Cetak / PDF
             </button>
-            <button className="btn-primary" onClick={() => void waReport()} disabled={busy === 'wa'}>
+            <button type="button" className="btn-primary" onClick={() => void waReport()} disabled={busy === 'wa'}>
               {busy === 'wa' ? 'Membuka…' : 'Laporan via WA'}
             </button>
           </div>

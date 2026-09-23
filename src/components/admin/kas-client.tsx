@@ -134,7 +134,7 @@ export function KasClient() {
           />
         </div>
         <div className="flex items-end">
-          <button className="btn-primary w-full" disabled={busy} onClick={addEntry}>
+          <button type="button" className="btn-primary w-full" disabled={busy} onClick={addEntry}>
             {busy ? 'Menyimpan…' : 'Tambah Jurnal'}
           </button>
         </div>
@@ -158,7 +158,7 @@ export function KasClient() {
                     {kindBadge[r.kind]?.label || r.kind}
                   </Badge>
                   {r.kind === 'entry' && (
-                    <button
+                    <button type="button"
                       onClick={() => removeEntry(r.id)}
                       className="ml-2 text-[10px] text-slate-400 underline hover:text-rose-600 dark:hover:text-rose-400"
                     >
@@ -203,7 +203,7 @@ export function KasClient() {
                     {kindBadge[r.kind]?.label || r.kind}
                   </Badge>
                   {r.kind === 'entry' && (
-                    <button
+                    <button type="button"
                       onClick={() => removeEntry(r.id)}
                       aria-label="Hapus jurnal manual ini"
                       className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"

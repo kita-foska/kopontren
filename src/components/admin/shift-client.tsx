@@ -110,7 +110,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
                 {openShift.sales_count} transaksi · {rp(openShift.sales_total)}
               </span>
               {/* Kasir hanya melihat shift-nya sendiri; admin semua. API tetap menegakkan izin. */}
-              <button
+              <button type="button"
                 className="btn-danger h-11 px-2 py-1 sm:h-auto"
                 disabled={busy === 'close' + openShift.id}
                 onClick={() => close(openShift.id)}
@@ -231,7 +231,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
       </div>
       {canMore && (
         <div className="p-1 text-center">
-          <button className="btn-ghost h-11 px-4 text-xs sm:h-9" onClick={loadMore} disabled={loadingMore}>
+          <button type="button" className="btn-ghost h-11 px-4 text-xs sm:h-9" onClick={loadMore} disabled={loadingMore}>
             {loadingMore ? 'Memuat…' : 'Muat shift lama lainnya'}
           </button>
         </div>

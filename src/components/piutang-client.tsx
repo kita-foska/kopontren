@@ -139,7 +139,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
                 ['all', 'Semua'],
               ] as const
             ).map(([k, label]) => (
-              <button
+              <button type="button"
                 key={k}
                 onClick={() => setFilter(k)}
                 className={filter === k ? 'btn-primary !py-1.5 text-xs' : 'btn-ghost !py-1.5 text-xs'}
@@ -192,7 +192,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
             />
           </div>
           <div className="flex items-end">
-            <button className="btn-primary w-full" disabled={busy} onClick={create}>
+            <button type="button" className="btn-primary w-full" disabled={busy} onClick={create}>
               {busy ? 'Menyimpan…' : 'Catat'}
             </button>
           </div>
@@ -247,7 +247,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
                   </span>
                   <div className="flex gap-1.5">
                     {x.status === 'open' && (
-                      <button
+                      <button type="button"
                         className="btn-amber !px-2.5 !py-1 text-xs"
                         onClick={() => {
                           setPayFor(x);
@@ -258,7 +258,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
                       </button>
                     )}
                     {admin && (
-                      <button className="btn-danger !px-2.5 !py-1 text-xs" onClick={() => del(x.id)}>
+                      <button type="button" className="btn-danger !px-2.5 !py-1 text-xs" onClick={() => del(x.id)}>
                         Hapus
                       </button>
                     )}
@@ -277,10 +277,10 @@ export function PiutangClient({ admin }: { admin: boolean }) {
         onClose={() => setPayFor(null)}
         footer={
           <>
-            <button className="btn-ghost" onClick={() => setPayFor(null)}>
+            <button type="button" className="btn-ghost" onClick={() => setPayFor(null)}>
               Batal
             </button>
-            <button className="btn-primary" disabled={busy} onClick={pay}>
+            <button type="button" className="btn-primary" disabled={busy} onClick={pay}>
               {busy ? 'Menyimpan…' : 'Simpan'}
             </button>
           </>

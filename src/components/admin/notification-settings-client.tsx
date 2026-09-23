@@ -190,7 +190,7 @@ export function NotificationSettingsClient() {
             </div>
           </div>
           {pushState === 'granted' ? (
-            <button
+            <button type="button"
               onClick={disablePush}
               disabled={busy}
               className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-700"
@@ -199,7 +199,7 @@ export function NotificationSettingsClient() {
               Nonaktifkan Push
             </button>
           ) : (
-            <button
+            <button type="button"
               onClick={enablePush}
               disabled={busy || pushState === 'unavailable' || pushState === 'denied'}
               className="flex items-center gap-1 rounded-lg bg-accent-500 px-3 py-1.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50"
@@ -248,7 +248,7 @@ export function NotificationSettingsClient() {
         <p className="text-xs text-slate-400">
           Perubahan diterapkan saat tombol di-toggle (otomati tersimpan).
         </p>
-        <button
+        <button type="button"
           onClick={load}
           className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-700"
         >

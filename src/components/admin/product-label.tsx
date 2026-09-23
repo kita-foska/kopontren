@@ -150,14 +150,14 @@ export function ProductBarcodeLabel({
           </div>
         ) : null}
         <div className="mt-4 flex justify-center gap-2">
-          <button
+          <button type="button"
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
             onClick={printLabels}
             disabled={!ready}
           >
             Cetak Label
           </button>
-          <button
+          <button type="button"
             className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-300"
             onClick={onClose}
           >

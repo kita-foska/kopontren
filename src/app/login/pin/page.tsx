@@ -128,7 +128,7 @@ export default function PinReauthPage() {
             <p className="text-center text-sm text-slate-600 dark:text-slate-300">
               Sesi tidak ditemukan. Silakan login dengan username &amp; password.
             </p>
-            <button
+            <button type="button"
               className="btn-primary w-full shadow-md shadow-accent-500/20"
               onClick={() => (window.location.href = '/login')}
             >
@@ -143,7 +143,7 @@ export default function PinReauthPage() {
               Gagal memeriksa sesi — jaringan lambat atau server belum siap
               (timeout 10 dtk).
             </p>
-            <button
+            <button type="button"
               className="btn-primary w-full shadow-md shadow-accent-500/20"
               onClick={() => {
                 setErr('');
@@ -153,7 +153,7 @@ export default function PinReauthPage() {
             >
               Coba Lagi
             </button>
-            <button
+            <button type="button"
               className="w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               onClick={() => (window.location.href = '/login')}
             >
@@ -189,7 +189,7 @@ export default function PinReauthPage() {
               }}
               disabled={busy}
             />
-            <button
+            <button type="button"
               className="btn-primary mt-4 w-full shadow-md shadow-accent-500/20"
               disabled={busy || value.length < 4}
               onClick={verify}
@@ -201,7 +201,7 @@ export default function PinReauthPage() {
                 {err}
               </p>
             )}
-            <button
+            <button type="button"
               className="mt-3 w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               onClick={() => (window.location.href = '/login?reset=1')}
             >

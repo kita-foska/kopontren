@@ -74,7 +74,7 @@ export function LaporanAdminClient() {
           [30, '30 hari'],
           [365, '1 tahun'],
         ].map(([v, label]) => (
-          <button
+          <button type="button"
             key={v}
             onClick={() => setPeriod(String(v))}
             className={
@@ -87,7 +87,7 @@ export function LaporanAdminClient() {
             {label}
           </button>
         ))}
-        <button onClick={csv} className="btn-ghost ml-auto">
+        <button type="button" onClick={csv} className="btn-ghost ml-auto">
           Unduh CSV
         </button>
       </div>

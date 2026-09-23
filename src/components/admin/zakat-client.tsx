@@ -241,16 +241,16 @@ export function ZakatClient() {
 
       {/* Aksi */}
       <div className="card flex flex-wrap items-center gap-2 p-4 print:hidden">
-        <button className="btn btn-primary" onClick={() => load()} disabled={busy}>
+        <button type="button" className="btn btn-primary" onClick={() => load()} disabled={busy}>
           Hitung Ulang
         </button>
-        <button className="btn btn-amber" onClick={recordHistory} disabled={busy || !c}>
+        <button type="button" className="btn btn-amber" onClick={recordHistory} disabled={busy || !c}>
           Simpan ke Riwayat
         </button>
-        <button className="btn btn-ghost" onClick={exportCsv} disabled={history === null}>
+        <button type="button" className="btn btn-ghost" onClick={exportCsv} disabled={history === null}>
           Export CSV
         </button>
-        <button className="btn btn-ghost" onClick={() => window.print()}>
+        <button type="button" className="btn btn-ghost" onClick={() => window.print()}>
           Print
         </button>
         <input
@@ -330,7 +330,7 @@ export function ZakatClient() {
                   {s.last_zakat_date ? fmtDate(s.last_zakat_date) : 'belum pernah'}
                 </span>
               </p>
-              <button className="btn btn-primary" onClick={saveSettings} disabled={busy}>
+              <button type="button" className="btn btn-primary" onClick={saveSettings} disabled={busy}>
                 Simpan Pengaturan
               </button>
             </div>

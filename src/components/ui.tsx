@@ -148,7 +148,7 @@ export function Modal({
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-bold">{title}</h3>
           {/* min 44px: target sentuh a11y di layar kecil */}
-          <button
+          <button type="button"
             onClick={onClose}
             aria-label="Tutup dialog"
             className="grid min-h-11 min-w-11 place-items-center rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"

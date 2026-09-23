@@ -60,14 +60,14 @@ export function LowStockClient({ items }: { items: Item[] }) {
         </h2>
         {items.length > 0 && (
           <div className="flex gap-1.5">
-            <button
+            <button type="button"
               className="btn-ghost inline-flex items-center gap-1 px-2.5 py-1 text-xs"
               onClick={copyMsg}
             >
               <Copy className="h-3.5 w-3.5" />
               Salin
             </button>
-            <button
+            <button type="button"
               className="btn-primary inline-flex items-center gap-1 px-2.5 py-1 text-xs"
               onClick={() => void sendWa()}
               disabled={busy}

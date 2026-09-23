@@ -165,7 +165,7 @@ export function ReturClient() {
             </label>
           </div>
           <div className="flex items-end">
-            <button className="btn-primary w-full" disabled={busy} onClick={submit}>
+            <button type="button" className="btn-primary w-full" disabled={busy} onClick={submit}>
               {busy ? 'Menyimpan…' : 'Simpan Retur'}
             </button>
           </div>

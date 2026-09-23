@@ -204,7 +204,7 @@ export function MemberClient() {
             onChange={(e) => setQ(e.target.value)}
           />
           {q && (
-            <button className="btn-ghost px-2.5 py-1.5 text-xs" onClick={() => setQ('')}>
+            <button type="button" className="btn-ghost px-2.5 py-1.5 text-xs" onClick={() => setQ('')}>
               Reset
             </button>
           )}
@@ -218,7 +218,7 @@ export function MemberClient() {
               </span>
             )}
           </span>
-          <button className="btn-primary" onClick={() => openEdit()}>
+          <button type="button" className="btn-primary" onClick={() => openEdit()}>
             + Tambah Member
           </button>
         </div>
@@ -269,14 +269,14 @@ export function MemberClient() {
                 </td>
                 <td className="td text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <button
+                    <button type="button"
                       className="text-xs font-bold text-accent-500 hover:underline dark:text-accent-300"
                       onClick={() => openEdit(m)}
                     >
                       Ubah
                     </button>
                     <span className="text-slate-300 dark:text-navy-600">|</span>
-                    <button
+                    <button type="button"
                       className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
                       onClick={() => remove(m)}
                     >
@@ -323,13 +323,13 @@ export function MemberClient() {
                 </span>
               </div>
               <div className="mt-2 flex gap-2">
-                <button
+                <button type="button"
                   className="h-11 flex-1 rounded-lg border border-accent-200 bg-accent-100/50 px-2 text-xs font-bold text-accent-600 transition hover:bg-accent-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-accent-300"
                   onClick={() => openEdit(m)}
                 >
                   Ubah
                 </button>
-                <button
+                <button type="button"
                   className="h-11 flex-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-rose-400"
                   onClick={() => remove(m)}
                 >
@@ -348,7 +348,7 @@ export function MemberClient() {
         </div>
         {!qDeb.trim() && hasMoreRef.current && (
           <div className="border-t border-slate-200 p-3 text-center dark:border-navy-700">
-            <button className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+            <button type="button" className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
               {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
             </button>
           </div>
@@ -362,10 +362,10 @@ export function MemberClient() {
         onClose={() => setShow(false)}
         footer={
           <>
-            <button className="btn-ghost" onClick={() => setShow(false)}>
+            <button type="button" className="btn-ghost" onClick={() => setShow(false)}>
               Batal
             </button>
-            <button className="btn-primary" disabled={busy} onClick={save}>
+            <button type="button" className="btn-primary" disabled={busy} onClick={save}>
               {busy ? 'Menyimpan…' : 'Simpan'}
             </button>
           </>

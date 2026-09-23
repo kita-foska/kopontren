@@ -90,7 +90,7 @@ export function SalesBarChart({
       </div>
       <div className="mt-1.5 flex gap-[2px]">
         {bars.map((b, i) => (
-          <div key={b.day} className="flex-1 text-center text-[9px] font-semibold text-slate-400 dark:text-slate-500">
+          <div key={b.day} className="flex-1 text-center text-[11px] font-semibold text-slate-400 dark:text-slate-500">
             {i % step === 0 ? wibShort(b.day) : ''}
           </div>
         ))}

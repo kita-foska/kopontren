@@ -150,10 +150,10 @@ export function AuditClient() {
           />
         </div>
         <div className="flex items-end gap-2">
-          <button className="btn-ghost flex-1" onClick={() => purge(90)}>
+          <button type="button" className="btn-ghost flex-1" onClick={() => purge(90)}>
             Bersihkan &gt;90h
           </button>
-          <button className="btn-ghost flex-1" onClick={() => purge(365)}>
+          <button type="button" className="btn-ghost flex-1" onClick={() => purge(365)}>
             Bersihkan &gt;1th
           </button>
         </div>
@@ -273,7 +273,7 @@ export function AuditClient() {
       </div>
       {canMore && (
         <div className="p-1 text-center">
-          <button className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+          <button type="button" className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
             {loadingMore ? 'Memuat…' : 'Muat lebih banyak log'}
           </button>
         </div>

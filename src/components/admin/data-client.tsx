@@ -151,8 +151,11 @@ export function DataClient() {
   return (
     <div className="space-y-4">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 pb-2 dark:border-navy-700">
+      <div className="flex gap-2 border-b border-slate-200 pb-2 dark:border-navy-700" role="tablist">
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'backup'}
           onClick={() => setActiveTab('backup')}
           className={
             'rounded-lg px-4 py-2 text-sm font-bold transition ' +
@@ -164,6 +167,9 @@ export function DataClient() {
           Backup & Ekspor Data
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'audit'}
           onClick={() => setActiveTab('audit')}
           className={
             'rounded-lg px-4 py-2 text-sm font-bold transition ' +
@@ -188,7 +194,7 @@ export function DataClient() {
                 Unduh salinan lengkap seluruh database (produk, penjualan, retur, piutang, hutang dagang, kas, konsinyasi, member, shift, notifikasi, pengaturan notifikasi & audit log) untuk arsip / pindah server.
               </p>
             </div>
-            <button
+            <button type="button"
               className="btn-primary w-full"
               disabled={busy === 'dl'}
               onClick={exportJson}
@@ -207,7 +213,7 @@ export function DataClient() {
                 Unduh rekap detail semua transaksi item penjualan format CSV yang bisa dibuka langsung di Microsoft Excel.
               </p>
             </div>
-            <button
+            <button type="button"
               className="btn-ghost w-full font-bold"
               disabled={busy === 'dl'}
               onClick={exportSalesCsv}
@@ -233,7 +239,7 @@ export function DataClient() {
               className="hidden"
               onChange={importJson}
             />
-            <button
+            <button type="button"
               className="btn-ghost w-full font-bold"
               disabled={busy === 'import'}
               onClick={() => fileRef.current?.click()}
@@ -252,7 +258,7 @@ export function DataClient() {
                 Kosongkan seluruh data operasional (penjualan, retur, piutang, hutang dagang, stok, kas, konsinyasi, notifikasi). Akun login pengurus, audit log & pengaturan tetap aman.
               </p>
             </div>
-            <button
+            <button type="button"
               className="btn-danger w-full"
               disabled={busy === 'reset'}
               onClick={resetAll}
@@ -288,7 +294,7 @@ export function DataClient() {
                 <option value={50}>50 log</option>
               </select>
             </div>
-            <button className="btn-ghost px-3 py-1 text-xs" onClick={() => loadLogs()}>
+            <button type="button" className="btn-ghost px-3 py-1 text-xs" onClick={() => loadLogs()}>
               Refresh Log
             </button>
           </div>
@@ -346,7 +352,7 @@ export function DataClient() {
           </div>
           {canMore && (
             <div className="p-1 text-center">
-              <button className="btn-ghost text-xs" onClick={loadMoreLogs} disabled={loadingMore}>
+              <button type="button" className="btn-ghost text-xs" onClick={loadMoreLogs} disabled={loadingMore}>
                 {loadingMore ? 'Memuat…' : 'Muat lebih banyak log'}
               </button>
             </div>

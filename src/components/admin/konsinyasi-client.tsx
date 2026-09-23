@@ -174,7 +174,7 @@ export function KonsinyasiClient() {
         </div>
         {doneMode ? (
           <div className="mt-3 flex justify-end">
-            <button className="btn-ghost" disabled={busy} onClick={() => bukaLagi(k)}>
+            <button type="button" className="btn-ghost" disabled={busy} onClick={() => bukaLagi(k)}>
               Buka lagi
             </button>
           </div>
@@ -200,16 +200,16 @@ export function KonsinyasiClient() {
                 onChange={(e) => act(k.id, { pay: Number(e.target.value) })}
               />
             </div>
-            <button className="btn-ghost" disabled={busy} onClick={() => jual(k)}>
+            <button type="button" className="btn-ghost" disabled={busy} onClick={() => jual(k)}>
               Jual
             </button>
-            <button className="btn-ghost" disabled={busy} onClick={() => kembalikan(k)}>
+            <button type="button" className="btn-ghost" disabled={busy} onClick={() => kembalikan(k)}>
               Kembalikan
             </button>
-            <button className="btn-amber" disabled={busy} onClick={() => bayar(k)}>
+            <button type="button" className="btn-amber" disabled={busy} onClick={() => bayar(k)}>
               Bayar
             </button>
-            <button className="btn-danger" disabled={busy} onClick={() => tutup(k)}>
+            <button type="button" className="btn-danger" disabled={busy} onClick={() => tutup(k)}>
               Tutup
             </button>
           </div>
@@ -315,7 +315,7 @@ export function KonsinyasiClient() {
           />
         </div>
         <div className="flex items-end">
-          <button className="btn-primary w-full" disabled={busy} onClick={create}>
+          <button type="button" className="btn-primary w-full" disabled={busy} onClick={create}>
             {busy ? 'Menyimpan…' : 'Terima Konsinyasi'}
           </button>
         </div>
@@ -324,14 +324,20 @@ export function KonsinyasiClient() {
         Harga perjanjian = nominal per unit yang dibayarkan kepada pemilik tiap barang terjual.
       </p>
 
-      <div className="mb-3 flex gap-2">
+      <div className="mb-3 flex gap-2" role="tablist">
         <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'active'}
           onClick={() => setTab('active')}
           className={tab === 'active' ? 'btn-primary' : 'btn-ghost'}
         >
           Aktif ({active.length})
         </button>
         <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'done'}
           onClick={() => setTab('done')}
           className={tab === 'done' ? 'btn-primary' : 'btn-ghost'}
         >
@@ -362,7 +368,7 @@ export function KonsinyasiClient() {
       )}
       {canMore && (
         <div className="p-1 text-center">
-          <button className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+          <button type="button" className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
             {loadingMore ? 'Memuat…' : 'Muat riwayat lebih lama'}
           </button>
         </div>

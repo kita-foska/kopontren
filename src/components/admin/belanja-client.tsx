@@ -91,11 +91,23 @@ export function BelanjaClient() {
 
   return (
     <div>
-      <div className="mb-3 flex gap-2">
-        <button onClick={() => setTab('in')} className={tab === 'in' ? 'btn-primary' : 'btn-ghost'}>
+      <div className="mb-3 flex gap-2" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'in'}
+          onClick={() => setTab('in')}
+          className={tab === 'in' ? 'btn-primary' : 'btn-ghost'}
+        >
           Stok Masuk (Belanja)
         </button>
-        <button onClick={() => setTab('out')} className={tab === 'out' ? 'btn-primary' : 'btn-ghost'}>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'out'}
+          onClick={() => setTab('out')}
+          className={tab === 'out' ? 'btn-primary' : 'btn-ghost'}
+        >
           Pengeluaran
         </button>
       </div>
@@ -146,7 +158,7 @@ export function BelanjaClient() {
               />
             </div>
             <div className="flex items-end">
-              <button
+              <button type="button"
                 className="btn-primary w-full"
                 disabled={busy === 'in'}
                 onClick={addPurchase}
@@ -213,7 +225,7 @@ export function BelanjaClient() {
               />
             </div>
             <div className="flex items-end">
-              <button
+              <button type="button"
                 className="btn-primary w-full"
                 disabled={busy === 'out'}
                 onClick={addExpense}

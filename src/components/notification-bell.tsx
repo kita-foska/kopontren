@@ -133,9 +133,11 @@ export function NotificationBell() {
 
   return (
     <div className="relative" ref={rootRef}>
-      <button
+      <button type="button"
         onClick={toggle}
         aria-label="Notifikasi"
+        aria-expanded={open}
+        aria-controls="notif-panel"
         title="Notifikasi"
         className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
       >
@@ -150,6 +152,7 @@ export function NotificationBell() {
       {open &&
         createPortal(
           <div
+            id="notif-panel"
             ref={panelRef}
             className="fixed z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-navy-600 dark:bg-navy-800"
             style={
@@ -167,7 +170,7 @@ export function NotificationBell() {
             <p className="text-sm font-bold">Notifikasi</p>
             <div className="flex items-center gap-1">
               {count > 0 && (
-                <button
+                <button type="button"
                   onClick={markAll}
                   disabled={busy}
                   className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-accent-600 hover:bg-accent-500/10 disabled:opacity-50 dark:text-accent-300"
@@ -189,7 +192,7 @@ export function NotificationBell() {
             ) : (
               items.map((n) => (
                 <li key={n.id}>
-                  <button
+                  <button type="button"
                     onClick={() => onItem(n)}
                     className="block w-full px-3 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-navy-700"
                   >

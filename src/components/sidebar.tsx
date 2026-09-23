@@ -155,7 +155,7 @@ export function Sidebar({
               {ROLE_LABEL[role] ?? role.toUpperCase()}
             </p>
           </div>
-          <button
+          <button type="button"
             onClick={onClose}
             aria-label="Tutup menu"
             className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-slate-200 text-sm text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-700"
@@ -312,9 +312,10 @@ export function HamburgerNav({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button
+      <button type="button"
         onClick={() => setOpen(true)}
         aria-label="Buka menu navigasi"
+        aria-expanded={open}
         title="Menu"
         className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
       >

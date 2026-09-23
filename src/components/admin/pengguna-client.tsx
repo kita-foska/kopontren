@@ -248,7 +248,7 @@ export function PenggunaClient() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
             </div>
-            <button className="btn-primary w-full" disabled={createBusy} onClick={createUser}>
+            <button type="button" className="btn-primary w-full" disabled={createBusy} onClick={createUser}>
               {createBusy ? 'Membuat…' : '+ Buat Akun'}
             </button>
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -276,7 +276,7 @@ export function PenggunaClient() {
               value={ownPw.next}
               onChange={(e) => setOwnPw({ ...ownPw, next: e.target.value })}
             />
-            <button className="btn-ghost w-full" disabled={ownPwBusy} onClick={changeOwnPw}>
+            <button type="button" className="btn-ghost w-full" disabled={ownPwBusy} onClick={changeOwnPw}>
               {ownPwBusy ? 'Menyimpan…' : 'Simpan Password Baru'}
             </button>
           </div>
@@ -313,7 +313,7 @@ export function PenggunaClient() {
                 setOwnPin({ ...ownPin, confirm: e.target.value.replace(/\D/g, '') })
               }
             />
-            <button className="btn-ghost w-full" disabled={ownPinBusy} onClick={changeOwnPin}>
+            <button type="button" className="btn-ghost w-full" disabled={ownPinBusy} onClick={changeOwnPin}>
               {ownPinBusy ? 'Menyimpan…' : 'Ganti PIN'}
             </button>
           </div>
@@ -332,7 +332,7 @@ export function PenggunaClient() {
               value={timeout}
               onChange={(e) => setTimeoutSec(e.target.value.replace(/\D/g, ''))}
             />
-            <button className="btn-primary" disabled={timeoutBusy || !timeout} onClick={saveTimeout}>
+            <button type="button" className="btn-primary" disabled={timeoutBusy || !timeout} onClick={saveTimeout}>
               {timeoutBusy ? 'Menyimpan…' : 'Simpan'}
             </button>
           </div>
@@ -373,7 +373,7 @@ export function PenggunaClient() {
                   {fmtDate(u.created_at)}
                 </td>
                 <td className="td text-right text-xs">
-                  <button
+                  <button type="button"
                     onClick={() => {
                       setPwModal(u);
                       setPw('');
@@ -382,7 +382,7 @@ export function PenggunaClient() {
                   >
                     Reset PW
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => {
                       setPinModal(u);
                       setPinNew({ new: '', confirm: '' });
@@ -392,7 +392,7 @@ export function PenggunaClient() {
                     Reset PIN
                   </button>
                   {u.id !== self?.id && (
-                    <button
+                    <button type="button"
                       onClick={() => toggleActive(u)}
                       disabled={toggleBusyId === u.id}
                       className="ml-2 font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -420,10 +420,10 @@ export function PenggunaClient() {
         onClose={() => setPwModal(null)}
         footer={
           <>
-            <button className="btn-ghost" onClick={() => setPwModal(null)}>
+            <button type="button" className="btn-ghost" onClick={() => setPwModal(null)}>
               Batal
             </button>
-            <button className="btn-primary" disabled={resetPwBusy} onClick={resetPw}>
+            <button type="button" className="btn-primary" disabled={resetPwBusy} onClick={resetPw}>
               {resetPwBusy ? 'Menyimpan…' : 'Reset'}
             </button>
           </>
@@ -444,10 +444,10 @@ export function PenggunaClient() {
         onClose={() => setPinModal(null)}
         footer={
           <>
-            <button className="btn-ghost" onClick={() => setPinModal(null)}>
+            <button type="button" className="btn-ghost" onClick={() => setPinModal(null)}>
               Batal
             </button>
-            <button className="btn-primary" disabled={resetPinBusy} onClick={resetPin}>
+            <button type="button" className="btn-primary" disabled={resetPinBusy} onClick={resetPin}>
               {resetPinBusy ? 'Menyimpan…' : 'Reset'}
             </button>
           </>

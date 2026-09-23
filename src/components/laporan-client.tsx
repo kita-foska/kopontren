@@ -231,7 +231,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
             [30, '30 hari'],
             [0, 'Semua'],
           ].map(([v, label]) => (
-            <button
+            <button type="button"
               key={v}
               onClick={() => setPeriod(v as number)}
               className={
@@ -262,7 +262,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={downloadCsv}
             className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
             title="Download laporan transaksi format Excel/CSV"
@@ -272,7 +272,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
               Unduh CSV
             </span>
           </button>
-          <button
+          <button type="button"
             onClick={shareWa}
             disabled={unreported.length === 0}
             className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
@@ -283,7 +283,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
             </span>
           </button>
           {admin && (
-            <button
+            <button type="button"
               onClick={markAll}
               disabled={unreported.length === 0}
               className="btn-amber px-2.5 py-1.5 text-xs font-bold"
@@ -297,7 +297,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
       {undoMsg && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-accent-500/40 bg-accent-500/10 px-3 py-2 text-sm">
           <span>{undoMsg}</span>
-          <button onClick={undoAll} className="font-bold text-accent-500 dark:text-accent-300">
+          <button type="button" onClick={undoAll} className="font-bold text-accent-500 dark:text-accent-300">
             Urungkan
           </button>
         </div>
@@ -307,9 +307,11 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
       <div className="space-y-2">
         {filteredSales.map((s) => (
           <div key={s.id} className="card p-3 hover:border-slate-300 dark:hover:border-navy-600 transition">
-            <button
+            <button type="button"
               className="flex w-full flex-wrap items-center justify-between gap-2 text-left"
               onClick={() => setOpen(open === s.id ? null : s.id)}
+              aria-expanded={open === s.id}
+              aria-controls={`lap-detail-${s.id}`}
             >
               <div className="flex items-center gap-2">
                 <Badge tone={s.status === 'unreported' ? 'amber' : 'green'}>
@@ -336,7 +338,10 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
               </div>
             </button>
             {open === s.id && (
-              <div className="mt-3 border-t border-slate-200 pt-3 dark:border-navy-700">
+              <div
+                id={`lap-detail-${s.id}`}
+                className="mt-3 border-t border-slate-200 pt-3 dark:border-navy-700"
+              >
                 <table className="w-full text-xs">
                   <tbody>
                     {s.items.map((it, i) => (
@@ -354,14 +359,14 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
                   Kasir: {s.kasir_name || 'Kasir'} · Transaksi #{s.id}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button
+                  <button type="button"
                     onClick={() => toggleStatus(s)}
                     className={s.status === 'unreported' ? 'btn-primary px-3 py-1 text-xs' : 'btn-ghost px-3 py-1 text-xs'}
                   >
                     {s.status === 'unreported' ? 'Tandai Sudah Dilapor' : 'Kembali ke Belum'}
                   </button>
                   {admin && (
-                    <button onClick={() => remove(s.id)} className="btn-danger px-3 py-1 text-xs">
+                    <button type="button" onClick={() => remove(s.id)} className="btn-danger px-3 py-1 text-xs">
                       Hapus
                     </button>
                   )}
