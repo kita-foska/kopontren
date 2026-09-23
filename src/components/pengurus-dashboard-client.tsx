@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { SalesBarChart, type DailyPoint } from '@/components/charts';
-import { Toast, api, useToast } from '@/components/ui';
+import { PageSkeleton, Toast, api, useToast } from '@/components/ui';
 import { fmtDate, rp } from '@/lib/format';
 import { shareWa } from '@/lib/rekap';
 
@@ -200,10 +200,7 @@ export function PengurusDashboardClient() {
       </div>
     );
 
-  if (!data)
-    return (
-      <div className="card p-4 text-sm text-slate-500 dark:text-slate-400">Memuat laporan…</div>
-    );
+  if (!data) return <PageSkeleton />;
 
   return (
     <div className="print-area space-y-3">

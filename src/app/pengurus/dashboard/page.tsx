@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { canAccess, currentUser } from '@/lib/auth';
+import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
@@ -53,24 +53,29 @@ export default async function PengurusDashboardPage() {
     c: number;
   }).c;
 
+  // Pengurus = read-only (TIDAK operasional): KPI yang mengarah ke halaman
+  // operasional (kas/member/produk) dinamis -> /admin/laporan, agar pengurus
+  // tak jatuh ke dead-end (halaman tsb di-guard isManager/'member'/'stock').
+  const readOnly = !isManager(user);
+  const laporan = '/admin/laporan';
   const cards = [
     {
       label: 'Penjualan 30 Hari',
       value: rp(s30.t),
       sub: s30.c + ' transaksi',
-      href: '/admin/laporan',
+      href: laporan,
     },
     {
       label: 'Arus Kas 30 Hari',
       value: rp(cash30.inn - cash30.out),
       sub: 'masuk ' + rp(cash30.inn) + ' / keluar ' + rp(cash30.out),
-      href: '/admin/kas',
+      href: readOnly ? laporan : '/admin/kas',
     },
     {
       label: 'Member Aktif',
       value: String(memberCount),
       sub: 'loyalty & poin',
-      href: '/admin/member',
+      href: readOnly ? laporan : '/admin/member',
     },
     {
       label: 'Stok Menipis',
@@ -83,7 +88,7 @@ export default async function PengurusDashboardPage() {
       label: 'Cabang Terdaftar',
       value: String(storeCount),
       sub: 'data penjualan masih global',
-      href: '/admin/produk',
+      href: readOnly ? laporan : '/admin/produk',
     },
   ];
 
