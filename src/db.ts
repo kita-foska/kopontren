@@ -359,8 +359,9 @@ async function migrate(d: Db) {
   await d.exec("CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
   // tiered units per product: 1 <unit_name> = conversion_factor <base unit>
   await d.exec("CREATE TABLE IF NOT EXISTS product_units (id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, unit_name TEXT NOT NULL, conversion_factor REAL NOT NULL DEFAULT 1, UNIQUE (product_id, unit_name))");
-  // stock opname: physical count vs system, with the delta
-  await d.exec("CREATE TABLE IF NOT EXISTS stock_opname (id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, system_stock INTEGER NOT NULL DEFAULT 0, physical_stock INTEGER NOT NULL DEFAULT 0, difference INTEGER NOT NULL DEFAULT 0, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  // stock opname (v1): DEAD TABLE, di-drop di v15 — tidak pernah ditulis
+  // oleh kode mana pun & fiturnya tak terpasang di UI. DROP-nya ada di
+  // bagian akhir fullInit (migration v15).
   // trade payables ("Hutang" / utang dagang ke supplier): same shape as
   // debts + created_by. Paying via /api/payables/[id] also inserts a
   // cash_entries 'expense' row (integrasi kas keluar), mirroring /api/kas.
@@ -388,7 +389,6 @@ async function migrate(d: Db) {
   // indexes
   await d.exec('CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_debts_status ON debts(status)');
-  await d.exec('CREATE INDEX IF NOT EXISTS idx_stock_opname_created ON stock_opname(created_at)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_point_history_member ON point_history(member_id)');
   // Batch 2 (2026-09-21, guard retur kasir): kolom kasir_id sudah masuk
   // CREATE TABLE sales — tetapi CREATE TABLE IF NOT EXISTS TIDAK diterapkan
@@ -739,7 +739,10 @@ export async function saveZakatSettings(
 // utk DB existing (CREATE TABLE baru tidak menambah kolom ke tabel lama).
 // DB existing (v13) menjalankan fullInit sekali lagi; index
 // idx_sales_kasir kini aman dibuat.
-const SCHEMA_VERSION = 14;
+// Bump v15 (2026-09-23): drop dead table stock_opname (fitur opname
+// tak pernah dipakai / tak pernah ditulis kode). DB existing (v14)
+// menjalankan fullInit sekali lagi -> DROP TABLE IF EXISTS v15.
+const SCHEMA_VERSION = 15;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
@@ -770,6 +773,13 @@ async function fullInit(d: Db) {
     `UPDATE consignments SET settled_at = strftime('%Y-%m-%dT%H:%M:%fZ', settled_at) WHERE settled_at IS NOT NULL AND instr(settled_at, ' ') > 0;`
   );
   await seed(d);
+  // v15: drop dead table stock_opname (tidak pernah ditulis oleh kode
+  // mana pun sejak era fitur v3; tanpa entry UI). Idempoten & aman utk
+  // DB fresh (CREATE-nya sudah tidak ada di bagian atas). Data lama
+  // yang mungkin pernah diinput manual tetap bisa dipulihkan dari
+  // snapshot backup Turso pra-drop.
+  await d.exec('DROP TABLE IF EXISTS stock_opname');
+  await d.exec('DROP INDEX IF EXISTS idx_stock_opname_created');
   // Stamp the schema version: every later cold start skips all migrations
   // (one cheap SELECT instead of ~150 sequential Turso round-trips, which
   // made the first page load take 15-20 s over the remote HTTP API).
