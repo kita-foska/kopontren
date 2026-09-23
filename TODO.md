@@ -223,15 +223,25 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       manual), grid 2 kolom A4, pilihan 2–24 lembar, print via
       window + document.write (pola MemberQrBadge, nilai di-escape
       HTML). Butuh field barcode terisi dulu (toast penunjuk).
-- [r] `debts` & `payables`: ringkasan `date('now')` (UTC) bisa meleset
-      ±7 jam utk jatuh tempo tengah malam — badge per-baris sudah
-      dihitung client-side WIB; agregat server opsional diperbaiki.
+- [x] `debts` & `payables`: ringkasan `date('now')` (UTC) bisa meleset
+      ±7 jam utk jatuh tempo tengah malam — **SELESAI (Batch F `c392237`,
+      24 Sep 2026)**: cutoff overdue payables + badge hutang/piutang kini
+      WIB (client baca device timezone, agregat server ikut boundary WIB);
+      boundary `from` CSV laporan juga WIB (`startOfDayJakarta` +
+      `T00:00:00+07:00`).
 - [r] Notifikasi `cash_low`: pemicu `notifyCashBalance()` mengecek saldo
       kas penuh (5 query SUM) tiap jurnal — throttled dedupe 60 mnt,
       biarkan tapi pantau Rows Read.
-- [r] `amount_paid`/`change` POST /api/sales dipercaya dari klien
-      (tanpa cross-check vs `total`) — pre-ada; POS menghitungnya;
-      validasi server opsional (jangan rusak alur offline-queue).
+- [x] `amount_paid`/`change` POST /api/sales dipercaya dari klien —
+      **SELESAI (Batch F `1a07ed1`, 24 Sep 2026)**: normalisasi server
+      (`paid` ≥ `total`, partial paid tak mungkin lagi; `change`
+      di-recompute: cash = paid−total, tf/wa/split = 0) + normalisasi
+      sama di import backup; alur offline-queue tak berubah (clamp
+      hanya di sisi penerima).
+- [x] **Audit Batch F (24 Sep 2026): item F-1 ditandai STALE** —
+      temuan tak lagi berlaku setelah re-verify (stale); **tanpa
+      perubahan kode** — hanya tercatat di MEMORY.md + item ini,
+      tidak ada commit khusus.
 
 ## Performa (status: BERSIH)
 - [x] Target Turso Rows Read < 3.000 tercapai: list cap 50 baris,

@@ -1,5 +1,30 @@
 # MEMORY
 
+## 2026-09-24
+### Batch F: integrity `1a07ed1` + tz WIB `c392237` (perbaikan audit)
+- **integrity (commit `1a07ed1`)**: `amount_paid`/`change` tak lagi
+  dipercaya dari klien. POST /api/sales: `amount_paid = max(total,
+  paid)` (partial paid tak mungkin lagi) + `change` di-recompute
+  server (cash = paid−total; tf/wa/split = 0). POST /api/backup
+  (import) dinormalkan identik (`paidNorm`/`changeNorm`) agar
+  restore tak memvalidasikan kembali inkonsistensi. Alur
+  offline-queue tak berubah — clamp hanya di sisi penerima.
+- **tz WIB (commit `c392237`)**: boundary periode kini WIB (UTC+7),
+  bukan tengah malam UTC: cutoff overdue `payables/route.ts`,
+  `piutang-client` + `hutang-client` (baca timezone device),
+  `laporan-client`, `reports/csv` (`startOfDayJakarta` →
+  `T00:00:00+07:00`). Akar bug periode lama: regex server menolak
+  tanggal ISO-UTC penuh, sehingga parameter periode terabaikan
+  diam-diam & semua query tercap 365 hari.
+- **F-1 (audit Batch F): ditandai STALE — tanpa perubahan kode.**
+  Re-verify menunjukkan temuan tak lagi berlaku; hanya tercatat di
+  MEMORY.md + TODO.md.
+- Verifikasi: `tsc --noEmit` EXIT 0 + `npm run build` EXIT 0
+  (kedua commit). Dual-push `master` + `main` (keduanya kini
+  `c392237`). `public/sw.js` TIDAK ikut commit (aturan: Vercel
+  stamp sendiri). Test PWA Edge taskbar masih **PENDING hasil**
+  (lihat TODO seksi "PWA / Favicon").
+
 ## 2026-09-23
 ### Batch E: keyboard-nav tablist (APG) + sync audit a11y
 - `4545e4d` (master) — helper `useTablistNav` di `ui.tsx` (ArrowRight/Left
