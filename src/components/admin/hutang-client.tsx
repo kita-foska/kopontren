@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Payable = {
@@ -43,6 +43,7 @@ function plusDays(dateStr: string, days: number): string {
 export function HutangClient({ admin }: { admin: boolean }) {
   const [filter, setFilter] = useState<'open' | 'settled' | 'all'>('open');
   const [data, setData] = useState<PayableResp | null>(null);
+  const [loading, setLoading] = useState(true);
   const [toast, showToast] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [form, setForm] = useState({
@@ -56,8 +57,10 @@ export function HutangClient({ admin }: { admin: boolean }) {
   const [payAmt, setPayAmt] = useState(0);
 
   const load = useCallback(async () => {
+    setLoading(true);
     const r = await api<PayableResp>('/api/payables?status=' + filter);
     if (r.ok && r.data) setData(r.data);
+    setLoading(false);
   }, [filter]);
   useEffect(() => {
     load();
@@ -123,6 +126,8 @@ export function HutangClient({ admin }: { admin: boolean }) {
     x.status === 'open' && !!x.due_date && x.due_date < today;
   const isDueSoon = (x: Payable) =>
     x.status === 'open' && !!x.due_date && x.due_date >= today && x.due_date <= plusDays(today, 6);
+
+  if (loading && !data) return <PageSkeleton />;
 
   return (
     <div>

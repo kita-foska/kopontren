@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 import { Download } from 'lucide-react';
@@ -33,6 +33,7 @@ const emptyForm = {
 
 export function ProdukClient() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ ...emptyForm });
   const [show, setShow] = useState(false);
   const [toast, showToast] = useToast();
@@ -49,8 +50,10 @@ export function ProdukClient() {
   const [label, setLabel] = useState<Product | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     const r = await api<Resp>('/api/products');
     if (r.ok && r.data) setProducts(r.data.products || []);
+    setLoading(false);
   }, []);
   useEffect(() => {
     load();
@@ -79,6 +82,8 @@ export function ProdukClient() {
       return true;
     });
   }, [products, q, cat, statusFilter]);
+
+  if (loading && products.length === 0) return <PageSkeleton />;
 
   function openEdit(p?: Product) {
     if (p) setForm({ ...p, barcode: p.barcode ?? '' });

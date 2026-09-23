@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Modal, Toast, useToast } from '@/components/ui';
 import { fmtDate } from '@/lib/format';
 
 type User = {
@@ -17,6 +17,7 @@ type Resp = { users: User[]; self: User };
 
 export function PenggunaClient() {
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [self, setSelf] = useState<User | null>(null);
   const [form, setForm] = useState({
     username: '',
@@ -35,11 +36,13 @@ export function PenggunaClient() {
   const [toast, showToast] = useToast();
 
   const load = useCallback(async () => {
+    setLoading(true);
     const r = await api<Resp>('/api/users');
     if (r.ok && r.data) {
       setUsers(r.data.users || []);
       setSelf(r.data.self || null);
     }
+    setLoading(false);
   }, []);
   useEffect(() => {
     load();
@@ -152,6 +155,8 @@ export function PenggunaClient() {
     if (r.ok) showToast('Session timeout disimpan (berlaku utk sesi berikutnya).');
     else showToast(r.error || 'Gagal menyimpan');
   }
+
+  if (loading && users.length === 0) return <PageSkeleton />;
 
   return (
     <div>
@@ -349,6 +354,13 @@ export function PenggunaClient() {
                 </td>
               </tr>
             ))}
+            {users.length === 0 && (
+              <tr>
+                <td className="td py-8 text-center text-sm text-slate-500 dark:text-slate-400" colSpan={5}>
+                  Belum ada pengguna.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
