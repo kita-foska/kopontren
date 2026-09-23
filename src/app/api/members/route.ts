@@ -3,6 +3,7 @@ import { db, tx } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
+import { phoneOwner } from '@/lib/phone';
 
 export async function GET(req: Request) {
   const user = await currentUser();
@@ -65,11 +66,33 @@ export async function POST(req: Request) {
   const name = String(b.name || '').trim();
   if (!name) return NextResponse.json({ error: 'Nama member wajib' }, { status: 400 });
   const d = await db();
-  const info = await d
-    .prepare(
-      `INSERT INTO members (name, phone, address) VALUES (?, ?, ?)`
-    )
-    .run(name, String(b.phone || '').trim(), String(b.address || '').trim());
+  const phone = String(b.phone || '').trim();
+  // Nomor HP non-kosong wajib unik (unique partial index idx_members_phone_uniq).
+  // Dulu INSERT tanpa guard -> pelanggaran constraint melempar error mentah
+  // (HTTP 500, pesan "Kesalahan jaringan." di POS). Sekarang dicek lebih dulu
+  // via phoneOwner (dua bentuk nomor: apa adanya + kanonik) + fallback
+  // try/catch: kasir menerima pesan yang jelas, data tetap aman.
+  if (await phoneOwner(d, phone))
+    return NextResponse.json(
+      { error: 'Nomor HP ' + phone + ' sudah dipakai member lain' },
+      { status: 409 }
+    );
+  let info: { lastInsertRowid: number };
+  try {
+    info = await d
+      .prepare(`INSERT INTO members (name, phone, address) VALUES (?, ?, ?)`)
+      .run(name, phone, String(b.address || '').trim());
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '';
+    return NextResponse.json(
+      {
+        error: /unique|constraint/i.test(msg)
+          ? 'Nomor HP ' + phone + ' sudah dipakai member lain'
+          : 'Gagal menambah member: ' + msg,
+      },
+      { status: 400 }
+    );
+  }
   await logAudit(user, 'member:create', 'members', Number(info.lastInsertRowid), undefined, {
     name,
   }, req);
@@ -96,18 +119,37 @@ export async function PUT(req: Request) {
     points: number;
   } | undefined;
   if (!row) return NextResponse.json({ error: 'Member tidak ditemukan' }, { status: 404 });
-  await d
-    .prepare('UPDATE members SET name = ?, phone = ?, address = ? WHERE id = ?')
-    .run(
-      String(b.name ?? row.name).trim() || row.name,
-      String(b.phone ?? row.phone).trim(),
-      String(b.address ?? row.address).trim(),
-      id
+  const name = String(b.name ?? row.name).trim() || row.name;
+  const phone = String(b.phone ?? row.phone).trim();
+  const address = String(b.address ?? row.address).trim();
+  // Nomor HP non-kosong wajib unik (index partial idx_members_phone_uniq).
+  // Tanpa guard, edit member ke HP milik member lain -> constraint melempar
+  // error mentah (HTTP 500). Cek dulu (phoneOwner: dua bentuk nomor, kecuali
+  // dirinya sendiri) + try/catch utk balapan dua request paralel.
+  if (await phoneOwner(d, phone, id))
+    return NextResponse.json(
+      { error: 'Nomor HP ' + phone + ' sudah dipakai member lain' },
+      { status: 409 }
     );
+  try {
+    await d
+      .prepare('UPDATE members SET name = ?, phone = ?, address = ? WHERE id = ?')
+      .run(name, phone, address, id);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '';
+    return NextResponse.json(
+      {
+        error: /unique|constraint/i.test(msg)
+          ? 'Nomor HP ' + phone + ' sudah dipakai member lain'
+          : 'Gagal memperbarui member: ' + msg,
+      },
+      { status: 400 }
+    );
+  }
   await logAudit(user, 'member:update', 'members', id, row, {
-    name: String(b.name ?? row.name),
-    phone: String(b.phone ?? row.phone),
-    address: String(b.address ?? row.address),
+    name,
+    phone,
+    address,
   }, req);
   invalidate('members:');
   return NextResponse.json({ ok: true });

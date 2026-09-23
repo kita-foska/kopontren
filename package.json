@@ -13,7 +13,8 @@
     "import:excel": "node scripts/import-excel.mjs",
     "fix:sales": "node scripts/fix-negative-sales.mjs",
     "test:margin": "node scripts/test-margin.ts",
-    "test:split": "node scripts/test-split.ts"
+    "test:split": "node scripts/test-split.ts",
+    "test:phone": "node scripts/test-members-phone.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.0",
