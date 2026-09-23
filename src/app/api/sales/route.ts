@@ -383,9 +383,14 @@ export async function POST(req: Request) {
         paySplitParts = splitIn;
         paySplitJson = JSON.stringify(splitIn.map((x) => ({ m: x.m, a: x.a })));
       }
+      // Integritas (Batch F): server sumber kebenaran — uang yang masuk
+      // tidak boleh kurang dari total (bagian cash < total diinput kasir
+      // tidak membuat transaksi "lunas" dengan nominal kurang), dan
+      // `change` dihitung ulang oleh server (klien hanya mengingatkannya):
+      // cash → received − total; tf/wa → selalu 0; split → total/0.
       const amount_paid =
-        paySplitParts.length > 0 ? total : Math.max(0, Math.floor(Number(b.amount_paid) || 0));
-      const change = paySplitParts.length > 0 ? 0 : Math.max(0, Math.floor(Number(b.change) || 0));
+        paySplitParts.length > 0 ? total : Math.max(total, Math.floor(Number(b.amount_paid) || 0));
+      const change = paySplitParts.length > 0 ? 0 : method === 'cash' ? amount_paid - total : 0;
 
       const created_at = new Date().toISOString();
       const sale = await d

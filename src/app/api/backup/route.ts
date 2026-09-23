@@ -152,18 +152,25 @@ export async function POST(req: Request) {
           const splitSum = parts.reduce((t, x) => t + x.a, 0);
           if (parts.length > 0 && splitSum === rowTotal) paySplitDb = JSON.stringify(parts);
         }
+        // Integritas (Batch F): normalisasi sama persis dgn POST /api/sales —
+        // split valid → total/0; selain itu amount_paid tidak boleh < total
+        // (partial paid tidak masuk), dan change hanya di-rekompute utk cash.
+        const payMethod = String(s.pay_method ?? '') || 'cash';
+        const paidNorm = paySplitDb ? rowTotal : Math.max(rowTotal, Number(s.amount_paid) || 0);
+        const changeNorm =
+          paySplitDb || payMethod !== 'cash' ? 0 : paidNorm - rowTotal;
         await insS.run(
           Number(s.id),
           s.kasir_id != null ? Number(s.kasir_id) : null,
           String(s.customer ?? ''),
-          String(s.pay_method ?? '') || 'cash',
+          payMethod,
           paySplitDb,
           String(s.status ?? '') || 'unreported',
           String(s.note ?? ''),
-          Number(s.total) || 0,
+          rowTotal,
           s.member_id != null ? Number(s.member_id) : null,
-          Number(s.amount_paid) || 0,
-          Number(s.change) || 0,
+          paidNorm,
+          changeNorm,
           Number(s.discount) || 0,
           Number(s.member_points) || 0,
           normTs(s.created_at, new Date().toISOString()),
