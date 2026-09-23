@@ -8,6 +8,15 @@
  * invalidate(prefix) dipanggil di route WRITE (POST/PUT/DELETE/PATCH)
  * supaya setelah mutasi, data segar terbaca dari Turso; TTL 60 dtk tetap
  * jadi backstop (multi-instance Vercel tidak saling invalidate).
+ *
+ * Prefix 'kas': SAAT INI TIDAK ADA key 'kas:…' yang di-cache. Key nyata:
+ * reports:<from>, products:active, belanja:totals, members:totals:<q>,
+ * settings:member, audit:tables, notif:list:<…>. invalidate('kas:') di
+ * 10 route tulis (kas, sales, expenses, purchases, returns, debts,
+ * payables, konsinyasi) = BACKSTOP INTENTIONAL (no-op, biaya ~0):
+ * jika kelak ada cached('kas:…'), semua route mutasi SUDAH memanggil
+ * invalidate('kas:') — tidak perlu disisir ulang. (Verifikasi FASE 1
+ * 2026-09-23: bukan bug, didokumentasikan di sini + MEMORY.md.)
  */
 const TTL_MS = 60_000;
 // Plafon ukuran store: key dinamis (mis. 'members:totals:<q>' mengikuti
