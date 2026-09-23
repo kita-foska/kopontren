@@ -1,7 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, api, Badge, Toast, useToast } from '@/components/ui';
+import {
+  PageSkeleton,
+  api,
+  Badge,
+  Toast,
+  useToast,
+  useTablistNav,
+} from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Purchase = {
@@ -29,6 +36,12 @@ type Expense = {
 
 export function BelanjaClient() {
   const [tab, setTab] = useState<'in' | 'out'>('in');
+  // Keyboard nav tablist: ArrowRight/Left (wrap) + Home/End, aktivasi
+  // otomatis (WCAG 16.20 / APG tabs) — fokus pindah, tab ikut nyala.
+  const { onTabKeyDown } = useTablistNav<'in' | 'out'>(
+    (i) => (i === 0 ? 'in' : 'out'),
+    setTab
+  );
   const [data, setData] = useState<Resp | null>(null);
   const [toast, showToast] = useToast();
 
@@ -91,7 +104,7 @@ export function BelanjaClient() {
 
   return (
     <div>
-      <div className="mb-3 flex gap-2" role="tablist">
+      <div className="mb-3 flex gap-2" role="tablist" onKeyDown={onTabKeyDown}>
         <button
           type="button"
           role="tab"

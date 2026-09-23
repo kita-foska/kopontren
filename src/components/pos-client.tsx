@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import jsQR from 'jsqr';
 import { useRouter } from 'next/navigation';
-import { api, Badge, Modal, Toast, useToast } from '@/components/ui';
+import {
+  api,
+  Badge,
+  Modal,
+  Toast,
+  useToast,
+  useTablistNav,
+} from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
@@ -211,6 +218,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [cat, setCat] = useState('');
+  // Keyboard nav tablist kategori (pola APG tabs): tab pertama = "Semua"
+  // (cat=''), lalu kategori berurutan; ArrowRight/Left wrap, Home/End.
+  const { onTabKeyDown: onCatTabKeyDown } = useTablistNav(
+    (i) => (i === 0 ? '' : categories[i - 1] ?? ''),
+    setCat
+  );
   const [q, setQ] = useState('');
   // Search debounce 300ms: grid produk memakai qDeb supaya re-render tidak
   // terjadi setiap ketikan; handler Enter (barcode scanner) tetap live.
@@ -1138,8 +1151,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               className="no-scrollbar flex flex-nowrap gap-1.5 overflow-x-auto pb-1"
               role="tablist"
               aria-label="Kategori produk"
+              onKeyDown={onCatTabKeyDown}
             >
               <button type="button"
+                role="tab"
+                aria-selected={!cat}
                 onClick={() => setCat('')}
                 className={
                   'shrink-0 rounded-full px-3 py-1 text-xs font-bold transition ' +
@@ -1153,6 +1169,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               {categories.map((c) => (
                 <button type="button"
                   key={c}
+                  role="tab"
+                  aria-selected={cat === c}
                   onClick={() => setCat(c)}
                   className={
                     'shrink-0 rounded-full px-3 py-1 text-xs font-bold transition ' +

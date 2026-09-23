@@ -1,7 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import {
+  api,
+  Badge,
+  Toast,
+  useConfirm,
+  useToast,
+  useTablistNav,
+} from '@/components/ui';
 import { fmtDateTime } from '@/lib/format';
 import { AlertTriangle, Download, FileSpreadsheet, Package } from 'lucide-react';
 
@@ -24,6 +31,12 @@ export function DataClient() {
   const [toast, showToast] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [activeTab, setActiveTab] = useState<'backup' | 'audit'>('backup');
+  // Keyboard nav tablist: ArrowRight/Left (wrap) + Home/End, aktivasi
+  // otomatis (WCAG 16.20 / APG tabs).
+  const { onTabKeyDown } = useTablistNav<'backup' | 'audit'>(
+    (i) => (i === 0 ? 'backup' : 'audit'),
+    setActiveTab
+  );
 
   // Audit log states
   const [logs, setLogs] = useState<Log[]>([]);
@@ -151,7 +164,7 @@ export function DataClient() {
   return (
     <div className="space-y-4">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 pb-2 dark:border-navy-700" role="tablist">
+      <div className="flex gap-2 border-b border-slate-200 pb-2 dark:border-navy-700" role="tablist" onKeyDown={onTabKeyDown}>
         <button
           type="button"
           role="tab"

@@ -1,7 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import {
+  api,
+  Badge,
+  Toast,
+  useConfirm,
+  useToast,
+  useTablistNav,
+} from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Kons = {
@@ -42,6 +49,12 @@ const EMPTY_FORM = {
 
 export function KonsinyasiClient() {
   const [tab, setTab] = useState<'active' | 'done'>('active');
+  // Keyboard nav tablist: ArrowRight/Left (wrap) + Home/End, aktivasi
+  // otomatis (WCAG 16.20 / APG tabs).
+  const { onTabKeyDown } = useTablistNav<'active' | 'done'>(
+    (i) => (i === 0 ? 'active' : 'done'),
+    setTab
+  );
   const [data, setData] = useState<Resp | null>(null);
   const [toast, showToast] = useToast();
   const { ask, host: confirmHost } = useConfirm();
@@ -324,7 +337,7 @@ export function KonsinyasiClient() {
         Harga perjanjian = nominal per unit yang dibayarkan kepada pemilik tiap barang terjual.
       </p>
 
-      <div className="mb-3 flex gap-2" role="tablist">
+      <div className="mb-3 flex gap-2" role="tablist" onKeyDown={onTabKeyDown}>
         <button
           type="button"
           role="tab"

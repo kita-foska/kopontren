@@ -1,6 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+// alias agar tidak men-shadow type KeyboardEvent global (DOM) yang
+// dipakai handler ESC Modal di bawah.
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { X } from 'lucide-react';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 
@@ -36,6 +39,58 @@ export function initials(name: string): string {
   if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/**
+ * Navigasi keyboard tablist (WCAG 16.20 / pola APG "tabs", aktivasi
+ * otomatis): ArrowRight/ArrowLeft memindahkan fokus (wrap), Home/End
+ * lompat ke tab pertama/terakhir. Saat pindah fokus, tab langsung
+ * diaktifkan (click() pada tombol — handler onClick yang sama yang
+ * dipakai mouse juga jalan). Cara pakai:
+ *
+ *   const { onTabKeyDown } = useTablistNav(getKey, setKey);
+ *   <div role="tablist" onKeyDown={onTabKeyDown}>…
+ *
+ * getKey(index) → key tab di index i; setKey(k) → aktifkan tab k.
+ */
+export function useTablistNav<T extends string>(
+  getKey: (index: number) => T,
+  setKey: (k: T) => void
+) {
+  const onTabKeyDown = useCallback(
+    (e: ReactKeyboardEvent<HTMLDivElement>) => {
+      const tabs = Array.from(
+        e.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]')
+      );
+      if (tabs.length === 0) return;
+      const current = tabs.indexOf(document.activeElement as HTMLElement);
+      let next = -1;
+      switch (e.key) {
+        case 'ArrowRight':
+          next = current === -1 ? 0 : (current + 1) % tabs.length;
+          break;
+        case 'ArrowLeft':
+          next = current === -1 ? tabs.length - 1 : (current - 1 + tabs.length) % tabs.length;
+          break;
+        case 'Home':
+          next = 0;
+          break;
+        case 'End':
+          next = tabs.length - 1;
+          break;
+        default:
+          return;
+      }
+      e.preventDefault();
+      tabs[next].focus();
+      // aktivasi otomatis (pola APG): focus langsung memicu onClick tab
+      // tsb; setKey eksplisit jadi pengaman bila onClick tidak identik.
+      tabs[next].click();
+      setKey(getKey(next));
+    },
+    [getKey, setKey]
+  );
+  return { onTabKeyDown };
 }
 
 /**
