@@ -10,7 +10,7 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   (`startOfDayJakarta()` kembalikan string UTC ISO, BUKAN format spasi WIB —
   jangan bandingkan string campur format).
 - `src/db.ts`: skema + migrasi idempoten + **gate `schema_version`**
-  (SAAT INI `SCHEMA_VERSION = 14`). Cold start: kalau versi DB < 14 →
+  (SAAT INI `SCHEMA_VERSION = 15`). Cold start: kalau versi DB < 15 →
   `fullInit` sekali; selain itu 1 SELECT saja. **Aturan: statement skema
   baru WAJIB diiringi bump `SCHEMA_VERSION`** (kalau tidak, DB lama tidak
   akan pernah dapat migrasi).
@@ -54,6 +54,14 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   string pencarian user). `invalidate(prefix)` dipanggil di setiap route
   WRITE yang menyentuh data tersebut (`products:`, `kas:`, `reports:`,
   `members:`, `belanja:`, `notif:`, `audit:`, `settings:member`).
+  **Catatan `kas:` (23 Sep, verifikasi FASE 1):** prefix `kas:` = BACKSTOP
+  — saat ini TIDAK ADA key cache `kas:…` (key nyata: `reports:<from>`,
+  `products:active`, `belanja:totals`, `members:totals:<q>`,
+  `settings:member`, `audit:tables`, `notif:list:<…>`), jadi
+  `invalidate('kas:')` di 10 route tulis adalah no-op yang INTENTIONAL
+  (ongkos ~0): kalau kelak ada `cached('kas:…')`, semua route mutasi
+  sudah memanggil invalidate — tidak perlu disisir ulang. Didokumentasi
+  juga di doc-header `src/lib/ref-cache.ts` (commit `ae430f6`).
 - `src/lib/ttl-cache.ts`: helper terpisah (cap 100) — legacy, dipakai
   minimal sekarang.
 - Header `Cache-Control: public, max-age=60` HANYA untuk response yang
@@ -656,3 +664,40 @@ blocking)
   lockout anti brute-force tak pernah terpicu. Test
   `npm run test:clientip` (16 checks). `x-real-ip` tetap jadi
   fallback bila XFF absen.
+
+
+## Fix minor FASE 1 + drop stock_opname + FASE 2 (23 Sep 2026)
+- **Commit `c088861` fix(client): timeout 10 dtk di semua fetch** —
+  helper baru `src/lib/fetch-util.ts`: `fetchTimeout(url, init?, ms=10_000)`
+  (AbortController; menggabungkan `init.signal` bila ada) + `isAbort(e)`
+  + pesan galat spesifik "Waktu koneksi habis. Silakan coba lagi."
+  Cakupan: `api()` di `ui.tsx` (menutup SEMUA caller helper: POS,
+  laporan, piutang, retur, belanja, hutang, kas, konsinyasi, audit,
+  shift, produk, pengguna, member, zakat, dsb.), `/api/auth/login`,
+  PIN verify, PIN setup (cek sesi + POST), `session-watcher` (polling
+  30 dtk + refresh), logout `shell.tsx` (kini + catch — dulu bisa
+  hang tanpa redirect), export CSV zakat. Pengecualian: batch import
+  produk `migrate-client` = 60 dtk (batch 50 baris tidak boleh
+  terpotong Turso lambat).
+- **Commit `ae430f6` docs(cache): `kas:` backstop** — hanya doc
+  (header ref-cache.ts); bukan bug, tidak ada perubahan perilaku.
+- **Commit `c46f4fa` chore(db): drop `stock_opname` + SCHEMA_VERSION 15** —
+  CREATE TABLE + CREATE INDEX dihapus dari skema fullInit; langkah v15
+  baru `DROP TABLE IF EXISTS stock_opname` + `DROP INDEX IF EXISTS
+  idx_stock_opname_created` sebelum stamp versi. DB produksi (stempel
+  14) akan menjalankan `fullInit` SEKALI saat cold start pertama pasca
+  deploy (pola sama dengan bump v9→14 — terbukti aman); data lama
+  (bila pernah diinput manual) tetap bisa dipulihkan dari snapshot
+  backup Turso pra-drop. Butuh opname lagi → migration baru + v16.
+- **FASE 2 (UI Modern + Komunikatif): AUDIT UI/UX LENGKAP SELESAI,
+  TUNGGU APPROVAL user sebelum ubah UI.** Detail temuan per halaman di
+  `TODO.md` (seksi "FASE 2 — Audit UI/UX"). Prinsip yang disepakati:
+  tidak ada perubahan UI sebelum approval; rekomendasi dipecah per
+  batch agar tiap batch kecil & mudah di-approve.
+
+## Konvensi fetch klien (23 Sep 2026)
+- Klien: SEMUA fetch lewat `fetchTimeout` (`@/lib/fetch-util`),
+  default 10 dtk; pesan galat timeout via `isAbort(e)`. Jangan buat
+  helper terpisah per halaman. (`checkSession` di `/login/pin` sudah
+  punya AbortController sendiri + abort saat unmount — biarkan, sudah
+  patuh aturan 10 dtk.)

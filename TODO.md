@@ -56,6 +56,20 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       timeout (login/pin/session-watcher) - cosmetic. Verifikasi
       deploy prod: SW-BUILD stamp berubah `7706b506c8ab` ->
       `1d0b1c0f67b6` (deploy pasca `6b4b179` sudah live).
+- [x] **Minor findings di-close (23 Sep, lanjut audit 3x s.d.
+      `bd86ffa`):**
+      (a) `stock_opname` — DITRIM (Opsi 3, keputusan user): commit
+      `c46f4fa` (drop tabel + index, SCHEMA_VERSION 14 -> 15, fullInit
+      v15 `DROP TABLE IF EXISTS`);
+      (b) `invalidate('kas:')` — BUKAN BUG: didokumentasikan sebagai
+      backstop intentional (commit `ae430f6` + doc ref-cache.ts +
+      MEMORY.md seksi cache);
+      (c) fetch klien tanpa timeout — commit `c088861`:
+      `src/lib/fetch-util.ts` (`fetchTimeout` 10 dtk + `isAbort`),
+      diterapkan di `api()` ui.tsx + login + pin + pin/setup +
+      session-watcher + logout shell + export CSV zakat; batch import
+      produk 60 dtk (toleransi). TSC exit 0, `next build` exit 0,
+      regresi test 26/57/15/16 semua 0 gagal, dual-push `c088861`…`c46f4fa`.
 - [x] `audit_log.ip_address` dari `x-forwarded-for` mentah — **SELESAI
       (23 Sep)**: `src/lib/client-ip.ts` `clientIp()` ambil KANAN-paling
       XFF (hop yang ditambahkan edge Vercel, tak bisa di-forge) + validasi
@@ -325,4 +339,164 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       Turso di `.env` lokal. Setelah user upload: verifikasi jumlah
       baris di Turso (ekspektasi 237, atau 236 bila `ZZ-GUARD-TEST`
       dihapus).
+
+## FASE 2 — Audit UI/UX lengkap (23 Sep 2026) — STATUS: TUNGGU APPROVAL
+Audit dhisik, **belum ada perubahan UI**. Temuan per halaman (prioritas:
+P1 = fungsional/menyesatkan, P2 = UX/mobil, P3 = konsistensi/kosmetik).
+Tag: [kom] komunikasi, [bug] UX-fungsional, [mobil], [a11y], [kons]
+konsistensi.
+
+### Global / shell / komponen bersama
+- P1 [bug] **Double-submit tanpa guard** di form pencatatan:
+  piutang (create/pay), hutang (create/pay), belanja (addPurchase/
+  addExpense), kas (addEntry), konsinyasi (create/jual/kembalikan/
+  bayar), produk & member (save modal), pengguna (createUser).
+  Button tidak `disabled` selama request jalan — tap dobel di HP
+  = data dobel. (Pola sudah benar di: member-settings,
+  notification-*, data, POS, shift.)
+- P1 [kom] **Label total belanja menipu**: `belanja-client`
+  menuliskan "Total pengeluaran: X (50 pengeluaran terbaru)"
+  padahal total AGREGAT GLOBAL (sumber `totals` server) & daftar
+  hanya 50 terbaru.
+- P2 [mobil] **Tabel lebar scroll horizontal di HP**: kas
+  (`min-w-[36rem]`), shift (`min-w-[40rem]`, 7 kolom), produk,
+  member, audit — alternatif: card per baris di <sm.
+- P2 [a11y] `aria` minim di aksi tabel (produk/member/pengguna/
+  laporan-admin: button teks tanpa `type`, hit-area kecil,
+  pemisah "|" mentah) & label sumbu chart `text-[9px]`.
+- P2 [kons] **Terminologi metode bayar tidak seragam** antar
+  halaman: dashboard (Tunai/QRIS/Transfer/Campur), laporan
+  (tf=Transfer), shift (QRIS/WA), pengurus-dashboard (CASH/TF/WA),
+  laporan-admin (raw key `capitalize`). Rekomendasi: 1 map label
+  di `lib/pay-methods.ts` dipakai semua.
+- P2 [kons] **Fallback loading tidak seragam**: `PageSkeleton` di
+  10 halaman vs teks "Memuat komponen…" di 6 (piutang, retur,
+  audit, hutang, shift, zakat).
+- P3 [bug-ringan] `toggleActive` pengguna: tanpa feedback
+  (sukses/gagal sunyi) — satu-satunya mutasi tanpa toast.
+
+### / (Ringkasan / dashboard peran)
+- Baik: banner password-default komunikatif + link solusi; kasir
+  dapat layout khusus (CTA MULAI JUAL + transaksi terakhir
+  read-only).
+- P3: teks "Menu pengurus … tersedia di navigasi atas" — di layout
+  mobile navigasi ada di hamburger + bottom nav; kalimat
+  membingungkan.
+
+### /kasir (POS)
+- Terbaik se-app: busy-guard, queue offline + toast sinkron,
+  hotkey F4/F6-F9 + cheatsheet, validasi stok dobel, a11y paling
+  lengkap (7 aria).
+- P3 [mobil]: input qty `disabled` diam-diam (alasan baru ketahuan
+  dari toast saat coba tambah).
+
+### /laporan (Laporan & Rekap)
+- P2 [bug]: loop pagination — jika 1 request di tengah gagal
+  (`!r.ok`), daftar TERPOTONG tanpa indikator.
+- P2 [a11y]: accordion transaksi tanpa `aria-expanded`.
+- Good: filter periode/status/cari, Undo 5 dtk utk tandai status,
+  share WA rekap.
+
+
+### /piutang + /admin/hutang
+- P1 [bug] double-submit (create & terima-bayar/bayar) — lihat global.
+- Good: modal pembayaran komunikatif (peringatan melebihi sisa,
+  auto-lunas, penjelasan kas keluar utk hutang), badge Tunggak /
+  Awas jatuh tempo.
+
+### /retur
+- P2: dropdown transaksi hanya 100 terakhir (30 hari) — transaksi
+  lebih lama tak bisa dipilih; komunikasikan batasan atau tambah
+  pencarian.
+- Good: estimasi nilai retur live + preview efek ("masuk jurnal kas
+  keluar + stok +N").
+
+### /admin/belanja
+- P1 label total menipu (lihat global). P2 tab "Stok Masuk /
+  Pengeluaran" = button biasa, bukan tab semantik.
+
+### /admin/kas
+- P2 [a11y/mobil] tombol "hapus" jurnal `text-[10px]` tanpa
+  padding (hit-area < 24px).
+- P2 `removeEntry` fire-and-forget: tanpa toast sukses/gagal.
+- Good: saldo kas berwarna + rumus penjelasan.
+
+### /admin/konsinyasi
+- P1 [bug] aksi jual/kembalikan/bayar tanpa guard busy.
+- Good: "Muat riwayat lebih lama" (server-paginated), kartu per
+  konsinyasi (sisa/payable/unpaid).
+
+### /admin/shift
+- P2 [mobil] tabel 7 kolom min-w-40rem (lihat global).
+- Good: empty state ajakan "Buka shift dulu di menu Kasir (POS)";
+  kasir lihat shift sendiri, admin semua + checkbox setor.
+
+### /admin/audit
+- Good: filter user/tabel/sejak, modal detail before/after
+  (merah/hijau), purge 30/90/365 dengan confirm, "Muat lebih
+  banyak log".
+- P3: dropdown filter user hanya berisi user dari 50 log pertama.
+
+### /admin/produk
+- P1 [bug] save modal tanpa busy guard.
+- P2 [mobil] aksi baris "Label | Ubah | Hapus" teks-pipih — sulit
+  diketik di HP; ganti icon-button berlabel.
+- Good: pencarian + filter kategori + status, edit stok inline,
+  bulk ops, cetak label barcode.
+
+### /admin/pengguna
+- P1 [bug] createUser tanpa guard; `toggleActive` sunyi (global).
+- Good: modal reset PW/PIN, atur timeout sesi.
+
+### /admin/member
+- Good: virtual list + debounce server-search.
+- P1 [bug] save modal tanpa guard; P2 aksi baris pipih (seperti
+  produk).
+
+### /admin/dashboard
+- Good: 6 KPI card clickable + LowStockClient (prediksi hari habis
+  + Notif WA deep-link + salin pesan).
+- P3 [kom] badge "14hr: 0/j" & "±N hr" cryptic — ganti "0 terjual
+  14 hari" → "belum ada penjualan 14 hari".
+
+### /pengurus/dashboard
+- P2 [kons] PAY_LABEL hanya CASH/TF/WA uppercase — beda dari
+  semua halaman lain.
+- Good: chart anomali + export CSV/XLSX/PDF + kirim WA laporan +
+  state error eksplisit.
+
+### /admin/laporan (Laporan Pengurus)
+- P2 [kons] by_method tampil raw key (`capitalize`).
+- Good: catatan metodologi HPP historis (komunikatif).
+
+### /admin/notifications (+settings)
+- Good: bell portal + clamp viewport (HP aman), polling 30 dtk,
+  mark-all, settings toggle per-jenis + push PWA (busy-guard,
+  spinner).
+
+### /admin/data & /admin/migrate
+- Good: busy-guard import/reset, "Hapus Semua Data" dengan
+  confirm, progress + fatal state migrate.
+- P3 [kom] `window.open('/api/backup')` membuka tab API (kedip
+  halaman kosong) — bisa blob download seperti CSV zakat.
+
+### /login, /login/pin, /login/pin/setup
+- Sudah bagus (hasil fix minor): timeout 10 dtk + pesan galat
+  spesifik + error state tidak stuck.
+- P3: `pin/setup` — bila cek sesi gagal, UI tetap tampil tanpa
+  penjelasan → tambah hint "tak bisa cek sesi, lanjutkan saja
+  (POST akan memvalidasi)".
+
+### Batch rekomendasi (untuk approval user)
+- **Batch A (bug fungsional, 1 commit):** guard busy semua form
+  (P1 global) + label total belanja + toast utk removeEntry/
+  toggleActive + notify potongan pagination laporan.
+- **Batch B (mobile):** tabel → card di <sm (kas, shift, produk,
+  member, audit) + hit-area aksi baris + tombol hapus kas.
+- **Batch C (komunikasi/konsistensi):** map label metode bayar
+  terpusat + fallback skeleton seragam + label LowStock + aksen
+  h1 seragam + hint pin/setup + backup window.open → blob.
+- **Batch D (a11y polish):** aria-expanded accordion, role=tablist
+  pada tab, type=button + label aksi tabel, sumbu chart >= 11px.
+
 
