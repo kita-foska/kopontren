@@ -56,8 +56,14 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       timeout (login/pin/session-watcher) - cosmetic. Verifikasi
       deploy prod: SW-BUILD stamp berubah `7706b506c8ab` ->
       `1d0b1c0f67b6` (deploy pasca `6b4b179` sudah live).
-- [r] `audit_log.ip_address` dari `x-forwarded-for` mentah — bisa di-forge
-      (forensik saja, bukan auth).
+- [x] `audit_log.ip_address` dari `x-forwarded-for` mentah — **SELESAI
+      (23 Sep)**: `src/lib/client-ip.ts` `clientIp()` ambil KANAN-paling
+      XFF (hop yang ditambahkan edge Vercel, tak bisa di-forge) + validasi
+      IPv4/IPv6 (sampah -> `unknown`). Dipakai `logAudit` DAN kunci throttle
+      login (dulu kiri-paling = forgeable → penyerang bisa memutar kunci
+      `username|IP` dan lockout tak pernah terpicu — upgrade dari sekadar
+      forensik jadi perbaikan anti brute-force nyata). Test `test:clientip`
+      16 checks; TSC + build lolos.
 - [x] AUDIT 3x (21 Sep): struk cetak / struk WA — XSS print-window —
       **DIVERIFIKASI AMAN**: cetak struk = JSX React
       (auto-escape) + `window.print()` via CSS `.receipt-print`

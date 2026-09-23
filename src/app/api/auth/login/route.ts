@@ -10,6 +10,7 @@ import {
   expCookieOptions,
 } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { clientIp } from '@/lib/client-ip';
 
 // ── Anti brute-force (per-instansi) ─────────────────────────────────────────
 // Pembatasan percobaan login per username+IP: 10 kegagalan dalam 15 menit
@@ -22,8 +23,11 @@ type LoginAttempt = { fails: number[]; lockedUntil: number };
 const loginThrottle = new Map<string, LoginAttempt>();
 
 function throttleKey(username: string, req: Request): string {
-  const fwd = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  return username.toLowerCase() + '|' + fwd;
+  // clientIp() = kanan-paling x-forwarded-for (hop yang ditambahkan
+  // edge Vercel, tak bisa di-forge). Dulu ambil kiri-paling — penyerang
+  // bisa memutar kunci via header palsu dan lockout tak pernah terpicu.
+  const ip = clientIp(req);
+  return username.toLowerCase() + '|' + ip;
 }
 
 /** Kembalikan sisa detik kunci, atau null bila masih boleh mencoba. */

@@ -643,3 +643,13 @@ blocking)
   `cached()` (7 site) terverifikasi punya pasangan
   `invalidate(prefix)` yang benar; oversell-guard
   `WHERE stock >= ?` + guard `changes === 1` tetap konsisten.
+- **Hardening IP klien (23 Sep):** `src/lib/client-ip.ts`
+  `clientIp(req)` — ambil KANAN-paling `x-forwarded-for` (hop yang
+  ditambahkan edge Vercel; kiri-paling bisa di-forge klien) +
+  validasi IPv4/IPv6, sampah -> `'unknown'`. Dipakai oleh
+  `logAudit` (forensik audit_log.ip_address) DAN `throttleKey` di
+  `/api/auth/login` — sebelumnya kunci throttle
+  `username|IP` bisa diputar penyerang via header palsu sehingga
+  lockout anti brute-force tak pernah terpicu. Test
+  `npm run test:clientip` (16 checks). `x-real-ip` tetap jadi
+  fallback bila XFF absen.

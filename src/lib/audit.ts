@@ -1,4 +1,5 @@
 import { db } from '@/db';
+import { clientIp } from '@/lib/client-ip';
 
 /** Snapshot user utk log audit (subset AppUser). `null` = event sistem. */
 export type AuditUser = {
@@ -14,7 +15,8 @@ export type AuditUser = {
  *   dihapus atau role-nya berubah.
  * - fieldChanges = diff per-field {field: {before, after}} -> dicatat ke
  *   old_value/new_value JSON (UI audit menampilkan "lama → baru").
- * - req = opsional; IP (x-forwarded-for) & user-agent disimak utk forensik.
+ * - req = opsional; IP klien (edge terpercaya, lihat lib/client-ip.ts)
+ *   & user-agent disimak utk forensik.
  */
 export type AuditFields = {
   userId: number | null;
@@ -26,16 +28,6 @@ export type AuditFields = {
   fieldChanges?: Record<string, { before: unknown; after: unknown }>;
   req?: Request;
 };
-
-/** IP klien: x-forwarded-for (load balancer / Vercel) lalu x-real-ip. */
-function ipOf(req?: Request): string {
-  if (!req) return '';
-  return (
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    ''
-  );
-}
 
 function userAgentOf(req?: Request): string {
   if (!req) return '';
@@ -132,7 +124,7 @@ export async function logAudit(
         entityId,
         oldJ,
         newJ,
-        ipOf(req),
+        clientIp(req),
         userAgentOf(req),
         new Date().toISOString()
       );
