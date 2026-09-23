@@ -106,13 +106,13 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
                 mulai {fmtDateTime(openShift.start_time)}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex w-full flex-wrap items-center justify-end gap-2 text-xs sm:w-auto">
               <span>
                 {openShift.sales_count} transaksi · {rp(openShift.sales_total)}
               </span>
               {/* Kasir hanya melihat shift-nya sendiri; admin semua. API tetap menegakkan izin. */}
               <button
-                className="btn-danger px-2 py-1"
+                className="btn-danger h-11 px-2 py-1 sm:h-auto"
                 disabled={busy === 'close' + openShift.id}
                 onClick={() => close(openShift.id)}
               >
@@ -123,7 +123,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
         </div>
       ))}
 
-      <div className="card overflow-x-auto">
+      <div className="card hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[40rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -183,9 +183,56 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile: kartu rekap shift (<sm) — data sama dengan tabel. */}
+      <div className="card sm:hidden">
+        {all.map((s) => (
+          <div key={s.id} className="border-b border-slate-200 p-3 last:border-0 dark:border-navy-700">
+            <div className="flex min-h-[44px] items-center justify-between gap-2">
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                #{s.id}
+                {s.label ? <span className="text-xs font-normal text-slate-400"> · {s.label}</span> : null}
+              </p>
+              {isAdmin ? (
+                <label className="flex min-h-[44px] items-center gap-2 text-xs font-semibold">
+                  <input
+                    type="checkbox"
+                    className="h-6 w-6 accent-accent-500"
+                    checked={!!s.setor}
+                    disabled={busy === 'setor' + s.id}
+                    onChange={(e) => setor(s.id, e.target.checked)}
+                  />
+                  Setor kas
+                </label>
+              ) : (
+                <Badge tone={s.setor ? 'green' : 'gray'}>{s.setor ? 'Sudah setor' : 'Belum setor'}</Badge>
+              )}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {s.kasir_name || '-'} · {fmtDateTime(s.start_time)}
+              {s.end_time ? ' → ' + fmtDateTime(s.end_time) : ''}
+            </p>
+            <div className="mt-1 flex items-center justify-between gap-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400">{s.sales_count} transaksi</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{rp(s.sales_total)}</span>
+            </div>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {Object.entries(s.by_method || {})
+                .filter(([, v]) => (v as number) > 0)
+                .map(([k, v]) => (METHOD_LABEL[k] || k) + ' ' + rp(v as number))
+                .join(' · ') || '-'}
+            </p>
+          </div>
+        ))}
+        {all.length === 0 && openList.length === 0 && (
+          <div className="p-4 text-center text-sm text-slate-500">
+            Belum ada shift yang ditutup. Buka shift dulu di menu Kasir (POS).
+          </div>
+        )}
+      </div>
       {canMore && (
         <div className="p-1 text-center">
-          <button className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+          <button className="btn-ghost h-11 px-4 text-xs sm:h-9" onClick={loadMore} disabled={loadingMore}>
             {loadingMore ? 'Memuat…' : 'Muat shift lama lainnya'}
           </button>
         </div>

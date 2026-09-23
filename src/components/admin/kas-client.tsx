@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PageSkeleton, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
+import { Trash2 } from 'lucide-react';
 
 type Row = {
   id: number;
@@ -139,7 +140,7 @@ export function KasClient() {
         </div>
       </div>
 
-      <div className="card overflow-x-auto">
+      <div className="card hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[36rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -188,6 +189,48 @@ export function KasClient() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: kartu jurnal kas (<sm) — data sama dengan tabel; tombol hapus
+          ikon Trash2 dengan hit-area 44px. */}
+      <div className="card sm:hidden">
+        {data.rows.map((r) => (
+          <div key={r.kind + r.id} className="border-b border-slate-200 p-3 last:border-0 dark:border-navy-700">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex min-h-[44px] items-center gap-2">
+                  <Badge tone={kindBadge[r.kind]?.tone || 'gray'}>
+                    {kindBadge[r.kind]?.label || r.kind}
+                  </Badge>
+                  {r.kind === 'entry' && (
+                    <button
+                      onClick={() => removeEntry(r.id)}
+                      aria-label="Hapus jurnal manual ini"
+                      className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+                <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{r.label}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{fmtDateTime(r.created_at)}</p>
+              </div>
+              <p
+                className={
+                  'text-lg font-extrabold ' +
+                  (r.sign > 0
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-rose-600 dark:text-rose-400')
+                }
+              >
+                {r.sign > 0 ? '+' : '−'} {rp(r.amount)}
+              </p>
+            </div>
+          </div>
+        ))}
+        {data.rows.length === 0 && (
+          <div className="p-4 text-center text-sm text-slate-500">Belum ada gerakan kas.</div>
+        )}
       </div>
       {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />

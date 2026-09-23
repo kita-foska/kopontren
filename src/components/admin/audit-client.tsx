@@ -159,7 +159,7 @@ export function AuditClient() {
         </div>
       </div>
 
-      <div className="card overflow-x-auto">
+      <div className="card hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[44rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -230,6 +230,46 @@ export function AuditClient() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: kartu log audit (<sm) — data sama dengan tabel; tombol detail
+          perubahan pakai hit-area 44px (min-h-[44px]). */}
+      <div className="card sm:hidden">
+        {logs.map((l) => (
+          <div key={l.id} className="border-b border-slate-200 p-3 last:border-0 dark:border-navy-700">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{fmtDateTime(l.created_at)}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">{l.table_name}</p>
+            </div>
+            <p className="mt-1 text-sm font-semibold text-accent-500 dark:text-accent-300">
+              {l.action}
+              {l.record_id ? ' #' + l.record_id : ''}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {l.user_name || l.username} ({l.username}
+              {l.user_role ? ', ' + l.user_role : ''})
+            </p>
+            {l.old_value || l.new_value ? (
+              <button
+                type="button"
+                onClick={() => setViewLog(l)}
+                className="mt-2 block min-h-[44px] w-full rounded-lg bg-slate-100 px-3 py-2 text-left text-xs text-slate-600 transition hover:bg-slate-200 dark:bg-navy-900/50 dark:text-slate-300 dark:hover:bg-navy-800"
+              >
+                {l.old_value ? (
+                  <span className="text-slate-400 dark:text-slate-500">
+                    lama: {truncate(l.old_value, 40)} →{' '}
+                  </span>
+                ) : null}
+                {l.new_value ? truncate(l.new_value, 40) : <span className="text-slate-400 dark:text-slate-500">(hapus)</span>}
+              </button>
+            ) : (
+              <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">—</p>
+            )}
+          </div>
+        ))}
+        {logs.length === 0 && (
+          <div className="p-4 text-center text-sm text-slate-500">Tidak ada log yang cocok dengan filter.</div>
+        )}
       </div>
       {canMore && (
         <div className="p-1 text-center">

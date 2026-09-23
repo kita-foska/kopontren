@@ -227,6 +227,7 @@ export function MemberClient() {
       {/* Member Table */}
       <div className="card overflow-hidden">
         <div ref={listRef} onScroll={onScroll} className="max-h-[640px] overflow-auto">
+        <div className="hidden sm:block">
         <table className="w-full min-w-[36rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -299,6 +300,51 @@ export function MemberClient() {
             )}
           </tbody>
         </table>
+        </div>
+
+        {/* Mobile: kartu member (<sm) — data sama (jendela virtual) dengan tabel.
+            Spacer atas/bawah mengikuti padTop/padBottom agar scroll container tetap akurat. */}
+        <div className="sm:hidden">
+          {padTop > 0 && <div aria-hidden="true" style={{ height: padTop }} />}
+          {shown.map((m) => (
+            <div key={m.id} className="border-b border-slate-200 p-3 last:border-0 dark:border-navy-700">
+              <div className="flex min-h-[44px] items-center justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">{m.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{m.phone || 'Tanpa no. HP'}</p>
+                </div>
+                <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}>★ {m.points} poin</Badge>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{m.address || '—'}</p>
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{rp(m.total_spent)}</span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                  Terdaftar {fmtDateTime(m.created_at)}
+                </span>
+              </div>
+              <div className="mt-2 flex gap-2">
+                <button
+                  className="h-11 flex-1 rounded-lg border border-accent-200 bg-accent-100/50 px-2 text-xs font-bold text-accent-600 transition hover:bg-accent-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-accent-300"
+                  onClick={() => openEdit(m)}
+                >
+                  Ubah
+                </button>
+                <button
+                  className="h-11 flex-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-rose-400"
+                  onClick={() => remove(m)}
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+          ))}
+          {padBottom > 0 && <div aria-hidden="true" style={{ height: padBottom }} />}
+          {members.length === 0 && (
+            <div className="p-6 text-center text-sm text-slate-500">
+              {qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
+            </div>
+          )}
+        </div>
         </div>
         {!qDeb.trim() && hasMoreRef.current && (
           <div className="border-t border-slate-200 p-3 text-center dark:border-navy-700">

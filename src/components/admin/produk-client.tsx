@@ -393,8 +393,8 @@ export function ProdukClient() {
         </div>
       )}
 
-      {/* Product Table */}
-      <div className="card overflow-x-auto">
+      {/* Product Table (desktop ≥sm) */}
+      <div className="card hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[44rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -529,6 +529,95 @@ export function ProdukClient() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: kartu produk (<sm) — data sama dengan tabel; toggle status,
+          input stok & tombol aksi pakai hit-area 44px. */}
+      <div className="card sm:hidden">
+        {filtered.map((p) => {
+          const margin = p.base_price - p.cost_price;
+          const marginPct = p.cost_price > 0 ? Math.round((margin / p.cost_price) * 100) : 0;
+          return (
+            <div key={p.id} className="border-b border-slate-200 p-3 last:border-0 dark:border-navy-700">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{p.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {p.category || 'Tanpa kategori'} · {p.unit}
+                    {p.barcode ? ' · ' + p.barcode : ''}
+                  </p>
+                </div>
+                <button
+                  onClick={() => toggleActive(p)}
+                  disabled={toggleBusy}
+                  className={
+                    'min-h-[44px] shrink-0 rounded-full px-3 py-1 text-xs font-bold transition ' +
+                    (p.active
+                      ? 'bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400'
+                      : 'bg-slate-500/15 text-slate-500 hover:bg-slate-500/25')
+                  }
+                >
+                  {p.active ? 'Aktif' : 'Nonaktif'}
+                </button>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{rp(p.base_price)}</p>
+                  HPP {rp(p.cost_price)} · Margin +{rp(margin)} ({marginPct}%)
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    className="input w-16 px-2 py-1 text-center text-sm font-bold"
+                    type="number"
+                    min={0}
+                    value={stockEdits[p.id] ?? p.stock}
+                    onChange={(e) => setStockEdits((s) => ({ ...s, [p.id]: e.target.value }))}
+                    aria-label={'Stok ' + p.name}
+                  />
+                  <button
+                    className="btn-ghost h-11 px-2 text-xs sm:h-9"
+                    disabled={stockBusy}
+                    onClick={() => setStock(p)}
+                  >
+                    {stockBusy ? '…' : 'Simpan'}
+                  </button>
+                </div>
+                {p.stock <= 0 ? (
+                  <Badge tone="red">Habis</Badge>
+                ) : p.stock < 5 ? (
+                  <Badge tone="amber">Tipis</Badge>
+                ) : (
+                  <Badge tone="green">Aman</Badge>
+                )}
+              </div>
+              <div className="mt-2 flex gap-2">
+                <button
+                  className="h-11 flex-1 rounded-lg border border-accent-200 bg-accent-100/50 px-2 text-xs font-bold text-accent-600 transition hover:bg-accent-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-accent-300"
+                  onClick={() => openLabel(p)}
+                >
+                  Label
+                </button>
+                <button
+                  className="h-11 flex-1 rounded-lg border border-accent-200 bg-accent-100/50 px-2 text-xs font-bold text-accent-600 transition hover:bg-accent-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-accent-300"
+                  onClick={() => openEdit(p)}
+                >
+                  Ubah
+                </button>
+                <button
+                  className="h-11 flex-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-rose-400"
+                  onClick={() => deleteProduct(p)}
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div className="p-4 text-center text-sm text-slate-500">
+            {q || cat ? 'Tidak ada produk yang cocok dengan pencarian.' : 'Belum ada produk.'}
+          </div>
+        )}
       </div>
 
       <Modal
