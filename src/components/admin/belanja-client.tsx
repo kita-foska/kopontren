@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Toast, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Purchase = {
@@ -69,7 +69,7 @@ export function BelanjaClient() {
     } else showToast(r.error || 'Gagal');
   }
 
-  if (!data) return <p className="text-sm text-slate-500">Memuat…</p>;
+  if (!data) return <PageSkeleton />;
   // Total memakai agregat global dari server (semua data), bukan jumlah dari
   // daftar 50 terbaru — kartu ringkasan tetap akurat.
   const inTotal = data.totals.in;

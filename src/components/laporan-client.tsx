@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit } from '@/lib/pay-methods';
@@ -23,6 +23,7 @@ const PAY: Record<string, string> = { cash: 'Tunai', tf: 'Transfer', wa: 'QRIS /
 
 export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?: 'all' | 'today' }) {
   const [sales, setSales] = useState<Sale[]>([]);
+  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState(scope === 'today' ? 1 : 7);
   const [statusF, setStatusF] = useState('');
   const [q, setQ] = useState('');
@@ -44,18 +45,23 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
   // tetap lengkap, tapi tiap request kecil & Turso Rows Read per request
   // tetap rendah.
   const load = useCallback(async () => {
+    setLoading(true);
     const all: Sale[] = [];
     const PAGE = 50;
-    for (let offset = 0; ; offset += PAGE) {
-      const r = await api<ListResp>(
-        '/api/sales?days=' + period + '&status=' + (statusF || 'all') + '&limit=' + PAGE + '&offset=' + offset
-      );
-      if (!r.ok || !r.data) return;
-      const page = r.data.sales || [];
-      all.push(...page);
-      if (page.length < PAGE || all.length >= 500) break;
+    try {
+      for (let offset = 0; ; offset += PAGE) {
+        const r = await api<ListResp>(
+          '/api/sales?days=' + period + '&status=' + (statusF || 'all') + '&limit=' + PAGE + '&offset=' + offset
+        );
+        if (!r.ok || !r.data) break;
+        const page = r.data.sales || [];
+        all.push(...page);
+        if (page.length < PAGE || all.length >= 500) break;
+      }
+      setSales(all);
+    } finally {
+      setLoading(false);
     }
-    setSales(all);
   }, [period, statusF]);
 
   useEffect(() => {
@@ -152,6 +158,8 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
     const fromDate = period > 0 ? new Date(Date.now() - period * 86400000).toISOString() : '1970-01-01';
     window.open('/api/reports/csv?from=' + fromDate, '_blank');
   }
+
+  if (loading && sales.length === 0) return <PageSkeleton />;
 
   return (
     <div className="space-y-4">

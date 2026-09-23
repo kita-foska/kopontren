@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Row = {
@@ -57,7 +57,7 @@ export function KasClient() {
     });
   }
 
-  if (!data) return <p className="text-sm text-slate-500">Memuat…</p>;
+  if (!data) return <PageSkeleton />;
 
   const kindBadge: Record<string, { tone: 'green' | 'red' | 'blue' | 'amber'; label: string }> = {
     sale: { tone: 'green', label: 'JUALAN' },

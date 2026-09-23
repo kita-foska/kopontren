@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type Debt = {
@@ -100,6 +100,8 @@ export function PiutangClient({ admin }: { admin: boolean }) {
   const debts = data?.debts ?? [];
   const open = data?.summary.open_total ?? 0;
   const openCount = data?.summary.open_count ?? 0;
+
+  if (!data) return <PageSkeleton />;
 
   return (
     <div>
