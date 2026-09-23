@@ -513,9 +513,22 @@ konsistensi.
   (dashboard user: `bf52f63` Ready+Production; fingerprint LIVE
   `kopontren-gamma` ✓ — detail: MEMORY.md seksi "Re-Verifikasi LIVE").
   Test lulus → **Batch B di-approve & dieksekusi @ `cb792aa`**.
-- **Batch C (komunikasi/konsistensi):** map label metode bayar
-  terpusat + fallback skeleton seragam + label LowStock + aksen
-  h1 seragam + hint pin/setup + backup window.open → blob.
+- **Batch C (komunikasi/konsistensi) — SELESAI, commit `ec9d9c9`
+  (23 Sep):** 22 file, +181/−77, murni presentasional.
+  (1) `lib/pay-methods.ts`: `PAY_METHOD_LABEL` + `payMethodLabel()`
+  kanonik; 6 map lokal dihapus, 16 call-site seragam.
+  (2) 7 page wrapper next/dynamic (audit, hutang, pengaturan-member,
+  shift, zakat, piutang, retur) kini `PageSkeleton`.
+  (3) LowStock: "14hr: 0/j" → "belum ada penjualan 14 hari",
+  "±N hr" → "habis dalam N hari".
+  (4) h1 aksen: konsinyasi/produk/belanja dapat span accent;
+  laporan amber→accent.
+  (5) pin/setup: catch/status tak dikenal tak lagi nyangkut
+  "Memeriksa sesi" + hint amber (validasi tetap server-side).
+  (6) 4 unduhan `window.open('/api/...')` (data-client ×2,
+  laporan-client, laporan-admin) → `fetch`+Blob+objectURL+download
+  + busy `dl` + toast. Verifikasi: `tsc --noEmit` 0, `npm run
+  build` EXIT 0 (47 rute), dual-push master+main @ `ec9d9c9`.
 - **Batch D (a11y polish):** aria-expanded accordion, role=tablist
   pada tab, type=button + label aksi tabel, sumbu chart >= 11px.
 

@@ -742,6 +742,36 @@ blocking)
   Verifikasi: `tsc --noEmit` exit 0 (output kosong), `npm run
   build` exit 0 (rute export lengkap, First Load JS shared
   103 kB). Dual-push `master` + `main` @ `cb792aa`.
+- **FASE 2 BATCH C (konsistensi UI): DISELESAIKAN — commit
+  `ec9d9c9` (23 Sep 2026).** 22 file, +181/−77, MURNI
+  PRESENTASIONAL (tak ada ubah data/state/API/DB):
+  1. **Label metode bayar terpusat:** `lib/pay-methods.ts`
+     kini punya `PAY_METHOD_LABEL` + `payMethodLabel()`; 6 map
+     lokal (rekap, pengurus-dashboard, pos-client, laporan-client,
+     shift-client, home) dihapus → 16 call-site pakai helper.
+  2. **Skeleton seragam:** 7 page wrapper `next/dynamic` (audit,
+     hutang, pengaturan-member, shift, zakat, piutang, retur)
+     `loading="Memuat komponen..."` → `<PageSkeleton />`.
+  3. **Low-stock badge:** "14hr: 0/j" → "belum ada penjualan
+     14 hari", "±N hr" → "habis dalam N hari".
+  4. **Aksen h1:** konsinyasi/produk/belanja dapat span
+     `text-accent-500`; laporan amber→accent.
+  5. **Bug pin/setup:** status tak dikenal/fetch gagal dulu
+     nyangkut "Memeriksa sesi…" → kini lanjutkan UI + state
+     `checkFailed` + hint amber "tak bisa cek sesi, lanjutkan
+     saja" (POST tetap memvalidasi sesi server-side).
+  6. **Unduhan tanpa tab flicker:** 4 tempat
+     `window.open('/api/backup')` & `window.open('/api/reports/csv…')`
+     (data-client ×2, laporan-client, laporan-admin-client) →
+     `fetch`+Blob+`URL.createObjectURL`+`<a download>`+revoke,
+     busy `dl` + toast sukses/gagal.
+  - Verifikasi: `tsc --noEmit` exit 0, `npm run build` EXIT 0
+    (47 rute), grep sisa `PAY_LABEL`/`window.open('/api` bersih.
+    `public/sw.js` tidak di-commit (di-restore pasca build,
+    stamp lokal `c1adf8a50196`). Dual-push `master` + `main`
+    @ `ec9d9c9`.
+  - Belum teruji di UI langsung; menunggu test manual user
+    (pola sama dgn Batch A/B).
 
 ## Konvensi fetch klien (23 Sep 2026)
 - Klien: SEMUA fetch lewat `fetchTimeout` (`@/lib/fetch-util`),
