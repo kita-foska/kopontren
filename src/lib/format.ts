@@ -67,3 +67,13 @@ export function startOfDayJakarta(offsetDays = 0): string {
   // WIB wall clock -> real UTC: subtract 7h (WIB = UTC+7). offsetDays <= 0 goes back.
   return new Date(fakeMidnightMs + offsetDays * 86400000 - 7 * 3600 * 1000).toISOString();
 }
+
+/**
+ * Today's WIB calendar day as 'YYYY-MM-DD' (pure UTC arithmetic -
+ * independent of the device's timezone). Jatuh tempo / tunggak memakai
+ * hari kalender WIB sebagai acuan tunggal: server (payables) dan
+ * klien (piutang/hutang) harus sama, device di zona waktu mana pun.
+ */
+export function todayWibStr(): string {
+  return startOfDayJakarta(0).slice(0, 10);
+}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { PageSkeleton, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
-import { rp, fmtDateTime } from '@/lib/format';
+import { rp, fmtDateTime, todayWibStr } from '@/lib/format';
 
 type Debt = {
   id: number;
@@ -17,12 +17,6 @@ type Debt = {
   created_at: string;
 };
 type DebtResp = { debts: Debt[]; summary: { open_total: number; open_count: number } };
-
-function todayStr(): string {
-  const now = new Date();
-  const p = (n: number) => String(n).padStart(2, '0');
-  return now.getFullYear() + '-' + p(now.getMonth() + 1) + '-' + p(now.getDate());
-}
 
 export function PiutangClient({ admin }: { admin: boolean }) {
   const [filter, setFilter] = useState<'open' | 'settled' | 'all'>('open');
@@ -215,7 +209,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
         <div className="max-h-96 space-y-2 overflow-y-auto">
 
           {debts.map((x) => {
-            const overdue = x.status === 'open' && x.due_date !== '' && x.due_date < todayStr();
+            const overdue = x.status === 'open' && x.due_date !== '' && x.due_date < todayWibStr();
             return (
               <div key={x.id} className="rounded-lg border border-slate-100 p-2.5 dark:border-navy-700">
                 <div className="flex items-start justify-between gap-2">

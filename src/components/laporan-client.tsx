@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PageSkeleton, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
-import { rp, fmtDateTime } from '@/lib/format';
+import { rp, fmtDateTime, startOfDayJakarta } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit, payMethodLabel } from '@/lib/pay-methods';
 import { ChevronDown, FileDown, FileText, Smartphone } from 'lucide-react';
@@ -160,7 +160,10 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
   }
 
   async function downloadCsv() {
-    const fromDate = period > 0 ? new Date(Date.now() - period * 86400000).toISOString() : '1970-01-01';
+    // Batas WIB (Batch F): hari kalender WIB (startOfDayJakarta), selaras dgn
+    // /api/reports/csv. UTC penuh sebelumnya ditolak regex date-only di server,
+    // jadi parameter periode tak terpakai (selalu dicap 365 hari).
+    const fromDate = period > 0 ? startOfDayJakarta(1 - period).slice(0, 10) : '1970-01-01';
     // Blob download: tanpa tab baru/flicker (window.open dulu buka tab kosong).
     try {
       const r = await fetch('/api/reports/csv?from=' + fromDate);

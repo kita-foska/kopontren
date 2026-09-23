@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { startOfDayJakarta } from '@/lib/format';
 
 type PayableRow = {
   id: number;
@@ -47,18 +48,21 @@ export async function GET(req: Request) {
   );
   // Agregat 1 query (index tak membantu untuk COUNT bersyarat — tabel kecil,
   // scan sekali jauh lebih murah daripada 4 query terpisah).
-  // Catatan: date('now') UTC — bisa meleset ±7 jam vs WIB utk tanggal tengah
-  // malam; badge per-baris di UI dihitung client-side (WIB) jadi tetap akurat.
+  // Boundary UTC-safe: due_date (date-only) dibanding hari kalender WIB yang
+  // dihitung server (startOfDayJakarta), bukan date('now') UTC — UTC meleset
+  // ±7 jam dari WIB utk WIB tengah malam–pagi (tunggak salah hitung 7 jam).
+  const wibToday = startOfDayJakarta(0).slice(0, 10);
+  const wibSoon = startOfDayJakarta(6).slice(0, 10);
   const summary = (
     (await d
       .prepare(
         `SELECT COALESCE(SUM(CASE WHEN status = 'open' THEN remaining ELSE 0 END), 0) AS open_total,
                 COALESCE(SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END), 0) AS open_count,
-                COALESCE(SUM(CASE WHEN status = 'open' AND due_date != '' AND date(due_date) < date('now') THEN 1 ELSE 0 END), 0) AS overdue_count,
-                COALESCE(SUM(CASE WHEN status = 'open' AND due_date != '' AND date(due_date) >= date('now') AND date(due_date) <= date('now', '+6 days') THEN 1 ELSE 0 END), 0) AS due_soon_count
+                COALESCE(SUM(CASE WHEN status = 'open' AND due_date != '' AND due_date < ? THEN 1 ELSE 0 END), 0) AS overdue_count,
+                COALESCE(SUM(CASE WHEN status = 'open' AND due_date != '' AND due_date >= ? AND due_date <= ? THEN 1 ELSE 0 END), 0) AS due_soon_count
          FROM payables`
       )
-      .get()) as unknown
+      .all(wibToday, wibToday, wibSoon)) as unknown
   ) as {
     open_total: number;
     open_count: number;

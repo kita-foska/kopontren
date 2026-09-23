@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { PageSkeleton, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
-import { rp, fmtDateTime } from '@/lib/format';
+import { rp, fmtDateTime, todayWibStr } from '@/lib/format';
 
 type Payable = {
   id: number;
@@ -25,13 +25,6 @@ type PayableResp = {
     due_soon_count: number;
   };
 };
-
-/** Tanggal lokal (device pengurus ≈ WIB) sebagai 'YYYY-MM-DD'. */
-function todayStr(): string {
-  const now = new Date();
-  const p = (n: number) => String(n).padStart(2, '0');
-  return now.getFullYear() + '-' + p(now.getMonth() + 1) + '-' + p(now.getDate());
-}
 
 function plusDays(dateStr: string, days: number): string {
   const d = new Date(dateStr + 'T00:00:00');
@@ -135,7 +128,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
   const openCount = data?.summary.open_count ?? 0;
   const overdue = data?.summary.overdue_count ?? 0;
   const dueSoon = data?.summary.due_soon_count ?? 0;
-  const today = todayStr();
+  const today = todayWibStr();
   const isOverdue = (x: Payable) =>
     x.status === 'open' && !!x.due_date && x.due_date < today;
   const isDueSoon = (x: Payable) =>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { parsePaySplit } from '@/lib/pay-methods';
+import { startOfDayJakarta } from '@/lib/format';
 
 export async function GET(req: Request) {
   const user = await currentUser();
@@ -12,8 +13,13 @@ export async function GET(req: Request) {
   // Batasi rentang export: maks 365 hari ke belakang (default lama = sejak 1970).
   const rawFrom = url.searchParams.get('from')?.trim() ?? '';
   const fromNorm = /^\d{4}-\d{2}-\d{2}$/.test(rawFrom) ? rawFrom : null;
-  const capStr = new Date(Date.now() - 365 * 86400_000).toISOString().slice(0, 10);
+  // Batas WIB (Batch F): cap 365 hari memakai hari kalender WIB
+  // (startOfDayJakarta), bukan UTC (midnight UTC = 07:00 WIB → meleset ±7 jam).
+  const capStr = startOfDayJakarta(-365).slice(0, 10);
   const from = fromNorm && fromNorm >= capStr ? fromNorm : capStr;
+  // 'YYYY-MM-DD' (hari kalender WIB) → ISO tengah malam WIB, agar boundary
+  // s.created_at >= ? jatuh tepat 00:00 WIB, bukan 00:00 UTC (07:00 WIB).
+  const fromIso = new Date(from + 'T00:00:00+07:00').toISOString();
   const d = await db();
   const rows = (
     (await d
@@ -28,7 +34,7 @@ export async function GET(req: Request) {
         ORDER BY s.created_at DESC, si.id
         LIMIT 50000`
       )
-      .all(from)) as Record<string, unknown>[]
+      .all(fromIso)) as Record<string, unknown>[]
   );
   const head = [
     'created_at_utc',
