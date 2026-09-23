@@ -15,8 +15,10 @@ const nextConfig = {
    * - /sw.js: max-age=0 + must-revalidate → browser selalu revalidate saat
    *   navigasi berikutnya, jadi update service worker tidak stuck di cache.
    * - Gambar (svg/jpg/jpeg/png/gif/ico/webp): 1 tahun immutable.
-   *   NOTE: kalau ikon/logo diganti, tambahkan version query (?v=2) di URL
-   *   pemakai untuk bust cache immutable.
+   *   Pengecualian: ikon PWA & logo & favicon (aturan di bawah) → 1 hari,
+   *   agar ganti ikon/logo setelah deploy sampai ke user tanpa perlu ?v=N.
+   *   NOTE: untuk ikon yang sudah terkunci immutable di cache user lama,
+   *   tambahkan version query (?v=2) di URL pemakai untuk bust cache.
    * - /manifest.json: 1 hari, agar icon PWA baru setelah deploy tetap bisa
    *   muncul.
    */
@@ -35,6 +37,17 @@ const nextConfig = {
       {
         source: '/:path*.(svg|jpg|jpeg|png|gif|ico|webp)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        // Ikon PWA & logo & favicon: 1 hari (boleh di-revalidate), BUKAN
+        // immutable setahun — supaya ikon/logo baru setelah deploy bisa
+        // sampai ke user tanpa harus menambah ?v=N di URL pemakai.
+        source: '/(icon|logo)-:path*.(png|svg)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+      },
+      {
+        source: '/favicon.ico',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },
       {
         source: '/manifest.json',
