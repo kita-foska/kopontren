@@ -42,31 +42,45 @@ export function BelanjaClient() {
 
   const [p, setP] = useState({ product_id: '', qty: 1, unit_cost: 0, supplier: '' });
   const [e, setE] = useState({ name: '', category: '', amount: 0 });
+  // Guard busy: cegah double-submit (null = idle, 'in'/'out' = tab yg request).
+  const [busy, setBusy] = useState<'in' | 'out' | null>(null);
 
   async function addPurchase() {
+    if (busy) return;
     if (!p.product_id || p.qty <= 0) {
       showToast('Pilih produk & jumlah minimal 1');
       return;
     }
-    const r = await api('/api/purchases', { method: 'POST', body: JSON.stringify(p) });
-    if (r.ok) {
-      showToast('Stok masuk tercatat, HPP diperbarui');
-      setP({ product_id: '', qty: 1, unit_cost: 0, supplier: '' });
-      load();
-    } else showToast(r.error || 'Gagal');
+    setBusy('in');
+    try {
+      const r = await api('/api/purchases', { method: 'POST', body: JSON.stringify(p) });
+      if (r.ok) {
+        showToast('Stok masuk tercatat, HPP diperbarui');
+        setP({ product_id: '', qty: 1, unit_cost: 0, supplier: '' });
+        load();
+      } else showToast(r.error || 'Gagal');
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function addExpense() {
+    if (busy) return;
     if (!e.name.trim() || e.amount <= 0) {
       showToast('Nama & nominal wajib');
       return;
     }
-    const r = await api('/api/expenses', { method: 'POST', body: JSON.stringify(e) });
-    if (r.ok) {
-      showToast('Pengeluaran tercatat');
-      setE({ name: '', category: '', amount: 0 });
-      load();
-    } else showToast(r.error || 'Gagal');
+    setBusy('out');
+    try {
+      const r = await api('/api/expenses', { method: 'POST', body: JSON.stringify(e) });
+      if (r.ok) {
+        showToast('Pengeluaran tercatat');
+        setE({ name: '', category: '', amount: 0 });
+        load();
+      } else showToast(r.error || 'Gagal');
+    } finally {
+      setBusy(null);
+    }
   }
 
   if (!data) return <PageSkeleton />;
@@ -132,14 +146,18 @@ export function BelanjaClient() {
               />
             </div>
             <div className="flex items-end">
-              <button className="btn-primary w-full" onClick={addPurchase}>
-                Catat
+              <button
+                className="btn-primary w-full"
+                disabled={busy === 'in'}
+                onClick={addPurchase}
+              >
+                {busy === 'in' ? 'Menyimpan…' : 'Catat'}
               </button>
             </div>
           </div>
           <div className="card p-3 text-sm">
             Total pembelian: <b className="text-accent-500 dark:text-accent-300">{rp(inTotal)}</b>{' '}
-            <span className="text-xs text-slate-400">(50 transaksi terbaru)</span>
+            <span className="text-xs text-slate-400">(dari semua data)</span>
             <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto">
               {data.purchases.map((x) => (
                 <div
@@ -195,14 +213,18 @@ export function BelanjaClient() {
               />
             </div>
             <div className="flex items-end">
-              <button className="btn-primary w-full" onClick={addExpense}>
-                Catat
+              <button
+                className="btn-primary w-full"
+                disabled={busy === 'out'}
+                onClick={addExpense}
+              >
+                {busy === 'out' ? 'Menyimpan…' : 'Catat'}
               </button>
             </div>
           </div>
           <div className="card p-3 text-sm">
             Total pengeluaran: <b className="text-rose-600 dark:text-rose-400">{rp(outTotal)}</b>{' '}
-            <span className="text-xs text-slate-400">(50 pengeluaran terbaru)</span>
+            <span className="text-xs text-slate-400">(dari semua data)</span>
             <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto">
               {data.expenses.map((x) => (
                 <div

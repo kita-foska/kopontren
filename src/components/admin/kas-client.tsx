@@ -23,6 +23,8 @@ export function KasClient() {
   const [form, setForm] = useState({ type: 'income', label: '', amount: 0 });
   const [toast, showToast] = useToast();
   const { ask, host: confirmHost } = useConfirm();
+  // Guard busy: cegah double-submit saat request dalam perjalanan.
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     const r = await api<KasResp>('/api/kas');
@@ -33,16 +35,22 @@ export function KasClient() {
   }, [load]);
 
   async function addEntry() {
+    if (busy) return;
     if (!form.label.trim() || form.amount <= 0) {
       showToast('Uraian & nominal wajib');
       return;
     }
-    const r = await api('/api/kas', { method: 'POST', body: JSON.stringify(form) });
-    if (r.ok) {
-      showToast('Jurnal kas manual tercatat');
-      setForm({ type: form.type, label: '', amount: 0 });
-      load();
-    } else showToast(r.error || 'Gagal');
+    setBusy(true);
+    try {
+      const r = await api('/api/kas', { method: 'POST', body: JSON.stringify(form) });
+      if (r.ok) {
+        showToast('Jurnal kas manual tercatat');
+        setForm({ type: form.type, label: '', amount: 0 });
+        load();
+      } else showToast(r.error || 'Gagal');
+    } finally {
+      setBusy(false);
+    }
   }
 
   function removeEntry(id: number) {
@@ -51,8 +59,15 @@ export function KasClient() {
       message: 'Hapus jurnal manual ini?',
       confirmLabel: 'Hapus',
       proceed: async () => {
-        await api('/api/kas?entry_id=' + id, { method: 'DELETE' });
-        load();
+        if (busy) return;
+        setBusy(true);
+        try {
+          const r = await api('/api/kas?entry_id=' + id, { method: 'DELETE' });
+          showToast(r.ok ? 'Jurnal manual dihapus' : r.error || 'Gagal menghapus');
+          load();
+        } finally {
+          setBusy(false);
+        }
       },
     });
   }
@@ -118,8 +133,8 @@ export function KasClient() {
           />
         </div>
         <div className="flex items-end">
-          <button className="btn-primary w-full" onClick={addEntry}>
-            Tambah Jurnal
+          <button className="btn-primary w-full" disabled={busy} onClick={addEntry}>
+            {busy ? 'Menyimpan…' : 'Tambah Jurnal'}
           </button>
         </div>
       </div>

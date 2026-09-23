@@ -48,6 +48,8 @@ export function MemberClient() {
   const [toast, showToast] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [loadingMore, setLoadingMore] = useState(false);
+  // Guard busy: cegah double-submit saat request dalam perjalanan.
+  const [busy, setBusy] = useState(false);
   const [scrollTop, setScrollTop] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const hasMoreRef = useRef(false);
@@ -113,25 +115,31 @@ export function MemberClient() {
   }
 
   async function save() {
+    if (busy) return;
     if (!form.name.trim()) {
       showToast('Nama santri / member wajib diisi');
       return;
     }
-    const r = form.id
-      ? await api('/api/members', {
-          method: 'PUT',
-          body: JSON.stringify(form),
-        })
-      : await api('/api/members', {
-          method: 'POST',
-          body: JSON.stringify(form),
-        });
-    if (r.ok) {
-      showToast(form.id ? 'Data member diperbarui' : 'Member baru berhasil didaftarkan');
-      setShow(false);
-      await load(qDeb);
-    } else {
-      showToast(r.error || 'Gagal menyimpan');
+    setBusy(true);
+    try {
+      const r = form.id
+        ? await api('/api/members', {
+            method: 'PUT',
+            body: JSON.stringify(form),
+          })
+        : await api('/api/members', {
+            method: 'POST',
+            body: JSON.stringify(form),
+          });
+      if (r.ok) {
+        showToast(form.id ? 'Data member diperbarui' : 'Member baru berhasil didaftarkan');
+        setShow(false);
+        await load(qDeb);
+      } else {
+        showToast(r.error || 'Gagal menyimpan');
+      }
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -311,8 +319,8 @@ export function MemberClient() {
             <button className="btn-ghost" onClick={() => setShow(false)}>
               Batal
             </button>
-            <button className="btn-primary" onClick={save}>
-              Simpan
+            <button className="btn-primary" disabled={busy} onClick={save}>
+              {busy ? 'Menyimpan…' : 'Simpan'}
             </button>
           </>
         }

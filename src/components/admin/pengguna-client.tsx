@@ -33,6 +33,13 @@ export function PenggunaClient() {
   const [ownPin, setOwnPin] = useState({ old: '', next: '', confirm: '' });
   const [timeout, setTimeoutSec] = useState('');
   const [timeoutBusy, setTimeoutBusy] = useState(false);
+  // Busy guards (per-file useState): cegah double-submit per operasi.
+  const [createBusy, setCreateBusy] = useState(false);
+  const [resetPwBusy, setResetPwBusy] = useState(false);
+  const [toggleBusyId, setToggleBusyId] = useState<number | null>(null);
+  const [ownPwBusy, setOwnPwBusy] = useState(false);
+  const [ownPinBusy, setOwnPinBusy] = useState(false);
+  const [resetPinBusy, setResetPinBusy] = useState(false);
   const [toast, showToast] = useToast();
 
   const load = useCallback(async () => {
@@ -56,88 +63,129 @@ export function PenggunaClient() {
   }, [load]);
 
   async function createUser() {
+    if (createBusy) return;
     if (!form.username.trim() || form.password.length < 6) {
       showToast('Username wajib, password min 6 karakter');
       return;
     }
-    const r = await api('/api/users', { method: 'POST', body: JSON.stringify(form) });
-    if (r.ok) {
-      showToast('Akun ' + form.username + ' dibuat');
-      setForm({ username: '', display_name: '', role: 'kasir', password: '' });
-      load();
-    } else showToast(r.error || 'Gagal membuat akun');
+    setCreateBusy(true);
+    try {
+      const r = await api('/api/users', { method: 'POST', body: JSON.stringify(form) });
+      if (r.ok) {
+        showToast('Akun ' + form.username + ' dibuat');
+        setForm({ username: '', display_name: '', role: 'kasir', password: '' });
+        load();
+      } else showToast(r.error || 'Gagal membuat akun');
+    } finally {
+      setCreateBusy(false);
+    }
   }
 
   async function resetPw() {
+    if (resetPwBusy) return;
     if (!pwModal || pw.length < 6) {
       showToast('Password min 6 karakter');
       return;
     }
-    const r = await api('/api/users', {
-      method: 'PUT',
-      body: JSON.stringify({ id: pwModal.id, password: pw }),
-    });
-    if (r.ok) {
-      showToast('Password ' + pwModal.username + ' direset');
-      setPwModal(null);
-      setPw('');
-      load();
-    } else showToast(r.error || 'Gagal');
+    setResetPwBusy(true);
+    try {
+      const r = await api('/api/users', {
+        method: 'PUT',
+        body: JSON.stringify({ id: pwModal.id, password: pw }),
+      });
+      if (r.ok) {
+        showToast('Password ' + pwModal.username + ' direset');
+        setPwModal(null);
+        setPw('');
+        load();
+      } else showToast(r.error || 'Gagal');
+    } finally {
+      setResetPwBusy(false);
+    }
   }
 
   async function toggleActive(u: User) {
-    await api('/api/users', {
-      method: 'PUT',
-      body: JSON.stringify({ id: u.id, active: u.active ? 0 : 1 }),
-    });
-    load();
+    if (toggleBusyId !== null) return;
+    setToggleBusyId(u.id);
+    try {
+      const r = await api('/api/users', {
+        method: 'PUT',
+        body: JSON.stringify({ id: u.id, active: u.active ? 0 : 1 }),
+      });
+      showToast(
+        r.ok
+          ? 'Akun ' + u.username + (u.active ? ' dinonaktifkan' : ' diaktifkan')
+          : r.error || 'Gagal mengubah status'
+      );
+      load();
+    } finally {
+      setToggleBusyId(null);
+    }
   }
 
   async function changeOwnPw() {
+    if (ownPwBusy) return;
     if (ownPw.next.length < 6) {
       showToast('Password baru min 6 karakter');
       return;
     }
-    const r = await api('/api/users', {
-      method: 'PUT',
-      body: JSON.stringify({ id: self?.id, password: ownPw.next, old_password: ownPw.old }),
-    });
-    if (r.ok) {
-      showToast('Password Anda diubah. Login berikutnya pakai yang baru.');
-      setOwnPw({ old: '', next: '' });
-      load();
-    } else showToast(r.error || 'Password lama salah');
+    setOwnPwBusy(true);
+    try {
+      const r = await api('/api/users', {
+        method: 'PUT',
+        body: JSON.stringify({ id: self?.id, password: ownPw.next, old_password: ownPw.old }),
+      });
+      if (r.ok) {
+        showToast('Password Anda diubah. Login berikutnya pakai yang baru.');
+        setOwnPw({ old: '', next: '' });
+        load();
+      } else showToast(r.error || 'Password lama salah');
+    } finally {
+      setOwnPwBusy(false);
+    }
   }
 
   async function resetPin() {
+    if (resetPinBusy) return;
     if (!pinModal || pinNew.new.length < 4 || pinNew.new.length > 6 || pinNew.new !== pinNew.confirm) {
       showToast('PIN baru 4-6 digit & konfirmasi harus sama');
       return;
     }
-    const r = await api('/api/auth/pin/reset', {
-      method: 'POST',
-      body: JSON.stringify({ newPin: pinNew.new, confirm: pinNew.confirm, user_id: pinModal.id }),
-    });
-    if (r.ok) {
-      showToast('PIN ' + pinModal.username + ' direset');
-      setPinModal(null);
-      setPinNew({ new: '', confirm: '' });
-    } else showToast(r.error || 'Gagal reset PIN');
+    setResetPinBusy(true);
+    try {
+      const r = await api('/api/auth/pin/reset', {
+        method: 'POST',
+        body: JSON.stringify({ newPin: pinNew.new, confirm: pinNew.confirm, user_id: pinModal.id }),
+      });
+      if (r.ok) {
+        showToast('PIN ' + pinModal.username + ' direset');
+        setPinModal(null);
+        setPinNew({ new: '', confirm: '' });
+      } else showToast(r.error || 'Gagal reset PIN');
+    } finally {
+      setResetPinBusy(false);
+    }
   }
 
   async function changeOwnPin() {
+    if (ownPinBusy) return;
     if (ownPin.next.length < 4 || ownPin.next.length > 6 || ownPin.next !== ownPin.confirm) {
       showToast('PIN baru 4-6 digit & konfirmasi harus sama');
       return;
     }
-    const r = await api('/api/auth/pin/change', {
-      method: 'POST',
-      body: JSON.stringify({ oldPin: ownPin.old, newPin: ownPin.next, confirm: ownPin.confirm }),
-    });
-    if (r.ok) {
-      showToast('PIN Anda diubah');
-      setOwnPin({ old: '', next: '', confirm: '' });
-    } else showToast(r.error || 'PIN lama salah');
+    setOwnPinBusy(true);
+    try {
+      const r = await api('/api/auth/pin/change', {
+        method: 'POST',
+        body: JSON.stringify({ oldPin: ownPin.old, newPin: ownPin.next, confirm: ownPin.confirm }),
+      });
+      if (r.ok) {
+        showToast('PIN Anda diubah');
+        setOwnPin({ old: '', next: '', confirm: '' });
+      } else showToast(r.error || 'PIN lama salah');
+    } finally {
+      setOwnPinBusy(false);
+    }
   }
 
   async function saveTimeout() {
@@ -200,8 +248,8 @@ export function PenggunaClient() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
             </div>
-            <button className="btn-primary w-full" onClick={createUser}>
-              + Buat Akun
+            <button className="btn-primary w-full" disabled={createBusy} onClick={createUser}>
+              {createBusy ? 'Membuat…' : '+ Buat Akun'}
             </button>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Kasir: POS & rekap. Pengurus: operasional + pembukuan (tanpa Pengguna &amp; Data).
@@ -228,8 +276,8 @@ export function PenggunaClient() {
               value={ownPw.next}
               onChange={(e) => setOwnPw({ ...ownPw, next: e.target.value })}
             />
-            <button className="btn-ghost w-full" onClick={changeOwnPw}>
-              Simpan Password Baru
+            <button className="btn-ghost w-full" disabled={ownPwBusy} onClick={changeOwnPw}>
+              {ownPwBusy ? 'Menyimpan…' : 'Simpan Password Baru'}
             </button>
           </div>
         </div>
@@ -265,8 +313,8 @@ export function PenggunaClient() {
                 setOwnPin({ ...ownPin, confirm: e.target.value.replace(/\D/g, '') })
               }
             />
-            <button className="btn-ghost w-full" onClick={changeOwnPin}>
-              Ganti PIN
+            <button className="btn-ghost w-full" disabled={ownPinBusy} onClick={changeOwnPin}>
+              {ownPinBusy ? 'Menyimpan…' : 'Ganti PIN'}
             </button>
           </div>
         </div>
@@ -346,6 +394,7 @@ export function PenggunaClient() {
                   {u.id !== self?.id && (
                     <button
                       onClick={() => toggleActive(u)}
+                      disabled={toggleBusyId === u.id}
                       className="ml-2 font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                     >
                       {u.active ? 'Nonaktifkan' : 'Aktifkan'}
@@ -374,8 +423,8 @@ export function PenggunaClient() {
             <button className="btn-ghost" onClick={() => setPwModal(null)}>
               Batal
             </button>
-            <button className="btn-primary" onClick={resetPw}>
-              Reset
+            <button className="btn-primary" disabled={resetPwBusy} onClick={resetPw}>
+              {resetPwBusy ? 'Menyimpan…' : 'Reset'}
             </button>
           </>
         }
@@ -398,8 +447,8 @@ export function PenggunaClient() {
             <button className="btn-ghost" onClick={() => setPinModal(null)}>
               Batal
             </button>
-            <button className="btn-primary" onClick={resetPin}>
-              Reset
+            <button className="btn-primary" disabled={resetPinBusy} onClick={resetPin}>
+              {resetPinBusy ? 'Menyimpan…' : 'Reset'}
             </button>
           </>
         }

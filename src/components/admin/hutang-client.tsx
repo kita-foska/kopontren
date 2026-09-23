@@ -55,6 +55,8 @@ export function HutangClient({ admin }: { admin: boolean }) {
   });
   const [payFor, setPayFor] = useState<Payable | null>(null);
   const [payAmt, setPayAmt] = useState(0);
+  // Guard busy: cegah double-submit saat request dalam perjalanan.
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -67,38 +69,50 @@ export function HutangClient({ admin }: { admin: boolean }) {
   }, [load]);
 
   async function create() {
+    if (busy) return;
     if (!form.supplier_name.trim() || form.amount <= 0) {
       showToast('Nama supplier & nominal wajib');
       return;
     }
-    const r = await api('/api/payables', { method: 'POST', body: JSON.stringify(form) });
-    if (r.ok) {
-      showToast('Hutang tercatat');
-      setForm({ supplier_name: '', supplier_phone: '', amount: 0, due_date: '', note: '' });
-      load();
-    } else showToast(r.error || 'Gagal');
+    setBusy(true);
+    try {
+      const r = await api('/api/payables', { method: 'POST', body: JSON.stringify(form) });
+      if (r.ok) {
+        showToast('Hutang tercatat');
+        setForm({ supplier_name: '', supplier_phone: '', amount: 0, due_date: '', note: '' });
+        load();
+      } else showToast(r.error || 'Gagal');
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function pay() {
+    if (busy) return;
     if (!payFor || payAmt <= 0) {
       showToast('Nominal pembayaran wajib > 0');
       return;
     }
-    const r = await api('/api/payables/' + payFor.id, {
-      method: 'PATCH',
-      body: JSON.stringify({ pay: payAmt }),
-    });
-    if (r.ok) {
-      const d = r.data as { remaining?: number; status?: string };
-      showToast(
-        d.status === 'settled'
-          ? 'Lunas! Hutang sudah tertutup & kas keluar tercatat'
-          : 'Pembayaran ' + rp(payAmt) + ' tercatat (kas keluar), sisa ' + rp(d.remaining ?? 0)
-      );
-      setPayFor(null);
-      setPayAmt(0);
-      load();
-    } else showToast(r.error || 'Gagal');
+    setBusy(true);
+    try {
+      const r = await api('/api/payables/' + payFor.id, {
+        method: 'PATCH',
+        body: JSON.stringify({ pay: payAmt }),
+      });
+      if (r.ok) {
+        const d = r.data as { remaining?: number; status?: string };
+        showToast(
+          d.status === 'settled'
+            ? 'Lunas! Hutang sudah tertutup & kas keluar tercatat'
+            : 'Pembayaran ' + rp(payAmt) + ' tercatat (kas keluar), sisa ' + rp(d.remaining ?? 0)
+        );
+        setPayFor(null);
+        setPayAmt(0);
+        load();
+      } else showToast(r.error || 'Gagal');
+    } finally {
+      setBusy(false);
+    }
   }
 
   function del(id: number) {
@@ -212,8 +226,8 @@ export function HutangClient({ admin }: { admin: boolean }) {
             />
           </div>
           <div className="flex items-end">
-            <button className="btn-primary w-full" onClick={create}>
-              Catat
+            <button className="btn-primary w-full" disabled={busy} onClick={create}>
+              {busy ? 'Menyimpan…' : 'Catat'}
             </button>
           </div>
         </div>
@@ -301,8 +315,8 @@ export function HutangClient({ admin }: { admin: boolean }) {
             <button className="btn-ghost" onClick={() => setPayFor(null)}>
               Batal
             </button>
-            <button className="btn-primary" onClick={pay}>
-              Simpan
+            <button className="btn-primary" disabled={busy} onClick={pay}>
+              {busy ? 'Menyimpan…' : 'Simpan'}
             </button>
           </>
         }

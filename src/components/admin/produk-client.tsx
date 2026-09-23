@@ -47,6 +47,10 @@ export function ProdukClient() {
   const [bulkStock, setBulkStock] = useState('');
   const [bulkCat, setBulkCat] = useState('');
   const [bulkBusy, setBulkBusy] = useState(false);
+  // Busy guards (per-file useState): cegah double-submit per operasi.
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [stockBusy, setStockBusy] = useState(false);
+  const [toggleBusy, setToggleBusy] = useState(false);
   const [label, setLabel] = useState<Product | null>(null);
 
   const load = useCallback(async () => {
@@ -92,42 +96,60 @@ export function ProdukClient() {
   }
 
   async function save() {
+    if (saveBusy) return;
     if (!form.name.trim()) {
       showToast('Nama produk wajib diisi');
       return;
     }
-    const r = form.id
-      ? await api('/api/products/' + form.id, {
-          method: 'PUT',
-          body: JSON.stringify(form),
-        })
-      : await api('/api/products', { method: 'POST', body: JSON.stringify(form) });
-    if (r.ok) {
-      showToast(form.id ? 'Produk diperbarui' : 'Produk ditambahkan');
-      setShow(false);
-      load();
-    } else {
-      showToast(r.error || 'Gagal menyimpan');
+    setSaveBusy(true);
+    try {
+      const r = form.id
+        ? await api('/api/products/' + form.id, {
+            method: 'PUT',
+            body: JSON.stringify(form),
+          })
+        : await api('/api/products', { method: 'POST', body: JSON.stringify(form) });
+      if (r.ok) {
+        showToast(form.id ? 'Produk diperbarui' : 'Produk ditambahkan');
+        setShow(false);
+        load();
+      } else {
+        showToast(r.error || 'Gagal menyimpan');
+      }
+    } finally {
+      setSaveBusy(false);
     }
   }
 
   async function setStock(p: Product) {
+    if (stockBusy) return;
     const v = Number(stockEdits[p.id]);
     if (Number.isNaN(v) || v < 0) return;
-    await api('/api/products/' + p.id, {
-      method: 'PUT',
-      body: JSON.stringify({ id: p.id, stock: v }),
-    });
-    showToast('Stok ' + p.name + ' diubah ke ' + v);
-    load();
+    setStockBusy(true);
+    try {
+      await api('/api/products/' + p.id, {
+        method: 'PUT',
+        body: JSON.stringify({ id: p.id, stock: v }),
+      });
+      showToast('Stok ' + p.name + ' diubah ke ' + v);
+      load();
+    } finally {
+      setStockBusy(false);
+    }
   }
 
   async function toggleActive(p: Product) {
-    await api('/api/products/' + p.id, {
-      method: 'PUT',
-      body: JSON.stringify({ active: p.active ? 0 : 1 }),
-    });
-    load();
+    if (toggleBusy) return;
+    setToggleBusy(true);
+    try {
+      await api('/api/products/' + p.id, {
+        method: 'PUT',
+        body: JSON.stringify({ active: p.active ? 0 : 1 }),
+      });
+      load();
+    } finally {
+      setToggleBusy(false);
+    }
   }
 
   function deleteProduct(p: Product) {
@@ -440,8 +462,12 @@ export function ProdukClient() {
                         value={stockEdits[p.id] ?? p.stock}
                         onChange={(e) => setStockEdits((s) => ({ ...s, [p.id]: e.target.value }))}
                       />
-                      <button className="btn-ghost px-2 py-1 text-xs" onClick={() => setStock(p)}>
-                        Simpan
+                      <button
+                        className="btn-ghost px-2 py-1 text-xs"
+                        disabled={stockBusy}
+                        onClick={() => setStock(p)}
+                      >
+                        {stockBusy ? '…' : 'Simpan'}
                       </button>
                       {p.stock <= 0 ? (
                         <Badge tone="red">Habis</Badge>
@@ -455,6 +481,7 @@ export function ProdukClient() {
                   <td className="td">
                     <button
                       onClick={() => toggleActive(p)}
+                      disabled={toggleBusy}
                       className={
                         'rounded-full px-2.5 py-0.5 text-xs font-bold transition ' +
                         (p.active
@@ -513,8 +540,8 @@ export function ProdukClient() {
             <button className="btn-ghost" onClick={() => setShow(false)}>
               Batal
             </button>
-            <button className="btn-primary" onClick={save}>
-              Simpan
+            <button className="btn-primary" disabled={saveBusy} onClick={save}>
+              {saveBusy ? 'Menyimpan…' : 'Simpan'}
             </button>
           </>
         }

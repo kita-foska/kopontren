@@ -18,12 +18,15 @@ type Sale = {
   created_at: string;
   items: { product_name: string; qty: number; unit: string; unit_price: number; subtotal: number }[];
 };
-type ListResp = { sales: Sale[] };
+type ListResp = { sales: Sale[]; total?: number };
 const PAY: Record<string, string> = { cash: 'Tunai', tf: 'Transfer', wa: 'QRIS / WA' };
 
 export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?: 'all' | 'today' }) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
+  // Total baris dari server (COUNT /api/sales) — "N" utk notifikasi
+  // "Menampilkan X dari N transaksi" (bukan jumlah baris yang sudah termuat).
+  const [total, setTotal] = useState(0);
   const [period, setPeriod] = useState(scope === 'today' ? 1 : 7);
   const [statusF, setStatusF] = useState('');
   const [q, setQ] = useState('');
@@ -49,16 +52,19 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
     const all: Sale[] = [];
     const PAGE = 50;
     try {
+      let totalSeen = 0;
       for (let offset = 0; ; offset += PAGE) {
         const r = await api<ListResp>(
           '/api/sales?days=' + period + '&status=' + (statusF || 'all') + '&limit=' + PAGE + '&offset=' + offset
         );
         if (!r.ok || !r.data) break;
+        if (typeof r.data.total === 'number') totalSeen = r.data.total;
         const page = r.data.sales || [];
         all.push(...page);
         if (page.length < PAGE || all.length >= 500) break;
       }
       setSales(all);
+      setTotal(totalSeen || all.length);
     } finally {
       setLoading(false);
     }
@@ -356,6 +362,13 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
           </div>
         )}
       </div>
+      {/* Notifikasi pagination: N = total baris dari server (COUNT), jadi
+          user tahu kalau daftar yang tampil hanya sebagian. */}
+      {total > 0 && (
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Menampilkan {filteredSales.length} dari {total} transaksi
+        </p>
+      )}
       {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>

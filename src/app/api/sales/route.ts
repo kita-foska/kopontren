@@ -47,6 +47,14 @@ export async function GET(req: Request) {
     where.push('status = ?');
     args.push(status);
   }
+  // Total baris (COUNT tanpa limit/offset, WHERE sama persis) — dipakai
+  // klien Laporan utk notifikasi "Menampilkan X dari N transaksi" supaya
+  // pagination tidak disembunyikan dari user.
+  const total = (
+    (await d
+      .prepare(`SELECT COUNT(*) c FROM sales WHERE ${where.join(' AND ')}`)
+      .get(...args)) as { c: number }
+  ).c;
   args.push(limit, offset);
   const rows = (
     (await d
@@ -114,7 +122,7 @@ export async function GET(req: Request) {
       items: itemsMap.get(r.id) || [],
     };
   });
-  return NextResponse.json({ sales, limit, offset });
+  return NextResponse.json({ sales, total, limit, offset });
 }
 
 export async function POST(req: Request) {

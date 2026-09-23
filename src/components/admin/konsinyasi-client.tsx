@@ -49,6 +49,8 @@ export function KonsinyasiClient() {
   const [acts, setActs] = useState<Record<number, { qty: number; pay: number }>>({});
   const [loadingMore, setLoadingMore] = useState(false);
   const [canMore, setCanMore] = useState(false);
+  // Guard busy: cegah double-tap pada aksi jual/kembalikan/bayar/tutup.
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async (offset = 0, append = false) => {
     // Server cap 50 baris/halaman; offset melanjutkan riwayat konsinyasi.
@@ -81,14 +83,20 @@ export function KonsinyasiClient() {
   }
 
   async function post(body: object, okMsg: string) {
-    const r = await api<{ ok?: boolean }>('/api/konsinyasi', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
-    if (r.ok) {
-      showToast(okMsg);
-      load();
-    } else showToast(r.error || 'Gagal memproses');
+    if (busy) return;
+    setBusy(true);
+    try {
+      const r = await api<{ ok?: boolean }>('/api/konsinyasi', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      if (r.ok) {
+        showToast(okMsg);
+        load();
+      } else showToast(r.error || 'Gagal memproses');
+    } finally {
+      setBusy(false);
+    }
   }
 
   function act(id: number, patch: Partial<{ qty: number; pay: number }>) {
@@ -135,7 +143,7 @@ export function KonsinyasiClient() {
   const done = data?.consignments.filter((k) => k.status === 'settled') || [];
   if (!data) return <p className="text-sm text-slate-500">Memuat…</p>;
 
-  function KonsCard({ k, doneMode }: { k: Kons; doneMode: boolean }) {
+  function KonsCard({ k, doneMode, busy }: { k: Kons; doneMode: boolean; busy?: boolean }) {
     return (
       <div className="card mb-3 p-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
@@ -166,7 +174,7 @@ export function KonsinyasiClient() {
         </div>
         {doneMode ? (
           <div className="mt-3 flex justify-end">
-            <button className="btn-ghost" onClick={() => bukaLagi(k)}>
+            <button className="btn-ghost" disabled={busy} onClick={() => bukaLagi(k)}>
               Buka lagi
             </button>
           </div>
@@ -192,16 +200,16 @@ export function KonsinyasiClient() {
                 onChange={(e) => act(k.id, { pay: Number(e.target.value) })}
               />
             </div>
-            <button className="btn-ghost" onClick={() => jual(k)}>
+            <button className="btn-ghost" disabled={busy} onClick={() => jual(k)}>
               Jual
             </button>
-            <button className="btn-ghost" onClick={() => kembalikan(k)}>
+            <button className="btn-ghost" disabled={busy} onClick={() => kembalikan(k)}>
               Kembalikan
             </button>
-            <button className="btn-amber" onClick={() => bayar(k)}>
+            <button className="btn-amber" disabled={busy} onClick={() => bayar(k)}>
               Bayar
             </button>
-            <button className="btn-danger" onClick={() => tutup(k)}>
+            <button className="btn-danger" disabled={busy} onClick={() => tutup(k)}>
               Tutup
             </button>
           </div>
@@ -307,8 +315,8 @@ export function KonsinyasiClient() {
           />
         </div>
         <div className="flex items-end">
-          <button className="btn-primary w-full" onClick={create}>
-            Terima Konsinyasi
+          <button className="btn-primary w-full" disabled={busy} onClick={create}>
+            {busy ? 'Menyimpan…' : 'Terima Konsinyasi'}
           </button>
         </div>
       </div>
@@ -339,7 +347,7 @@ export function KonsinyasiClient() {
         ) : (
           <div>
             {active.map((k) => (
-              <KonsCard key={k.id} k={k} doneMode={false} />
+              <KonsCard key={k.id} k={k} doneMode={false} busy={busy} />
             ))}
           </div>
         )
@@ -348,7 +356,7 @@ export function KonsinyasiClient() {
       ) : (
         <div>
           {done.map((k) => (
-            <KonsCard key={k.id} k={k} doneMode={true} />
+            <KonsCard key={k.id} k={k} doneMode={true} busy={busy} />
           ))}
         </div>
       )}
