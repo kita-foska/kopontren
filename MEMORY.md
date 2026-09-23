@@ -772,6 +772,45 @@ blocking)
     @ `ec9d9c9`.
   - Belum teruji di UI langsung; menunggu test manual user
     (pola sama dgn Batch A/B).
+  - **UPDATE (23 Sep):** 6 titik test manual user nang HP
+    SEMUA OK — (1) label bayar ✓, (2) skeleton ✓, (3) low-stock ✓,
+    (4) aksen h1 ✓, (5) pin/setup ✓, (6) unduhan blob ✓.
+    Batch C final → Batch D di-approve.
+
+## FASE 2 BATCH D (a11y polish): DISELESAIKAN — commit `e9ebfdb`
+  (23 Sep 2026)
+  - 30 file, +194/−161, MURNI ATRIBUT (tak ada ubah
+    data/state/API/DB, tak ada ubah layout/perilaku):
+    1. **aria-expanded ×3** (sebelumnya 0 di seluruh repo):
+       `laporan-client` (akordion transaksi, `aria-controls=
+       lap-detail-{id}` + id di panel), `notification-bell`
+       (toggle panel, `aria-controls="notif-panel"` + id di panel),
+       `sidebar` (tombol menu mobile drawer).
+    2. **role=tablist ×3 baru** (+ `role="tab"` +
+       `aria-selected` di 6 tombol tab): `belanja-client`
+       (in/out), `data-client` (backup/audit), `konsinyasi-client`
+       (active/done). Catatan: `pos-client` L1139 sudah punya
+       `role="tablist"` bawaan (tak diubah). Panel tab berupa
+       fragment/kondisional — wiring `aria-controls` panel
+       sengaja dilewati (minimal viable, tanpa wrap baru).
+    3. **type="button" ×154 tombol di 30 file** (estimasi awal
+       grep single-line ~65; scanner nesting-aware menemukan
+       lebih banyak karena banyak tag `type=`-nya beda baris /
+       auditor melewatkan tombol tanpa atribut di beberapa file).
+       Tombol submit form login (`type="submit"`) TIDAK diubah —
+       satu-satunya `<form>` di app.
+    4. **Sumbu chart:** label x `SalesBarChart`
+       (`charts.tsx`) `text-[9px]` → `text-[11px]`.
+  - Verifikasi: `tsc --noEmit` exit 0, `npm run build` EXIT 0;
+    grep: `aria-expanded`=3 (full coverage — tak ada kontrol
+    fold/collapse lain di repo), `role="tablist"`=4 (3 baru +
+    1 eksisting pos-client), `text-[9px]` di charts=0, scanner
+    `<button` tanpa `type` = 0 pelanggaran.
+  - `public/sw.js` tidak di-commit (di-restore pasca build,
+    stamp lokal `9aa319458960`). Dual-push `master` + `main`
+    @ `e9ebfdb` (ls-remote kedua ref = `e9ebfdb…`).
+  - Sisa pending: test ikon PWA di Edge (urutan 3 test user),
+    QRIS / grosir / point_history (tunda, NMID).
 
 ## Konvensi fetch klien (23 Sep 2026)
 - Klien: SEMUA fetch lewat `fetchTimeout` (`@/lib/fetch-util`),

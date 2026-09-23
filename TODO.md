@@ -529,7 +529,20 @@ konsistensi.
   laporan-client, laporan-admin) → `fetch`+Blob+objectURL+download
   + busy `dl` + toast. Verifikasi: `tsc --noEmit` 0, `npm run
   build` EXIT 0 (47 rute), dual-push master+main @ `ec9d9c9`.
-- **Batch D (a11y polish):** aria-expanded accordion, role=tablist
-  pada tab, type=button + label aksi tabel, sumbu chart >= 11px.
+- **Batch D (a11y polish) — SELESAI, commit `e9ebfdb` (23 Sep):**
+  30 file, +194/−161, murni atribut.
+  (1) `aria-expanded` ×3: akordion transaksi `laporan-client`
+  (+`aria-controls`), toggle panel `notification-bell`, tombol
+  menu mobile `sidebar`.
+  (2) `role="tablist"` ×3 baru (+`role="tab"`+`aria-selected`
+  di 6 tombol): belanja in/out, data backup/audit,
+  konsinyasi active/done (pos-client sudah punya tablist).
+  (3) `type="button"` di 154 tombol tanpa `type` eksplisit
+  (submit form login tak disentuh).
+  (4) Sumbu x `SalesBarChart` `text-[9px]`→`text-[11px]`.
+  Verifikasi: tsc 0, build EXIT 0, grep + scanner bersih,
+  dual-push master+main @ `e9ebfdb`.
+  **Sisa pending:** test ikon PWA di Edge; QRIS/grosir/
+  point_history (tunda, NMID).
 
 
