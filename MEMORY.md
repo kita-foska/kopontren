@@ -694,6 +694,28 @@ blocking)
   `TODO.md` (seksi "FASE 2 — Audit UI/UX"). Prinsip yang disepakati:
   tidak ada perubahan UI sebelum approval; rekomendasi dipecah per
   batch agar tiap batch kecil & mudah di-approve.
+- **FASE 2 BATCH A: DISELESAIKAN — commit `9ef700e` (23 Sep 2026).**
+  Eksekusi 4 item bug fungsional (1 commit, 10 file, +377/-199):
+  1. **Guard busy 8 form** (useState per-file, konsisten dgn POS/
+     LowStock): piutang, hutang, belanja (tab in & out), kas,
+     konsinyasi (`post` + 5 tombol KonsCard), produk (save/stock/
+     toggle; bulk sudah guard), member, pengguna (6 operasi).
+     Setiap submit async kini `if (busy) return` + `finally
+     setBusy(false)`, tombol `disabled` saat request.
+  2. **Label belanja tidak menyesatkan:** "(50 transaksi/pengeluaran
+     terbaru)" → "(dari semua data)" — total memang agregat global
+     server, daftar di bawah hanya 50 baris.
+  3. **Feedback sunyi diurai:** `removeEntry` (kas) kini toast sukses/
+     gagal; `toggleActive` (pengguna) kini toast "Aktiv/Nonaktif".
+  4. **Notifikasi pagination laporan:** GET `/api/sales` kini
+     mengembalikan `total` (COUNT dgn WHERE sama); `laporan-client`
+     menampilkan footer "Menampilkan X dari N transaksi".
+  - Verifikasi: `tsc --noEmit` exit 0, `npm run build` exit 0,
+    audit guard per-file (semua 8 form punya `if(busy)` + `disabled`).
+    `public/sw.js` sengaja TIDAK di-commit (di-stamp ulang oleh build
+    Vercel). Dual-push `main` + `master` @ `9ef700e`.
+  - Belum teruji di UI langsung (butuh deploy + klik di perangkat);
+    logika double-tap sudah dipertahankan di level guard + disabled.
 
 ## Konvensi fetch klien (23 Sep 2026)
 - Klien: SEMUA fetch lewat `fetchTimeout` (`@/lib/fetch-util`),

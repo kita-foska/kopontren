@@ -488,9 +488,12 @@ konsistensi.
   (POST akan memvalidasi)".
 
 ### Batch rekomendasi (untuk approval user)
-- **Batch A (bug fungsional, 1 commit):** guard busy semua form
-  (P1 global) + label total belanja + toast utk removeEntry/
-  toggleActive + notify potongan pagination laporan.
+- **Batch A (bug fungsional, 1 commit) — SELESAI, commit `9ef700e`:**
+  guard busy 8 form (piutang, hutang, belanja, kas, konsinyasi, produk,
+  member, pengguna) via `useState` per-file + label total belanja
+  "(dari semua data)" (tab in & out) + toast removeEntry (kas) &
+  toggleActive (pengguna) + footer "Menampilkan X dari N transaksi"
+  (GET /api/sales + kolom `total`).
 - **Batch B (mobile):** tabel → card di <sm (kas, shift, produk,
   member, audit) + hit-area aksi baris + tombol hapus kas.
 - **Batch C (komunikasi/konsistensi):** map label metode bayar
