@@ -629,6 +629,17 @@ blocking)
   artefak build lokal; Vercel re-stamp saat build). CSV stok
   (`stok-export/import-20260923.csv`, `_products_update.csv`)
   tetap untracked — user upload sendiri (PENDING).
-- **Vercel**: auto-deploy dari `main` pasca-push `6b4b179`; baseline
-  stamp produksi sebelum deploy = `SW-BUILD:7706b506c8ab` (berubah
-  = deploy baru Ready — cara verifikasi tanpa Vercel CLI/token).
+- **Vercel: DEPLOY TERKONFIRMASI LIVE (23 Sep):** stamp produksi
+  berubah `SW-BUILD:7706b506c8ab` -> `1d0b1c0f67b6`. Catatan:
+  stamp di-seed `BUILD_ID + Date.now()` per build (lihat
+  `scripts/inject-sw-version.mjs`), jadi stamp prod TIDAK PERNAH
+  = stamp lokal — kriteria sukses = stamp prod BERUBAH dari
+  baseline, bukan match lokal. Cara verifikasi ini tanpa
+  Vercel CLI/token: `curl https://kopontren-gamma.vercel.app/sw.js`
+  lalu grep `SW-BUILD:`.
+- **AUDIT 3x (23 Sep): tanpa bug kritis baru** — detail + temuan
+  minor (schema mati `stock_opname`, `invalidate('kas:')` no-op,
+  fetch klien tanpa timeout) tercatat di TODO.md. Semua key
+  `cached()` (7 site) terverifikasi punya pasangan
+  `invalidate(prefix)` yang benar; oversell-guard
+  `WHERE stock >= ?` + guard `changes === 1` tetap konsisten.

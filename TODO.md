@@ -44,6 +44,18 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       bounded (periode last_zakat_date), users list admin-only,
       tak ada SQL string-concat, tak ada N+1 lain; CSV cap di atas
       menutup item performa terakhir.
+- [x] **AUDIT 3x (23 Sep, pasca deploy phone guard + purchases
+      floor): TANPA BUG KRITIS BARU.** Putaran: (1) grep SQLi/DOM/
+      fetch/date/auth-role, (2) matriks write-route x invalidate x
+      cache-key x guard, (3) regresi test:phone 26/26 + test:margin
+      57/57 + test:split 15/15 + tsc exit 0. Temuan minor:
+      (a) tabel `stock_opname` = schema mati (didefinisi + index di
+      db.ts, TIDAK ada writer di route/lib manapun) -> decide
+      drop/implement; (b) `invalidate('kas:')` tak punya key cache
+      pasangan (harmless, jadi backstop); (c) fetch klien tanpa
+      timeout (login/pin/session-watcher) - cosmetic. Verifikasi
+      deploy prod: SW-BUILD stamp berubah `7706b506c8ab` ->
+      `1d0b1c0f67b6` (deploy pasca `6b4b179` sudah live).
 - [r] `audit_log.ip_address` dari `x-forwarded-for` mentah — bisa di-forge
       (forensik saja, bukan auth).
 - [x] AUDIT 3x (21 Sep): struk cetak / struk WA — XSS print-window —
