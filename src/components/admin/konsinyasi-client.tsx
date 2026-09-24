@@ -67,6 +67,10 @@ export function KonsinyasiClient() {
   const [acts, setActs] = useState<Record<number, { qty: number; pay: number }>>({});
   const [loadingMore, setLoadingMore] = useState(false);
   const [canMore, setCanMore] = useState(false);
+  // Kegagalan muat awal (401/403/500): simpan pesan error + tombol retry,
+  // supaya PWA tidak stuck "Memuat…" selamanya (mis. DB produksi belum
+  // migrasi v16 saat pertama deploy).
+  const [loadErr, setLoadErr] = useState('');
   // Guard busy: cegah double-tap pada aksi jual/kembalikan/bayar/tutup.
   const [busy, setBusy] = useState(false);
   // P4-B: flag field komisi sudah disentuh user (pre-fill per-pemilik
@@ -92,6 +96,9 @@ export function KonsinyasiClient() {
         };
       });
       setCanMore((r.data!.consignments?.length || 0) >= 50);
+      setLoadErr('');
+    } else if (!append) {
+      setLoadErr(r.error || 'Gagal memuat data konsinyasi');
     }
   }, []);
   useEffect(() => {
@@ -198,7 +205,25 @@ export function KonsinyasiClient() {
 
   const active = data?.consignments.filter((k) => k.status === 'active') || [];
   const done = data?.consignments.filter((k) => k.status === 'settled') || [];
-  if (!data) return <p className="text-sm text-slate-500">Memuat…</p>;
+  if (!data) {
+    if (loadErr)
+      return (
+        <div className="text-sm text-slate-500">
+          <p>{loadErr}</p>
+          <button
+            type="button"
+            className="btn-ghost mt-2"
+            onClick={() => {
+              setLoadErr('');
+              load();
+            }}
+          >
+            Coba lagi
+          </button>
+        </div>
+      );
+    return <p className="text-sm text-slate-500">Memuat…</p>;
+  }
 
   function KonsCard({ k, doneMode, busy }: { k: Kons; doneMode: boolean; busy?: boolean }) {
     return (

@@ -764,7 +764,14 @@ export async function saveZakatSettings(
 // Bump v15 (2026-09-23): drop dead table stock_opname (fitur opname
 // tak pernah dipakai / tak pernah ditulis kode). DB existing (v14)
 // menjalankan fullInit sekali lagi -> DROP TABLE IF EXISTS v15.
-const SCHEMA_VERSION = 15;
+// Bump v16 (2026-09-24): FASE P4 (4f12818) menambah execColumn
+// consignments.commission_rate ke fullInit TANPA bump versi (tetap 15)
+// -> DB produksi (sudah stempel v15) skip fullInit -> kolom tak pernah
+// dibuat -> SELECT /api/konsinyasi 500 "no such column: commission_rate"
+// -> halaman Konsinyasi PWA stuck "Memuat…" (pelaporan 24 Sep). Bump v16
+// memaksa DB existing (v15) menjalankan fullInit sekali lagi (idempoten);
+// cold start Turso pertama butuh ~15-20 s, hanya satu kali.
+const SCHEMA_VERSION = 16;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
