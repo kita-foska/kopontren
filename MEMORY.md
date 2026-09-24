@@ -1,6 +1,38 @@
 # MEMORY
 
 ## 2026-09-24
+### PWA icon-180 fix + exact-source headers (lanjutan 24 Sep)
+- **Akar masalah (final):** `public/icon-180.png` server-side KORUP
+  (1,921 B, kotak putih + garis biru); ikon/logo/manifest
+  cache-first nang SW v11 + Windows icon-cache → .ico taskbar PWA
+  kothakan putih, stuck (PWA terinstall di periode rusak).
+- **`608074d` (master+main):** regen `public/icon-180.png`
+  (11,493 B = logo ✓ pixel-inspected sharp) + `?v=2` cache-busting
+  (`manifest.json` + `apple-touch-icon` di `layout.tsx`) + aturan
+  cache ikon/logo/logo → `max-age=86400` (ora immutable global).
+- **`7e6cb37` (master+main):** aturan ikon/logo `next.config.mjs`
+  diganti source EXACT (`/icon-180.png`, `/icon-192.png`,
+  `/icon-512.png`, `/logo-kopontren.svg`, `/favicon.ico`,
+  `/manifest.json`) — pengganti wildcard `/(icon|logo)-:path*`
+  sing curiga bikin build Vercel stall/queue stuck.
+- **Verifikasi lokal:** `tsc --noEmit` exit 0 + `npm run build`
+  EXIT 0 (48 page) ngemuhi config anyar (Register-ScheduledTask +
+  `.build-out4.txt` = `BUILD_EXIT=0`). stamp sw.js lokál
+  `c0aac38143af` = artefak build, JANGAN commit.
+- **Cutover Vercel PENDING (re-poll 24 Sep):** sw.js live tetep
+  `SW-BUILD 787c447606c5`; `icon-180.png` live tetep 1,921 B;
+  `manifest.json` live tetep 718 B (tanpa `?v=2`).
+- **Prosedur "nuclear reset" kanggo user (NANGKA cutover):**
+  ① Uninstall PWA (klik kanan shortcut taskbar/Start → Uninstall)
+  ② Tutup Edge total → hapus `%LOCALAPPDATA%\Microsoft\Edge\User
+     Data\Chrome (PWA)` + `Default\Service Worker` + `Default\Cache`
+     + `Default\Code Cache` + `%LOCALAPPDATA%\Microsoft\Windows\
+     Explorer\iconcache*.db` & `thumbcache*.db` → `ie4uinit.exe
+     -show` → reboot
+  ③ Edge → Clear browsing data "All time" (cached images + site
+     data/service workers)
+  ④ Install PWA maneh → ikon taskbar/Start menu = logo (detail
+     kelèk: TODO.md seksi "PWA / Favicon").
 ### Batch F: integrity `1a07ed1` + tz WIB `c392237` (perbaikan audit)
 - **integrity (commit `1a07ed1`)**: `amount_paid`/`change` tak lagi
   dipercaya dari klien. POST /api/sales: `amount_paid = max(total,

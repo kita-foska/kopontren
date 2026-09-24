@@ -331,12 +331,38 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       Vercel LIVE: favicon served 5.635 byte = persis file lokal
       (verifikasi HTTP 22 Sep, https://kopontren-gamma.vercel.app).
 - [ ] **Test manual ikon PWA taskbar — HANDLED USER NANG EDGE LAPTOP
-      (PENDING hasil):**
-      1. Tunggu Vercel deploy `046b80c` Ready
-      2. Uninstall PWA di Edge → clear site data → restart Explorer
-      3. Install ulang PWA → cek logo nang taskbar & Start menu
-      4. Bila masih gagal: hapus cache ikon Windows manual → restart
-         → install maneh → LAPOR hasilnya
+      (PENDING hasil) — update 24 Sep:**
+      Akar masalah ketemu: `public/icon-180.png` server-side KORUP
+      (1,921 B, kotak putih + garis biru); PWA terinstall di periode
+      rusak → .ico taskbar stuck di icon-cache Windows. Fix wis
+      committed: `608074d` (regen icon-180 = 11,493 B + `?v=2` bust
+      + header ikon/logo `max-age=86400`) & `7e6cb37` (next.config.mjs
+      source EXACT — verified lokal `tsc` exit 0 + `npm run build`
+      EXIT 0, 48 page). Kedua wis dual-push master+main; cutover
+      Vercel durung keliver (re-poll 24 Sep: sw.js live tetep
+      `SW-BUILD 787c447606c5`, icon-180 live tetep 1,921 B,
+      manifest.json live tetep 718 B tanpa `?v=2`).
+      **Prosedur "nuclear reset" (eksekusi NANGKA cutover live):**
+      1. Uninstall PWA: klik kanan shortcut "Kopontren" nang
+         taskbar/Start menu → **Uninstall**
+      2. Tutup Edge total (cek tray) → hapus:
+         - `%LOCALAPPDATA%\Microsoft\Edge\User Data\Chrome (PWA)`
+           (folder PWA terinstall)
+         - `%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Service
+           Worker`, `...\Default\Cache`, `...\Default\Code Cache`
+         - `%LOCALAPPDATA%\Microsoft\Windows\Explorer\iconcache*.db`
+           & `thumbcache*.db` ( Explorer kudu mati/reboot )
+         → `Win+R` `ie4uinit.exe -show` → **reboot**
+      3. Edge → Settings → Privacy, search & services → Clear
+         browsing data → "All time" (✓ Cached images & files,
+         ✓ Site data & service workers)
+      4. Buka `https://kopontren-gamma.vercel.app` → Install app
+         maneh (ikon PWA nang menu)
+      5. Cek: ikon taskbar & Start menu = logo (ora kothakan
+         putih). Bila MASIH gagal → debug `chrome://serviceworker
+         -internals` / `chrome://components` / flag
+         `edge-automatic-https-encryption-disabled` (ref. seksi
+         PWA/Favicon ing MEMORY.md) → LAPOR hasilnya
 
 ## Produk / Stok — revisi pendekatan (23 Sep 2026)
 - [x] Generate CSV stok dari DB dev (`file:./data/kopontren.db`):
