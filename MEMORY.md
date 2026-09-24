@@ -25,6 +25,30 @@
   = sub-test "Bug #1 (A1–A5)") · ④ upload CSV ke Turso sendiri ·
   [r] risiko rendah diterima (termasuk `cash_low` monitoring) ·
   TUNDA: QRIS (NMID) · grosir · point_history.
+### KONFIRMASI FINAL GUS FI + CHECK A2/A3/A4 (24 Sep, pasca P4-B)
+- P4-B `0e34c45` KONFIRMASI OK: 8 file +360/−36; tsc 0, build 0,
+  `test:konsinyasi` 47/47, regresi `test:margin` 57/57 +
+  `test:split` ALL_PASS. Chain lengkap: P4-A `4f12818` → P4-B
+  `0e34c45` → P3 `9dbc22c` → docs `d1c0c7e`/`6c6ab64` (main=master).
+- **Check "sisa A2/A3/A4?" — JAWABAN BUKTI KODE:**
+  - A2 (Arus Kas) = **SUDAH BANGUN**: `/admin/kas` (jurnal + auto),
+    dashboard admin "Arus Kas 7 Hari", WA push pengurus "Arus Kas
+    30 Hari", kartu "Arus kas neto" di laporan, `keuangan.ts`
+    (scope eksplisit fase A2; piutang/hutang sengaja keluar —
+    itu cakupan zakat, bukan kas).
+  - A4 (Top Produk) = **SUDAH BANGUN**: seksi "Top produk"
+    `laporan-admin-client.tsx`.
+  - A3 (Neraca) + A4 bagian "Jam Sibuk" = **TAK PERNAH
+    DIPLANNING** (0 hit di TODO/MEMORY/SYARIAH-CHECKLIST + kode)
+    → bukan sisa WIP; hanya request baru kalo Gus Fi mau.
+  - A1 (P&L Laba-Rugi) = SELESAI `0564e71` (MEMORY L1159).
+- **① Test ikon PWA Edge = LULUS 24 Sep** (TODO L603) → sisa
+  user-test tinggal ② HP + ③ checklist zakat + ④ upload CSV.
+- **0 WIP engineering**: working tree bersih utk kode/docs; sisa
+  hanya ` M public/sw.js` (artefak lokal — JANGAN commit, policy
+  PWA; Vercel stamp sendiri) + 3 CSV user untracked
+  (`_products_update.csv`, `stok-export-20260923.csv`,
+  `stok-import-admin-20260923.csv`) = material item ④.
 ### P4 Konsinyasi + komisi store / akad WAKALAH BIL UJRAH (24 Sep, FASE P4)
 - Keputusan pengurus: komisi toko 20% dr harga jual. Akad
   **wakalah bil ujrah** (koreksi 24 Sep dsr riset Syafi'i + Bahtsul
