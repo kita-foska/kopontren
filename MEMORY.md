@@ -1059,19 +1059,19 @@ blocking)
 6. Tashih ulama: (P3) formula zakat — haul 1 tahun tetap, laba konservatif, harga emas;
    (P4) skema komisi konsinyasi bila store mau margin.
 
-### Status FASE A1 (P&L UI) — WIP, menunggu tes & approval user
+### Status FASE A1 (P&L UI) — SELESAI & COMMITTED (0564e71, 24 Sep 2026)
 - `laporan-admin-client.tsx`: import + tipe (LabaRugi, PlPreset, PlRow, plPresetRange,
   plPeriodLabel) + shell tab "Ringkasan|Laba-Rugi" ✅. **LabaRugiTab body SELESAI** (blok 24 Sep 2026):
   tab menampilkan: preset 1/7/30/bulan/tahun + rentang custom, statement bruto→bersih→HPP→laba kotor→
   beban (accordion byCategory)→laba bersih, blok Memo di luar laba, kotak Catatan V1, tombol Bagikan WA.
 - Backend A1 juga sudah ada: `src/app/api/keuangan/` + `src/lib/keuangan.ts`
   (queryKeuangan + KEUANGAN_NOTES), `rekap.ts` (+ buildLabaRugiWa, label 'Saldo Reward').
-- tsc --noEmit ✅ & next build ✅ (24 Sep 2026). Masih BELUM ter-commit (WIP FASE 4,
-  sengaja di luar commit f1/f2 f4479b3). Lanjut: tes manual tab Laba-Rugi (preset +
-  rentang custom + bagikan WA) → approval user → commit FASE 4.
-- Follow-up (24 Sep 2026, commit be570d7+): label sisa P1 — `perks.ts` soft-flag,
+- tsc --noEmit ✅ & next build ✅ (24 Sep 2026). Kode commit `0564e71` (4 file) —
+  approval user (tes manual P2 rollback + tab Laba-Rugi: preset, rentang custom, bagikan WA).
+- Lanjut (non-eng): P3 tashih ulama (zakat) · P4 keputusan pengurus (konsinyasi/ju'alah) · P5 ✅ (denda tak pernah diimplementasi).
+- Follow-up (24 Sep 2026, commit 552c8e2): label sisa P1 — `perks.ts` soft-flag,
   `rekap.ts` baris WA rekap ("Saldo Reward"), SYARIAH-CHECKLIST P1/P2 ✅.
-  Label CSV P&L (`api/keuangan/csv/route.ts`) ikut commit FASE 4 (butuh `keuangan.ts`).
+  Label CSV P&L (`api/keuangan/csv/route.ts`) ter-commit di A1 `0564e71`.
 
 ## ⚠️ ATURAN BAKU NGUDI SUSILO (24 Sep 2026, WIS DIBACA)
 
