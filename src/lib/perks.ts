@@ -295,7 +295,7 @@ export function memberSettingWarnings(cfg: PerkConfig): string[] {
     out.push(`Beban perk otomatis ${total}% cukup tinggi — margin produk tipis bisa tergerus.`);
   }
   if (cfg.cashbackPct >= 50) {
-    out.push(`Cashback ${cfg.cashbackPct}% tinggi — saldo cashback member akan menumpuk cepat.`);
+    out.push(`Saldo Reward ${cfg.cashbackPct}% tinggi — saldo reward member akan menumpuk cepat.`);
   }
   if (cfg.pointValue > 0 && cfg.pointsEvery > 0 && cfg.pointValue >= cfg.pointsEvery) {
     out.push(

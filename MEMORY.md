@@ -1069,6 +1069,9 @@ blocking)
 - tsc --noEmit ✅ & next build ✅ (24 Sep 2026). Masih BELUM ter-commit (WIP FASE 4,
   sengaja di luar commit f1/f2 f4479b3). Lanjut: tes manual tab Laba-Rugi (preset +
   rentang custom + bagikan WA) → approval user → commit FASE 4.
+- Follow-up (24 Sep 2026, commit be570d7+): label sisa P1 — `perks.ts` soft-flag,
+  `rekap.ts` baris WA rekap ("Saldo Reward"), SYARIAH-CHECKLIST P1/P2 ✅.
+  Label CSV P&L (`api/keuangan/csv/route.ts`) ikut commit FASE 4 (butuh `keuangan.ts`).
 
 ## ⚠️ ATURAN BAKU NGUDI SUSILO (24 Sep 2026, WIS DIBACA)
 

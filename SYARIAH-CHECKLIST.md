@@ -54,17 +54,17 @@
 | 3 | Hutang supplier | Dayn | ✅ | Tanpa bunga & denda; due_date hanya pengingat |
 | 4 | Konsinyasi | Salam al-bi' / wakalah | ✅ | 100% hasil untuk pemilik; tanpa komisi (ju'alah) |
 | 5 | Poin loyalty | Tawadhi'/hibah | ✅ | Gratis, jadi potongan, tak bisa ditarik tunai |
-| 6 | Cashback (reward) | Ta'diyah / potongan | ⚠️ | Mekanik ok; **redesign label** + perlu tashih ulama |
+| 6 | Cashback (reward) | Ta'diyah / potongan | ✅ | Mekanik ok; P1 SELESAI — label UI jadi "Saldo Reward" (f4479b3, 24 Sep 2026) |
 | 7 | Tier Silver/Gold | Status | ✅ | Badge saja, ambang jelas di setting |
 | 8 | Diskon (member/grosir/ultah) | Hibah | ✅ | Jelas, cap 90%, ultah = tawadhi' |
-| 9 | Retur/Refund | Khiyar ('aib/syarat) | ⚠️ | Alur sah; **lubang exploit poin** (P2) + tashih |
+| 9 | Retur/Refund | Khiyar ('aib/syarat) | ✅ | Alur sah; P2 SELESAI — rollback poin/reward saat retur penuh (f4479b3) |
 | 10 | Zakat tijarah | Kewajiban | ❓ | Nisab/kadar ok; formula laba periodik & modal HPP perlu tashih |
 | 11 | Shift / setor kas | Wakalah | ✅ | Kontrol internal, jurnal kas atomik |
 | 12 | QRIS | — | ⏸️ | Masih MOCK — jangan produksi sebelum NMID |
 
 ### Keputusan user P (tashih ulama)
-1. **P1 — Terminologi "Cashback"** → ganti label UI menjadi **"Saldo Reward"**; poin "Poin Reward". Mekanisme tidak berubah.
-2. **P2 — Lubang exploit poin** (beli → tebus reward → retur barang + uang, poin tetap) → fix: balikkan poin/reward saat retur penuh. Tashih: bolehkah store membatalkan reward yang sudah cair? (biasanya boleh, karena mughannash/dhalalah)
+1. **P1 — Terminologi "Cashback"** → ✅ SELESAI (24 Sep 2026, commit f4479b3 + follow-up label WA/CSV/soft-flag): label UI jadi **"Saldo Reward"**; poin "Poin Reward". Mekanisme tidak berubah (tetap store-credit).
+2. **P2 — Lubang exploit poin** (beli → tebus reward → retur barang + uang, poin tetap) → ✅ SELESAI (f4479b3): balikkan poin & saldo reward saat retur penuh (jejak ledger `reason='return'`). Tashih tersisa: bolehkah store membatalkan reward yang sudah cair? (biasanya boleh, karena mughannash/dhalalah)
 3. **P3 — Zakat**: (a) pakai haul 1 tahun tetap; laba diakumulasikan secara konservatif sejak awal haul, bukan sejak `last_zakat_date`, (b) harga emas diverifikasi berkala, (c) apakah modal disekap pada nilai pasar (atau tetap HPP)? — semua menunggu keputusan ulama.
 4. **P4 — Konsinyasi + komisi store**: jika suatu hari store mau komisi, pakai **ju'alah** (komisi % disepakati di muka, tercatat di baris konsinyasi).
 5. **P5 — Denda keterlambatan**: JANGAN pernah diimplementasikan sebagai pendapatan store. Jika ada insentif ketepatan waktu → **ta'zir/ta'zhir ke kas amal** (contoh: donasi ke kas pondok), bukan masuk kas store.

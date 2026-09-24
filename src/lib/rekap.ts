@@ -1,5 +1,6 @@
 // Plain-ASCII WhatsApp rekap builder (safe on every WA version: no emoji, no Unicode).
 import { parsePaySplit, payMethodLabel } from './pay-methods';
+import type { KeuanganPayload } from './keuangan';
 export type RekapItem = {
   product_name: string;
   qty: number;
@@ -144,7 +145,7 @@ export function strukWaText(o: {
   lines.push('--------------------------------');
   lines.push('*TOTAL: Rp ' + o.total.toLocaleString('id-ID') + '*');
   if (o.cashback && o.cashback > 0) {
-    lines.push('Cashback: +Rp ' + o.cashback.toLocaleString('id-ID') + ' (masuk saldo)');
+    lines.push('Saldo Reward: +Rp ' + o.cashback.toLocaleString('id-ID') + ' (masuk saldo)');
   }
   if (o.tier) {
     lines.push('Tier: ' + (o.tier === 'gold' ? 'Gold' : 'Silver'));
@@ -186,4 +187,36 @@ export function shareWa(text: string, phone?: string) {
     /* cancelled */
   }
   window.open('https://wa.me/?text=' + enc, '_blank');
+}
+
+/**
+ * P&L V1 statement untuk WhatsApp (plain ASCII, gaya rekap: tanpa
+ * emoji/Unicode khusus). Memo sengaja DISEPRAH dan diberi label
+ * "di luar laba bersih" — konsisten dgn keputusan A1 (cashback, zakat,
+ * settlement konsinyasi TIDAK dijumlahkan ke laba).
+ */
+export function buildLabaRugiWa(p: KeuanganPayload, from: string, to: string): string {
+  const idr = (n: number) => 'Rp ' + n.toLocaleString('id-ID');
+  const lines: string[] = [];
+  lines.push('*LAPORAN LABA-RUGI OPERASIONAL (V1)*');
+  lines.push('Periode: ' + from + ' s.d. ' + to);
+  lines.push('===========================');
+  lines.push('Penjualan Bruto: ' + idr(p.pendapatan.bruto));
+  lines.push('Retur Penjualan Tercatat: -' + idr(p.pendapatan.retur));
+  lines.push('Pendapatan Bersih: ' + idr(p.pendapatan.bersih));
+  lines.push('HPP (COGS): -' + idr(p.hpp));
+  lines.push('*Laba Kotor: ' + idr(p.labaKotor) + '*');
+  lines.push('Beban Operasional: -' + idr(p.beban.total));
+  lines.push('===========================');
+  lines.push('*LABA BERSIH: ' + idr(p.labaBersih) + '*');
+  lines.push('');
+  lines.push('Memo (di luar laba bersih):');
+  lines.push('Saldo Reward Diberikan: ' + idr(p.memo.cashback.total));
+  lines.push('Zakat Tercatat: ' + idr(p.memo.zakat.total));
+  lines.push('Settlement Konsinyasi: ' + idr(p.memo.konsinyasi.total));
+  lines.push('---');
+  lines.push(
+    'V1: retur COGS belum dibalik; piutang/hutang & kas belum terintegrasi (lihat Catatan V1).'
+  );
+  return lines.join('\n');
 }
