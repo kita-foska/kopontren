@@ -25,6 +25,9 @@
   hint akad ju'alah dr `commission_rate_default`.
 - Verifikasi: `tsc --noEmit` exit 0; `test:konsinyasi` 24/24;
   `test:margin` 57/57; `test:split` ALL_PASS; `test:clientip` 16 ok.
+- Dokumen `P4-PROPOSAL-KONSINYASI.md` (24 Sep): proposal pengurus —
+  tabel opsi deliberasi + permohonan keputusan + risiko/penahan.
+  Status: menunggu approval pengurus; tashih sisa → ulama.
 - TASHIH tersisa utk ulama: apakah ujrah boleh dr harga jual aktual
   bila berbeda dr harga perjanjian (V1: komisi dr harga perjanjian —
   konsisten, harga jual tidak direkam terpisah; off-sales).
