@@ -42,7 +42,22 @@ const nextConfig = {
         // Ikon PWA & logo & favicon: 1 hari (boleh di-revalidate), BUKAN
         // immutable setahun — supaya ikon/logo baru setelah deploy bisa
         // sampai ke user tanpa harus menambah ?v=N di URL pemakai.
-        source: '/(icon|logo)-:path*.(png|svg)',
+        // Pakai source EXACT (bukan pola wildcard) agar 100% lolos validasi
+        // routing Vercel; query string tidak memengaruhi pencocokan source
+        // (Vercel match based on path), jadi '?v=2' tetap dapat header ini.
+        source: '/icon-180.png',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+      },
+      {
+        source: '/icon-192.png',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+      },
+      {
+        source: '/icon-512.png',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
+      },
+      {
+        source: '/logo-kopontren.svg',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=86400' }],
       },
       {
