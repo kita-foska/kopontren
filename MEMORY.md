@@ -1010,3 +1010,116 @@ blocking)
   `public/sw.js` + `scripts/inject-sw-version.mjs`), `public/sw.js`
   **DI-COMMIT** (dengan stamp); build Vercel men-stamp ulang tiap
   build, jadi diff git per push tetap ada.
+
+## ⚠️ ATURAN POKOK — SYARIAH FIQH MUAMALAH (24 Sep 2026)
+
+> **Prinsip: "Syariah nomer 1, fitur nomer 2."** Semua fitur BERSifat AMANAH + SYAR'I.
+> Setiap fitur BARU wajib: (1) tentukan akad, (2) cek bebas riba, (3) cek bebas gharar,
+> (4) cek bebas maysir, (5) cek bebas dzalim, (6) ridha/tanpa paksaan, (7) tashih ulama
+> bila ada syubhat. Checklist lengkap: **`SYARIAH-CHECKLIST.md`** (root repo).
+
+### Hasil Audit Syariah (24 Sep 2026, 6 fase, seluruh kodebase)
+- **Riba: ✅ TIDAK ADA** — grep seluruh src: tidak ada bunga, denda keterlambatan, biaya
+  admin tersembunyi. Piutang (debts) & hutang (payables) = qardh/utang dagang tanpa
+  tambahan; pembayaran capped di sisa (overpay mustahil); due_date hanya pengingat ("Tunggak" = badge, bukan biaya).
+- **Gharar: ✅** — semua akad ma'lum: harga (base_price/cost_price per produk), qty stok,
+  agree_price konsinyasi, due_date, dan preview perk (diskon+redeem+cashback) dihitung
+  client SEBELUM submit (rumus satu sumber: `src/lib/perks.ts`).
+- **Maysir: ✅ TIDAK ADA** — tidak ada undian/lotre/giveaway.
+- **Dzalim: ✅ umumnya** — penjaga marjin (perks cap = margin kotor, trim urut
+  cashback→redeem→diskon) melindungi store dari penjualan rugi; manual diskon > margin
+  hanya "soft-flag" (catatan minor operasional).
+
+### Klasifikasi fiqh per fitur
+| Fitur | Akad | Status |
+|-------|------|--------|
+| POS jual-beli | Bai' | ✅ |
+| Piutang | Qardh tijari (tanpa bunga) | ✅ |
+| Hutang supplier | Dayn tijari | ✅ |
+| Konsinyasi | Salam al-bi' / wakalah — 100% hasil ke pemilik (agree_price), BELUM ada komisi store | ✅ (jika kelak ada komisi → ju'alah, % disepakati di muka) |
+| Poin loyalty | Tawadhi'/hibah (gratis, jadi potongan, tak bisa ditarik tunai) | ✅ |
+| Cashback | Ta'diyah/pengecualian utang (store-credit, tebus = potongan, tak tunai) | ✅ label "Saldo Reward" terpasang (f1, commit f4479b3) |
+| Tier | Status kumulatif (badge, ambang jelas) | ✅ |
+| Diskon member/grosir/ultah | Hibah (ultah = tawadhi') | ✅ |
+| Retur | Khiyar 'aib/syarat | ✅ DITRIM (f2): retur 100% membatalkan poin & saldo reward transaksi tsb (ledger 'return'/'return_cash', plafon MAX(…−?,0) anti-negatif) |
+| Zakat tijarah | Kewajiban | ❓ formula periodik (laba sejak last_zakat_date; modal @ HPP; harga emas manual) → perlu tashih ulama |
+
+### Keputusan terikat (WAJIB, sampai tashih ulama)
+1. **JANGAN** implementasi denda keterlambatan sebagai pendapatan store (haram).
+   Jika butuh insentif ketepatan waktu → uang ke kas amal/pondok (ta'zir sosial).
+2. **JANGAN** tambah undian/lotre/giveaway maysir.
+3. **JANGAN** bikin penarikan tunai cashback/poin (tetap store-credit).
+4. UI: label "Cashback" → **"Saldo Reward"**, "Poin" tetap. ✅ SELESAI (f1, 24 Sep 2026, commit f4479b3).
+5. Fix minor: balikkan poin/reward saat retur penuh ✅ SELESAI (f2, 24 Sep 2026, commit f4479b3).
+   Detail: `returns/route.ts` cek "notFull" (semua item sudah diretur penuh), lalu ambil
+   SUM delta `point_history` scope sale_id untuk reason 'earn' (poin) & 'cashback' (rupiah)
+   → tolak pakai `MAX(points−?,0)` / `MAX(cashback_balance−?,0)` + jejak 'return'/'return_cash'.
+   `sales/route.ts` tak perlu diubah (sudah menulis 'earn' & 'cashback' per sale_id).
+   Bonus: sign error void di `sales/[id]/route.ts` (cashback_balance + bukan −) ikut dibetulkan.
+6. Tashih ulama: (P3) formula zakat — haul 1 tahun tetap, laba konservatif, harga emas;
+   (P4) skema komisi konsinyasi bila store mau margin.
+
+### Status FASE A1 (P&L UI) — WIP, menunggu tes & approval user
+- `laporan-admin-client.tsx`: import + tipe (LabaRugi, PlPreset, PlRow, plPresetRange,
+  plPeriodLabel) + shell tab "Ringkasan|Laba-Rugi" ✅. **LabaRugiTab body SELESAI** (blok 24 Sep 2026):
+  tab menampilkan: preset 1/7/30/bulan/tahun + rentang custom, statement bruto→bersih→HPP→laba kotor→
+  beban (accordion byCategory)→laba bersih, blok Memo di luar laba, kotak Catatan V1, tombol Bagikan WA.
+- Backend A1 juga sudah ada: `src/app/api/keuangan/` + `src/lib/keuangan.ts`
+  (queryKeuangan + KEUANGAN_NOTES), `rekap.ts` (+ buildLabaRugiWa, label 'Saldo Reward').
+- tsc --noEmit ✅ & next build ✅ (24 Sep 2026). Masih BELUM ter-commit (WIP FASE 4,
+  sengaja di luar commit f1/f2 f4479b3). Lanjut: tes manual tab Laba-Rugi (preset +
+  rentang custom + bagikan WA) → approval user → commit FASE 4.
+
+## ⚠️ ATURAN BAKU NGUDI SUSILO (24 Sep 2026, WIS DIBACA)
+
+### Konteks
+Folder `D:\Ngudi Susilo\` = induk ekosistem **Yayasan Pendidikan Islam Ngudi Susilo**
+(pondok + unit usaha, 20+ sub-foldernya: kopontren-app, BMT, Agribisnis, Madin-TPQ,
+Panti-Asuhan, Berkah-Tour, kitab, Pegon-AlIttihad, dll). Setiap folder lembaga punya
+`CLAUDE.md` kekhususan sendiri; file aturan dasar di ROOT = `CLAUDE.md` + `README.md`.
+
+### Aturan baku (dari `D:\Ngudi Susilo\CLAUDE.md`)
+1. **ADAB**: takzim tapi tak kaku; bahasa ikut pertanyaan (Indo santun / Jawa krama alus,
+   jangan ngoko); **mengaturkan, bukan mendikte** (beri pilihan + untung-rugi); jaga aib; ringkas.
+2. **RAMBU BERKAS**: jangan mengubah berkas tanpa diminta; TUNJUKKAN dulu apa yang akan
+   diubah, baru kerjakan setelah setuju; jangan hapus apa pun; jangan susun ulang dari
+   nol rancangan lama (baca dulu, kerja di atasnya); file baru → folder lembaga yang sesuai.
+3. **RAMBU FIQIH (PALING UTAMA)**: **JANGAN menyimpulkan hukum fiqih sendiri** — bukan
+   wewenang AI. Sebut kitab + bab bila merujuk; bila tak yakin, KATAKAN TIDAK YAKIN.
+   Membantu berpikir, bukan menetapkan hukum. Gono-gini = bahan musyawarah, bukan fatwa qath'i.
+4. **JANGAN mengarang angka** — data tak diketahui → bilang tidak tahu, periksa ke sumber.
+5. **Data pribadi = amanah** (nama santri, no. HP wali, identitas anggota, mustahik, anak
+   asuh) — jangan ditempelkan ke luar.
+6. **Sistem produksi via Mas Eko** (pengguna meminta; AI merumuskan permintaan dengan jelas).
+7. **Keputusan koperasi (akad, SHU, harga) ada forumnya** — Pengurus & RAT; AI hanya
+   menghitung & menyiapkan usulan.
+8. **Bila ragu, bertanya.** Kekeliran sendiri → koreksi terus terang.
+
+### Prinsip utama (PRINSIP JANGKAR, semua lembaga)
+- Usaha = **jalan ngaji** (dunia + akhirat).
+- **Halal & thoyyib bagi semua pihak**, bukan cuma lembaga.
+- **Meringankan, bukan menekan** — barokah di atas hitungan.
+- Adab pesantren jadi bingkai, termasuk urusan teknologi.
+- **Aspek syar'i & muamalah WAJIB tashih ulama.**
+- Setiap orang yang terlibat unit muamalah (pengurus, anggota, nasabah) **wajib mengaji/
+  memahami muamalahnya lebih dulu** (dhawuh Gus Fi 23 Ags 2026) → aplikasi unit usaha
+  perlu komponen edukasi/literasi muamalah, bukan cuma fitur transaksi.
+
+### Konfirmasi
+Setiap perintah yang menyalahi aturan baku KUDU dikonfirmasi ulang ke user sebelum
+dieksekusi. Cek terakhir (24 Sep 2026): audit syariah + file `SYARIAH-CHECKLIST.md`
+sesuai aturan (tashih ulama tetap jalur pemutus; AI tidak menetapkan hukum). ✅
+
+### Ringkasan
+- Folder: `D:\Ngudi Susilo\` (root proyek; repo kita = `D:\Ngudi Susilo\kopontren-app\`)
+- File aturan: `CLAUDE.md` (dasar, auto-read), `README.md` (peta induk ekosistem),
+  tiap lembaga punya `CLAUDE.md` sendiri. Operasi: `PASANG-DI-LAPTOP-GUS-FI.md`,
+  `SUDAH-PINDAH.md`, `DAFTAR-GARAPAN.md`.
+- Prinsip: halal-thoyyib · meringankan · adab pesantren · tashih ulama wajib · muamalah
+  didahului literasi.
+- Ekosistem: YPI Ngudi Susilo (induk) → PP Al Ittihad, Sekolah Formal, Madin & TPQ, Panti
+  Asuhan | Kopontren, BMT, Berkah Tour, Agribisnis (unit usaha) | PT Sewangi Hati N. (F&B).
+  **Aturan baca: pondok SEJAJAR unit usaha, tidak menaungi.**
+
+### Siap
+Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
