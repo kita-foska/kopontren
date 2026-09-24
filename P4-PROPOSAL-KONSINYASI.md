@@ -1,4 +1,4 @@
-# PROPOSAL PENGURUS — KOMISI KONSINYASI FLEKSIBEL PER KESEPAKATAN (JU'ALAH)
+# PROPOSAL PENGURUS — KOMISI KONSINYASI FLEKSIBEL PER KESEPAKATAN (WAKALAH BIL UJRAH)
 ## Kopontren Al Ittihad
 
 > **Materi musyawarah pengurus, BUKAN fatwa.**
@@ -10,7 +10,9 @@
 
 - Tanggal: 24 Sep 2026
 - Penyusun: Tim app Kopontren (admin)
-- Landasan: SYARIAH-CHECKLIST.md — keputusan P4 (akad ju'alah)
+- Landasan: SYARIAH-CHECKLIST.md — keputusan P4 (akad wakalah bil
+  ujrah; koreksi terminologi 24 Sep dsr riset fiqh Syafi'i +
+  Bahtsul Masail — sebelumnya tertulis "ju'alah")
 - Status teknis: SELESAI (pushed master+main, menunggu approval
   pengurus + tashih sisa ke ulama)
 
@@ -18,9 +20,13 @@
 Pengurus berkeputusan: toko mengambil komisi 20% dari harga jual
 barang konsinyasi. Sebelumnya (18 Sep) fitur konsinyasi berjalan
 tanpa komisi — 100% hasil untuk pemilik barang. Keputusan P4
-checklist syariah: bila toko mau komisi, pakai akad **ju'alah**
-(upah atas pekerjaan yang terlaksana — Fatwa DSN-MUI No. 62/2007),
-komisi disepakati di muka & tercatat di baris konsinyasi.
+checklist syariah: bila toko mau komisi, pakai akad **wakalah bil
+ujrah** (toko = wakil pemilik menjual, upah = ujrah — Fatwa
+DSN-MUI No. 113/DSN-MUI/IX/2017), komisi disepakati di muka &
+tercatat di baris konsinyasi. (Koreksi 24 Sep: keputusan awal
+tertulis "ju'alah"; dsr riset Syafi'i + Bahtsul Masail, bentuk
+"laku = beli" = gharar → akad yang tepat = wakalah bil ujrah;
+mekanik tidak berubah — lihat seksi H.)
 
 **P4-B (24 Sep, keputusan user):** komisi TIDAK harus seragam 20%.
 Boleh berbeda-beda tergantung **kesepakatan (antardhin) dengan
@@ -31,8 +37,8 @@ dan tidak ada perubahan sepihak pada titipan berjalan.
 ### B. Opsi yang Dideliberasi (beserta pilihan yang terpasang)
 | Aspek | Opsi | Terpilih |
 |-------|------|----------|
-| Akad | wadiah (tanpa komisi) / ju'alah / ijara | **ju'alah** (pengurus minta komisi) |
-| Waktu ujrah | di muka (saat titipan diterima) / saat terjual | **saat terjual** — komisi baru ada bila hasil ada (prinsip ju'alah: upah atas kerja yang terlaksana; barang dikembalikan tanpa komisi = "ora payu") |
+| Akad | wadiah (tanpa komisi) / wakalah bil ujrah / ijara | **wakalah bil ujrah** (pengurus minta komisi; koreksi 24 Sep dr "ju'alah") |
+| Waktu ujrah | di muka (saat titipan diterima) / saat terjual | **saat terjual** — komisi baru ada bila hasil ada (prinsip wakalah bil ujrah: upah atas jasa mewakili jual; barang dikembalikan tanpa komisi = "ora payu") |
 | Besaran | % global / % per titipan / Rp flat per item | **% fleksibel P4-B — disepakati per titipan**: input di form ("Komisi toko (%)"), boleh beda per pemilik/barang; default global 20, + default per-pemilik (setting `konsinyasi_owner_rates` JSON). 0 = tanpa komisi |
 | Rate snapshot | per titipan (diambil saat titipan dibuat) / mengambang ikut setting | **snapshot** — kontrak berjalan tak berubah walau setting global di-ubah; **tidak ada aksi ubah rate pada titipan aktif** (tanpa perubahan sepihak). Prioritas rate titipan baru: input eksplisit > default per-pemilik > global |
 | Pencatatan kas | otomatis saat sell / manual admin | **otomatis** "Ujrah Kon. <pemilik> − <barang>" — anti dobel hitung |
@@ -52,7 +58,7 @@ dan tidak ada perubahan sepihak pada titipan berjalan.
 - P&L V1 + memo WA + CSV: baris "Ujrah Konsinyasi" + peringatan
   "jangan dicatat manual".
 - UI `/admin/konsinyasi`: badge "Komisi toko X% · Ujrah Rp …",
-  "Tagihan pemilik", hint akad ju'alah.
+  "Tagihan pemilik", hint akad wakalah bil ujrah.
 - Backup: kolom `commission_rate` ikut export/restore.
 - **P4-B fleksibel**: form titipan dapat field "Komisi toko (%)"
   (disepakati saat input); kartu "Rate per-pemilik" kelola setting
@@ -73,9 +79,9 @@ barang dikembalikan → ujrah 0, tagihan tidak berubah.
 
 ### E. Risiko & Penahan
 1. **Dobel hitung ujrah** di laporan → dihalau: otomatis +
-   warning V1; tashih tersisa utk ulama: bolehkah ujrah
-   dihitung dari harga jual aktual bila berbeda dari harga
-   perjanjian (V1 memakai harga perjanjian).
+   warning V1. Tashih tersisa utk ulama (basis ujrah — hasil riset 24 Sep):
+   V1 memakai % harga PERJANJIAN (ma'lum — SESUAI Syafi'i); harga jual
+   aktual = gharar dlm Syafi'i klasik (DSN-MUI No. 112/IX/2017 membolehkan persentase yg disepakati; alternatif: ujrah mitsli) — konfirmasi ulama terbuka.
 2. **Setting di-ubah semasa kontrak berjalan** → snapshot
    per titipan (kontrak lama tak berubah).
 3. **Toko merugi** bila komisi 20% dianggap besar →
@@ -90,7 +96,7 @@ barang dikembalikan → ujrah 0, tagihan tidak berubah.
    tercatat per baris + audit `commission_source` (bukti utuh).
 
 ### F. Permohonan Keputusan Pengurus
-1. [ ] Setujui skema komisi (ju'alah, ujrah saat terjual) **sesuai
+1. [ ] Setujui skema komisi (wakalah bil ujrah, ujrah saat terjual) **sesuai
    implementasi** commit `4f12818` + P4-B fleksibel (commit P4-B,
    lihat git log).
 2. [ ] Setujui: komisi boleh **berbeda-beda per kesepakatan
@@ -109,3 +115,26 @@ Keputusan dicatat di `MEMORY.md` + `SYARIAH-CHECKLIST.md`
 - Commit `4f12818` (14 file) + commit P4-B (skema fleksibel)
 - `scripts/test-konsinyasi.ts` (skenario teruji, 47 kasus)
 - `src/lib/konsinyasi.ts`, `src/app/api/konsinyasi/route.ts`
+
+### H. Koreksi Akad: ju'alah → WAKALAH BIL UJRAH (riset 24 Sep 2026)
+Hasil riset fiqh madzhab Syafi'i + Bahtsul Masail NU (masuk tashih
+P4; **bukan perubahan mekanik** — komisi tetap hanya dicatat saat
+barang terjual, snapshot per titipan, tanpa perubahan sepihak):
+- Bentuk konsinyasi klasik "barang laku = dibeli, tidak laku =
+  dikembalikan" = syarat rusak / gharar → dlm madzhab Syafi'i
+  penjualannya tidak sah (Ibnu Qudamah al-Mughni; Syekh Ibnu
+  Utsaimin).
+- Solusi: **wakalah bil ujrah** — pemilik (muwakkil) memberi kuasa
+  ke toko (wakil) utk menjual, toko diberi upah (ujrah).
+  Referensi: Fatwa DSN-MUI No. 113/DSN-MUI/IX/2017 (wakalah).
+- Komisi persenan (20% dlsb) = **ujrah ma'lum** — disetujui
+  mayoritas Bahtsul Masail HIPJAS VI 2023 (Hasyiyah al-Jamal);
+  sejalan Fatwa DSN-MUI No. 112/DSN-MUI/IX/2017 (kuantitas/
+  kualitas ujrah harus jelas — angka, persentase, atau rumus
+  yang disepakati & diketahui kedua pihak).
+- Basis ujrah: V1 = persentase dari harga PERJANJIAN (known at
+  akad → ma'lum, sesuai Syafi'i). Harga jual aktual = lebih
+  gharar dlm pendapat klasik; bila diperlukan, alternatif =
+  ujrah mitsli (upah layak). Menunggu konfirmasi ulama.
+- Terminologi di UI/dokumen/komentar kode diubah ju'alah →
+  wakalah bil ujrah; mekanik & data TIDAK berubah.

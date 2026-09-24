@@ -29,7 +29,10 @@ export type ZakatCalculation = {
  *             mulai haul; bila keduanya kosong, awal bulan WIB berjalan.
  *   piutang = Σ remaining hutang customer (debts status open)
  *   hutang  = Σ remaining kewajiban dagang (payables status open)
- *   nishab  = nishab_gram × gold_price
+ *   nishab  = nishab_gram × gold_price (gold_price = harga emas MURNI
+ *             24 karat per gram — Muktamar NU ke-35: emas 14/18 karat
+ *             TIDAK boleh jadi dasar nisab; Syafi'i: nisab = 85 g
+ *             emas murni)
  *   wajib   bila harga emas terisi dan total >= nishab.
  */
 async function computeZakat(): Promise<ZakatCalculation> {

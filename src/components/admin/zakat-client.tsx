@@ -269,7 +269,7 @@ export function ZakatClient() {
         {s ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label className="label">Harga emas per gram (Rp)</label>
+              <label className="label">Harga emas 24 karat per gram (Rp)</label>
               <input
                 className="input"
                 type="number"
@@ -279,7 +279,7 @@ export function ZakatClient() {
                 placeholder="mis. 1100000"
               />
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                1 gram = {rp(s.gold_price)}
+                1 gram emas murni = {rp(s.gold_price)} — pakai harga emas 24 karat (murni); emas 14/18 karat TIDAK boleh jadi dasar nisab (Muktamar NU ke-35, madzhab Syafi'i: nisab = 85 g emas murni)
               </p>
             </div>
             <div>

@@ -1,11 +1,15 @@
 # MEMORY
 
 ## 2026-09-24
-### P4 Konsinyasi + komisi store / akad ju'alah (24 Sep, FASE P4)
-- Keputusan pengurus: komisi toko 20% dr harga jual. Akad **ju'alah**
-  (Fatwa DSN-MUI No. 62/DSN-MUI/XII/2007): upah tidak di muka, hanya
-  terhitung saat barang terjual; barang dikembalikan (ora payu) tanpa
-  komisi; pemilik dapat 80%.
+### P4 Konsinyasi + komisi store / akad WAKALAH BIL UJRAH (24 Sep, FASE P4)
+- Keputusan pengurus: komisi toko 20% dr harga jual. Akad
+  **wakalah bil ujrah** (koreksi 24 Sep dsr riset Syafi'i + Bahtsul
+  Masail; ref. Fatwa DSN-MUI No. 113/DSN-MUI/IX/2017): toko = wakil
+  pemilik, upah TIDAK di muka, hanya terhitung saat barang terjual;
+  barang dikembalikan (ora payu) tanpa komisi; pemilik dapat 80%.
+  (Awalnya tertulis "ju'alah" — dsr Syafi'i, bentuk "laku = beli,
+  tidak laku = kembali" = gharar → BUKAN ju'alah; mekanik tidak
+  berubah.)
 - Setting baru `konsinyasi_commission` (SHOP_SETTING_DEFAULTS, default
   '20', admin bisa ubah 0-100 via PUT /api/settings).
 - Kolom `consignments.commission_rate` = SNAPSHOT rate saat titipan
@@ -32,7 +36,7 @@
 - Backup: kolom `commission_rate` ikut export/restore (backup lama
   tanpa key → 20).
 - UI konsinyasi: badge "Komisi toko X% · Ujrah Rp …", "Tagihan pemilik",
-  hint akad ju'alah dr `commission_rate_default`.
+  hint akad wakalah bil ujrah dr `commission_rate_default`.
 - Verifikasi: `tsc --noEmit` exit 0; `test:konsinyasi` 47/47
   (P4-B: parseOwnerRates + resolveCommissionRate); `test:margin`
   57/57; `test:split` ALL_PASS; `test:clientip` 26 ok; `next build`
@@ -40,9 +44,36 @@
 - Dokumen `P4-PROPOSAL-KONSINYASI.md` (24 Sep): proposal pengurus —
   tabel opsi deliberasi + permohonan keputusan + risiko/penahan.
   Status: menunggu approval pengurus; tashih sisa → ulama.
-- TASHIH tersisa utk ulama: apakah ujrah boleh dr harga jual aktual
-  bila berbeda dr harga perjanjian (V1: komisi dr harga perjanjian —
-  konsisten, harga jual tidak direkam terpisah; off-sales).
+- TASHIH tersisa utk ulama (BASIS UJRAH — hasil riset 24 Sep): V1 =
+  % harga PERJANJIAN (ma'lum → SESUAI Syafi'i); harga jual aktual =
+  gharar dlm Syafi'i klasik (DSN-MUI No. 112/DSN-MUI/IX/2017
+  membolehkan persentase asal disepakati & diketahui; alternatif:
+  ujrah mitsli). V1: komisi dr harga perjanjian — konsisten, harga
+  jual tidak direkam terpisah; off-sales.
+### P4-Tashih + P3 Zakat (riset Syafi'i & Bahtsul Masail, 24 Sep 2026)
+- **Koreksi akad konsinyasi: ju'alah → WAKALAH BIL UJRAH** — dsr
+  madzhab Syafi'i, bentuk "barang laku = dibeli, tidak laku =
+  kembali" = gharar (Ibnu Qudamah al-Mughni; Syekh Ibnu Utsaimin)
+  → akad yang tepat: pemilik (muwakkil) memberi kuasa ke toko
+  (wakil) utk menjual + upah (ujrah). Ref. Fatwa DSN-MUI No.
+  113/DSN-MUI/IX/2017. Mekanik & data TIDAK berubah; hanya
+  terminologi UI/dokumen/komentar kode yang disetel.
+- **Komisi 20% = sah** — komisi persenan = ujrah ma'lum (mayoritas
+  Bahtsul Masail HIPJAS VI 2023, Hasyiyah al-Jamal; sejalan
+  DSN-MUI No. 112/DSN-MUI/IX/2017: persentase boleh asal jelas &
+  disepakati kedua pihak).
+- **Zakat: harga emas = 24 KARAT MURNI** — Muktamar NU ke-35:
+  emas 14 karat TIDAK sah utk nisab (bukan emas murni; nisab emas
+  campuran dihitung dr kandungan emas murninya). Syafi'i: nisab =
+  85 g emas murni. Setelan app: label UI /admin/zakat "Harga emas 24
+  karat per gram (Rp)" + hint karat; komentar db.ts & route zakat
+  disetel; formula & default (85 g, 2,5%) TIDAK berubah.
+- File terubah: src/lib/konsinyasi.ts, src/lib/keuangan.ts,
+  src/db.ts, src/components/admin/konsinyasi-client.tsx,
+  src/components/admin/zakat-client.tsx, src/app/api/zakat/route.ts,
+  P4-PROPOSAL-KONSINYASI.md (+seksi H), SYARIAH-CHECKLIST.md,
+  P3-TASHIH-ZAKAT.md.
+
 ### PWA icon-180 fix + exact-source headers (lanjutan 24 Sep)
 - **Akar masalah (final):** `public/icon-180.png` server-side KORUP
   (1,921 B, kotak putih + garis biru); ikon/logo/manifest

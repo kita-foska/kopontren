@@ -21,7 +21,7 @@
  *  - Settlement konsinyasi = cash-out ke pemilik (label cash_entries
  *    'Kon. …'); penjualan barangnya TIDAK masuk `sales` → off-P&L,
  *    ditampilkan sebagai MEMO, bukan beban operasional.
- *  - FASE P4: komisi konsinyasi (ujrah, akad ju'alah; setting
+ *  - FASE P4: komisi konsinyasi (ujrah, akad wakalah bil ujrah; setting
  *    konsinyasi_commission default 20%) tercatat OTOMATIS sebagai kas
  *    masuk 'Ujrah Kon. …' saat barang terjual (/api/konsinyasi action
  *    'sell') → MEMO off-P&L selayaknya settlement; tagihan pemilik di
@@ -102,7 +102,7 @@ export const KEUANGAN_NOTES: string[] = [
   'Cashback adalah kewajiban kepada member (saldo tertunda), bukan beban — ditampilkan sebagai memo agar tidak dobel hitung.',
   'Zakat tercatat terpisah (zakat_history), bukan beban operasional — ditampilkan sebagai memo.',
   'Settlement konsinyasi adalah pembayaran kepada pemilik barang (di luar P&L; penjualan barangnya tidak tercatat di sales) — ditampilkan sebagai memo, bukan beban.',
-  "Komisi konsinyasi (ujrah, akad ju'alah; default 20%) tercatat OTOMATIS sebagai kas masuk ('Ujrah Kon. …') saat barang terjual; tagihan pemilik sudah neto komisi — jangan dicatat manual agar tidak dobel hitung.",
+  "Komisi konsinyasi (ujrah, akad wakalah bil ujrah; default 20%) tercatat OTOMATIS sebagai kas masuk ('Ujrah Kon. …') saat barang terjual; tagihan pemilik sudah neto komisi — jangan dicatat manual agar tidak dobel hitung.",
   'Piutang manual (debts) dan hutang supplier (payables) tidak memengaruhi laporan ini; pelunasannya hanya pergerakan kas (cakupan laporan arus kas, fase A2).',
 ];
 /**
@@ -190,7 +190,7 @@ export async function queryKeuangan(
     )
     .get(...p)) as { c: number; v: number };
 
-  // Memo ujrah (FASE P4, akad ju'alah): komisi konsinyasi = cash_entries
+  // Memo ujrah (FASE P4, akad wakalah bil ujrah): komisi konsinyasi = cash_entries
   // INCOME berlabel 'Ujrah Kon. <pemilik> - <barang>' (dibuat
   // /api/konsinyasi action 'sell' saat barang terjual — upah tidak di
   // muka; barang dikembalikan tidak menghasilkan jurnal ini). Off-P&L

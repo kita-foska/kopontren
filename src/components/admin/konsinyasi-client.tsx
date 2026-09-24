@@ -463,7 +463,7 @@ export function KonsinyasiClient() {
       </div>
 
       <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-        Komisi FLEKSIBEL (antardhin/ju'alah): field "Komisi toko (%)" di atas =
+        Komisi FLEKSIBEL (antardhin, akad wakalah bil ujrah): field "Komisi toko (%)" di atas =
         kesepakatan utk titipan ini (pre-fill dari rate per-pemilik bila ada,
         selain itu global {data.commission_rate_default ?? 20}%), bisa diubah
         per barang; 0 = tanpa komisi. Komisi terhitung OTOMATIS saat barang

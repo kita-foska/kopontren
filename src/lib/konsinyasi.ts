@@ -1,7 +1,15 @@
 /**
- * FASE P4 — komisi konsinyasi utk akad ju'alah (keputusan pengurus
- * 2026-09-24). Default: komisi toko 20% dr harga jual, bagian pemilik
- * 80%. Referensi: Fatwa DSN-MUI No. 62/DSN-MUI/XII/2007 (ju'alah).
+ * FASE P4 — komisi konsinyasi utk akad WAKALAH BIL UJRAH (keputusan
+ * pengurus 2026-09-24; koreksi terminologi 24 Sep dsr riset fiqh
+ * Syafi'i + Bahtsul Masail: BUKAN ju'alah — bentuk "barang laku =
+ * dibeli, tidak laku = kembali" = gharar → tidak sah dlm madzhab
+ * Syafi'i, ref. Ibnu Qudamah al-Mughni & Syekh Ibnu Utsaimin).
+ * Toko = wakil (agen) pemilik barang utk menjual; upah (ujrah) 20%
+ * hanya dicatat saat barang terjual; bagian pemilik 80%.
+ * Referensi: Fatwa DSN-MUI No. 113/DSN-MUI/IX/2017 (wakalah);
+ * Bahtsul Masail HIPJAS VI 2023 — komisi persenan = ujrah ma'lum
+ * (Hasyiyah al-Jamal; sah jg dlm Fatwa DSN-MUI No. 112/DSN-MUI/IX/2017
+ * asal persentase jelas & disepakati).
  *
  * Aturan syariah yang dijamin di sini:
  *  - Upah TIDAK dibayar di muka — komisi baru terhitung saat barang

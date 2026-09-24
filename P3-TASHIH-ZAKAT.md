@@ -57,6 +57,12 @@ pertanyaan terbuka untuk ulama.
   ~85 g menurut ukur Hijaz — angka 85 g terkonfirmasi DSN-MUI
   Fatwa No. 8/2008); bab qiyas nila' al-fudhala' (Mughni,
   kitab zakaat).
+- **Karat (riset 24 Sep 2026 — Muktamar NU ke-35 + Syafi'i):**
+  emas 14 karat TIDAK sah sebagai standar nisab (bukan emas murni;
+  nisab emas campuran diperhitungkan dr kandungan emas murninya).
+  `gold_price` di app WAJIB = harga emas **24 karat (murni)**;
+  label UI /admin/zakat sudah disetel ("Harga emas 24 karat per
+  gram (Rp)").
 
 #### 3. Modal: HPP vs Nilai Pasar
 - **Formula saat ini:** modal = Σ stok × HPP (`cost_price`)
@@ -115,7 +121,7 @@ tabel ini hanya peta arah baca.
    (periode laba sejak `haul_start_date`)?
 2. **Harga emas:** sumber resmi apa (Antam/spot/daerah),
    frekuensi verifikasi + pencatatan di mana, dan opsi
-   konservatif bila ragu?
+   konservatif bila ragu? (Karat: sudah terjawab — 24 karat murni, Muktamar NU ke-35; label UI sudah disetel)
 3. **Modal:** HPP (status quo) sah, atau harus nilai pasar /
    pendekatan hanya-untung?
 

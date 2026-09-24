@@ -468,8 +468,13 @@ async function migrate(d: Db) {
   // tiap request; entek setelah session_timeout detik tanpa aktivitas).
   await execColumn(d, 'ALTER TABLE sessions ADD COLUMN last_activity TEXT');
   // FASE P4 (2026-09-24, keputusan pengurus): komisi konsinyasi utk akad
-  // ju'alah — rate disnapshot per baris saat barang dititipkan (kontrak
-  // disepakati saat titipan, ref. Fatwa DSN-MUI No. 62/DSN-MUI/XII/2007).
+  // WAKALAH BIL UJRAH (koreksi terminologi 24 Sep dsr riset Syafi'i —
+  // BUKAN ju'alah, bentuk "laku = beli" = gharar): toko = wakil pemilik
+  // menjual; ujrah hanya dicatat saat terjual. Ref. Fatwa
+  // DSN-MUI No. 113/DSN-MUI/IX/2017 (wakalah) + Bahtsul Masail HIPJAS
+  // VI 2023 (komisi persenan = ujrah ma'lum).
+  // Rate disnapshot per baris saat barang dititipkan (kontrak
+  // disepakati saat titipan).
   // Baris lama dapat 20 (default keputusan); setting global
   // konsinyasi_commission hanya berlaku utk titipan baru.
   await execColumn(
@@ -572,7 +577,7 @@ export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
   timezone: 'Asia/Jakarta',
   // Detik. Idle timeout sesi (default 3600 = 1 jam). Bisa diubah admin.
   session_timeout: '3600',
-  // FASE P4 (akad ju'alah, keputusan pengurus 2026-09-24): komisi toko
+  // FASE P4 (akad wakalah bil ujrah, keputusan pengurus 2026-09-24): komisi toko
   // utk konsinyasi (% dr harga jual); bagian pemilik = 100 - rate. Upah
   // baru tercatat saat barang terjual, tidak di muka. Default 20.
   konsinyasi_commission: '20',
@@ -667,7 +672,7 @@ export async function saveMemberSettings(
  * berulang saat navigasi; simpan pengaturan menginvalidasi cache.
  */
 export const ZAKAT_SETTING_DEFAULTS: Record<string, string> = {
-  gold_price: '0', // harga emas per 1 gram (Rp) — diisi admin
+  gold_price: '0', // harga emas MURNI 24 KARAT per 1 gram (Rp) — diisi admin (dasar nisab = emas murni 85 g; emas 14/18K TIDAK boleh, Muktamar NU ke-35)
   nishab_gram: '85', // nishab (gram)
   zakat_rate: '2.5', // kadar zakat (%)
   haul_start_date: '', // tanggal mulai haul (YYYY-MM-DD, kosong = auto awal bulan)
