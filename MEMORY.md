@@ -1,6 +1,30 @@
 # MEMORY
 
 ## 2026-09-24
+### P3 + P4 DOKUMEN LIVE + SYNC MAIN (24 Sep, KONFIRMASI GUS FI)
+- Tashih zakat + proposal konsinyasi LIVE: commit `9dbc22c` (10 file;
+  koreksi terminologi akad konsinyasi **Wakalah bil Ujrah** + standar
+  nisab emas **24 karat murni**; `P3-TASHIH-ZAKAT.md`,
+  `P4-PROPOSAL-KONSINYASI.md`, silang-referensi SYARIAH-CHECKLIST +
+  MEMORY + README). `next build` exit 0; repo bersih (file sementara
+  & probe sudah dibersihkan).
+- **Koreksi hash:** commit sebenarnya = `9dbc22c` (laporan user
+  menulis `8cedb6b` — hasil git log/ls-remote = `9dbc22c`).
+- **Sinkronisasi main (temuan saat konfirmasi):** `origin/main`
+  masih `0e34c45` (tertinggal) saperlu `origin/master` = `9dbc22c` →
+  dual-push `git push origin master:main` → kini `origin/main` =
+  `origin/master` = `9dbc22c`. Vercel (build saka `main`) kini
+  deploy seluruh seri 24 Sep (P4-A/B + P3 + terminologi + 24K +
+  dokumen).
+- Keputusan Gus Fi: P3 → kirim ulama (tashih zakat); P4 → kirim
+  pengurus (keputusan konsinyasi); update setelah keputusan.
+- Sisa item tersusun: tashih P3 (3 pertanyaan: haul, verifikasi
+  harga emas 24K, modal HPP vs pasar) · keputusan P4 pengurus +
+  tashih ulama basis ujrah V1 · user-test ② uji manual pasca-deploy
+  nang HP · ③ checklist /admin/zakat 10 item (TODO L259–268; item 9
+  = sub-test "Bug #1 (A1–A5)") · ④ upload CSV ke Turso sendiri ·
+  [r] risiko rendah diterima (termasuk `cash_low` monitoring) ·
+  TUNDA: QRIS (NMID) · grosir · point_history.
 ### P4 Konsinyasi + komisi store / akad WAKALAH BIL UJRAH (24 Sep, FASE P4)
 - Keputusan pengurus: komisi toko 20% dr harga jual. Akad
   **wakalah bil ujrah** (koreksi 24 Sep dsr riset Syafi'i + Bahtsul
