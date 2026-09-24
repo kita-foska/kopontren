@@ -366,6 +366,23 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
          `edge-automatic-https-encryption-disabled` (ref. seksi
          PWA/Favicon ing MEMORY.md) → LAPOR hasilnya
 
+## Housekeeping (24 Sep)
+- [x] **Cleanup file scratch root — commit `ba5f272` (dual-push):**
+      113 file scratch dihapus (semua untracked — aman):
+      `.audit-*.txt` (17) + `.build-*.txt`/`.tsc-*.txt` (7) +
+      `_*.txt`/`_*.log`/`_*.json` (88) + `*.log` top-level (6).
+      Root: 119 → 24 file. 6 file `.mjs` (bukti bug `tx()`:
+      `_txlib.mjs`, `_probe4.mjs` + 4 tool sesi) DIPINDAH ke
+      `desktop-archive/` (gitignored, tetep available). `.gitignore`
+      +3 pattern (`.audit-*.txt`/`.build-*.txt`/`.tsc-*.txt`)
+      anti-pollute. Verifikasi: `tsc --noEmit` EXIT 0 + `next build`
+      EXIT 0 (48 page). JANGAN HAPUS (udh dijaga): CSV data user
+      (`stok-*.csv`, `_products_update.csv`), `src/`, `public/sw.js`
+      (artefak build — jangan commit), `public/icon-*.png`, script
+      user (`build.ps1`, `smoke.ps1`, `server.ps1`, `rebuild.bat`),
+      `state.txt` + `DEPLOY-VERCEL.txt` (tracked). `scripts/zz-*`
+      = kosong (ora ana).
+
 ## Produk / Stok — revisi pendekatan (23 Sep 2026)
 - [x] Generate CSV stok dari DB dev (`file:./data/kopontren.db`):
       `stok-export-20260923.csv` (237 baris, semua `aktif`; UTF-8 tanpa

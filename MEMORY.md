@@ -42,6 +42,29 @@
      data/service workers)
   ④ Install PWA maneh → ikon taskbar/Start menu = logo (detail
      kelèk: TODO.md seksi "PWA / Favicon").
+### Cleanup file scratch root (24 Sep, commit `ba5f272`)
+- 113 file scratch dihapus nang root (SEMUA untracked/gitignored —
+  aman, tak anatracked yg kena): `.audit-*.txt` (17),
+  `.build-*.txt`+`.tsc-*.txt` (7), `_*.txt`/`_*.log`/`_*.json`
+  (88), `*.log` top-level (6: swc, build_utf8, build-check,
+  build-payables, rebuild_bs, server2.err). Root: 119 → 24 file.
+- 6 `.mjs` DIPINDAH ke `desktop-archive/` (gitignored, tetep
+  available — ora dihapus): `_txlib.mjs` + `_probe4.mjs`
+  (bukti bug `tx()` — sesuai komentar .gitignore "Bukti yg
+  di-retain") + 4 tool sesi (`_extract-pdf.mjs`, `_pdf2csv.mjs`,
+  `_fetch-products.mjs`, `_gen-stok-csv.mjs`).
+- `.gitignore` +3 pattern (`.audit-*.txt`, `.build-*.txt`,
+  `.tsc-*.txt`) biyara sesi mangkase tak numpuk untracked maneh.
+- JANGAN HAPUS (udh dijaga): CSV data user (`stok-*.csv`,
+  `_products_update.csv`), `src/`, `public/sw.js` (artefak build —
+  JANGAN commit; Vercel nglewati dhewe), `public/icon-*.png`,
+  script user (`build.ps1`, `smoke.ps1`, `server.ps1`,
+  `rebuild.bat`), `state.txt` + `DEPLOY-VERCEL.txt` (TRACKED —
+  hapus bakal ngrusak git history). `scripts/zz-*` = kosong.
+- Verifikasi pasca-cleanup: `tsc --noEmit` EXIT 0 + `next build`
+  EXIT 0 (48/48 page). Catatan: `npx` PS kena ExecutionPolicy —
+  pakai `node node_modules\typescript\bin\tsc` /
+  `node node_modules\next\dist\bin\next build` langsung.
 ### Batch F: integrity `1a07ed1` + tz WIB `c392237` (perbaikan audit)
 - **integrity (commit `1a07ed1`)**: `amount_paid`/`change` tak lagi
   dipercaya dari klien. POST /api/sales: `amount_paid = max(total,
