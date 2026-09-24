@@ -19,10 +19,19 @@
   EXIT 0 (48 page) ngemuhi config anyar (Register-ScheduledTask +
   `.build-out4.txt` = `BUILD_EXIT=0`). stamp sw.js lokál
   `c0aac38143af` = artefak build, JANGAN commit.
-- **Cutover Vercel PENDING (re-poll 24 Sep):** sw.js live tetep
-  `SW-BUILD 787c447606c5`; `icon-180.png` live tetep 1,921 B;
-  `manifest.json` live tetep 718 B (tanpa `?v=2`).
-- **Prosedur "nuclear reset" kanggo user (NANGKA cutover):**
+- **Cutover Vercel LIVE (~14:30 24 Sep):** sw.js
+  `SW-BUILD 4c31dc0c5819`; `icon-180.png` live = 11,493 B ✓;
+  `manifest.json` live `?v=2` ✓; ikon/logo/favicon CC =
+  `public, max-age=86400` ✓; `/sw.js` = `max-age=0,
+  must-revalidate`; `/_next/static/*` tetep `immutable` ✓.
+- **Test user "Nuclear Reset" LULUS (24 Sep):** uninstall PWA +
+  hapus folder Edge (`Chrome (PWA)`/`Default\Service Worker`/
+  `Cache`/`Code Cache`) + `iconcache*.db`/`thumbcache*.db` →
+  `ie4uinit.exe -show` → reboot → clear browsing "All time" →
+  install maneh → **logo taskbar KATON ✓ + Start menu KATON ✓ +
+  PWA fungsional ✓**. Item PWA/Favicon TUTUP — 0 engineering.
+- **Prosedur "nuclear reset" kanggo user (UDH LULUS — saka
+  reference bilangan kali balik gagal):**
   ① Uninstall PWA (klik kanan shortcut taskbar/Start → Uninstall)
   ② Tutup Edge total → hapus `%LOCALAPPDATA%\Microsoft\Edge\User
      Data\Chrome (PWA)` + `Default\Service Worker` + `Default\Cache`

@@ -330,8 +330,8 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       lama KORUP (detail: MEMORY.md, seksi "PWA Favicon"). Produksi
       Vercel LIVE: favicon served 5.635 byte = persis file lokal
       (verifikasi HTTP 22 Sep, https://kopontren-gamma.vercel.app).
-- [ ] **Test manual ikon PWA taskbar — HANDLED USER NANG EDGE LAPTOP
-      (PENDING hasil) — update 24 Sep:**
+- [x] **Test manual ikon PWA taskbar — HANDLED USER NANG EDGE LAPTOP
+      (LULUS 24 Sep, dieksekusi pas wanci cutover `4c31dc0c5819`):**
       Akar masalah ketemu: `public/icon-180.png` server-side KORUP
       (1,921 B, kotak putih + garis biru); PWA terinstall di periode
       rusak → .ico taskbar stuck di icon-cache Windows. Fix wis
@@ -339,10 +339,12 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       + header ikon/logo `max-age=86400`) & `7e6cb37` (next.config.mjs
       source EXACT — verified lokal `tsc` exit 0 + `npm run build`
       EXIT 0, 48 page). Kedua wis dual-push master+main; cutover
-      Vercel durung keliver (re-poll 24 Sep: sw.js live tetep
-      `SW-BUILD 787c447606c5`, icon-180 live tetep 1,921 B,
-      manifest.json live tetep 718 B tanpa `?v=2`).
-      **Prosedur "nuclear reset" (eksekusi NANGKA cutover live):**
+      Cutover Vercel LIVE (sw stamp `4c31dc0c5819`; icon-180 live =
+      11,493 B; manifest live `?v=2`; ikon CC `max-age=86400`).
+      **Hasil test "nuclear reset": logo taskbar KATON ✓ + Start
+      menu KATON ✓ + PWA fungsional ✓ → item TUTUP 24 Sep.**
+      Prosedur "nuclear reset" (UDH DIEKSEKUSI — saka reference
+      bilangan kali balik gagal):
       1. Uninstall PWA: klik kanan shortcut "Kopontren" nang
          taskbar/Start menu → **Uninstall**
       2. Tutup Edge total (cek tray) → hapus:
@@ -580,7 +582,7 @@ konsistensi.
   (4) Sumbu x `SalesBarChart` `text-[9px]`→`text-[11px]`.
   Verifikasi: tsc 0, build EXIT 0, grep + scanner bersih,
   dual-push master+main @ `e9ebfdb`.
-  **Sisa pending:** test ikon PWA di Edge; QRIS/grosir/
-  point_history (tunda, NMID).
+  **Sisa pending:** QRIS/grosir/
+  point_history (tunda, NMID). (test ikon PWA Edge LULUS 24 Sep.)
 
 
