@@ -5,6 +5,7 @@ import { api, PageSkeleton, Toast, useToast } from '@/components/ui';
 import { rp, startOfDayJakarta, todayWibStr } from '@/lib/format';
 import { buildLabaRugiWa, shareRekap } from '@/lib/rekap';
 import type { KeuanganPayload } from '@/lib/keuangan';
+import type { NeracaPayload } from '@/lib/neraca';
 import { ChevronDown, FileDown, MessageCircle } from 'lucide-react';
 
 type Summary = {
@@ -26,6 +27,12 @@ type LabaRugi = KeuanganPayload & {
   ok: boolean;
   from: string;
   to: string;
+  notes: string[];
+};
+
+/** Shape respons /api/neraca (FASE A3): NeracaPayload + notes. */
+type Neraca = NeracaPayload & {
+  ok: boolean;
   notes: string[];
 };
 
@@ -112,7 +119,7 @@ function PlRow({
 }
 
 export function LaporanAdminClient() {
-  const [tab, setTab] = useState<'ringkasan' | 'laba'>('ringkasan');
+  const [tab, setTab] = useState<'ringkasan' | 'laba' | 'neraca'>('ringkasan');
   const [period, setPeriod] = useState('30');
   const [s, setS] = useState<Summary | null>(null);
   const [toast, showToast] = useToast();
@@ -162,13 +169,15 @@ export function LaporanAdminClient() {
   return (
     <div>
       {/* Tab A1: "Ringkasan" = konten & perilaku lama (intinya tak diubah);
-          "Laba-Rugi" = statement P&L V1 (/api/keuangan). */}
+          "Laba-Rugi" = statement P&L V1 (/api/keuangan);
+          "Neraca" = foto posisi sederhana V1 (snapshot, /api/neraca). */}
       <div className="mb-3 flex gap-1 border-b border-slate-200 dark:border-navy-700">
         {(
           [
             ['ringkasan', 'Ringkasan'],
             ['laba', 'Laba-Rugi'],
-          ] as ['ringkasan' | 'laba', string][]
+            ['neraca', 'Neraca'],
+          ] as ['ringkasan' | 'laba' | 'neraca', string][]
         ).map(([k, label]) => (
           <button
             key={k}
@@ -264,8 +273,10 @@ export function LaporanAdminClient() {
         </div>
       </div>
       </>
-      ) : (
+      ) : tab === 'laba' ? (
         <LabaRugiTab />
+      ) : (
+        <NeracaTab />
       )}
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>
@@ -461,6 +472,172 @@ export function LabaRugiTab() {
         </div>
       ) : (
         <p className="text-sm text-slate-500">Pilih rentang tanggal untuk menampilkan laporan.</p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * FASE A3 — tab "Neraca": Neraca Sederhana V1 (foto posisi per hari ini)
+ * via /api/neraca (modul src/lib/neraca.ts). Tanpa pemilih periode:
+ * neraca = snapshot (saldo kas kumulatif, stok & tagihan terbuka saat
+ * ini), berbeda dgn Laba-Rugi/Arus Kas yang berbasis rentang.
+ */
+export function NeracaTab() {
+  const [data, setData] = useState<Neraca | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr('');
+    const r = await api<Neraca>('/api/neraca');
+    if (r.ok && r.data) setData(r.data);
+    else setErr(r.error || 'Gagal memuat neraca');
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          Snapshot per {todayWibStr()} · V1
+        </span>
+        <button type="button" onClick={() => void load()} className="btn-ghost ml-auto">
+          Muat ulang
+        </button>
+      </div>
+
+      {loading && !data ? (
+        <p className="text-sm text-slate-500">Memuat…</p>
+      ) : err && !data ? (
+        <div className="card p-4 text-sm text-rose-600 dark:text-rose-400">{err}</div>
+      ) : data ? (
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="card p-4">
+            <h2 className="mb-2 font-bold">Aset</h2>
+            <PlRow
+              label="Kas"
+              value={data.kas < 0 ? '−' + rp(-data.kas) : rp(data.kas)}
+              neg={data.kas < 0}
+              sub="penjualan − belanja − pengeluaran + jurnal kas"
+            />
+            <PlRow
+              label="Stok (nilai harga beli)"
+              value={rp(data.stok.total)}
+              sub={data.stok.count + ' produk · ' + data.stok.units + ' unit'}
+            />
+            <PlRow
+              label="Piutang (terbuka)"
+              value={rp(data.piutang.total)}
+              sub={data.piutang.count + ' tagihan'}
+            />
+            <PlRow label="Total Aset" value={rp(data.aset_total)} strong />
+            {data.rincian.stok_top.length > 0 && (
+              <div className="mt-3 border-t border-slate-200 pt-3 dark:border-navy-700">
+                <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  Stok terbesar (nilai)
+                </h3>
+                <ul className="space-y-1.5 text-sm">
+                  {data.rincian.stok_top.map((s) => (
+                    <li key={s.name} className="flex items-center justify-between">
+                      <span>{s.name}</span>
+                      <span className="text-slate-500 dark:text-slate-400">
+                        {s.qty} unit ·{' '}
+                        <b className="text-slate-800 dark:text-slate-200">{rp(s.total)}</b>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div className="card p-4">
+            <h2 className="mb-2 font-bold">Kewajiban &amp; Modal Setara</h2>
+            <PlRow
+              label="Hutang Supplier (terbuka)"
+              value={rp(data.hutang.total)}
+              sub={data.hutang.count + ' tagihan'}
+            />
+            <PlRow
+              label="Saldo Reward Member"
+              value={rp(data.cashback.total)}
+              sub={data.cashback.count + ' member'}
+            />
+            <PlRow label="Total Kewajiban" value={rp(data.liabilitas_total)} strong />
+            <div className="mt-3 border-t border-slate-200 pt-3 dark:border-navy-700">
+              <PlRow
+                label="Modal Setara (aset − kewajiban)"
+                value={data.modal_setara < 0 ? '−' + rp(-data.modal_setara) : rp(data.modal_setara)}
+                neg={data.modal_setara < 0}
+                strong
+              />
+              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                Off-balance (tidak dijumlahkan): tagihan konsinyasi terbuka{' '}
+                <b className="text-slate-600 dark:text-slate-300">
+                  {rp(data.off_balance.konsinyasi.total)}
+                </b>{' '}
+                · {data.off_balance.konsinyasi.count} item
+              </p>
+            </div>
+          </div>
+
+          <div className="card p-4">
+            <h2 className="mb-2 font-bold">Tagihan Terbuka (5 terbesar)</h2>
+            <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Piutang
+            </h3>
+            {data.rincian.piutang_top.length === 0 ? (
+              <p className="text-sm text-slate-500">Tidak ada tagihan terbuka.</p>
+            ) : (
+              <ul className="space-y-1.5 text-sm">
+                {data.rincian.piutang_top.map((t, i) => (
+                  <li key={i} className="flex items-center justify-between">
+                    <span>{t.name}</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {t.due_date ? 'jatuh ' + t.due_date + ' · ' : ''}
+                      <b className="text-slate-800 dark:text-slate-200">{rp(t.remaining)}</b>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <h3 className="mt-3 mb-1 text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Hutang
+            </h3>
+            {data.rincian.hutang_top.length === 0 ? (
+              <p className="text-sm text-slate-500">Tidak ada tagihan terbuka.</p>
+            ) : (
+              <ul className="space-y-1.5 text-sm">
+                {data.rincian.hutang_top.map((t, i) => (
+                  <li key={i} className="flex items-center justify-between">
+                    <span>{t.name}</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {t.due_date ? 'jatuh ' + t.due_date + ' · ' : ''}
+                      <b className="text-slate-800 dark:text-slate-200">{rp(t.remaining)}</b>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="card p-4">
+            <h2 className="mb-2 font-bold">Catatan V1</h2>
+            <ul className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+              {data.notes.map((n) => (
+                <li key={n}>• {n}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-slate-500">Belum ada data.</p>
       )}
     </div>
   );
