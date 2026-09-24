@@ -15,7 +15,8 @@
     "test:margin": "node scripts/test-margin.ts",
     "test:split": "node scripts/test-split.ts",
     "test:phone": "node scripts/test-members-phone.ts",
-    "test:clientip": "node scripts/test-client-ip.ts"
+    "test:clientip": "node scripts/test-client-ip.ts",
+    "test:konsinyasi": "node scripts/test-konsinyasi.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.0",

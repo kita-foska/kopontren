@@ -437,7 +437,13 @@ export function LabaRugiTab() {
                 indent
                 label="Settlement Konsinyasi"
                 value={rp(data.memo.konsinyasi.total)}
-                sub="pembayaran ke pemilik barang"
+                sub="pembayaran ke pemilik barang (neto komisi)"
+              />
+              <PlRow
+                indent
+                label="Ujrah Konsinyasi"
+                value={rp(data.memo.ujrah_konsinyasi.total)}
+                sub={data.memo.ujrah_konsinyasi.count + ' jurnal komisi (otomatis saat terjual)'}
               />
               <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                 Memo tidak dijumlahkan ke laba bersih.

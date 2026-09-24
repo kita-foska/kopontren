@@ -1,6 +1,33 @@
 # MEMORY
 
 ## 2026-09-24
+### P4 Konsinyasi + komisi store / akad ju'alah (24 Sep, FASE P4)
+- Keputusan pengurus: komisi toko 20% dr harga jual. Akad **ju'alah**
+  (Fatwa DSN-MUI No. 62/DSN-MUI/XII/2007): upah tidak di muka, hanya
+  terhitung saat barang terjual; barang dikembalikan (ora payu) tanpa
+  komisi; pemilik dapat 80%.
+- Setting baru `konsinyasi_commission` (SHOP_SETTING_DEFAULTS, default
+  '20', admin bisa ubah 0-100 via PUT /api/settings).
+- Kolom `consignments.commission_rate` = SNAPSHOT rate saat titipan
+  (kontrak berjalan tidak berubah walau setting global berubah; baris
+  lama default 20).
+- `src/lib/konsinyasi.ts` (helper murni): `clampRate` + `splitConsignment`
+  (komisi floor per unit; pemilik + komisi = harga persis, tanpa pecahan).
+- `/api/konsinyasi`: tagihan pemilik NETO komisi; action `sell` mencatat
+  OTOMATIS kas masuk `Ujrah Kon. <pemilik> - <barang>` = qty × komisi
+  unit (hanya jika >0) + invalidate kas/reports.
+- Laporan: memo P&L V1 baris baru `Ujrah Konsinyasi` (keuangan.ts,
+  UI P&L, WA rekap, CSV). Catatan V1 baru: JANGAN catat manual —
+  otomatis, anti dobel hitung.
+- Backup: kolom `commission_rate` ikut export/restore (backup lama
+  tanpa key → 20).
+- UI konsinyasi: badge "Komisi toko X% · Ujrah Rp …", "Tagihan pemilik",
+  hint akad ju'alah dr `commission_rate_default`.
+- Verifikasi: `tsc --noEmit` exit 0; `test:konsinyasi` 24/24;
+  `test:margin` 57/57; `test:split` ALL_PASS; `test:clientip` 16 ok.
+- TASHIH tersisa utk ulama: apakah ujrah boleh dr harga jual aktual
+  bila berbeda dr harga perjanjian (V1: komisi dr harga perjanjian —
+  konsisten, harga jual tidak direkam terpisah; off-sales).
 ### PWA icon-180 fix + exact-source headers (lanjutan 24 Sep)
 - **Akar masalah (final):** `public/icon-180.png` server-side KORUP
   (1,921 B, kotak putih + garis biru); ikon/logo/manifest
@@ -1068,7 +1095,7 @@ blocking)
   (queryKeuangan + KEUANGAN_NOTES), `rekap.ts` (+ buildLabaRugiWa, label 'Saldo Reward').
 - tsc --noEmit ✅ & next build ✅ (24 Sep 2026). Kode commit `0564e71` (4 file) —
   approval user (tes manual P2 rollback + tab Laba-Rugi: preset, rentang custom, bagikan WA).
-- Lanjut (non-eng): P3 tashih ulama (zakat) · P4 keputusan pengurus (konsinyasi/ju'alah) · P5 ✅ (denda tak pernah diimplementasi).
+- Lanjut (non-eng, ditanam user 24 Sep 2026): P3 tashih ulama (zakat) — user siapin dokumen tashih · P4 keputusan pengurus (konsinyasi/ju'alah) — user siapin proposal · P5 ✅ (denda tak pernah diimplementasi) · ②③④ tes manual.
 - Follow-up (24 Sep 2026, commit 552c8e2): label sisa P1 — `perks.ts` soft-flag,
   `rekap.ts` baris WA rekap ("Saldo Reward"), SYARIAH-CHECKLIST P1/P2 ✅.
   Label CSV P&L (`api/keuangan/csv/route.ts`) ter-commit di A1 `0564e71`.

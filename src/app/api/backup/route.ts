@@ -66,7 +66,7 @@ export async function GET() {
     expenses: await all('SELECT * FROM expenses'),
     cash_entries: await all('SELECT * FROM cash_entries'),
     consignments: await all(
-      'SELECT id, owner, owner_phone, item_name, unit, qty_received, agree_price, qty_sold, qty_returned, amount_paid, status, note, created_at, settled_at FROM consignments'
+      'SELECT id, owner, owner_phone, item_name, unit, qty_received, agree_price, commission_rate, qty_sold, qty_returned, amount_paid, status, note, created_at, settled_at FROM consignments'
     ),
     members: await all('SELECT * FROM members'),
     shifts: await all('SELECT * FROM shifts'),
@@ -239,7 +239,7 @@ export async function POST(req: Request) {
         );
       }
       const insK = d.prepare(
-        'INSERT INTO consignments (id, owner, owner_phone, item_name, unit, qty_received, agree_price, qty_sold, qty_returned, amount_paid, status, note, created_at, settled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO consignments (id, owner, owner_phone, item_name, unit, qty_received, agree_price, commission_rate, qty_sold, qty_returned, amount_paid, status, note, created_at, settled_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
       );
       for (const k of (payload.consignments as Record<string, unknown>[]) || []) {
         await insK.run(
@@ -250,6 +250,10 @@ export async function POST(req: Request) {
           String(k.unit ?? '') || 'pcs',
           Number(k.qty_received) || 0,
           Number(k.agree_price) || 0,
+          // FASE P4: rate komisi (ju'alah); backup lama tanpa key -> 20.
+          k.commission_rate != null
+            ? Math.max(0, Math.min(100, Math.floor(Number(k.commission_rate))))
+            : 20,
           Number(k.qty_sold) || 0,
           Number(k.qty_returned) || 0,
           Number(k.amount_paid) || 0,

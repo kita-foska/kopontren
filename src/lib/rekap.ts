@@ -193,7 +193,7 @@ export function shareWa(text: string, phone?: string) {
  * P&L V1 statement untuk WhatsApp (plain ASCII, gaya rekap: tanpa
  * emoji/Unicode khusus). Memo sengaja DISEPRAH dan diberi label
  * "di luar laba bersih" — konsisten dgn keputusan A1 (cashback, zakat,
- * settlement konsinyasi TIDAK dijumlahkan ke laba).
+ * settlement & ujrah konsinyasi TIDAK dijumlahkan ke laba).
  */
 export function buildLabaRugiWa(p: KeuanganPayload, from: string, to: string): string {
   const idr = (n: number) => 'Rp ' + n.toLocaleString('id-ID');
@@ -214,6 +214,7 @@ export function buildLabaRugiWa(p: KeuanganPayload, from: string, to: string): s
   lines.push('Saldo Reward Diberikan: ' + idr(p.memo.cashback.total));
   lines.push('Zakat Tercatat: ' + idr(p.memo.zakat.total));
   lines.push('Settlement Konsinyasi: ' + idr(p.memo.konsinyasi.total));
+  lines.push('Ujrah Konsinyasi (komisi toko): ' + idr(p.memo.ujrah_konsinyasi.total));
   lines.push('---');
   lines.push(
     'V1: retur COGS belum dibalik; piutang/hutang & kas belum terintegrasi (lihat Catatan V1).'

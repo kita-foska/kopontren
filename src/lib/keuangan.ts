@@ -21,6 +21,11 @@
  *  - Settlement konsinyasi = cash-out ke pemilik (label cash_entries
  *    'Kon. …'); penjualan barangnya TIDAK masuk `sales` → off-P&L,
  *    ditampilkan sebagai MEMO, bukan beban operasional.
+ *  - FASE P4: komisi konsinyasi (ujrah, akad ju'alah; setting
+ *    konsinyasi_commission default 20%) tercatat OTOMATIS sebagai kas
+ *    masuk 'Ujrah Kon. …' saat barang terjual (/api/konsinyasi action
+ *    'sell') → MEMO off-P&L selayaknya settlement; tagihan pemilik di
+ *    /api/konsinyasi sudah NETO komisi (pemilik 80%, toko 20%).
  *  - Piutang manual (debts) & hutang supplier (payables) BUKAN modul
  *    penjualan/pembelian (off-POS) → TIDAK dibaca oleh P&L; pelunasannya
  *    hanya pergerakan kas (cakupan FASE A2 Arus Kas).
@@ -82,6 +87,7 @@ export type KeuanganPayload = {
     cashback: { total: number };
     zakat: { total: number; count: number };
     konsinyasi: { total: number; count: number };
+    ujrah_konsinyasi: { total: number; count: number };
   };
 };
 
@@ -96,6 +102,7 @@ export const KEUANGAN_NOTES: string[] = [
   'Cashback adalah kewajiban kepada member (saldo tertunda), bukan beban — ditampilkan sebagai memo agar tidak dobel hitung.',
   'Zakat tercatat terpisah (zakat_history), bukan beban operasional — ditampilkan sebagai memo.',
   'Settlement konsinyasi adalah pembayaran kepada pemilik barang (di luar P&L; penjualan barangnya tidak tercatat di sales) — ditampilkan sebagai memo, bukan beban.',
+  "Komisi konsinyasi (ujrah, akad ju'alah; default 20%) tercatat OTOMATIS sebagai kas masuk ('Ujrah Kon. …') saat barang terjual; tagihan pemilik sudah neto komisi — jangan dicatat manual agar tidak dobel hitung.",
   'Piutang manual (debts) dan hutang supplier (payables) tidak memengaruhi laporan ini; pelunasannya hanya pergerakan kas (cakupan laporan arus kas, fase A2).',
 ];
 /**
@@ -183,6 +190,19 @@ export async function queryKeuangan(
     )
     .get(...p)) as { c: number; v: number };
 
+  // Memo ujrah (FASE P4, akad ju'alah): komisi konsinyasi = cash_entries
+  // INCOME berlabel 'Ujrah Kon. <pemilik> - <barang>' (dibuat
+  // /api/konsinyasi action 'sell' saat barang terjual — upah tidak di
+  // muka; barang dikembalikan tidak menghasilkan jurnal ini). Off-P&L
+  // V1 selayaknya settlement; otomatis, jangan dobel hitung manual.
+  const ujrah = (await d
+    .prepare(
+      `SELECT COUNT(*) c, COALESCE(SUM(amount), 0) v
+       FROM cash_entries
+       WHERE type = 'income' AND label LIKE 'Ujrah Kon. %' AND created_at >= ? AND created_at <= ?`
+    )
+    .get(...p)) as { c: number; v: number };
+
   // Bruto = neto + potongan yang sudah dipotong (hanya utk detail UI).
   const bruto = sales.t + sales.disc + sales.mdisc + sales.red;
   const bersih = sales.t - ret.v;
@@ -211,6 +231,7 @@ export async function queryKeuangan(
       cashback: { total: sales.cb },
       zakat: { total: zakat.v, count: zakat.c },
       konsinyasi: { total: kons.v, count: kons.c },
+      ujrah_konsinyasi: { total: ujrah.v, count: ujrah.c },
     },
   };
 }

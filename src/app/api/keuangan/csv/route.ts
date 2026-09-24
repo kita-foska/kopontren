@@ -63,6 +63,7 @@ export async function GET(req: Request) {
     'Saldo Reward Diberikan,' + p.memo.cashback.total,
     'Zakat Tercatat,' + p.memo.zakat.total,
     'Settlement Konsinyasi,' + p.memo.konsinyasi.total,
+    'Ujrah Konsinyasi (komisi toko),' + p.memo.ujrah_konsinyasi.total,
     '',
     'CATATAN V1,',
     ...KEUANGAN_NOTES.map((n, i) => '"' + (i + 1) + '. ' + n.replace(/"/g, '""') + '"'),

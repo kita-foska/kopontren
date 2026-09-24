@@ -19,6 +19,7 @@ type Kons = {
   unit: string;
   qty_received: number;
   agree_price: number;
+  commission_rate: number;
   qty_sold: number;
   qty_returned: number;
   amount_paid: number;
@@ -28,11 +29,13 @@ type Kons = {
   settled_at: string | null;
   remaining: number;
   payable: number;
+  commission: number;
   unpaid: number;
 };
 type Resp = {
   consignments: Kons[];
   totals: { active: number; unpaid: number; remaining: number };
+  commission_rate_default?: number;
   limit?: number;
   offset?: number;
 };
@@ -181,7 +184,8 @@ export function KonsinyasiClient() {
           <Badge tone="blue">Terjual {k.qty_sold}</Badge>
           <Badge tone="gray">Dikembalikan {k.qty_returned}</Badge>
           <Badge tone="amber">Sisa {k.remaining}</Badge>
-          <Badge tone="red">Tagihan {rp(k.payable)}</Badge>
+          <Badge tone="blue">Komisi toko {k.commission_rate}% · Ujrah {rp(k.commission)}</Badge>
+          <Badge tone="red">Tagihan pemilik {rp(k.payable)}</Badge>
           <Badge tone="green">Terbayar {rp(k.amount_paid)}</Badge>
           {k.unpaid > 0 && <Badge tone="red">Kurang {rp(k.unpaid)}</Badge>}
         </div>
@@ -334,7 +338,11 @@ export function KonsinyasiClient() {
         </div>
       </div>
       <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-        Harga perjanjian = nominal per unit yang dibayarkan kepada pemilik tiap barang terjual.
+        Harga perjanjian = nominal per unit dasar bagi hasil. Akad ju'alah: komisi toko{' '}
+        {data.commission_rate_default ?? 20}% terhitung OTOMATIS saat barang terjual
+        (bukan di muka) dan tercatat sebagai pendapatan jasa (ujrah); bagian pemilik{' '}
+        {100 - (data.commission_rate_default ?? 20)}%. Barang yang dikembalikan karena tidak
+        terjual tidak menghasilkan komisi.
       </p>
 
       <div className="mb-3 flex gap-2" role="tablist" onKeyDown={onTabKeyDown}>

@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { db, tx } from '@/db';
+import { db, getSettings, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { notifyNewKonsinyasi } from '@/lib/notify';
+import { clampRate, splitConsignment } from '@/lib/konsinyasi';
 
 type Row = {
   id: number;
@@ -13,6 +14,7 @@ type Row = {
   unit: string;
   qty_received: number;
   agree_price: number;
+  commission_rate: number;
   qty_sold: number;
   qty_returned: number;
   amount_paid: number;
@@ -23,13 +25,23 @@ type Row = {
 };
 
 const COLS =
-  'id, owner, owner_phone, item_name, unit, qty_received, agree_price, qty_sold, qty_returned, amount_paid, status, note, created_at, settled_at';
+  'id, owner, owner_phone, item_name, unit, qty_received, agree_price, commission_rate, qty_sold, qty_returned, amount_paid, status, note, created_at, settled_at';
 
-/** Add derived fields: sisa barang, tagihan pemilik, dan selisih belum dibayar. */
+/**
+ * Add derived fields: sisa barang, tagihan PEMILIK (neto komisi), komisi
+ * toko (ujrah, akad ju'alah), dan selisih belum dibayar. Komisi hanya
+ * dari qty yang TERJUAL — barang dikembalikan (ora payu) tanpa komisi;
+ * upah tidak pernah di muka.
+ */
 function computed(r: Row) {
   const remaining = r.qty_received - r.qty_sold - r.qty_returned;
-  const payable = r.qty_sold * r.agree_price;
-  return { ...r, remaining, payable, unpaid: payable - r.amount_paid };
+  const { owner: unitOwner, commission: unitCommission } = splitConsignment(
+    r.agree_price,
+    r.commission_rate
+  );
+  const payable = r.qty_sold * unitOwner;
+  const commission = r.qty_sold * unitCommission;
+  return { ...r, remaining, payable, commission, unpaid: payable - r.amount_paid };
 }
 
 export async function GET(req: Request) {
@@ -55,10 +67,12 @@ export async function GET(req: Request) {
     .prepare(
       `SELECT COUNT(*) c,
               COALESCE(SUM(qty_received - qty_sold - qty_returned), 0) r,
-              COALESCE(SUM(qty_sold * agree_price - amount_paid), 0) u
+              COALESCE(SUM(qty_sold * (agree_price - agree_price * commission_rate / 100) - amount_paid), 0) u
        FROM consignments WHERE status = 'active'`
     )
     .get()) as { c: number; r: number; u: number };
+  // Rate default utk titipan BARU (akad disepakati saat titipan).
+  const defaultRate = clampRate((await getSettings()).konsinyasi_commission);
   return NextResponse.json({
     consignments: items,
     totals: {
@@ -66,6 +80,7 @@ export async function GET(req: Request) {
       unpaid: actAgg.u,
       remaining: actAgg.r,
     },
+    commission_rate_default: defaultRate,
     limit,
     offset,
   });
@@ -102,11 +117,15 @@ export async function POST(req: Request) {
             { error: 'Pemilik, barang & jumlah wajib diisi' },
             { status: 400 }
           );
+        // FASE P4: snapshot rate komisi (akad ju'alah) saat titipan —
+        // kontrak sudah disepakati, jadi rate lama tetap berlaku utk
+        // titipan ini walau setting global berubah.
+        const rate = clampRate((await getSettings()).konsinyasi_commission);
         const out = (await tx(d, async () => {
           const r = await d
             .prepare(
-              `INSERT INTO consignments (owner, owner_phone, item_name, unit, qty_received, agree_price, note)
-               VALUES (?, ?, ?, ?, ?, ?, ?)`
+              `INSERT INTO consignments (owner, owner_phone, item_name, unit, qty_received, agree_price, commission_rate, note)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
             )
             .run(
               owner,
@@ -115,6 +134,7 @@ export async function POST(req: Request) {
               String(b.unit || '').trim() || 'pcs',
               qty,
               price,
+              rate,
               String(b.note || '').trim()
             );
           return Number(r.lastInsertRowid);
@@ -124,6 +144,7 @@ export async function POST(req: Request) {
           item,
           qty,
           agree_price: price,
+          commission_rate: rate,
         });
         try {
           await notifyNewKonsinyasi(owner, item, qty);
@@ -169,6 +190,30 @@ export async function POST(req: Request) {
                     .run(n, id, n);
             if (Number(guard.changes) !== 1)
               throw new Error('Jumlah melebihi sisa (data berubah — muat ulang)');
+            if (b.action === 'sell') {
+              // FASE P4 (akad ju'alah): komisi (ujrah) baru TERCATAT saat
+              // barang terjual — upah tidak di muka; aksi 'return'
+              // (barang dikembalikan, ora payu) tidak menambah komisi.
+              const ujrah = n * splitConsignment(row.agree_price, row.commission_rate).commission;
+              if (ujrah > 0) {
+                // Tercatat sebagai pendapatan jasa (kas masuk
+                // 'Ujrah Kon. …'), berpasangan dgn settlement 'Kon. …'
+                // (kas keluar, neto komisi). Jangan catat manual.
+                await d
+                  .prepare(
+                    'INSERT INTO cash_entries (type, label, amount, note, created_by) VALUES (?, ?, ?, ?, ?)'
+                  )
+                  .run(
+                    'income',
+                    'Ujrah Kon. ' + row.owner + ' - ' + row.item_name,
+                    ujrah,
+                    "Komisi konsinyasi #" + id + " (akad ju'alah, otomatis saat terjual)",
+                    user.id
+                  );
+              }
+              invalidate('kas:');
+              invalidate('reports:');
+            }
             const c = computed({
               ...row,
               qty_sold: b.action === 'sell' ? row.qty_sold + n : row.qty_sold,
@@ -180,19 +225,24 @@ export async function POST(req: Request) {
             if (row.status !== 'active') throw new Error('Data sudah ditutup');
             const amount = Math.floor(Number(b.amount) || 0);
             if (amount <= 0) throw new Error('Nominal minimal 1');
-            const unpaid = row.qty_sold * row.agree_price - row.amount_paid;
+            // FASE P4: tagihan pemilik NETO komisi (akad ju'alah): pemilik
+            // menerima (100-rate)%; komisi rate% sudah tercatat otomatis
+            // saat jual, tidak ikut dibayar di sini.
+            const { owner: unitOwner } = splitConsignment(row.agree_price, row.commission_rate);
+            const unpaid = row.qty_sold * unitOwner - row.amount_paid;
             if (amount > unpaid)
-              throw new Error('Nominal melebihi tagihan (Rp ' + unpaid.toLocaleString('id-ID') + ')');
-            // Guarded update: cegah overpay (amount_paid > tagihan) akibat
-            // double-submit / 2 request paralel.
+              throw new Error('Nominal melebihi tagihan pemilik (Rp ' + unpaid.toLocaleString('id-ID') + ')');
+            // Guarded update: cegah overpay (amount_paid > tagihan pemilik,
+            // neto komisi) akibat double-submit / 2 request paralel.
             const payRes = await d
               .prepare(
                 `UPDATE consignments SET amount_paid = amount_paid + ?
-                 WHERE id = ? AND status = 'active' AND amount_paid + ? <= qty_sold * agree_price`
+                 WHERE id = ? AND status = 'active'
+                   AND amount_paid + ? <= qty_sold * (agree_price - agree_price * commission_rate / 100)`
               )
               .run(amount, id, amount);
             if (Number(payRes.changes) !== 1)
-              throw new Error('Nominal melebihi tagihan (data berubah — muat ulang)');
+              throw new Error('Nominal melebihi tagihan pemilik (data berubah — muat ulang)');
             // uang keluar kas untuk pemilik -> tercatat di pembukuan kas
             await d
               .prepare(
@@ -210,7 +260,7 @@ export async function POST(req: Request) {
             invalidate('reports:');
             return {
               ok: true,
-              unpaid: row.qty_sold * row.agree_price - (row.amount_paid + amount),
+              unpaid: row.qty_sold * unitOwner - (row.amount_paid + amount),
             };
           }
           if (b.action === 'close') {

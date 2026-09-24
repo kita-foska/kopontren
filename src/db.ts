@@ -467,6 +467,15 @@ async function migrate(d: Db) {
   // sessions.last_activity: jejak aktivitas terakhir utk idle timeout (refresh
   // tiap request; entek setelah session_timeout detik tanpa aktivitas).
   await execColumn(d, 'ALTER TABLE sessions ADD COLUMN last_activity TEXT');
+  // FASE P4 (2026-09-24, keputusan pengurus): komisi konsinyasi utk akad
+  // ju'alah — rate disnapshot per baris saat barang dititipkan (kontrak
+  // disepakati saat titipan, ref. Fatwa DSN-MUI No. 62/DSN-MUI/XII/2007).
+  // Baris lama dapat 20 (default keputusan); setting global
+  // konsinyasi_commission hanya berlaku utk titipan baru.
+  await execColumn(
+    d,
+    'ALTER TABLE consignments ADD COLUMN commission_rate INTEGER NOT NULL DEFAULT 20'
+  );
   // user_pins: PIN ter-hash scrypt (mirip password), 1 baris per user.
   await d.exec(
     "CREATE TABLE IF NOT EXISTS user_pins (" +
@@ -563,6 +572,10 @@ export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
   timezone: 'Asia/Jakarta',
   // Detik. Idle timeout sesi (default 3600 = 1 jam). Bisa diubah admin.
   session_timeout: '3600',
+  // FASE P4 (akad ju'alah, keputusan pengurus 2026-09-24): komisi toko
+  // utk konsinyasi (% dr harga jual); bagian pemilik = 100 - rate. Upah
+  // baru tercatat saat barang terjual, tidak di muka. Default 20.
+  konsinyasi_commission: '20',
 };
 
 export async function getSettings(): Promise<Record<string, string>> {
