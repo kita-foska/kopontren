@@ -576,6 +576,10 @@ export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
   // utk konsinyasi (% dr harga jual); bagian pemilik = 100 - rate. Upah
   // baru tercatat saat barang terjual, tidak di muka. Default 20.
   konsinyasi_commission: '20',
+  // FASE P4-B: komisi FLEKSIBEL per pemilik (antardhin) — JSON
+  // {nama_pemilik: rate%} utk pre-fill titipan baru. '{}' = pakai
+  // global. Dikelola di /admin/konsinyasi (aksi save/delete_owner_rate).
+  konsinyasi_owner_rates: '{}',
 };
 
 export async function getSettings(): Promise<Record<string, string>> {

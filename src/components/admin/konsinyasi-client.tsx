@@ -36,6 +36,7 @@ type Resp = {
   consignments: Kons[];
   totals: { active: number; unpaid: number; remaining: number };
   commission_rate_default?: number;
+  owner_rates?: Record<string, number>;
   limit?: number;
   offset?: number;
 };
@@ -47,6 +48,7 @@ const EMPTY_FORM = {
   unit: 'pcs',
   qty: 1,
   agree_price: 0,
+  commission_rate: '' as string | number,
   note: '',
 };
 
@@ -67,6 +69,11 @@ export function KonsinyasiClient() {
   const [canMore, setCanMore] = useState(false);
   // Guard busy: cegah double-tap pada aksi jual/kembalikan/bayar/tutup.
   const [busy, setBusy] = useState(false);
+  // P4-B: flag field komisi sudah disentuh user (pre-fill per-pemilik
+  // tidak boleh menimpa nilai yang sedang dipilih).
+  const [rateTouched, setRateTouched] = useState(false);
+  const [orOwner, setOrOwner] = useState('');
+  const [orRate, setOrRate] = useState('');
 
   const load = useCallback(async (offset = 0, append = false) => {
     // Server cap 50 baris/halaman; offset melanjutkan riwayat konsinyasi.
@@ -127,8 +134,42 @@ export function KonsinyasiClient() {
       showToast('Pemilik, barang & jumlah wajib diisi');
       return;
     }
-    await post(f, 'Konsinyasi diterima & tercatat');
+    // P4-B: rate disepakati (antardhin) — null = server resolve
+    // (default per-pemilik → global). 0 = tanpa komisi, valid.
+    const rateVal =
+      f.commission_rate === '' || f.commission_rate === null
+        ? null
+        : Number(f.commission_rate);
+    await post(
+      {
+        ...f,
+        commission_rate:
+          rateVal !== null && Number.isFinite(rateVal) ? rateVal : undefined,
+      },
+      'Konsinyasi diterima & tercatat'
+    );
     setF(EMPTY_FORM);
+    setRateTouched(false);
+  }
+
+  // P4-B: kelola default komisi per-pemilik (setting
+  // konsinyasi_owner_rates). Hanya utk pre-fill titipan BARU.
+  function saveOwnerRate() {
+    if (!orOwner.trim()) {
+      showToast('Nama pemilik wajib diisi');
+      return;
+    }
+    const r = Math.floor(Number(orRate));
+    if (!Number.isFinite(r) || r < 0 || r > 100) {
+      showToast('Komisi per-pemilik harus 0-100');
+      return;
+    }
+    post({ action: 'save_owner_rate', owner: orOwner.trim(), commission_rate: r }, 'Rate per-pemilik tersimpan');
+    setOrOwner('');
+    setOrRate('');
+  }
+  function delOwnerRate(o: string) {
+    post({ action: 'delete_owner_rate', owner: o }, 'Rate per-pemilik dihapus');
   }
 
   function jual(k: Kons) {
@@ -272,7 +313,20 @@ export function KonsinyasiClient() {
             className="input"
             value={f.owner}
             placeholder="Nama pemilik / pemilik kebun…"
-            onChange={(e) => setF({ ...f, owner: e.target.value })}
+            onChange={(e) => {
+              const v = e.target.value;
+              setF((prev) => ({
+                ...prev,
+                owner: v,
+                // P4-B: pre-fill rate dari default pemilik (bila ada);
+                // nilai yang sudah user pilih tidak di-overwrite.
+                commission_rate: rateTouched
+                  ? prev.commission_rate
+                  : (data?.owner_rates?.[v.trim()] ??
+                    data?.commission_rate_default ??
+                    20),
+              }));
+            }}
           />
         </div>
         <div>
@@ -323,6 +377,22 @@ export function KonsinyasiClient() {
           />
         </div>
         <div>
+          <label className="label">Komisi toko (%)</label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            className="input"
+            value={f.commission_rate}
+            placeholder={String(data?.commission_rate_default ?? 20)}
+            onChange={(e) => {
+              setRateTouched(true);
+              setF({ ...f, commission_rate: e.target.value });
+            }}
+          />
+        </div>
+        <div>
           <label className="label">Catatan</label>
           <input
             className="input"
@@ -337,12 +407,70 @@ export function KonsinyasiClient() {
           </button>
         </div>
       </div>
+      <div className="card mb-3 p-3">
+        <p className="text-sm font-bold">Rate per-pemilik (default komisi)</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Pre-fill form titipan baru per nama pemilik (antardhin — hasil
+          musyawarah). Pemilik tanpa rate → default global{' '}
+          {data.commission_rate_default ?? 20}%. Titipan aktif tidak pernah
+          terpengaruh.
+        </p>
+        {(data.owner_rates ? Object.keys(data.owner_rates).length : 0) > 0 ? (
+          <div className="mt-2 flex flex-col gap-1">
+            {Object.entries(data.owner_rates || {}).map(([o, r]) => (
+              <div key={o} className="flex items-center justify-between gap-2 text-xs">
+                <span className="font-bold">{o} — {r}%</span>
+                <button
+                  type="button"
+                  className="btn-danger"
+                  disabled={busy}
+                  onClick={() => delOwnerRate(o)}
+                >
+                  Hapus
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-slate-500">Belum ada rate per-pemilik.</p>
+        )}
+        <div className="mt-2 grid grid-cols-[1fr_88px_auto] items-end gap-2">
+          <div>
+            <label className="label">Nama pemilik</label>
+            <input
+              className="input"
+              value={orOwner}
+              placeholder="cth. Muhamad"
+              onChange={(e) => setOrOwner(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label">Komisi %</label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              className="input"
+              value={orRate}
+              placeholder="cth. 15"
+              onChange={(e) => setOrRate(e.target.value)}
+            />
+          </div>
+          <button type="button" className="btn-primary" disabled={busy} onClick={saveOwnerRate}>
+            Simpan
+          </button>
+        </div>
+      </div>
+
       <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-        Harga perjanjian = nominal per unit dasar bagi hasil. Akad ju'alah: komisi toko{' '}
-        {data.commission_rate_default ?? 20}% terhitung OTOMATIS saat barang terjual
-        (bukan di muka) dan tercatat sebagai pendapatan jasa (ujrah); bagian pemilik{' '}
-        {100 - (data.commission_rate_default ?? 20)}%. Barang yang dikembalikan karena tidak
-        terjual tidak menghasilkan komisi.
+        Komisi FLEKSIBEL (antardhin/ju'alah): field "Komisi toko (%)" di atas =
+        kesepakatan utk titipan ini (pre-fill dari rate per-pemilik bila ada,
+        selain itu global {data.commission_rate_default ?? 20}%), bisa diubah
+        per barang; 0 = tanpa komisi. Komisi terhitung OTOMATIS saat barang
+        terjual (bukan di muka) & tercatat sebagai pendapatan jasa (ujrah);
+        bagian pemilik = harga − komisi. Barang yang dikembalikan karena tidak
+        terjual tidak menghasilkan komisi. Titipan berjalan TIDAK BISA
+        diubah rate-nya (tanpa perubahan sepihak).
       </p>
 
       <div className="mb-3 flex gap-2" role="tablist" onKeyDown={onTabKeyDown}>

@@ -11,7 +11,13 @@
  * terhitung saat barang TERJUAL; barang yang dikembalikan (ora payu)
  * tidak menghasilkan komisi. Ref: Fatwa DSN-MUI No. 62/DSN-MUI/XII/2007.
  */
-import { clampRate, DEFAULT_CONSIGN_COMMISSION, splitConsignment } from '../src/lib/konsinyasi.ts';
+import {
+  clampRate,
+  DEFAULT_CONSIGN_COMMISSION,
+  parseOwnerRates,
+  resolveCommissionRate,
+  splitConsignment,
+} from '../src/lib/konsinyasi.ts';
 
 let passes = 0;
 let failures = 0;
@@ -85,6 +91,56 @@ console.log('── Skenario transaksi konsinyasi (skema 20:80) ─────�
   const qtyReturned = 6;
   eq('ujrah tetap hanya dari terjual', (qtySold + qtyReturned * 0) * commission, 8_000);
   eq('dikembalikan tanpa menambah tagihan', qtySold * owner, 32_000);
+}
+
+console.log('── parseOwnerRates (rate per-pemilik, P4-B) ─────────────────────────────────────');
+{
+  eq('JSON valid diparse', JSON.stringify(parseOwnerRates('{"Muhamad":15}')), '{"Muhamad":15}');
+  eq('empty/kosong -> {}', JSON.stringify(parseOwnerRates('')), '{}');
+  eq('undefined -> {}', JSON.stringify(parseOwnerRates(undefined)), '{}');
+  eq('JSON korup -> {} (fallback global)', JSON.stringify(parseOwnerRates('{x}')), '{}');
+  eq('bukan object (array) -> {}', JSON.stringify(parseOwnerRates('[1]')), '{}');
+  eq('null -> {}', JSON.stringify(parseOwnerRates('null')), '{}');
+  const m = parseOwnerRates('{"A":150,"B":-5,"C":"25","D":null,"E":""}');
+  eq('nilai >100 di-cap 100', m.A, 100);
+  eq('nilai <0 di-floor 0', m.B, 0);
+  eq('string number diparse', m.C, 25);
+  check('nilai tidak valid di-skip', !('D' in m) && !('E' in m));
+}
+
+console.log('── resolveCommissionRate (prioritas antardhin, P4-B) ─────────────────────────────');
+{
+  const ownerRates = { Muhamad: 15, Budi: 0 };
+  const r1 = resolveCommissionRate(10, 'Muhamad', ownerRates, '20');
+  // cek field per field (objek ≠ by-reference)
+  eq('eksplisit -> rate 10', r1.rate, 10);
+  eq('eksplisit -> source', r1.source, 'explicit');
+
+  const r2 = resolveCommissionRate(undefined, 'Muhamad', ownerRates, '20');
+  eq('tanpa eksplisit -> rate pemilik', r2.rate, 15);
+  eq('tanpa eksplisit -> source owner', r2.source, 'owner');
+
+  const r3 = resolveCommissionRate(null, 'SiUng', ownerRates, '20');
+  eq('pemilik tanpa rate -> global', r3.rate, 20);
+  eq('global source', r3.source, 'global');
+
+  const r4 = resolveCommissionRate(0, 'Budi', ownerRates, '20');
+  eq('eksplisit 0 = tanpa komisi (valid)', r4.rate, 0);
+  eq('0 tetap source explicit', r4.source, 'explicit');
+
+  const r5 = resolveCommissionRate(undefined, 'Budi', ownerRates, '20');
+  eq('pemilik Budi rate 0 -> owner (bukan global)', r5.rate, 0);
+  eq('source owner utk rate 0', r5.source, 'owner');
+
+  // Global dari setting string, clamp.
+  const r6 = resolveCommissionRate(undefined, 'X', {}, '77');
+  eq('global string diparse', r6.rate, 77);
+  const r7 = resolveCommissionRate(undefined, 'X', {}, '999');
+  eq('global >100 di-cap', r7.rate, 100);
+
+  // owner name trim + case-sensitif (nama = key persis).
+  const r8 = resolveCommissionRate(undefined, '  Muhamad  ', ownerRates, '20');
+  eq('nama di-trim saat lookup', r8.rate, 15);
 }
 
 console.log(`\n${passes} lulus, ${failures} gagal`);

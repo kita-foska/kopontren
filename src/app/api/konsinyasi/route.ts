@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
-import { db, getSettings, tx } from '@/db';
+import { db, getSettings, saveSettings, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { notifyNewKonsinyasi } from '@/lib/notify';
-import { clampRate, splitConsignment } from '@/lib/konsinyasi';
+import {
+  clampRate,
+  parseOwnerRates,
+  resolveCommissionRate,
+  splitConsignment,
+} from '@/lib/konsinyasi';
 
 type Row = {
   id: number;
@@ -71,8 +76,10 @@ export async function GET(req: Request) {
        FROM consignments WHERE status = 'active'`
     )
     .get()) as { c: number; r: number; u: number };
-  // Rate default utk titipan BARU (akad disepakati saat titipan).
-  const defaultRate = clampRate((await getSettings()).konsinyasi_commission);
+  // Rate default utk titipan BARU (akad disepakati saat titipan) +
+  // rate per-pemilik (P4-B) utk pre-fill form & kartu pengelola.
+  const sg = await getSettings();
+  const defaultRate = clampRate(sg.konsinyasi_commission);
   return NextResponse.json({
     consignments: items,
     totals: {
@@ -81,6 +88,7 @@ export async function GET(req: Request) {
       remaining: actAgg.r,
     },
     commission_rate_default: defaultRate,
+    owner_rates: parseOwnerRates(sg.konsinyasi_owner_rates),
     limit,
     offset,
   });
@@ -101,6 +109,7 @@ export async function POST(req: Request) {
     item_name?: string;
     unit?: string;
     agree_price?: number;
+    commission_rate?: number;
     note?: string;
   };
   const d = await db();
@@ -117,10 +126,17 @@ export async function POST(req: Request) {
             { error: 'Pemilik, barang & jumlah wajib diisi' },
             { status: 400 }
           );
-        // FASE P4: snapshot rate komisi (akad ju'alah) saat titipan —
-        // kontrak sudah disepakati, jadi rate lama tetap berlaku utk
-        // titipan ini walau setting global berubah.
-        const rate = clampRate((await getSettings()).konsinyasi_commission);
+        // FASE P4-B: komisi FLEKSIBEL (antardhin) — rate disepakati
+        // saat titipan: eksplisit (form, boleh beda per barang) >
+        // default per-pemilik (konsinyasi_owner_rates) > global.
+        // Snapshot utk baris ini; baris aktif TIDAK terpengaruh.
+        const s = await getSettings();
+        const { rate, source } = resolveCommissionRate(
+          b.commission_rate,
+          owner,
+          parseOwnerRates(s.konsinyasi_owner_rates),
+          s.konsinyasi_commission
+        );
         const out = (await tx(d, async () => {
           const r = await d
             .prepare(
@@ -145,6 +161,7 @@ export async function POST(req: Request) {
           qty,
           agree_price: price,
           commission_rate: rate,
+          commission_source: source,
         });
         try {
           await notifyNewKonsinyasi(owner, item, qty);
@@ -289,6 +306,42 @@ export async function POST(req: Request) {
           amount: b.amount,
         });
         return NextResponse.json(out as object);
+      }
+      case 'save_owner_rate': {
+        // FASE P4-B: default komisi per pemilik (antardhin — hasil
+        // musyawarah dgn pemilik). Hanya utk pre-fill titipan BARU;
+        // baris aktif tidak pernah terpengaruh.
+        const ownerKey = String(b.owner || '').trim().slice(0, 200);
+        if (!ownerKey)
+          return NextResponse.json({ error: 'Nama pemilik wajib diisi' }, { status: 400 });
+        const rateVal = Math.floor(Number(b.commission_rate));
+        if (!Number.isFinite(rateVal) || rateVal < 0 || rateVal > 100)
+          return NextResponse.json({ error: 'Komisi harus 0-100' }, { status: 400 });
+        const s2 = await getSettings();
+        const map = parseOwnerRates(s2.konsinyasi_owner_rates);
+        map[ownerKey] = rateVal;
+        await saveSettings(d, { konsinyasi_owner_rates: JSON.stringify(map) }, user);
+        await logAudit(user, 'konsinyasi:save_owner_rate', 'settings', null, undefined, {
+          owner: ownerKey,
+          rate: rateVal,
+        });
+        return NextResponse.json({ ok: true });
+      }
+      case 'delete_owner_rate': {
+        const ownerKey = String(b.owner || '').trim().slice(0, 200);
+        if (!ownerKey)
+          return NextResponse.json({ error: 'Nama pemilik wajib diisi' }, { status: 400 });
+        const s3 = await getSettings();
+        const map = parseOwnerRates(s3.konsinyasi_owner_rates);
+        if (ownerKey in map) {
+          delete map[ownerKey];
+          await saveSettings(d, { konsinyasi_owner_rates: JSON.stringify(map) }, user);
+          await logAudit(user, 'konsinyasi:delete_owner_rate', 'settings', null, undefined, {
+            owner: ownerKey,
+          });
+        }
+        // idempoten: hapus key yg tidak ada tetap ok
+        return NextResponse.json({ ok: true });
       }
       default:
         return NextResponse.json({ error: 'Aksi tidak dikenal' }, { status: 400 });

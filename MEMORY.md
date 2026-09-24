@@ -11,6 +11,16 @@
 - Kolom `consignments.commission_rate` = SNAPSHOT rate saat titipan
   (kontrak berjalan tidak berubah walau setting global berubah; baris
   lama default 20).
+- **P4-B (24 Sep):** komisi FLEKSIBEL per kesepakatan (antardhin):
+  field "Komisi toko (%)" di form titipan (boleh beda per barang;
+  0 = tanpa komisi) + default per-pemilik via setting
+  `konsinyasi_owner_rates` (JSON {nama: rate}; kartu "Rate per-pemilik"
+  + aksi save/delete_owner_rate di /admin/konsinyasi, audit log).
+  Prioritas rate titipan baru: input eksplisit > per-pemilik > global.
+  Titipan aktif TIDAK bisa diubah rate-nya oleh app (snapshot —
+  tanpa perubahan sepihak; utk ubah: tutup → titip ulang, musyawarah).
+  Helper `resolveCommissionRate`/`parseOwnerRates` (lib/konsinyasi.ts,
+  tanpa dependensi); audit create + `commission_source`.
 - `src/lib/konsinyasi.ts` (helper murni): `clampRate` + `splitConsignment`
   (komisi floor per unit; pemilik + komisi = harga persis, tanpa pecahan).
 - `/api/konsinyasi`: tagihan pemilik NETO komisi; action `sell` mencatat
@@ -23,8 +33,10 @@
   tanpa key → 20).
 - UI konsinyasi: badge "Komisi toko X% · Ujrah Rp …", "Tagihan pemilik",
   hint akad ju'alah dr `commission_rate_default`.
-- Verifikasi: `tsc --noEmit` exit 0; `test:konsinyasi` 24/24;
-  `test:margin` 57/57; `test:split` ALL_PASS; `test:clientip` 16 ok.
+- Verifikasi: `tsc --noEmit` exit 0; `test:konsinyasi` 47/47
+  (P4-B: parseOwnerRates + resolveCommissionRate); `test:margin`
+  57/57; `test:split` ALL_PASS; `test:clientip` 26 ok; `next build`
+  sukses.
 - Dokumen `P4-PROPOSAL-KONSINYASI.md` (24 Sep): proposal pengurus —
   tabel opsi deliberasi + permohonan keputusan + risiko/penahan.
   Status: menunggu approval pengurus; tashih sisa → ulama.

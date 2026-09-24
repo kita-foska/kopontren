@@ -35,3 +35,52 @@ export function splitConsignment(price: number, rate: number): { owner: number; 
   const commission = Math.floor((p * r) / 100);
   return { owner: p - commission, commission };
 }
+
+/**
+ * FASE P4-B: komisi FLEKSIBEL — boleh beda per pemilik / per barang
+ * (antardhin: disepakati saat titipan). Rate per-pemilik disimpan di
+ * setting `konsinyasi_owner_rates` (JSON string {nama: rate}).
+ * Parser toleran: JSON korup / bukan object → {} (fallback global).
+ */
+export function parseOwnerRates(v: unknown): Record<string, number> {
+  if (typeof v !== 'string' || !v.trim()) return {};
+  try {
+    const o: unknown = JSON.parse(v);
+    if (o === null || typeof o !== 'object' || Array.isArray(o)) return {};
+    const out: Record<string, number> = {};
+    for (const [k, raw] of Object.entries(o)) {
+      const name = String(k).trim();
+      if (!name) continue;
+      // skip null / string kosong: Number(null)=0 & Number('')=0 akan
+      // mengira rate 0 diam-diam — nilai tak valid memang di-skip.
+      if (raw === null || raw === undefined) continue;
+      if (typeof raw === 'string' && raw.trim() === '') continue;
+      const n = Math.floor(Number(raw));
+      if (!Number.isFinite(n)) continue;
+      out[name] = Math.min(100, Math.max(0, n));
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Resolve rate utk titipan BARU. Prioritas (antardhin — kesepakatan
+ * saat input menang): (1) explicit = nilai yg disepakati di form,
+ * (2) default pemilik (konsinyasi_owner_rates), (3) global
+ * (konsinyasi_commission, default 20). Baris berjalan TIDAK pernah
+ * kena — snapshot rate tetap (tanpa perubahan sepihak).
+ */
+export function resolveCommissionRate(
+  explicit: number | null | undefined,
+  ownerName: string,
+  ownerRates: Record<string, number>,
+  globalSetting: unknown
+): { rate: number; source: 'explicit' | 'owner' | 'global' } {
+  if (explicit !== null && explicit !== undefined && Number.isFinite(Number(explicit)))
+    return { rate: clampRate(explicit), source: 'explicit' };
+  const o = ownerRates[String(ownerName ?? '').trim()];
+  if (o !== undefined) return { rate: o, source: 'owner' };
+  return { rate: clampRate(globalSetting), source: 'global' };
+}
