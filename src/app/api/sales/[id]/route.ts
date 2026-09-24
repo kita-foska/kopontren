@@ -103,7 +103,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
       await d
         .prepare(
           `UPDATE members SET points = MAX(points - ?, 0), total_spent = MAX(total_spent - ?, 0),
-           cashback_balance = MAX(cashback_balance + ?, 0) WHERE id = ?`
+           cashback_balance = MAX(cashback_balance - ?, 0) WHERE id = ?`
         )
         .run(sale.member_points, sale.total, sale.cashback, sale.member_id);
       // Rehitung auto-tier setelah total_spent turun — tanpa ini badge

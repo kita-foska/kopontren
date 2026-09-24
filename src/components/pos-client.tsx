@@ -1403,7 +1403,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   <div>
                     {selectedMember.points} poin (+{Math.floor(total / pointsEvery)} poin)
                     {perkAmt > 0 ? ` · Diskon member −${rp(perkAmt)}${isBday ? ' (ultah)' : ''}` : ''}
-                    {cbPreview > 0 ? ` · Cashback +${rp(cbPreview)} ke saldo` : ''}
+                    {cbPreview > 0 ? ` · Saldo Reward +${rp(cbPreview)}` : ''}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className={redeemMax <= 0 ? 'text-slate-400 dark:text-slate-500' : ''}>
@@ -1436,12 +1436,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     }
                   >
                     {redeemMax <= 0
-                      ? 'Tidak tersedia (saldo poin & cashback habis)'
+                      ? 'Tidak tersedia (saldo poin & reward habis)'
                       : redeemAmt > 0
-                        ? `Tebus −${rp(redeemAmt)} (${redeemPts} poin + Rp ${rp(redeemCb)} cashback)`
+                        ? `Tebus −${rp(redeemAmt)} (${redeemPts} poin + Rp ${rp(redeemCb)} reward)`
                         : `Saldo: ${selectedMember.points} poin${
                             pointValue > 0 ? ` × ${rp(pointValue)}` : ''
-                          } · cashback ${rp(selectedMember.cashback_balance || 0)} · maks ${rp(redeemMax)}`}
+                          } · saldo reward ${rp(selectedMember.cashback_balance || 0)} · maks ${rp(redeemMax)}`}
                   </div>
                   {redeemInputNum > redeemMax && redeemMax > 0 && (
                     <div className="text-amber-600 dark:text-amber-400">
@@ -1832,7 +1832,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 </div>
                 {receipt.cashback > 0 && (
                   <div className="flex justify-between">
-                    <span>Cashback (saldo)</span>
+                    <span>Saldo Reward</span>
                     <span>+{rp(receipt.cashback)}</span>
                   </div>
                 )}
@@ -1947,7 +1947,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           </div>
           {receipt.cashback > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Cashback (saldo)</span>
+              <span>Saldo Reward</span>
               <span>+Rp {receipt.cashback.toLocaleString('id-ID')}</span>
             </div>
           )}

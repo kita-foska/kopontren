@@ -24,7 +24,7 @@ export default async function PengaturanMemberPage() {
         Keuntungan <span className="text-accent-500 dark:text-accent-300">Member</span>
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-        Atur poin, diskon member, cashback, promo ulang tahun, dan tier member.
+        Atur poin, diskon member, saldo reward, promo ulang tahun, dan tier member.
       </p>
       <MemberSettingsClient />
     </Shell>

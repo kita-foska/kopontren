@@ -70,8 +70,10 @@ export async function POST(req: Request) {
   const d = await db();
   const sale = (
     (await d
-      .prepare('SELECT id, kasir_id, total FROM sales WHERE id = ?')
-      .get(saleId)) as { id: number; kasir_id: number | null; total: number } | undefined
+      .prepare('SELECT id, kasir_id, total, member_id FROM sales WHERE id = ?')
+      .get(saleId)) as
+      | { id: number; kasir_id: number | null; total: number; member_id: number | null }
+      | undefined
   );
   if (!sale) return NextResponse.json({ error: 'Transaksi tidak ditemukan' }, { status: 404 });
   if (user.role === 'kasir' && sale.kasir_id !== user.id)
@@ -130,6 +132,7 @@ export async function POST(req: Request) {
   const now = new Date().toISOString();
 
   let newId = 0;
+  let revNote = '';
   try {
     await tx(d, async () => {
       // Re-validasi plafon DI DALAM tx (guard akhir setelah semua
@@ -188,6 +191,71 @@ export async function POST(req: Request) {
           .prepare("INSERT INTO cash_entries (type, label, amount, created_by) VALUES ('expense', ?, ?, ?)")
           .run('Retur #' + saleId + ' · ' + item.product_name, amount, user.id);
       }
+      // SYARIAH P2 (audit 24 Sep 2026): bila transaksi ini kini 100% diretur
+      // (setiap baris: qty terjual == qty diretur), batalkan reward yang
+      // DIPEROLEH dari transaksi ini — poin + saldo reward — agar pola
+      // "beli → tebus reward → retur & simpan reward" (ghabtna) tertutup.
+      // Jumlah dibacakan PRESISI dari ledger point_history (bukan setting
+      // saat ini): reason 'earn' (poin, delta = poin) & 'cashback'
+      // (saldo reward, delta = rupiah — tercatat oleh POST /api/sales).
+      // Cek 'notFull' di dalam tx: state full tercapai hanya sekali per
+      // siklus (plafon retur memastikan qty tak bisa melebihi terjual),
+      // sehingga tidak ada kemungkinan pembatalan dobel.
+      const notFullRow = (
+        (await d
+          .prepare(
+            `SELECT COUNT(*) c FROM sale_items si
+             WHERE si.sale_id = ?
+               AND (SELECT COALESCE(SUM(r.qty), 0) FROM returns r
+                    WHERE r.sale_id = si.sale_id AND r.product_id = si.product_id)
+                   < si.qty`
+          )
+          .get(saleId)) as { c: number }
+      );
+      if (Number(notFullRow.c) === 0 && sale.member_id) {
+        const memberId = sale.member_id;
+        const earned = (
+          (await d
+            .prepare(
+              `SELECT COALESCE(SUM(CASE WHEN reason = 'earn' THEN delta ELSE 0 END), 0) p,
+                      COALESCE(SUM(CASE WHEN reason = 'cashback' THEN delta ELSE 0 END), 0) c
+               FROM point_history WHERE member_id = ? AND sale_id = ?
+                AND reason IN ('earn', 'cashback')`
+            )
+            .get(memberId, saleId)) as { p: number; c: number }
+        );
+        const pRev = Number(earned.p);
+        const cRev = Number(earned.c);
+        if (pRev > 0 || cRev > 0) {
+          const upd = await d
+            .prepare(
+              `UPDATE members SET points = MAX(points - ?, 0),
+                                   cashback_balance = MAX(cashback_balance - ?, 0)
+               WHERE id = ?`
+            )
+            .run(pRev, cRev, memberId);
+          if (Number(upd.changes) !== 1)
+            throw new Error('Member tidak ditemukan — balik reward retur dibatalkan');
+          if (pRev > 0) {
+            await d
+              .prepare(
+                `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
+                 VALUES (?, ?, 'return', ?, ?)`
+              )
+              .run(memberId, -pRev, pRev, saleId);
+          }
+          if (cRev > 0) {
+            await d
+              .prepare(
+                `INSERT INTO point_history (member_id, delta, reason, amount, sale_id)
+                 VALUES (?, ?, 'return_cash', ?, ?)`
+              )
+              .run(memberId, -cRev, cRev, saleId);
+          }
+          revNote =
+            ' · Poin & saldo reward dari transaksi ini dibatalkan (retur 100%, jejak "return")';
+        }
+      }
     });
   } catch (e) {
     return NextResponse.json(
@@ -203,11 +271,13 @@ export async function POST(req: Request) {
     amount,
     reason: reason || undefined,
     refund,
+    rewards_rolled_back: revNote !== '',
   });
   // Retur ubah stok produk (+refund) jurnal kas keluar & agregat laporan.
   invalidate('products:');
   invalidate('kas:');
   invalidate('reports:');
+  if (revNote !== '') invalidate('members:'); // poin/saldo reward berubah
   try {
     await notifyNewRetur(saleId, item.product_name, qty, amount);
   } catch (e) {
@@ -216,6 +286,9 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     id: newId,
-    note: 'Stok dikembalikan' + (refund ? ' & uang dikembalikan (jurnal kas keluar)' : ''),
+    note:
+      'Stok dikembalikan' +
+      (refund ? ' & uang dikembalikan (jurnal kas keluar)' : '') +
+      revNote,
   });
 }

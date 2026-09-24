@@ -26,8 +26,8 @@ const FIELDS: { key: string; label: string; hint: string; type: 'number' | 'togg
   },
   {
     key: 'cashback',
-    label: 'Cashback (%)',
-    hint: 'Dikreditkan ke saldo cashback member setelah transaksi.',
+    label: 'Saldo Reward (%)',
+    hint: 'Dikreditkan ke saldo reward member setelah transaksi.',
     type: 'number',
   },
   {
