@@ -11,7 +11,7 @@
 - **Koreksi hash:** commit sebenarnya = `9dbc22c` (laporan user
   menulis `8cedb6b` — hasil git log/ls-remote = `9dbc22c`).
 - **Sinkronisasi main (temuan saat konfirmasi):** `origin/main`
-  masih `0e34c45` (tertinggal) saperlu `origin/master` = `9dbc22c` →
+  masih `0e34c45` (tertinggal), `origin/master` = `9dbc22c` →
   dual-push `git push origin master:main` → kini `origin/main` =
   `origin/master` = `9dbc22c`. Vercel (build saka `main`) kini
   deploy seluruh seri 24 Sep (P4-A/B + P3 + terminologi + 24K +
