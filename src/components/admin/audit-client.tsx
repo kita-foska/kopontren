@@ -19,7 +19,14 @@ type Log = {
   user_agent: string;
   created_at: string;
 };
-type Resp = { logs: Log[]; tables: string[]; limit?: number; offset?: number };
+type Resp = {
+  logs: Log[];
+  tables: string[];
+  /** Daftar semua pengguna aktif (utk dropdown filter) — server-side. */
+  users?: { username: string; name: string }[];
+  limit?: number;
+  offset?: number;
+};
 
 function truncate(s: string | null, n = 60): string {
   if (!s) return '';
@@ -95,6 +102,15 @@ export function AuditClient() {
 
   const users = useMemo(() => {
     if (!data) return [];
+    // Sumber utama: daftar pengguna aktif dari server (seluruh tabel users),
+    // BUKAN dari 50 log pertama — akun yang log-nya tak masuk halaman tetap
+    // bisa dipilih. Fallback (field lama/kosong): turunan dari log yang ada.
+    if (data.users && data.users.length > 0) {
+      return data.users.map((u) => ({
+        value: u.username,
+        label: u.name ? u.username + ' (' + u.name + ')' : u.username,
+      }));
+    }
     const seen = new Map<string, string>();
     for (const l of data.logs) {
       if (l.username && !seen.has(l.username)) seen.set(l.username, l.user_name || '');

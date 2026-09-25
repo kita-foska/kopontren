@@ -32,7 +32,17 @@ export async function GET(req: Request) {
       .all()) as { table_name: string }[]
   ).map((r) => r.table_name)
   );
-  return NextResponse.json({ logs, tables, limit, offset });
+  // Daftar pengguna utk dropdown filter user — dari tabel users (aktif saja),
+  // BUKAN dari 50 log pertama: akun yang log-nya sudah tak masuk halaman
+  // tetap bisa dipilih. Tabel users kecil (admin, max puluhan baris);
+  // cache 60 dtk, dibuang saat ada perubahan user (invalidasi prefix 'users:').
+  const users = await cached('audit:users', async () =>
+    ((await d
+      .prepare(`SELECT username, display_name FROM users WHERE active = 1 ORDER BY username`)
+      .all()) as { username: string; display_name: string | null }[]
+    ).map((r) => ({ username: r.username, name: r.display_name || '' }))
+  );
+  return NextResponse.json({ logs, tables, users, limit, offset });
 }
 
 /** Purge old audit logs (data hygiene). */

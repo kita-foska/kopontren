@@ -278,7 +278,8 @@ export default async function DashboardPage() {
       </div>
         <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
           Menu pengurus (Produk, Belanja, Konsinyasi, Kas, Laporan Pengurus, Pengguna, Data &amp;
-          Backup) tersedia di navigasi atas.
+          Backup) tersedia di menu navigasi — baris atas di desktop, tombol hamburger di layar
+          kecil.
         </p>
       </div>
       )}
