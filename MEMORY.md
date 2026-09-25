@@ -1,5 +1,60 @@
 # MEMORY
 
+## 2026-09-25
+### KEPUTUSAN FINAL P3+P4 → GUS FI · A3 LIVE · v16 MENUNGGU DEPLOY VERCEL
+- **P3 (tashih zakat) + P4 (proposal konsinyasi)**: keputusan user/Gus Fi (25 Sep) —
+  dikirimkan sendiri oleh Gus Fi (P3 → ke ulama, P4 → ke pengurus); Cline standby
+  sampai ada hasilnya. Cline tidak perlu action apa pun.
+- **A3 (Neraca) KONFIRMASI LIVE di Vercel:**
+  - `/api/neraca` (produksi) → 401 "Belum login" = endpoint ADA (build pr-A3 = 404);
+    middleware sengaja lewati `/api/*` → 401 datang dari handler route sendiri.
+  - Marker sw.js produksi kini `3f017aa7ef77` — ubah dari `4c31dc0c5819`
+    (ikon fix `7e6cb37`) → build ter-deploy memuat A3 `15266cd`.
+  - Konfirmasi visual tab "Neraca" di PWA = bagian user-test ② (HP).
+- **v16 `13945f4` (SCHEMA_VERSION 15→16 + retry UI konsinyasi) BELUM live di Vercel**:
+  push dual-branch terverifikasi (`main` = `master` = `13945f4`; git lokal bersih,
+  hanya 3 CSV user untracked = material item ④), tapi marker sw.js produksi masih
+  `3f017aa7ef77` (build A3) → build Vercel utk `13945f4` belum sampai production.
+  CATATAN TEKNIS: marker Vercel di-stamp acak per build (`inject-sw-version.mjs`
+  fallback randomBytes di env fresh — seed BUILD_ID baru dibuat `next build`
+  setelah inject) → canary-nya "marker ≠ `3f017aa7ef77`", BUKAN hex tertentu.
+  Tak ada Vercel CLI/token lokal → user cek dashboard (project kopontren →
+  Deployments: cari `13945f4`; status Build failed/queued → baca log).
+- **KABAR (25 Sep, screenshot user): v16 `13945f4` WIS LIVE di Vercel**
+  (deployments: Ready + Production, branch `main` & `master`). Form konsinyasi
+  nang HP: kolom Komisi Toko (%) muncul (P4-B live); statistik 0/0/0 render
+  normal → `/api/konsinyasi` produksi OK → migrasi Turso v16 wis keeksekusi
+  (kolom `commission_rate` kedherek; menawi gagal kudu 500 "no such column"
+  + tombol "Coba lagi").
+- **Anomali sw.js (pentang kanggo canary):** probe langsung produksi
+  `/sw.js` (curl, 25 Sep) → header `age: 37220` (≈10,3 jam, pr-v16) +
+  `cache-control: public, max-age=0, must-revalidate` → edge Vercel isih
+  nyebar sw.js basi (marker isih `3f017aa7ef77`). Marker git v16 =
+  `67561e9c440e` (owah saka `05c129e243ec` commit 13945f4); nilai riil
+  build Vercel = stamp random anyar (inject-sw-version). Dadi canary
+  "marker ≠ `3f017aa7ef77`" kudu ditindak sawise edge re-validate /
+  deploy sabanjane — PWA HP entuk SW anyar nalika muat maneh. Mboten
+  blocker; kode app v16 wis live (runtime serverless tiasa stale-cache).
+
+- **Checklist pasca-deploy v16 (user)**:
+  1. Reload PWA di HP (SW update — marker baru)
+  2. Buka /admin/konsinyasi → request AUTH pisanan memicu migrasi Turso v16
+     sekali jalan (cold start ±15–20 s; request anonim ora njampuh DB)
+  3. Error transien → tombol "Coba lagi" (retry UI v16)
+- **Roadmap final (25 Sep):**
+  - Engineering WIP = 0. "A4 (Jam Sibuk)" TIDAK ada di roadmap — "A4" = Top
+    produk (✅ sudah bangun); bagian "Jam Sibuk" tak pernah dipplanning (0 hit
+    kode/docs; dikonfirmasi 24 Sep).
+  - TUNDA (keputusan user): QRIS asli (NMID) · grosir · `point_history`
+    (redemsi poin).
+  - `[r]` risiko rendah diterima: throttle XFF per-instance · PII GET
+    `/api/audit` · `cash_low` monitoring · validasi `pay_split` import backup ·
+    ZAKAT known issues ±7 jam UTC.
+  - P5 (denda) = di luar cakupan (tak pernah diimplementasi; tak perlu dibangun).
+  - Sisa non-engineering: ② uji manual HP · ③ checklist /admin/zakat ·
+    ④ upload CSV ke Turso · P3/P4 (Gus Fi).
+  - ① test ikon PWA Edge sudah LULUS 24 Sep.
+
 ## 2026-09-24
 ### P3 + P4 DOKUMEN LIVE + SYNC MAIN (24 Sep, KONFIRMASI GUS FI)
 - Tashih zakat + proposal konsinyasi LIVE: commit `9dbc22c` (10 file;
