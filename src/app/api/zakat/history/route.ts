@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
+import { isoToWib, wibToday } from '@/lib/zakat-period';
 
 type ZakatHistoryRow = {
   id: number;
@@ -20,7 +21,9 @@ function csvEscape(v: string | number): string {
 
 /**
  * Riwayat zakat: JSON default; ?csv=1 mengunduh file CSV
- * (dipakai tombol "Export CSV" di /admin/zakat).
+ * (dipakai tombol "Export CSV" di /admin/zakat). Kolom paid_at pada
+ * CSV diformat WIB (UTC+7) agar konsisten dgn tampilan UI; JSON
+ * tetap mentah (UI memformat sendiri).
  */
 export async function GET(req: Request) {
   const user = await currentUser();
@@ -41,14 +44,14 @@ export async function GET(req: Request) {
   const csv = new URL(req.url).searchParams.get('csv') === '1';
   if (csv) {
     const lines = [
-      'id,paid_at,status,total_assets,nishab,zakat_amount,note',
+      'id,paid_at (WIB),status,total_assets,nishab,zakat_amount,note',
       ...rows.map((r) =>
-        [r.id, r.paid_at, r.status, r.total_assets, r.nishab, r.zakat_amount, r.note]
+        [r.id, isoToWib(r.paid_at), r.status, r.total_assets, r.nishab, r.zakat_amount, r.note]
           .map(csvEscape)
           .join(',')
       ),
     ];
-    const filename = `zakat-history-${new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `zakat-history-${wibToday()}.csv`;
     return new Response('\uFEFF' + lines.join('\n'), {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',

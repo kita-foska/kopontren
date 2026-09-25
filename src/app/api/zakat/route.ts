@@ -3,6 +3,7 @@ import { db, getZakatSettings, saveZakatSettings } from '@/db';
 import { canAccess, currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { notifyNewZakat } from '@/lib/notify';
+import { currentWibMonthDate, wibDayStartUtc, wibToday } from '@/lib/zakat-period';
 
 export type ZakatCalculation = {
   total_assets: number;
@@ -53,19 +54,19 @@ async function computeZakat(): Promise<ZakatCalculation> {
   );
 
   // Periode laba kotor: dari last_zakat_date (siklus berjalan) atau
-  // haul_start_date; fallback awal bulan WIB. Format 'YYYY-MM-DD' aman
-  // dibandingkan leksikografis dengan created_at ISO-UTC.
-  const wib = new Date(Date.now() + 7 * 3600 * 1000);
-  const period_start =
-    s.last_zakat_date ||
-    s.haul_start_date ||
-    new Date(Date.UTC(wib.getUTCFullYear(), wib.getUTCMonth(), 1)).toISOString().slice(0, 10);
+  // haul_start_date (tanggal WIB); fallback awal bulan WIB berjalan.
+  // Boundary dikonversi 00:00 WIB -> 17:00 UTC hari sebelumnya
+  // (wibDayStartUtc) sehingga periode benar-benar mulai 00:00 WIB,
+  // bukan 07:00 WIB (perbandingan leksikografis 'YYYY-MM-DD' terhadap
+  // created_at ISO-UTC bergeser +7 jam).
+  const period_start = s.last_zakat_date || s.haul_start_date || currentWibMonthDate();
+  const period_start_utc = wibDayStartUtc(period_start);
 
   const salesTotal = Number(
     (
       (await d
         .prepare(`SELECT COALESCE(SUM(total), 0) v FROM sales WHERE created_at >= ?`)
-        .get(period_start)) as { v: number }
+        .get(period_start_utc)) as { v: number }
     ).v
   );
   const cogs = Number(
@@ -78,7 +79,7 @@ async function computeZakat(): Promise<ZakatCalculation> {
            LEFT JOIN products p ON p.id = si.product_id
            WHERE s.created_at >= ?`
         )
-        .get(period_start)) as { v: number }
+        .get(period_start_utc)) as { v: number }
     ).v
   );
   const laba = salesTotal - cogs;
@@ -146,7 +147,7 @@ export async function POST(req: Request) {
 
   const d = await db();
   const calc = await computeZakat();
-  const wibToday = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10);
+  const wibTodayStr = wibToday();
 
   const info = await d
     .prepare(
@@ -163,7 +164,7 @@ export async function POST(req: Request) {
   // terhitung sejak hari sebelum -> zakat terhitung terlalu kecil).
   const cycle_advanced = calc.status === 'wajib';
   if (cycle_advanced) {
-    await saveZakatSettings(d, { last_zakat_date: wibToday }, { id: user.id, username: user.username });
+    await saveZakatSettings(d, { last_zakat_date: wibTodayStr }, { id: user.id, username: user.username });
   }
   await logAudit(user, 'zakat:record', 'zakat_history', id, undefined, {
     total_assets: calc.total_assets,

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, Badge, Empty, Toast, useToast } from '@/components/ui';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { fmtDate, rp } from '@/lib/format';
+import { wibToday } from '@/lib/zakat-period';
 
 type ZakatCalc = {
   total_assets: number;
@@ -160,7 +161,7 @@ export function ZakatClient() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `zakat-history-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `zakat-history-${wibToday()}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
