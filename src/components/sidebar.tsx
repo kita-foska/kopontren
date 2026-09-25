@@ -49,6 +49,7 @@ const ADMIN_GROUPS: NavGroup[] = [
       { href: '/admin/hutang', label: 'Hutang' },
       { href: '/retur', label: 'Retur' },
       { href: '/admin/kas', label: 'Kas' },
+      { href: '/admin/qris', label: 'QRIS' },
       { href: '/admin/shift', label: 'Shift & Kasir' },
       { href: '/admin/zakat', label: 'Zakat' },
     ],

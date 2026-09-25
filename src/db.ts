@@ -589,6 +589,14 @@ export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
   // {nama_pemilik: rate%} utk pre-fill titipan baru. '{}' = pakai
   // global. Dikelola di /admin/konsinyasi (aksi save/delete_owner_rate).
   konsinyasi_owner_rates: '{}',
+  // QRIS (2026-09-25, placeholder pralayar): NMID/NMID2/MCC/kota utk
+  // encoder QRIS statis/dinamis (src/lib/qris.ts). Kosong = fitur offline
+  // (UI /admin/qris menampilkan state "NMID belum diset"). Nama merchant
+  // mengikuti store_name. Kosong sejak awal -> tanpa data existing.
+  qris_nmid: '',
+  qris_nmid2: '',
+  qris_mcc: '',
+  qris_city: '',
 };
 
 export async function getSettings(): Promise<Record<string, string>> {
