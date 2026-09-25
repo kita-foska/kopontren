@@ -10,6 +10,7 @@ import {
   useTablistNav,
 } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
+import { splitConsignment } from '@/lib/konsinyasi';
 
 type Kons = {
   id: number;
@@ -180,15 +181,15 @@ export function KonsinyasiClient() {
     }
     const r = Math.floor(Number(orRate));
     if (!Number.isFinite(r) || r < 0 || r > 100) {
-      showToast('Komisi per-pemilik harus 0-100');
+      showToast('Komisi khusus harus 0-100');
       return;
     }
-    post({ action: 'save_owner_rate', owner: orOwner.trim(), commission_rate: r }, 'Rate per-pemilik tersimpan');
+    post({ action: 'save_owner_rate', owner: orOwner.trim(), commission_rate: r }, 'Komisi khusus tersimpan');
     setOrOwner('');
     setOrRate('');
   }
   function delOwnerRate(o: string) {
-    post({ action: 'delete_owner_rate', owner: o }, 'Rate per-pemilik dihapus');
+    post({ action: 'delete_owner_rate', owner: o }, 'Komisi khusus dihapus');
   }
 
   function jual(k: Kons) {
@@ -217,6 +218,15 @@ export function KonsinyasiClient() {
 
   const active = data?.consignments.filter((k) => k.status === 'active') || [];
   const done = data?.consignments.filter((k) => k.status === 'settled') || [];
+  // Preview perhitungan form (per unit): rumus PERSIS server
+  // (src/lib/konsinyasi.ts) — floor komisi, bagian pemilik = harga − komisi.
+  const pPrice = f.agree_price === '' ? 0 : Math.floor(Number(f.agree_price) || 0);
+  const pRate =
+    f.commission_rate === ''
+      ? (data?.commission_rate_default ?? 20)
+      : Math.floor(Number(f.commission_rate) || 0);
+  const preview = splitConsignment(pPrice, pRate);
+  const qtySafe = Number.isFinite(f.qty) ? Math.max(0, Math.floor(f.qty)) : 0;
   if (!data) {
     if (loadErr)
       return (
@@ -262,7 +272,7 @@ export function KonsinyasiClient() {
           <Badge tone="blue">Terjual {k.qty_sold}</Badge>
           <Badge tone="gray">Dikembalikan {k.qty_returned}</Badge>
           <Badge tone="amber">Sisa {k.remaining}</Badge>
-          <Badge tone="blue">Komisi toko {k.commission_rate}% · Ujrah {rp(k.commission)}</Badge>
+          <Badge tone="blue">Komisi {k.commission_rate}% · Pendapatan toko {rp(k.commission)}</Badge>
           <Badge tone="red">Tagihan pemilik {rp(k.payable)}</Badge>
           <Badge tone="green">Terbayar {rp(k.amount_paid)}</Badge>
           {k.unpaid > 0 && <Badge tone="red">Kurang {rp(k.unpaid)}</Badge>}
@@ -343,121 +353,206 @@ export function KonsinyasiClient() {
         </div>
       </div>
 
-      <div className="card mb-3 grid grid-cols-2 gap-2 p-3 sm:grid-cols-4">
-        <div>
-          <label className="label">Pemilik *</label>
-          <input
-            className="input"
-            value={f.owner}
-            placeholder="Nama pemilik / pemilik kebun…"
-            onChange={(e) => {
-              const v = e.target.value;
-              setF((prev) => ({
-                ...prev,
-                owner: v,
-                // P4-B: pre-fill rate dari default pemilik (bila ada);
-                // nilai yang sudah user pilih tidak di-overwrite.
-                commission_rate: rateTouched
-                  ? prev.commission_rate
-                  : (data?.owner_rates?.[v.trim()] ??
-                    data?.commission_rate_default ??
-                    20),
-              }));
-            }}
-          />
+      <div className="card mb-3 p-3">
+        <p className="text-sm font-bold">Cara Kerja Konsinyasi</p>
+        <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-xs text-slate-600 dark:text-slate-300">
+          <li>Pemilik menitipkan barang (mis. madu) untuk dijualkan toko.</li>
+          <li>Toko menjualkan barang titipan.</li>
+          <li>
+            Saat barang terjual, toko mengambil komisi (upah penjualan) —
+            tercatat otomatis.
+          </li>
+          <li>Sisa uang (harga − komisi) milik pemilik; bisa dibayar kapan saja.</li>
+        </ol>
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Contoh: harga Rp 100.000, komisi toko 20% → toko menerima Rp 20.000,
+          pemilik menerima Rp 80.000.
+        </p>
+      </div>
+
+      <div className="card mb-3 p-3">
+        <p className="text-sm font-bold">Terima Barang Konsinyasi</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Lengkapi data di bawah, lalu tekan tombol "Terima Konsinyasi".
+        </p>
+
+        <p className="mt-3 mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          1 · Pemilik
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div>
+            <label className="label">Nama pemilik *</label>
+            <input
+              className="input"
+              value={f.owner}
+              placeholder="cth. Muhamad"
+              onChange={(e) => {
+                const v = e.target.value;
+                setF((prev) => ({
+                  ...prev,
+                  owner: v,
+                  // P4-B: komisi otomatis terisi dari komisi khusus pemilik
+                  // (bila ada); nilai yang sudah user pilih tidak di-overwrite.
+                  commission_rate: rateTouched
+                    ? prev.commission_rate
+                    : (data?.owner_rates?.[v.trim()] ??
+                      data?.commission_rate_default ??
+                      20),
+                }));
+              }}
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Nama pemilik yang menitipkan barang.
+            </p>
+          </div>
+          <div>
+            <label className="label">No. HP pemilik</label>
+            <input
+              className="input"
+              value={f.owner_phone}
+              placeholder="Opsional"
+              onChange={(e) => setF({ ...f, owner_phone: e.target.value })}
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Dipakai untuk menghubungi pemilik.
+            </p>
+          </div>
         </div>
-        <div>
-          <label className="label">HP pemilik</label>
-          <input
-            className="input"
-            value={f.owner_phone}
-            placeholder="Opsional"
-            onChange={(e) => setF({ ...f, owner_phone: e.target.value })}
-          />
+        <p className="mt-3 mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          2 · Barang
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div>
+            <label className="label">Nama barang *</label>
+            <input
+              className="input"
+              value={f.item_name}
+              placeholder="cth. Madu"
+              onChange={(e) => setF({ ...f, item_name: e.target.value })}
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Barang apa yang dititipkan.
+            </p>
+          </div>
+          <div>
+            <label className="label">Satuan</label>
+            <input
+              className="input"
+              value={f.unit}
+              placeholder="pcs, liter, kg"
+              onChange={(e) => setF({ ...f, unit: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">Jumlah diterima *</label>
+            <input
+              type="number"
+              min={1}
+              className="input"
+              value={f.qty}
+              onChange={(e) => setF({ ...f, qty: Number(e.target.value) })}
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Berapa banyak yang dititipkan.
+            </p>
+          </div>
         </div>
-        <div>
-          <label className="label">Barang titipan *</label>
-          <input
-            className="input"
-            value={f.item_name}
-            placeholder="Madu, walet, dll."
-            onChange={(e) => setF({ ...f, item_name: e.target.value })}
-          />
+        <p className="mt-3 mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          3 · Harga & Komisi
+        </p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div>
+            <label className="label">Harga per unit (Rp)</label>
+            <input
+              type="number"
+              min={0}
+              className="input"
+              value={f.agree_price}
+              placeholder="0"
+              onChange={(e) => setF({ ...f, agree_price: e.target.value })}
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Harga yang disepakati dengan pemilik. Kosong = 0.
+            </p>
+          </div>
+          <div>
+            <label className="label">Komisi toko (%)</label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              step={1}
+              className="input"
+              value={f.commission_rate}
+              placeholder={String(data?.commission_rate_default ?? 20)}
+              onChange={(e) => {
+                setRateTouched(true);
+                setF({ ...f, commission_rate: e.target.value });
+              }}
+            />
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Bagian toko dari harga. 0 = tanpa komisi.
+            </p>
+          </div>
+          <div>
+            <label className="label">Catatan</label>
+            <input
+              className="input"
+              value={f.note}
+              placeholder="Opsional"
+              onChange={(e) => setF({ ...f, note: e.target.value })}
+            />
+          </div>
         </div>
-        <div>
-          <label className="label">Satuan</label>
-          <input
-            className="input"
-            value={f.unit}
-            placeholder="pcs, liter, gr…"
-            onChange={(e) => setF({ ...f, unit: e.target.value })}
-          />
+
+        <div className="mt-3 rounded-lg bg-slate-100 p-2 dark:bg-slate-800">
+          <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+            Perhitungan otomatis (per unit)
+          </p>
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
+            <span>Harga: {rp(pPrice)}</span>
+            <span>Komisi toko ({pRate}%): {rp(preview.commission)}</span>
+            <span className="font-bold">Bagian pemilik: {rp(preview.owner)}</span>
+          </div>
+          {qtySafe > 0 && (
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Untuk {qtySafe} {f.unit.trim() || 'unit'} dititipkan → pemilik{' '}
+              {rp(preview.owner * qtySafe)} · komisi toko{' '}
+              {rp(preview.commission * qtySafe)}.
+            </p>
+          )}
         </div>
-        <div>
-          <label className="label">Jumlah diterima *</label>
-          <input
-            type="number"
-            min={1}
-            className="input"
-            value={f.qty}
-            onChange={(e) => setF({ ...f, qty: Number(e.target.value) })}
-          />
-        </div>
-        <div>
-          <label className="label">Rp / unit (harga perjanjian)</label>
-          <input
-            type="number"
-            min={0}
-            className="input"
-            value={f.agree_price}
-            placeholder="0"
-            onChange={(e) => setF({ ...f, agree_price: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="label">Komisi toko (%)</label>
-          <input
-            type="number"
-            min={0}
-            max={100}
-            step={1}
-            className="input"
-            value={f.commission_rate}
-            placeholder={String(data?.commission_rate_default ?? 20)}
-            onChange={(e) => {
-              setRateTouched(true);
-              setF({ ...f, commission_rate: e.target.value });
-            }}
-          />
-        </div>
-        <div>
-          <label className="label">Catatan</label>
-          <input
-            className="input"
-            value={f.note}
-            placeholder="Opsional"
-            onChange={(e) => setF({ ...f, note: e.target.value })}
-          />
-        </div>
-        <div className="flex items-end">
-          <button type="button" className="btn-primary w-full" disabled={busy} onClick={create}>
+        <div className="mt-3">
+          <button
+            type="button"
+            className="btn-primary w-full"
+            disabled={busy}
+            onClick={create}
+          >
             {busy ? 'Menyimpan…' : 'Terima Konsinyasi'}
           </button>
+          <p className="mt-1 text-center text-xs text-slate-500 dark:text-slate-400">
+            Komisi dicatat otomatis saat barang terjual — tidak dibayar di muka.
+          </p>
         </div>
       </div>
       <div className="card mb-3 p-3">
-        <p className="text-sm font-bold">Rate per-pemilik (default komisi)</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Pre-fill form titipan baru per nama pemilik (antardhin — hasil
-          musyawarah). Pemilik tanpa rate → default global{' '}
-          {data.commission_rate_default ?? 20}%. Titipan aktif tidak pernah
-          terpengaruh.
+        <p className="text-sm font-bold">Komisi Khusus Pemilik</p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Simpan komisi khusus untuk pemilik tertentu. Saat nama pemilik di
+          form di atas sama, komisi otomatis terisi. Pemilik tanpa komisi
+          khusus memakai komisi default{' '}
+          {data.commission_rate_default ?? 20}%. Titipan yang sudah berjalan
+          tidak terpengaruh.
         </p>
         {(data.owner_rates ? Object.keys(data.owner_rates).length : 0) > 0 ? (
           <div className="mt-2 flex flex-col gap-1">
+            <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+              Komisi tersimpan:
+            </p>
             {Object.entries(data.owner_rates || {}).map(([o, r]) => (
               <div key={o} className="flex items-center justify-between gap-2 text-xs">
-                <span className="font-bold">{o} — {r}%</span>
+                <span className="font-bold">{o} — komisi {r}%</span>
                 <button
                   type="button"
                   className="btn-danger"
@@ -470,7 +565,7 @@ export function KonsinyasiClient() {
             ))}
           </div>
         ) : (
-          <p className="mt-2 text-xs text-slate-500">Belum ada rate per-pemilik.</p>
+          <p className="mt-2 text-xs text-slate-500">Belum ada komisi khusus tersimpan.</p>
         )}
         <div className="mt-2 grid grid-cols-[1fr_88px_auto] items-end gap-2">
           <div>
@@ -483,7 +578,7 @@ export function KonsinyasiClient() {
             />
           </div>
           <div>
-            <label className="label">Komisi %</label>
+            <label className="label">Komisi (%)</label>
             <input
               type="number"
               min={0}
@@ -501,14 +596,12 @@ export function KonsinyasiClient() {
       </div>
 
       <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-        Komisi FLEKSIBEL (antardhin, akad wakalah bil ujrah): field "Komisi toko (%)" di atas =
-        kesepakatan utk titipan ini (pre-fill dari rate per-pemilik bila ada,
-        selain itu global {data.commission_rate_default ?? 20}%), bisa diubah
-        per barang; 0 = tanpa komisi. Komisi terhitung OTOMATIS saat barang
-        terjual (bukan di muka) & tercatat sebagai pendapatan jasa (ujrah);
-        bagian pemilik = harga − komisi. Barang yang dikembalikan karena tidak
-        terjual tidak menghasilkan komisi. Titipan berjalan TIDAK BISA
-        diubah rate-nya (tanpa perubahan sepihak).
+        Komisi (upah toko) disepakati bersama saat titipan — boleh berbeda
+        per pemilik atau per barang; 0 = tanpa komisi. Komisi dicatat
+        OTOMATIS saat barang terjual (bukan di muka) dan menjadi pendapatan
+        toko; bagian pemilik = harga − komisi. Barang yang tidak terjual dan
+        dikembalikan tidak menghasilkan komisi. Titipan yang sudah berjalan
+        tidak bisa diubah komisinya oleh satu pihak.
       </p>
 
       <div className="mb-3 flex gap-2" role="tablist" onKeyDown={onTabKeyDown}>
