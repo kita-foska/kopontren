@@ -154,9 +154,19 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       `members.cashback_balance` + ledger `point_history` (reason
       'cashback'); kolom baru `sales.member_discount`; preview & struk
       di POS. Grosir terpisah & ditunda (lihat item di bawah).
-- [m] GROSIR: setting `wholesale_min`/`wholesale_discount` global +
-      per produk (tabel `product_prices`) belum terpakai di
-      perhitungan — TUNDA (keputusan user 22 Sep: fokus perks dulu).
+- [x] GROSIR v1 (harga grosir per produk + integrasi POS) — SELESAI
+      (25 Sep 2026): modul murni `src/lib/wholesale.ts` (rumus satu
+      sumber: pct = MAKS(tier terbaik, global) vs base_price; harga
+      manual kasir menang); test `npm run test:wholesale` (38 cek).
+      Kolom `wholesale` (JSON tiers) di /api/products; endpoint anyar
+      `GET/POST /api/products/[id]/prices` (replace, admin/manajer,
+      audit `product:wholesale`); index `idx_product_prices_product`.
+      UI admin /admin/produk seksi "Harga grosir" (tier min_qty→diskon%
+      + preview). POS: auto-harga add/qty, badge "Grosir −X%" / "Harga
+      manual", recompute saat setting global tiba. Setting global
+      `wholesale_min`/`wholesale_discount` + `product_prices` kini
+      TERGUNAKAI. Struk WA & laporan tidak diubah (v2: HPP per tier +
+      struk grosir).
 - [x] Redemisi poin + pemakaian saldo cashback — SELESAI (baseline
       `66a3db9` + fix `1b98a24`, 23 Sep 2026): kolom `sales.redeem`/
       `sales.cashback` + ledger `point_history` reason `redeem`/

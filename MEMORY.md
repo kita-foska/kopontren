@@ -1,6 +1,52 @@
 # MEMORY
 
 ## 2026-09-25
+### GROSIR v1: harga grosir per produk + integrasi POS (25 Sep)
+- **Scope (disetujui user): UI admin + API + POS + test.** Struk WA &
+  laporan sengaja TIDAK diubah (unit_price dari POS sudah memuat harga
+  grosir, jadi HPP otomatis benar; v2: HPP per tier + struk grosir).
+- **Modul murni anyar `src/lib/wholesale.ts`** (pola `perks.ts`):
+  `effectiveWholesalePrice(basePrice, qty, tiers, global)` +
+  `bestTierPct` + `globalWholesalePct` + `parseWholesaleJson`.
+  Rumus disetujui user: **pct = MAKS(tier terbaik utk qty, global
+  `wholesale_min`/`wholesale_discount`)** — paling menguntungkan
+  pembeli; dasar hitung **base_price** (deterministik); harga **manual
+  kasir menang** (ora di-restore). 100% tanpa dependensi proyek.
+- **Admin UI `/admin/produk`**: seksi "Harga grosir (opsional)" di
+  modal form — baris tier (min_qty, discount%) + preview Rp + tombol
+  tambah/hapus; simpan = `POST /api/products/[id]/prices`
+  (replace-all, hanya bila seksi tier tersentuh; produk baru simpan
+  produk dulu baru tier).
+- **API anyar `GET/POST /api/products/[id]/prices`** (Turbo/`db.ts`):
+  GET = login (POS & admin baca); POST = admin/manajer (gate
+  `canAccess(user,'products')`), semantik REPLACE dalam `tx()`
+  (Turso atomic batch, lokal sekuensial), validasi (min_qty int ≥ 1
+  ≤ 100000, discount 0–99, duplikat min_qty → diskon terbesar,
+  maks 20 tier), audit `product:wholesale` (before/after JSON),
+  `invalidate('products:')`.
+- **`/api/products` (GET)**: kolom anyar `wholesale` (subquery
+  `json_group_array(json_object('min_qty',...,'discount_percent',...))`
+  per produk, COALESCE '[]', urut min_qty ASC) — 1 round-trip, tanpa
+  N+1; additive (konsumen lama tak terpengaruh). Index anyar
+  `idx_product_prices_product (product_id, min_qty)` di `db.ts`.
+- **POS (`pos-client.tsx`)**: `autoPrice(product, qty)` dari modul
+  (tier produk + global); harga otomatis di `add`/`setQty`
+  (naik/kurang qty → recompute kecuali baris manual); `setPrice`
+  (input "Ubah harga") set flag `manual` — harga tidak di-restore;
+  baris dihapus/ditambah lagi → balik auto; effect recompute saat
+  `memberSettings` tiba (setting global bisa lambat dari produk).
+  Badge: kartu grid "Grosir" (produk punya tier) + baris keranjang
+  "Grosir −X%" (harga otomatis) / "Harga manual" (kasir set).
+  Checkout payload `unit_price` tak berubah → struk & server tetap benar.
+- **Verifikasi**: `tsc --noEmit` 0 error; `next build` 0 (route
+  `/api/products/[id]/prices` terdaftar); `npm run test:wholesale`
+  (anyar) 38/38; regresi semua suite PASS (margin, split, phone,
+  clientip, konsinyasi, neraca, points).
+- Item TODO GROSIR (`wholesale_min`/`wholesale_discount` global +
+  `product_prices`) kini TERGUNAKAI — global + per-produk sudah ikut
+  perhitungan POS (setting global sebelumnya memang sudah ada di
+  `/admin/pengaturan-member` tapi belum terpakai).
+
 ### KONSINYASI: fix 2 bug + UX perjelas form (25 Sep) — DUAL-PUSH dbc5d45
 - **Bug 2 (kritis) — tombol "Terima Konsinyasi" → error "Aksi tidak dikenal"**
   (regresi P4-B `0e34c45`): `create()` di `konsinyasi-client.tsx` tidak pernah
@@ -1347,7 +1393,9 @@ blocking)
   basi (ref member-aktif).
 - `npm run test:points` (27 cek, ALL_PASS). Regresi: 6 suite 0 gagal; tsc 0;
   `next build` EXIT 0 (route /api/members/[id]/points terdaftar).
-- Sisa pending berikutnya: QRIS (butuh PPO eksternal) & grosir.
+- Sisa pending berikutnya: QRIS (butuh PPO eksternal). GROSIR v1
+  (per-produk + global + POS) SELESAI 25 Sep (lihat bagian GROSIR
+  di atas & TODO item [x]); tinggal QRIS asli.
 
 ## ⚠️ ATURAN BAKU NGUDI SUSILO (24 Sep 2026, WIS DIBACA)
 
