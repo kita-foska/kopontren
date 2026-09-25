@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { SalesBarChart, type DailyPoint } from '@/components/charts';
-import { PageSkeleton, Toast, api, useToast } from '@/components/ui';
+import { PageSkeleton, Toast, api, apiRetry, useToast } from '@/components/ui';
 import { fmtDate, rp } from '@/lib/format';
 import { shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
@@ -59,7 +59,9 @@ export function PengurusDashboardClient() {
 
   const load = useCallback(async (n: number) => {
     setErr('');
-    const r = await api<ReportPayload>('/api/reports?days=' + n);
+    // apiRetry: GET read-only load awal/refresh dashboard — tahan cold
+    // start Vercel (1 retry, backoff 800ms). Aksi tombol tetap api().
+    const r = await apiRetry<ReportPayload>('/api/reports?days=' + n);
     if (!r.ok) setErr(r.error || 'Gagal memuat laporan.');
     else setData(r.data);
   }, []);

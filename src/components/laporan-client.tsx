@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PageSkeleton, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, api, apiRetry, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, startOfDayJakarta } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit, payMethodLabel } from '@/lib/pay-methods';
@@ -53,7 +53,9 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
     try {
       let totalSeen = 0;
       for (let offset = 0; ; offset += PAGE) {
-        const r = await api<ListResp>(
+        // apiRetry: tiap halaman GET loop reload — tahan cold start
+        // (1 retry/backoff 800ms). Aksi PATCH/DELETE di bawah tetap api().
+        const r = await apiRetry<ListResp>(
           '/api/sales?days=' + period + '&status=' + (statusF || 'all') + '&limit=' + PAGE + '&offset=' + offset
         );
         if (!r.ok || !r.data) break;

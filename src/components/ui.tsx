@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // dipakai handler ESC Modal di bawah.
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { X } from 'lucide-react';
-import { fetchTimeout, isAbort } from '@/lib/fetch-util';
+import { fetchTimeout, fetchRetry, isAbort } from '@/lib/fetch-util';
 
 const tones: Record<string, string> = {
   blue: 'bg-accent-500/15 text-accent-600 dark:text-accent-300',
@@ -375,22 +375,20 @@ export function PageSkeleton() {
 }
 
 /**
- * Fetch JSON helper with json error surfacing + timeout abort 10 detik
- * (fetchTimeout) agar request yang pending tidak membuat spinner nyangkut
- * selamanya. Menutup semua caller klien yang memakai api().
- * Galat di-differentiate: fetch gagal total (offline/CORS/DNS) =
- * "Kesalahan jaringan."; respons server dgn badan non-JSON (mis. halaman
- * 5xx HTML saat query Turso meledak) = "Server sedang bermasalah (HTTP
- * X)" — bukan lagi mislabel "Kesalahan jaringan." (perbaikan 24 Sep,
- * laporan "Kesalahan jaringan" di tab Neraca).
+ * Inti api() — fetch JSON + envelope {ok, data, error}. Galat
+ * di-differentiate: fetch gagal total (offline/CORS/DNS) = "Kesalahan
+ * jaringan."; respons dgn badan non-JSON (mis. halaman 5xx HTML saat
+ * query Turso meledak) = "Server sedang bermasalah (HTTP X)."
+ * Parameter `doFetch` menentukan transport (fetchTimeout | fetchRetry).
  */
-export async function api<T = unknown>(
+async function apiCall<T>(
   url: string,
-  init?: RequestInit
+  init: RequestInit | undefined,
+  doFetch: (u: string, i: RequestInit) => Promise<Response>
 ): Promise<{ ok: boolean; data: T; error?: string }> {
   let res: Response;
   try {
-    res = await fetchTimeout(url, {
+    res = await doFetch(url, {
       ...init,
       headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
     });
@@ -417,4 +415,32 @@ export async function api<T = unknown>(
     };
   }
   return { ok: res.ok, data: data as T, error: data.error };
+}
+
+/**
+ * Fetch JSON helper dengan timeout abort 10 detik (fetchTimeout) agar
+ * request yang pending tidak membuat spinner nyangkut selamanya.
+ * Menutup semua caller klien yang memakai api().
+ */
+export async function api<T = unknown>(
+  url: string,
+  init?: RequestInit
+): Promise<{ ok: boolean; data: T; error?: string }> {
+  return apiCall(url, init, (u, i) => fetchTimeout(u, i));
+}
+
+/**
+ * Varian api() dengan resilience GET (fetchRetry): 1 retry otomatis
+ * (backoff 800ms) bila percobaan pertama kena jaringan putus / timeout
+ * / 5xx / 429 — khas cold start Vercel + query agregat berat saat
+ * dashboard/laporan pertama dibuka. Envelope & galat identik dengan
+ * api(). PERUNTUKAN: pemanggil GET read-only (load awal / refresh data).
+ * Jangan pakai utk aksi tombol (PATCH/DELETE/non-GET) — fetchRetry
+ * memang tidak mengulang method selain GET.
+ */
+export async function apiRetry<T = unknown>(
+  url: string,
+  init?: RequestInit
+): Promise<{ ok: boolean; data: T; error?: string }> {
+  return apiCall(url, init, (u, i) => fetchRetry(u, i));
 }

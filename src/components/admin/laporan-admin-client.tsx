@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, PageSkeleton, Toast, useToast } from '@/components/ui';
+import { api, apiRetry, PageSkeleton, Toast, useToast } from '@/components/ui';
 import { rp, startOfDayJakarta, todayWibStr } from '@/lib/format';
 import { HourBarChart, type HourPoint } from '../charts';
 import { buildLabaRugiWa, shareRekap } from '@/lib/rekap';
@@ -130,7 +130,9 @@ export function LaporanAdminClient() {
   const [toast, showToast] = useToast();
 
   const load = useCallback(async () => {
-    const r = await api<Summary>('/api/reports?days=' + period);
+    // apiRetry: load awal/refresh ringkasan (GET) tahan cold start;
+    // tab Laba-Rugi & Neraca tetap api() (tindakan klik tab).
+    const r = await apiRetry<Summary>('/api/reports?days=' + period);
     if (r.ok && r.data) setS(r.data);
   }, [period]);
   useEffect(() => {

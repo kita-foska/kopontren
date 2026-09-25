@@ -21,7 +21,8 @@
     "test:points": "node scripts/test-points.ts",
     "test:zakat": "node scripts/test-zakat.ts",
     "test:wholesale": "node scripts/test-wholesale.ts",
-    "test:qris": "node scripts/test-qris.ts"
+    "test:qris": "node scripts/test-qris.ts",
+    "test:fetch": "node scripts/test-fetch-util.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.0",

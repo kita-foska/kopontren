@@ -38,3 +38,56 @@ export async function fetchTimeout(
     clearTimeout(timer);
   }
 }
+
+/** Backoff tetap utk retry (bukan eksponensial — hanya 1 retry). */
+export const RETRY_BACKOFF_MS = 800;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Status HTTP yang layak diulang (transien; bukan galat logika klien). */
+function isRetriableStatus(status: number): boolean {
+  return status === 429 || (status >= 500 && status < 600);
+}
+
+/**
+ * fetchTimeout + 1 retry otomatis HANYA untuk GET (idempotent, aman
+ * diulang). Retry memicu pada:
+ *  - kegagalan jaringan (offline / DNS / koneksi putus),
+ *  - timeout abort (Vercel cold start / Turso lambat / device tertidur),
+ *  - respons 5xx (gateway hiccup) dan 429 (rate limit).
+ *
+ * TIDAK diulang: 4xx lain (400/401/403/404 — galat logika/otorisasi),
+ * method selain GET (POST/PATCH/DELETE non-idempotent), dan abort dari
+ * `init.signal` eksternal (unmount/cancel manual — jangan paksa ulang).
+ *
+ * Bila kedua percobaan gagal, hasil/error TERAKHIR dilewati apa adanya
+ * (propagasi natural) — caller tetap melihat kesalahan standar, tidak ada
+ * silent-undefined.
+ */
+export async function fetchRetry(
+  url: string,
+  init?: RequestInit,
+  ms: number = FETCH_TIMEOUT_MS
+): Promise<Response> {
+  const method = (init?.method || 'GET').toUpperCase();
+  if (method !== 'GET') {
+    // Non-idempotent: jangan pernah diulang — perilaku sama persis dgn fetchTimeout.
+    return fetchTimeout(url, init, ms);
+  }
+  try {
+    const res = await fetchTimeout(url, init, ms);
+    if (!isRetriableStatus(res.status)) return res;
+    // 5xx/429: tunggu backoff lalu ulangi satu kali.
+    await sleep(RETRY_BACKOFF_MS);
+    return fetchTimeout(url, init, ms);
+  } catch (e) {
+    // Abort dari signal eksternal (unmount/cancel) → jangan retry.
+    if (init?.signal?.aborted) throw e;
+    // Jaringan/timeout: tunggu backoff lalu ulangi satu kali.
+    // (Percobaan kedua boleh gagal lagi — galatnya propagasi natural.)
+    await sleep(RETRY_BACKOFF_MS);
+    return fetchTimeout(url, init, ms);
+  }
+}
