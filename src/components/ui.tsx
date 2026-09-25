@@ -378,23 +378,43 @@ export function PageSkeleton() {
  * Fetch JSON helper with json error surfacing + timeout abort 10 detik
  * (fetchTimeout) agar request yang pending tidak membuat spinner nyangkut
  * selamanya. Menutup semua caller klien yang memakai api().
+ * Galat di-differentiate: fetch gagal total (offline/CORS/DNS) =
+ * "Kesalahan jaringan."; respons server dgn badan non-JSON (mis. halaman
+ * 5xx HTML saat query Turso meledak) = "Server sedang bermasalah (HTTP
+ * X)" — bukan lagi mislabel "Kesalahan jaringan." (perbaikan 24 Sep,
+ * laporan "Kesalahan jaringan" di tab Neraca).
  */
 export async function api<T = unknown>(
   url: string,
   init?: RequestInit
 ): Promise<{ ok: boolean; data: T; error?: string }> {
+  let res: Response;
   try {
-    const res = await fetchTimeout(url, {
+    res = await fetchTimeout(url, {
       ...init,
       headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
     });
-    const data = (await res.json()) as T & { error?: string };
-    return { ok: res.ok, data: data as T, error: (data as { error?: string }).error };
   } catch (e) {
+    // Fetch itu sendiri gagal (koneksi putus, offline, CORS, DNS) →
+    // benar-benar kesalahan jaringan.
     return {
       ok: false,
       data: undefined as T,
       error: isAbort(e) ? 'Waktu koneksi habis. Silakan coba lagi.' : 'Kesalahan jaringan.',
     };
   }
+  let data: T & { error?: string };
+  try {
+    data = (await res.json()) as T & { error?: string };
+  } catch {
+    // Terima respons tapi badan bukan JSON (halaman error 5xx dari
+    // platform / exception tak tertangani di route) → tampilkan status
+    // HTTP agar bisa dibedakan dari gangguan jaringan murni.
+    return {
+      ok: false,
+      data: undefined as T,
+      error: 'Server sedang bermasalah (HTTP ' + res.status + '). Silakan coba lagi.',
+    };
+  }
+  return { ok: res.ok, data: data as T, error: data.error };
 }
