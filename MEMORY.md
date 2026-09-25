@@ -1,6 +1,40 @@
 # MEMORY
 
 ## 2026-09-25
+### KONSINYASI: fix 2 bug + UX perjelas form (25 Sep) — DUAL-PUSH dbc5d45
+- **Bug 2 (kritis) — tombol "Terima Konsinyasi" → error "Aksi tidak dikenal"**
+  (regresi P4-B `0e34c45`): `create()` di `konsinyasi-client.tsx` tidak pernah
+  mengirim field `action` ke `POST /api/konsinyasi`, sedangkan server P4-B
+  switch-case pada `b.action` → default = 400. Skenario nyata = klien PWA
+  ber-cache LAMA (pre-P4-B) bertemu server P4-B. Fix commit `e027596`:
+  client kirim `action: 'create'` eksplisit (+ validasi harga), dan server
+  toleran `if (!b.action) b.action = 'create'` (defense-in-depth; semua
+  aksi selain create TETAP wajib mengirim `action`).
+- **Bug 1 — kolom "Rp / unit (harga perjanjian)" 0 nyangkut**: default
+  `agree_price: 0` (number) → klik/ketik tak mengilangkan 0. Fix `e027596`:
+  default `'' as string | number` + `placeholder="0"` + onChange raw-string
+  + konversi `Number()` saat submit (kosong = 0 = valid).
+- **UX Perjelas (`dbc5d45`, 1 file +208/−115):** card panduan "Cara Kerja
+  Konsinyasi" (4 langkah + contoh Rp 100.000 komisi 20% = toko Rp 20.000 /
+  pemilik Rp 80.000); form re-layout step 1·Pemilik / 2·Barang / 3·Harga &
+  Komisi + hint sederhana tiap field; kotak "Perhitungan otomatis (per unit)"
+  LIVE via `splitConsignment` (rumus PERSIS server: floor komisi, pemilik =
+  harga − komisi; + baris total qty); card "Rate per-pemilik" → "Komisi
+  Khusus Pemilik" (label "Komisi tersimpan:"); istilah teknis dihapus dari UI
+  ("Pre-fill", "Rate", "Ujrah" → "Komisi otomatis terisi", "Komisi",
+  "Pendapatan toko"); paragrah syariah disederhanakan tanpa membuang inti
+  (disepakati saat titipan, tercatat otomatis saat terjual, tidak di muka,
+  titipan berjalan tak bisa diubah sepihak).
+- Verifikasi: `tsc --noEmit` exit 0; 7 suite semua 0 gagal (margin 57,
+  phone 26, clientip 16, split 15, konsinyasi 47, neraca, points);
+  `next build` exit 0. Dual-push `master`+`main` = `dbc5d45` — catatan:
+  push `main` pertama REJECTED (local `main` masih `13945f4`/v16,
+  origin/main = `d461ef5`; di-fix via `git branch -f main origin/main`
+  + `git push origin master:main`).
+- MANUAL QA tunggun user (HP): klik kolom harga → 0 hilang (placeholder),
+  langsung ketik; "Terima Konsinyasi" → toast "Konsinyasi diterima &
+  tercatat"; kolom komisi auto-terisi saat nama pemilik cocok.
+
 ### KEPUTUSAN FINAL P3+P4 → GUS FI · A3 LIVE · v16 MENUNGGU DEPLOY VERCEL
 - **P3 (tashih zakat) + P4 (proposal konsinyasi)**: keputusan user/Gus Fi (25 Sep) —
   dikirimkan sendiri oleh Gus Fi (P3 → ke ulama, P4 → ke pengurus); Cline standby

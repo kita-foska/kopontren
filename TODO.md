@@ -487,7 +487,20 @@ konsistensi.
 - Good: saldo kas berwarna + rumus penjelasan.
 
 ### /admin/konsinyasi
-- P1 [bug] aksi jual/kembalikan/bayar tanpa guard busy.
+- [x] P1 [bug] aksi jual/kembalikan/bayar tanpa guard busy — SELESAI di P4
+  (state `busy` global + `disabled={busy}` semua tombol aksi + guard
+  `if (busy) return` di `post()`).
+- [x] (25 Sep) P1 [bug] tombol "Terima Konsinyasi" → error "Aksi tidak
+  dikenal" (regresi P4-B: form tidak pernah kirim `action:'create'` ke
+  switch-case server; kena saat klien PWA cache-lama vs server baru) —
+  fix `e027596` (client kirim `action:'create'` + server toleran
+  `!b.action → 'create'`).
+- [x] (25 Sep) P2 [bug] kolom harga "Rp / unit" default 0 nyangkut saat
+  klik/ketik — fix `e027596` (default kosong + placeholder "0").
+- [x] (25 Sep) UX: form dijelas utk user awam (`dbc5d45`) — card panduan
+  "Cara Kerja Konsinyasi" + hint tiap field + preview perhitungan live +
+  istilah sederhana ("Komisi Khusus Pemilik" menggantikan "Rate
+  per-pemilik"/"Pre-fill"/"Ujrah").
 - Good: "Muat riwayat lebih lama" (server-paginated), kartu per
   konsinyasi (sisa/payable/unpaid).
 
