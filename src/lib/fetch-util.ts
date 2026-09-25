@@ -65,6 +65,13 @@ function isRetriableStatus(status: number): boolean {
  * Bila kedua percobaan gagal, hasil/error TERAKHIR dilewati apa adanya
  * (propagasi natural) — caller tetap melihat kesalahan standar, tidak ada
  * silent-undefined.
+ *
+ * Setiap percobaan retry DICATAT via console.error (bukan silent) agar
+ * mudah didiagnosis di devtools; galat akhirnya tetap propagasi natural
+ * (caller menampilkan state pesan galat — pola UX-0).
+ *
+ * ATURAN: GET = auto-retry 1x; POST/PUT/DELETE/PATCH = manual ("Coba
+ * lagi") — non-idempotent, risiko double-submit bila diulang otomatis.
  */
 export async function fetchRetry(
   url: string,
@@ -79,14 +86,21 @@ export async function fetchRetry(
   try {
     const res = await fetchTimeout(url, init, ms);
     if (!isRetriableStatus(res.status)) return res;
-    // 5xx/429: tunggu backoff lalu ulangi satu kali.
+    // 5xx/429: log (bukan silent), tunggu backoff lalu ulangi satu kali.
+    console.error(
+      `[fetchRetry] GET ${url} -> HTTP ${res.status}; retry dalam ${RETRY_BACKOFF_MS}ms`
+    );
     await sleep(RETRY_BACKOFF_MS);
     return fetchTimeout(url, init, ms);
   } catch (e) {
     // Abort dari signal eksternal (unmount/cancel) → jangan retry.
     if (init?.signal?.aborted) throw e;
-    // Jaringan/timeout: tunggu backoff lalu ulangi satu kali.
-    // (Percobaan kedua boleh gagal lagi — galatnya propagasi natural.)
+    // Jaringan/timeout: log (bukan silent), tunggu backoff lalu ulangi satu
+    // kali. (Percobaan kedua boleh gagal lagi — galatnya propagasi natural.)
+    console.error(
+      `[fetchRetry] GET ${url} gagal (${(e as Error)?.name ?? String(e)}); retry dalam ${RETRY_BACKOFF_MS}ms`,
+      e
+    );
     await sleep(RETRY_BACKOFF_MS);
     return fetchTimeout(url, init, ms);
   }

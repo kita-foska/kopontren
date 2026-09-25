@@ -174,6 +174,44 @@ async function main(): Promise<void> {
     ok('abort eksternal: tak di-retry (1 panggilan, error propagasi)', m.calls() === 1 && caught !== null);
   }
 
+  // ── logging: tiap retry dicatat console.error (bukan silent) ──
+  {
+    const origErr = console.error;
+    let logs = 0;
+    console.error = (..._args: unknown[]) => {
+      logs++;
+    };
+    const m2 = mockFetch([jsonResponse(503), jsonResponse(200)]);
+    globalThis.fetch = m2.fetch;
+    await fetchRetry('/test/log-5xx');
+    console.error = origErr;
+    ok('log: retry 5xx dicatat console.error (persis 1x)', logs === 1, String(logs));
+  }
+  {
+    const origErr = console.error;
+    let logs = 0;
+    console.error = (..._args: unknown[]) => {
+      logs++;
+    };
+    const m2 = mockFetch([new Error('fetch failed'), jsonResponse(200)]);
+    globalThis.fetch = m2.fetch;
+    await fetchRetry('/test/log-net');
+    console.error = origErr;
+    ok('log: retry jaringan dicatat console.error (persis 1x)', logs === 1, String(logs));
+  }
+  {
+    const origErr = console.error;
+    let logs = 0;
+    console.error = (..._args: unknown[]) => {
+      logs++;
+    };
+    const m2 = mockFetch([jsonResponse(404)]);
+    globalThis.fetch = m2.fetch;
+    await fetchRetry('/test/log-404');
+    console.error = origErr;
+    ok('log: tanpa retry (404) -> tanpa log', logs === 0, String(logs));
+  }
+
   globalThis.fetch = realFetch;
 
   console.log('---');
