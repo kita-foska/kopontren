@@ -12,7 +12,7 @@
 // SW-BUILD marker di-stamp ulang setiap build oleh scripts/inject-sw-version.mjs
 // → konten file berubah → browser mendeteksi SW baru → install + skipWaiting
 // + clientsClaim → cache lama di-purge saat activate.
-// SW-BUILD:85580328fa04
+// SW-BUILD:00ed1ac99d27
 const CACHE = 'kopontren-v11';
 const PAGE_CACHE = 'kopontren-pages-v8';
 const OFFLINE_FALLBACK = '/login';
@@ -97,6 +97,14 @@ self.addEventListener('fetch', (e) => {
   // Hanya respons 2xx yang di-cache; halaman error & opaque tidak pernah
   // disimpan, jadi deploy yang rusak tidak bisa meracuni fallback offline.
   e.respondWith(networkFirst(PAGE_CACHE, req, OFFLINE_FALLBACK));
+});
+
+// ── Update PWA: permintaan eksplisit "Perbarui" dari halaman ──
+// skipWaiting() memang sudah otomatis saat install, namun tombol "Perbarui"
+// di halaman mengirim message ini agar aktivasi terjadi SEKARANG →
+// browser memicu `controllerchange` di halaman → halaman reload ke versi baru.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // ── Web Push: tampilkan notifikasi (ikon, judul, isi, link) ──
