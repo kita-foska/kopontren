@@ -557,7 +557,7 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   **Catatan `kas:` (23 Sep, verifikasi FASE 1):** prefix `kas:` = BACKSTOP
   — saat ini TIDAK ADA key cache `kas:…` (key nyata: `reports:<from>`,
   `products:active`, `belanja:totals`, `members:totals:<q>`,
-  `settings:member`, `audit:tables`, `notif:list:<…>`), jadi
+  `settings:member`, `audit:tables`, `notif:list:<…>`, `reports:hourly:<from>` (Batch #5, jam sibuk)), jadi
   `invalidate('kas:')` di 10 route tulis adalah no-op yang INTENTIONAL
   (ongkos ~0): kalau kelak ada `cached('kas:…')`, semua route mutasi
   sudah memanggil invalidate — tidak perlu disisir ulang. Didokumentasi
@@ -1542,4 +1542,64 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
 - **Dikonfirmasi LIVE 25 Sep (ACC Gus Fi)**: uji manual 3 item lolos
   (dropdown user audit, kolom `created_at_wib`, teks dashboard mobile).
   Batch #4 resmi ditutup.
+## Sesi 25 Sep 2026 — Batch #5: Kartu Membership + Jam Sibuk (ACC Gus Fi)
+
+- **Konteks**: audit infrastruktur QR (kolom `members.qr_code` ada tapi
+  tak terpakai di UI; `PATCH /api/members/[id]` `{regenerate_qr}`
+  admin-only sudah ada; `lib/qr.ts` generateQrToken + keunikan token) +
+  kesiapan data kartu (tier, cashback_balance, total_spent) & grafik
+  (timestamp sales). Gus Fi ACC rencana 2 commit additive — tanpa
+  migration DB, tanpa ubah shape API (hanya +`qr_code` di SELECT).
+- **C1 — Kartu Membership** (`member-qr-badge.tsx` ditulis ulang +
+  `member-client.tsx` + `api/members/route.ts`):
+  - `GET /api/members` SELECT + `qr_code` (additive). Guard tier `pos`
+    (admin/manajer/kasir) — kasir memang POS yang akan memindai token;
+    token tidak ke log/endpoint umum.
+  - `MemberQrBadge`: kartu landscape maroon (#7a1c1c) — pratinjau di
+    modal + print window (`@page landscape`, font sistem, selalu
+    terang). Badge tier (GOLD amber / SILVER slate), statistik
+    Poin/Cashback/Total Belanja, footer baku: "Tunjukkan kartu ini
+    saat berbelanja — poin & cashback (uang kembali) diterapkan
+    otomatis." (basa awam + istilah asli, sesuai catatan Gus).
+  - Auto-generate: `qr_code` kosong → PATCH `{regenerate_qr}` otomatis
+    saat modal dibuka (peran admin; non-admin 403 → hint amber,
+    placeholder "QR belum dibuat", tombol Perbarui menampilkan pesan
+    403 dari server).
+  - Tombol "Perbarui QR" (bukan "Ulangi") → dialog `useConfirm`
+    "semua kartu lama … tidak akan berlaku lagi" SEBELUM PATCH —
+    sesuai catatan syariah/data pribadi.
+  - Aksi "Kartu" di daftar member (desktop antar `Riwayat|Hapus`,
+    kartu mobile h-11); `onQrChanged` sinkron `qr_code` baris daftar.
+- **C2 — Jam Sibuk** (`api/reports/hourly/route.ts` baru +
+  `charts.tsx` + `laporan-admin-client.tsx`):
+  - `GET /api/reports/hourly?days=1..365` (default 30, clamp; NaN → 30),
+    tier guard `laporan` (sama persis dgn /api/reports); respons
+    `{days, from, hours[24]}` tiap `{h, c, t}`; bucket jam WIB lewat
+    `strftime('%H', created_at, '+7 hours')`.
+  - Cache `reports:hourly:<from>` (ref-cache 60 dtk) — TERBUANG
+    otomatis oleh `invalidate('reports:')` di seluruh route tulis
+    (VERIFIKASI: sales POST/DELETE, kas, konsinyasi, returns, debts,
+    payables, expenses; `invalidate` = startsWith prefix,
+    ref-cache.ts L51-55). TTL 60 dtk = backstop multi-instance.
+  - `HourBarChart` (charts.tsx): CSS murni, TANPA dependency baru.
+    24 bar min-width 480px + scroll horizontal di layar HP (dipilih
+    Gus vs agregasi-2-jam — sederhana & aksesibel); setiap bar
+    `role="img"` + `aria-label` + `title` ("17.00–18.00 WIB · N
+    transaksi · Rp X"); jam puncak disorot amber + legenda.
+  - Kartu "Jam Sibuk" di tab Ringkasan (antar KPI grid & Top produk):
+    label periode sinkron preset 1/7/30/365 + callout puncak
+    ("Puncak: 17.00–18.00 WIB · N transaksi · Rp X"); silent-fail
+    (`console.error` + teks "Gagal memuat…", tak merusak tab).
+- **Verifikasi**: `tsc --noEmit` exit 0; `next build` EXIT 0 (52 rute;
+  `/api/reports/hourly` ada di route table; /admin/member 138 kB,
+  /admin/laporan 131 kB First Load JS).
+- **Sisa uji manual (checklist Gus Fi, nang HP pasca-deploy)**:
+  (1) cetak kartu member tanpa tier / silver / gold — badge & layout;
+  (2) member `qr_code` kosong → modal → auto-generate → cetak → token
+  discan (endpoint lookup scanner = luar scope batch ini);
+  (3) preset 1/7/30/365 di Jam Sibuk sinkron; (4) role kasir →
+  `PATCH regenerate_qr` 403 (halaman /admin/member sendiri tak
+  terjangkau kasir — tier 'member' = admin+manajer);
+  (5) 24 bar di HP → scroll horizontal.
+
 

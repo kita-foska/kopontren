@@ -684,3 +684,31 @@ konsistensi.
   deploy → tutup paksa PWA → buka → banner → tap "Perbarui" → reload.
 
 
+- **Batch #5: Kartu Membership + Jam Sibuk (25 Sep, ACC Gus Fi) —
+  SELESAI (kode, pra-dual-push):**
+  (1) Kartu Membership: `MemberQrBadge` ditulis ulang — modal kartu
+  landscape maroon (pratinjau + print `@page landscape`) dgn badge tier
+  (GOLD/SILVER), statistik Poin/Cashback/Total Belanja, footer
+  "Tunjukkan kartu ini saat berbelanja — poin & cashback (uang
+  kembali) diterapkan otomatis."; `qr_code` kosong → auto-generate
+  (PATCH admin-only, 403 → hint amber); "Perbarui QR" dgn dialog
+  konfirmasi (kartu lama tak berlaku lagi); aksi "Kartu" di
+  `/admin/member` (desktop + mobile card); `GET /api/members` +
+  `qr_code` (additive, tier 'pos' — kasir perlu token utk scanner).
+  (2) Jam Sibuk: `GET /api/reports/hourly` (bucket 24 jam WIB
+  `strftime('%H', created_at, '+7 hours')`, clamp days 1–365, tier
+  'laporan', cache `reports:hourly:<from>` ikut `invalidate('reports:')`
+  dari route tulis — TER-VERIFIKASI); `HourBarChart` di `charts.tsx`
+  (CSS murni tanpa dependency; 24 bar min-width 480px + scroll
+  horizontal di HP; aria-label + title tiap bar; jam puncak sorot
+  amber); kartu "Jam Sibuk" di tab Ringkasan sinkron preset
+  1/7/30/365 + callout puncak; silent-fail (console.error, tak
+  merusak tab).
+  Verifikasi: `tsc --noEmit` exit 0, `next build` EXIT 0 (52 rute,
+  `/api/reports/hourly` live di route table). **Sisa uji manual
+  (checklist)**: (a) cetak kartu per tier (tanpa/silver/gold),
+  (b) qr_code kosong → auto-generate → cetak → token discan,
+  (c) preset 1/7/30/365 sinkron, (d) kasir → 403 pada "Perbarui QR",
+  (e) 24 bar di HP scroll horizontal. Detail: MEMORY.md seksi
+  "Sesi 25 Sep 2026 — Batch #5".
+
