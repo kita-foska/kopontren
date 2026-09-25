@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { rp } from "@/lib/format";
 
 export type LabelProduct = {
   id: number;
@@ -17,10 +18,6 @@ function esc(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-function fmtRp(n: number): string {
-  return "Rp " + n.toLocaleString("id-ID");
 }
 
 /**
@@ -64,7 +61,7 @@ export function ProductBarcodeLabel({
     if (!dataUrl) return;
     const name = esc(product.name);
     const unit = product.unit ? esc(product.unit) : "";
-    const price = esc(fmtRp(product.base_price));
+    const price = esc(rp(product.base_price));
     const code = esc(product.barcode || "");
     const n = Math.max(1, Math.min(24, copies || 4));
     let cells = "";

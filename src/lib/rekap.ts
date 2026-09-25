@@ -1,5 +1,6 @@
 // Plain-ASCII WhatsApp rekap builder (safe on every WA version: no emoji, no Unicode).
 import { parsePaySplit, payMethodLabel } from './pay-methods';
+import { rp, rpShort } from './format';
 import type { KeuanganPayload } from './keuangan';
 export type RekapItem = {
   product_name: string;
@@ -55,7 +56,7 @@ export function buildRekapMsg(sales: RekapSale[], title = 'LAPORAN PENJUALAN KOP
     const method =
       parts.length > 0
         ? parts
-            .map((p) => payMethodLabel(p.m) + ' Rp ' + p.a.toLocaleString('id-ID'))
+            .map((p) => payMethodLabel(p.m) + ' ' + rp(p.a))
             .join(' + ')
         : payMethodLabel(s.pay_method);
     lines.push('');
@@ -71,21 +72,21 @@ export function buildRekapMsg(sales: RekapSale[], title = 'LAPORAN PENJUALAN KOP
           it.qty +
           it.unit +
           ' x ' +
-          it.unit_price.toLocaleString('id-ID') +
+          rpShort(it.unit_price) +
           ' = ' +
-          it.subtotal.toLocaleString('id-ID')
+          rpShort(it.subtotal)
       );
     }
     if (sub !== s.total) {
-      lines.push('    = ' + s.total.toLocaleString('id-ID'));
+      lines.push('    = ' + rpShort(s.total));
     }
-    lines.push('  Subtotal: ' + s.total.toLocaleString('id-ID'));
+    lines.push('  Subtotal: ' + rpShort(s.total));
     grand += s.total;
   });
   lines.push('');
   lines.push('===========================');
   lines.push('*TOTAL BELUM DILAPORKAN*');
-  lines.push('Rp ' + grand.toLocaleString('id-ID') + ' (' + sales.length + ' transaksi, ' + itemCount + ' item)');
+  lines.push(rp(grand) + ' (' + sales.length + ' transaksi, ' + itemCount + ' item)');
   return lines.join('\n');
 }
 
@@ -130,22 +131,22 @@ export function strukWaText(o: {
   lines.push('--------------------------------');
   for (const it of o.items) {
     lines.push(
-      it.qty + ' ' + it.unit + ' ' + it.name + ': Rp ' + it.total.toLocaleString('id-ID')
+      it.qty + ' ' + it.unit + ' ' + it.name + ': ' + rp(it.total)
     );
   }
   if (o.discount && o.discount > 0) {
-    lines.push('Diskon: -Rp ' + o.discount.toLocaleString('id-ID'));
+    lines.push('Diskon: -' + rp(o.discount));
   }
   if (o.memberDiscount && o.memberDiscount > 0) {
-    lines.push('Diskon member: -Rp ' + o.memberDiscount.toLocaleString('id-ID'));
+    lines.push('Diskon member: -' + rp(o.memberDiscount));
   }
   if (o.redeem && o.redeem > 0) {
-    lines.push('Tebus poin/saldo: -Rp ' + o.redeem.toLocaleString('id-ID'));
+    lines.push('Tebus poin/saldo: -' + rp(o.redeem));
   }
   lines.push('--------------------------------');
-  lines.push('*TOTAL: Rp ' + o.total.toLocaleString('id-ID') + '*');
+  lines.push('*TOTAL: ' + rp(o.total) + '*');
   if (o.cashback && o.cashback > 0) {
-    lines.push('Saldo Reward: +Rp ' + o.cashback.toLocaleString('id-ID') + ' (masuk saldo)');
+    lines.push('Saldo Reward: +' + rp(o.cashback) + ' (masuk saldo)');
   }
   if (o.tier) {
     lines.push('Tier: ' + (o.tier === 'gold' ? 'Gold' : 'Silver'));
@@ -154,14 +155,14 @@ export function strukWaText(o: {
     lines.push(
       'Bayar: ' +
         o.paySplit
-          .map((p) => payMethodLabel(p.m) + ' Rp ' + p.a.toLocaleString('id-ID'))
+          .map((p) => payMethodLabel(p.m) + ' ' + rp(p.a))
           .join(' + ')
     );
   } else {
     lines.push('Bayar: ' + payMethodLabel(o.pay));
     if (o.pay === 'cash' && o.received != null) {
-      lines.push('Diterima: Rp ' + o.received.toLocaleString('id-ID'));
-      lines.push('Kembali: Rp ' + (o.change ?? 0).toLocaleString('id-ID'));
+      lines.push('Diterima: ' + rp(o.received));
+      lines.push('Kembali: ' + rp(o.change ?? 0));
     }
   }
   lines.push('--------------------------------');
@@ -196,7 +197,7 @@ export function shareWa(text: string, phone?: string) {
  * settlement & ujrah konsinyasi TIDAK dijumlahkan ke laba).
  */
 export function buildLabaRugiWa(p: KeuanganPayload, from: string, to: string): string {
-  const idr = (n: number) => 'Rp ' + n.toLocaleString('id-ID');
+  const idr = (n: number) => rp(n);
   const lines: string[] = [];
   lines.push('*LAPORAN LABA-RUGI OPERASIONAL (V1)*');
   lines.push('Periode: ' + from + ' s.d. ' + to);

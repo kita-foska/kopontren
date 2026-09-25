@@ -11,7 +11,7 @@ import {
   useToast,
   useTablistNav,
 } from '@/components/ui';
-import { rp, fmtDateTime } from '@/lib/format';
+import { rp, rpShort, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { useHotkeys } from '@/lib/useHotkeys';
@@ -586,7 +586,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     if (!mix && pay === 'cash' && received.trim() !== '' && receivedNum < total) {
       showToast(
         'Uang diterima kurang, kekurangan Rp ' +
-          (total - receivedNum).toLocaleString('id-ID') +
+          rpShort(total - receivedNum) +
           '. Silakan periksa kembali nominal.'
       );
       return;
@@ -594,7 +594,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     if (mix && mixSum !== total) {
       showToast(
         'Split belum sama dengan total — selisih Rp ' +
-          Math.abs(total - mixSum).toLocaleString('id-ID') +
+          rpShort(Math.abs(total - mixSum)) +
           (mixSum < total ? ' (kurang)' : ' (lebih)') +
           '. Lengkapi nominal tiap metode.'
       );
@@ -1991,8 +1991,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <div key={idx} style={{ marginBottom: '3px' }}>
               <div>{it.product.name}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>{it.qty} {it.product.unit} x {it.price.toLocaleString('id-ID')}</span>
-                <span>{(it.qty * it.price).toLocaleString('id-ID')}</span>
+                <span>{it.qty} {it.product.unit} x {rpShort(it.price)}</span>
+                <span>{rpShort(it.qty * it.price)}</span>
               </div>
             </div>
           ))}
@@ -2000,29 +2000,29 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           {receipt.disc > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Diskon</span>
-              <span>-{receipt.disc.toLocaleString('id-ID')}</span>
+              <span>-{rpShort(receipt.disc)}</span>
             </div>
           )}
           {receipt.memberDiscount > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Diskon member</span>
-              <span>-{receipt.memberDiscount.toLocaleString('id-ID')}</span>
+              <span>-{rpShort(receipt.memberDiscount)}</span>
             </div>
           )}
           {receipt.redeem > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Tebus poin/saldo</span>
-              <span>-{receipt.redeem.toLocaleString('id-ID')}</span>
+              <span>-{rpShort(receipt.redeem)}</span>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '13px' }}>
             <span>TOTAL</span>
-            <span>Rp {(receipt.sale?.total ?? 0).toLocaleString('id-ID')}</span>
+            <span>{rp(receipt.sale?.total)}</span>
           </div>
           {receipt.cashback > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Saldo Reward</span>
-              <span>+Rp {receipt.cashback.toLocaleString('id-ID')}</span>
+              <span>+{rp(receipt.cashback)}</span>
             </div>
           )}
           {receipt.tier && (
@@ -2035,19 +2035,19 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <span>
               Bayar ({receipt.paySplit && receipt.paySplit.length > 0 ? 'campur' : payMethodLabel(receipt.pay)})
             </span>
-            <span>Rp {(receipt.received ?? receipt.sale?.total ?? 0).toLocaleString('id-ID')}</span>
+            <span>{rp(receipt.received ?? receipt.sale?.total)}</span>
           </div>
           {receipt.paySplit && receipt.paySplit.length > 0 ? (
             receipt.paySplit.map((p) => (
               <div key={p.m} style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>├ {payMethodLabel(p.m)}</span>
-                <span>Rp {p.a.toLocaleString('id-ID')}</span>
+                <span>{rp(p.a)}</span>
               </div>
             ))
           ) : receipt.pay === 'cash' && receipt.received != null ? (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Kembali</span>
-              <span>Rp {receipt.change.toLocaleString('id-ID')}</span>
+              <span>{rp(receipt.change)}</span>
             </div>
           ) : null}
           {receipt.points > 0 && (
