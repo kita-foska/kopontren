@@ -30,10 +30,19 @@ export async function GET() {
   if (!canAccess(user, 'laporan'))
     return NextResponse.json({ error: 'Hanya admin/manajer/pengurus' }, { status: 403 });
 
-  const payload = await cached('neraca', async () => {
-    const d = await db();
-    const p = await queryNeraca(d);
-    return { ok: true, ...p, notes: NERACA_NOTES };
-  });
-  return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } });
+  try {
+    const payload = await cached('neraca', async () => {
+      const d = await db();
+      const p = await queryNeraca(d);
+      return { ok: true, ...p, notes: NERACA_NOTES };
+    });
+    return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } });
+  } catch {
+    // Turso/Vercel exception tak tertangani (mis. DB transien) dulu bocor
+    // sebagai halaman HTML 500; klien api() salah baca HTML tsb sebagai
+    // "Kesalahan jaringan." (sebenarnya server error). Tangkap global →
+    // balas JSON 500 dengan pesan jelas; client menampilkan r.error +
+    // tombol "Muat ulang." Cache sukses terakhir tetap backstop (TTL 60 dtk).
+    return NextResponse.json({ error: 'Gagal memuat neraca. Silakan coba lagi.' }, { status: 500 });
+  }
 }
