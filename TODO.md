@@ -110,9 +110,14 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [x] ZAKAT tijarah: hutang dagang (`payables` open) dikurangkan dari
       harta bersih utk zakat — commit `6ef487b`, pushed master+main
       18 Sep 2026 — SELESAI
-- [r] ZAKAT known issues (terdokumentasi, belum difix): export CSV
-      timestamp UTC vs tampilan WIB (±7 jam, kosmetik); batas periode
-      laba zakat pakai UTC (±7 jam di ujung periode) — lihat MEMORY.md
+- [x] ZAKAT known issues (±7 jam) — FIXED (25 Sep, batch #1+#3, ACC Gus
+      Fi): boundary periode LABA dikonversi 00:00 WIB → 17:00 UTC
+      (`wibDayStartUtc`, `src/lib/zakat-period.ts`); export CSV riwayat
+      zakat kolom `paid_at (WIB)` + nama file `wibToday()`; validasi
+      `pay_split` import backup ter-lock (`normalizeSaleImport`).
+      Test: `test:split` 22 checks + `test:zakat` 18 checks, TSC exit 0,
+      build OK. Sisa low-priority: timestamp export `reports/csv` masih
+      UTC mentah (kosmetik) — lihat MEMORY.md.
 - [x] **Phone duplicate guard format-insensitive** — SELESAI (commit
       `f2b398e`, 23 Sep 2026, dual-push master+main): helper bersama
       `phoneOwner` + `canonicalPhone` di `src/lib/phone.ts` — duplikat
@@ -217,7 +222,7 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       Toast `aria-live`. Live @ `c364b2c` (+ batch 5 hotkey POS),
       divalidasi ulang 23 Sep (grep + `git merge-base`). Keyboard-nav
       tablist (APG, 4 grup) dilanjut di Batch E.
-- [r] Validasi `pay_split` saat IMPORT backup (🟠, laporan review
+- [x] Validasi `pay_split` saat IMPORT backup (🟠, laporan review
       Fitur 3) — menunggu approval: normalisasi via `parsePaySplit`
       + Σ=total; non-valid → null (legacy).
 - [r] QRIS asli (gateway/NMID resmi) — KEPUTUSAN 22 Sep: DITUNDA sampai

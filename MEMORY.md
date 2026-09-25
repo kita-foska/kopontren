@@ -157,12 +157,31 @@
   - TUNDA (keputusan user): QRIS asli (NMID) · grosir · `point_history`
     (redemsi poin).
   - `[r]` risiko rendah diterima: throttle XFF per-instance · PII GET
-    `/api/audit` · `cash_low` monitoring · validasi `pay_split` import backup ·
-    ZAKAT known issues ±7 jam UTC.
+    `/api/audit` · `cash_low` monitoring · validasi `pay_split` import backup
+    (TER-KUNCI 25 Sep: `normalizeSaleImport` + test:split) · ZAKAT known
+    issues ±7 jam UTC (boundary laba + CSV riwayat DIFIX 25 Sep; sisa
+    `reports/csv` timestamp kosmetik).
   - P5 (denda) = di luar cakupan (tak pernah diimplementasi; tak perlu dibangun).
   - Sisa non-engineering: ② uji manual HP · ③ checklist /admin/zakat ·
     ④ upload CSV ke Turso · P3/P4 (Gus Fi).
   - ① test ikon PWA Edge sudah LULUS 24 Sep.
+
+## 2026-09-25
+### Batch integrity #1 + #3 (25 Sep, ACC Gus Fi)
+- **#1 validasi pay_split import backup** — audit nembokake logika wis
+  ana (Batch F, inline `backup/route.ts`); diekstrak dadi helper murni
+  `normalizeSaleImport` (`src/lib/pay-methods.ts`, semantik identik:
+  JSON well-formed + whitelist `cash/tf/wa` + Σ===total → simpan;
+  mung → null legacy; `amount_paid` ≥ total; `change` cash mung).
+  Lock: `test:split` **22 checks** (7 anyar).
+- **#3 zakat WIB (±7 jam)** — bug: `created_at >= 'YYYY-MM-DD'` (tgl
+  WIB) vs ISO-UTC → periode miwiti 07:00 WIB. FIX: modul murni
+  `src/lib/zakat-period.ts` (`wibDayStartUtc`, `currentWibMonthDate`,
+  `wibToday`, `isoToWib`); `/api/zakat` query laba+COGS pake
+  `wibDayStartUtc(period_start)`; CSV riwayat kolom `paid_at (WIB)` +
+  nama file `wibToday()`. Lock: `test:zakat` **18 checks** (anyar).
+- TSC exit 0 · build OK · `npm run test:split` + `test:zakat` ALL_PASS.
+  Sisa (low): timestamp export `reports/csv` isih UTC (kosmetik).
 
 ## 2026-09-24
 ### P3 + P4 DOKUMEN LIVE + SYNC MAIN (24 Sep, KONFIRMASI GUS FI)
@@ -648,12 +667,15 @@ performa-integritas). `tsc --noEmit` BERSIH. Temuan:
   Arahnya: piutang (`receivables` open) **ditambah**, hutang dagang
   **dikurangkan** → harta bersih = modal + laba + piutang − hutang
   (konsisten fiqh zakat tijarah).
-- **Known issues (belum difix, low priority):**
-  - `reports/csv` export: timestamp ditulis **UTC mentah**, UI tampil
-    WIB (beda ±7 jam) — kosmetik, tidak memengaruhi perhitungam.
-  - Batas periode LABA zakat memakai perbandingan UTC
-    (`date('now')`), bukan batas hari/bulan WIB — laba bisa meleset
-    ±7 jam di ujung periode.
+- **Known issues:**
+  - ✅ (25 Sep, batch #1+#3) Batas periode LABA zakat TIDAK LAGI
+    perbandingan UTC mentah: 00:00 WIB dikonversi 17:00 UTC hari
+    sebelumnya via `wibDayStartUtc` (`src/lib/zakat-period.ts`); export
+    CSV riwayat zakat memformat `paid_at` WIB (header `paid_at (WIB)`);
+    nama file pakai `wibToday()`. Test: `npm run test:zakat` (18 checks).
+  - ⏳ `reports/csv` export: timestamp masih ditulis **UTC mentah**,
+    UI tampil WIB (beda ±7 jam) — kosmetik, di luar batch 25 Sep
+    (belum difix).
 - **Known behavior — `/sw.js` redirect (temuan 18 Sep 2026, bukan
   regression):** fetch `/sw.js` **tanpa cookie sesi → 307 redirect ke
   `/login`** (whitelist `isStaticPublic` di `src/middleware.ts` hanya
