@@ -6,7 +6,12 @@
  *     npm run test:split        (== node scripts/test-split.ts)
  * Tanpa framework test — output sederhana, exit code 1 bila ada gagal.
  */
-import { parsePaySplit, salesByMethod, salesCashPortion } from '../src/lib/pay-methods.ts';
+import {
+  normalizeSaleImport,
+  parsePaySplit,
+  salesByMethod,
+  salesCashPortion,
+} from '../src/lib/pay-methods.ts';
 import type { Db } from '../src/db.ts';
 
 let passes = 0;
@@ -66,6 +71,33 @@ async function main(): Promise<void> {
   ok('parse: rusak -> []', parsePaySplit('garbage').length === 0);
   ok('parse: filter metode tak dikenal', parsePaySplit('[{"m":"cc","a":5}]').length === 0);
   ok('parse: filter nominal<=0', parsePaySplit('[{"m":"cash","a":0}]').length === 0);
+
+  // ── normalizeSaleImport (import backup /api/backup) ──
+  // Split valid: JSON well-formed + whitelist + Sigma === total.
+  ok(
+    'import: split valid disimpan + total/0',
+    JSON.stringify(normalizeSaleImport({ pay_method: 'cash', pay_split: '[{"m":"cash","a":200000},{"m":"tf","a":200000}]', total: 400000, amount_paid: 300000 })) ===
+      JSON.stringify({ pay_method: 'cash', pay_split: '[{"m":"cash","a":200000},{"m":"tf","a":200000}]', amount_paid: 400000, change: 0 })
+  );
+  // JSON rusak -> null (legacy pay_method), amount_paid di-normalisasi.
+  const broken = normalizeSaleImport({ pay_method: 'cash', pay_split: 'not-json', total: 100000, amount_paid: 150000 });
+  ok('import: JSON rusak -> null (legacy)', broken.pay_split === null);
+  ok('import: legacy cash paid>total dipertahankan', broken.amount_paid === 150000 && broken.change === 50000, JSON.stringify(broken));
+  // Sigma != total -> null.
+  ok(
+    'import: Sigma!=total -> null',
+    normalizeSaleImport({ pay_method: 'tf', pay_split: '[{"m":"tf","a":100000}]', total: 150000, amount_paid: 100000 }).pay_split === null
+  );
+  // Metode tak dikenal (alias qris) ter-filter -> parts kosong -> null.
+  ok(
+    'import: metode tak dikenal -> null',
+    normalizeSaleImport({ pay_method: 'wa', pay_split: '[{"m":"qris","a":50000}]', total: 50000 }).pay_split === null
+  );
+  // Partial paid cash TANPA split: amount_paid tidak boleh < total, change 0.
+  const partial = normalizeSaleImport({ pay_method: 'cash', total: 100000, amount_paid: 30000 });
+  ok('import: partial paid -> dibulatkan total', partial.amount_paid === 100000 && partial.change === 0, JSON.stringify(partial));
+  // pay_method kosong -> default cash.
+  ok('import: pay_method default cash', normalizeSaleImport({ total: 1 }).pay_method === 'cash');
 
   if (!db) {
     console.error('  SKIP SQL — node:sqlite tidak tersedia: ' + sqliteErr);

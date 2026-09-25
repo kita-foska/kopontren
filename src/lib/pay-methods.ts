@@ -46,6 +46,36 @@ export function parsePaySplit(v: unknown): PayPart[] {
 }
 
 /**
+ * Normalisasi baris sales utk IMPORT BACKUP (route /api/backup) — deterministik
+ * & murni (testable), semantik identik dgn POST /api/sales:
+ *   - pay_split: JSON well-formed + metode whitelisted (parsePaySplit) +
+ *     Σ bagian === total baris → simpan JSON; selain itu → null (baris jadi
+ *     legacy pay_method) — JSON rusak tidak boleh masuk, supaya json_each
+ *     di sisi baca tidak pecah.
+ *   - split valid → amount_paid = total, change = 0.
+ *   - selain itu → amount_paid = max(total, amount_paid) (partial paid tidak
+ *     masuk), change hanya di-rekompute utk metode cash.
+ */
+export function normalizeSaleImport(row: {
+  pay_method?: unknown;
+  pay_split?: unknown;
+  total?: unknown;
+  amount_paid?: unknown;
+}): { pay_method: string; pay_split: string | null; amount_paid: number; change: number } {
+  const rowTotal = Number(row.total) || 0;
+  let paySplitDb: string | null = null;
+  if (typeof row.pay_split === 'string' && row.pay_split) {
+    const parts = parsePaySplit(row.pay_split);
+    const splitSum = parts.reduce((t, x) => t + x.a, 0);
+    if (parts.length > 0 && splitSum === rowTotal) paySplitDb = JSON.stringify(parts);
+  }
+  const payMethod = String(row.pay_method ?? '') || 'cash';
+  const paidNorm = paySplitDb ? rowTotal : Math.max(rowTotal, Number(row.amount_paid) || 0);
+  const changeNorm = paySplitDb || payMethod !== 'cash' ? 0 : paidNorm - rowTotal;
+  return { pay_method: payMethod, pay_split: paySplitDb, amount_paid: paidNorm, change: changeNorm };
+}
+
+/**
  * Agregat nominal penjualan per metode pembayaran. Baris mixed
  * (sales.pay_split) diperluas per bagian via json_each; baris legacy
  * memakai kolom pay_method. `where` ditulis TANPA alias tabel (dipakai

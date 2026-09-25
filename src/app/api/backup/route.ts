@@ -3,7 +3,7 @@ import { db, tx } from '@/db';
 import { currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
-import { parsePaySplit } from '@/lib/pay-methods';
+import { normalizeSaleImport } from '@/lib/pay-methods';
 
 type Backup = {
   version: number;
@@ -146,19 +146,14 @@ export async function POST(req: Request) {
         // Gagal validasi → null (baris jadi legacy pay_method) — JSON rusak
         // tidak boleh masuk, supaya json_each di sisi baca tidak pecah.
         const rowTotal = Number(s.total) || 0;
-        let paySplitDb: string | null = null;
-        if (typeof s.pay_split === 'string' && s.pay_split) {
-          const parts = parsePaySplit(s.pay_split);
-          const splitSum = parts.reduce((t, x) => t + x.a, 0);
-          if (parts.length > 0 && splitSum === rowTotal) paySplitDb = JSON.stringify(parts);
-        }
+        const norm = normalizeSaleImport(s);
         // Integritas (Batch F): normalisasi sama persis dgn POST /api/sales —
         // split valid → total/0; selain itu amount_paid tidak boleh < total
         // (partial paid tidak masuk), dan change hanya di-rekompute utk cash.
-        const payMethod = String(s.pay_method ?? '') || 'cash';
-        const paidNorm = paySplitDb ? rowTotal : Math.max(rowTotal, Number(s.amount_paid) || 0);
-        const changeNorm =
-          paySplitDb || payMethod !== 'cash' ? 0 : paidNorm - rowTotal;
+        const payMethod = norm.pay_method;
+        const paySplitDb = norm.pay_split;
+        const paidNorm = norm.amount_paid;
+        const changeNorm = norm.change;
         await insS.run(
           Number(s.id),
           s.kasir_id != null ? Number(s.kasir_id) : null,
