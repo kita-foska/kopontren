@@ -114,3 +114,70 @@ export function SalesBarChart({
     </div>
   );
 }
+
+export type HourPoint = { h: number; c: number; t: number };
+
+/**
+ * Grafik "Jam Sibuk": 24 batang jumlah transaksi per jam WIB (CSS murni,
+ * tanpa dependensi). Layar sempit → min-width + scroll horizontal; tiap
+ * batang punya aria-label & title (aksesibilitas + hover detail). Puncak
+ * (jam tersibuk) disorot kuning; jam tanpa transaksi baseline tipis.
+ */
+export function HourBarChart({ hours }: { hours: HourPoint[] }) {
+  const maxC = Math.max(1, ...hours.map((x) => x.c));
+  const peak = hours.reduce((a, b) => (b.c > a.c ? b : a), hours[0]);
+  const p2 = (n: number) => String(n).padStart(2, '0');
+  const labelFor = (p: HourPoint) =>
+    `${p2(p.h)}.00–${p2((p.h + 1) % 24)}.00 WIB · ${p.c} transaksi · Rp ${p.t.toLocaleString('id-ID')}`;
+
+  return (
+    <div>
+      <div className="overflow-x-auto">
+        <div className="flex h-36 min-w-[480px] items-end gap-[2px] sm:h-40">
+          {hours.map((p) => {
+            const hPct = (p.c / maxC) * 100;
+            const isPeak = p.h === peak.h && p.c > 0;
+            const cls = isPeak
+              ? 'bg-amber-400'
+              : p.c === 0
+                ? 'bg-slate-200 dark:bg-navy-700'
+                : 'bg-accent-500 dark:bg-accent-400';
+            return (
+              <div
+                key={p.h}
+                className="flex h-full min-w-0 flex-1 flex-col items-center justify-end"
+                title={labelFor(p)}
+              >
+                <div
+                  className={`chart-bar w-full rounded-t-sm ${cls}`}
+                  style={{ height: p.c > 0 ? Math.max(3, hPct) + '%' : 2 }}
+                  role="img"
+                  aria-label={labelFor(p)}
+                />
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-1.5 flex min-w-[480px] gap-[2px]">
+          {hours.map((p) => (
+            <div
+              key={p.h}
+              className="flex-1 text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500"
+            >
+              {p.h % 3 === 0 ? p2(p.h) : ''}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-accent-500" /> Transaksi
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-amber-400" /> Puncak (jam tersibuk)
+        </span>
+        <span className="text-slate-400 dark:text-slate-500">Semua jam dalam WIB</span>
+      </div>
+    </div>
+  );
+}

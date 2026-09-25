@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, PageSkeleton, Toast, useToast } from '@/components/ui';
 import { rp, startOfDayJakarta, todayWibStr } from '@/lib/format';
+import { HourBarChart, type HourPoint } from '../charts';
 import { buildLabaRugiWa, shareRekap } from '@/lib/rekap';
 import type { KeuanganPayload } from '@/lib/keuangan';
 import type { NeracaPayload } from '@/lib/neraca';
@@ -122,6 +123,10 @@ export function LaporanAdminClient() {
   const [tab, setTab] = useState<'ringkasan' | 'laba' | 'neraca'>('ringkasan');
   const [period, setPeriod] = useState('30');
   const [s, setS] = useState<Summary | null>(null);
+  // Jam Sibuk: agregasi 24 jam WIB untuk preset yang dipilih; silent-fail
+  // (kartu tidak menghancurkan tab utama), error tercatat di console.
+  const [hourly, setHourly] = useState<HourPoint[] | null>(null);
+  const [hourlyErr, setHourlyErr] = useState('');
   const [toast, showToast] = useToast();
 
   const load = useCallback(async () => {
@@ -131,6 +136,32 @@ export function LaporanAdminClient() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Sinkron dengan preset 1/7/30/365 di tab Ringkasan. Endpoint baru
+  // /api/reports/hourly (read-only, tier 'laporan').
+  useEffect(() => {
+    let alive = true;
+    setHourly(null);
+    setHourlyErr('');
+    fetch('/api/reports/hourly?days=' + period)
+      .then(async (res) => {
+        if (!alive) return;
+        if (!res.ok) {
+          console.error('Jam Sibuk: gagal memuat (HTTP ' + res.status + ')');
+          setHourlyErr('Gagal memuat grafik jam sibuk.');
+          return;
+        }
+        const d = (await res.json()) as { hours: HourPoint[] };
+        if (alive) setHourly(d.hours);
+      })
+      .catch((e) => {
+        console.error('Jam Sibuk: gagal memuat.', e);
+        if (alive) setHourlyErr('Gagal memuat grafik jam sibuk.');
+      });
+    return () => {
+      alive = false;
+    };
+  }, [period]);
 
   async function csv() {
     const from = startOfDayJakarta(Number(period) === 0 ? -3650 : -Number(period) + 1);
@@ -165,6 +196,16 @@ export function LaporanAdminClient() {
     { label: 'Pengeluaran', value: rp(s.expenses_total), sub: 'listrik, operasional', cls: 'text-rose-600 dark:text-rose-400' },
     { label: 'Arus kas neto', value: rp(s.cash_net), sub: 'masuk − keluar', cls: s.cash_net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' },
   ];
+
+  // Jam Sibuk: jam puncak (transaksi terbanyak) + label periode ramah
+  // (sinkron dengan preset 1/7/30/365 hari di atas).
+  const p2 = (n: number) => String(n).padStart(2, '0');
+  const peak =
+    hourly && hourly.some((h) => h.c > 0)
+      ? hourly.reduce((a, b) => (b.c > a.c ? b : a), hourly[0])
+      : null;
+  const periodLabel =
+    period === '1' ? 'hari ini' : period === '365' ? '1 tahun' : period + ' hari';
 
   return (
     <div>
@@ -234,6 +275,40 @@ export function LaporanAdminClient() {
             <p className="text-xs text-slate-500 dark:text-slate-400">{c.sub}</p>
           </div>
         ))}
+      </div>
+
+      {/* Jam Sibuk — distribusi transaksi per jam WIB (endpoint /api/reports/hourly).
+          Silent-fail: gagal memuat tidak menghancurkan kartu di tab Ringkasan. */}
+      <div className="mt-4 card p-4">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-bold">Jam Sibuk</h2>
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {periodLabel}
+            {peak
+              ? ' · Puncak: ' +
+                p2(peak.h) +
+                '.00–' +
+                p2((peak.h + 1) % 24) +
+                '.00 WIB · ' +
+                peak.c +
+                ' transaksi · ' +
+                rp(peak.t)
+              : ''}
+          </span>
+        </div>
+        {hourly ? (
+          hourly.every((h) => h.c === 0) ? (
+            <p className="py-8 text-center text-sm text-slate-500">
+              Belum ada penjualan di periode ini.
+            </p>
+          ) : (
+            <HourBarChart hours={hourly} />
+          )
+        ) : hourlyErr ? (
+          <p className="py-8 text-center text-sm text-slate-500">{hourlyErr}</p>
+        ) : (
+          <p className="py-8 text-center text-sm text-slate-500">Memuat grafik jam sibuk…</p>
+        )}
       </div>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
