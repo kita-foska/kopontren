@@ -47,6 +47,40 @@
   perhitungan POS (setting global sebelumnya memang sudah ada di
   `/admin/pengaturan-member` tapi belum terpakai).
 
+ ### QrisClient: encoder QRIS + admin UI + monitor grosir v1 (25 Sep)
+ - **QRIS (PLACEHOLDER pralayar, disetujui user):** NMID provider belum
+   turun → fitur dibangun offline-first. `src/lib/qris.ts` = modul MURNI
+   (TLV + CRC16-CCITT, tanpa DB/DOM/Node API; deterministik):
+   `buildQris/buildQrisStatic/buildQrisDynamic/crc16Ccitt/parseQrisTlv`.
+   Standar QRIS-BI: PFI 0111 statis / 0112 dinamis (+tag 54), tag
+   29 'ID' + 30 NMID + 31 NMID2?, 52 MCC?, 53 '360', 58 'ID', 59 nama,
+   60 kota?, 62 '1', 63 CRC (CCITT-FALSE 0xFFFF; check value publik
+   "123456789"→29B1). UI `/admin/qris` (isManager, sidebar item "QRIS"
+   antaraman "Kas" & "Shift & Kasir"): form NMID/NMID2/MCC/kota +
+   preview QR statis 1024px (`qrcode` `toDataURL` client-side) +
+   download PNG + copy payload + state "QRIS OFFLINE" bila NMID kosong;
+   nama merchant = `store_name` (bukan key tersendiri). Settings key
+   `qris_nmid/qris_nmid2/qris_mcc/qris_city` (default kosong di
+   `SHOP_SETTING_DEFAULTS`; saveSettings hanya menulis key yang ada di
+   defaults → WAJIB ada di situ; audit otomatis via `saveSettings`).
+   PUT `/api/settings` validasi: nmid/nmid2 ≤32, mcc 4 digit|'', kota
+   ≤30. POS mock barcode (`pos-client.tsx` L2086-2121) TIDAK disentuh
+   (batch #5 scope). Test `npm run test:qris` 28/28.
+ - **Monitor grosir v1 `scripts/zz-grosir-monitor.mjs`** (ops, disetujui):
+   READ-ONLY. Dua mode koneksi: Turso **raw HTTP** (pola
+   `backup-turso-http.mjs`, tanpa driver native) utk produksi;
+   `node:sqlite` bawaan (readOnly) bila `DATABASE_URL` `file:` (dev
+   lokal). Cek: row grosir 7 hari via `effectiveWholesalePrice`
+   DIIMPORT dari `src/lib/wholesale.ts` (satu sumber rumus; harga
+   manual kasir diflag INFO sesuai aturan 3), margin per baris
+   (omzet−HPP−komisi konsinyasi), konsinyasi via
+   `sales.konsinyasi/konsinyasi_commission`, audit log 7d, probe
+   HTTP 5xx `APP_URL` (default
+   `https://kopontren-hijrah.vercel.app`, `APP_URL=off` utk skip;
+   200/401/403 = sehat). Exit 1 bila 5xx / baris rugi / DB tak
+   terjangkau. Fallback skema lama (tanpa kolom P4) otomatis.
+   Uji live 25 Sep: 5 route produksi bebas 5xx ✅, 0 baris rugi.
+
 ### KONSINYASI: fix 2 bug + UX perjelas form (25 Sep) — DUAL-PUSH dbc5d45
 - **Bug 2 (kritis) — tombol "Terima Konsinyasi" → error "Aksi tidak dikenal"**
   (regresi P4-B `0e34c45`): `create()` di `konsinyasi-client.tsx` tidak pernah

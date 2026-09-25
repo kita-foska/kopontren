@@ -174,6 +174,19 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       `wholesale_min`/`wholesale_discount` + `product_prices` kini
       TERGUNAKAI. Struk WA & laporan tidak diubah (v2: HPP per tier +
       struk grosir).
+ - [x] **Monitor grosir v1** (`scripts/zz-grosir-monitor.mjs`, ops) —
+       SELESAI (25 Sep 2026, disetujui user): read-only; koneksi
+       Turso **raw HTTP** (tanpa driver native) utk produksi,
+       `node:sqlite` (readOnly) utk `DATABASE_URL` file: (dev lokal).
+       Cek 7 hari (arg `dina`): row grosir + margin (omzet−HPP−komisi
+       konsinyasi; rumus DIIMPORT `src/lib/wholesale.ts` — satu
+       sumber; harga manual kasir = flag INFO, bukan error), konsinyasi
+       (`sales.konsinyasi/konsinyasi_commission`), audit log 7d + aksi
+       terbanyak, probe HTTP 5xx route produksi (`APP_URL`, default
+       kopontren-hijrah.vercel.app; `APP_URL=off` skip). Exit 1 bila
+       5xx / baris rugi / DB tak terjangkau. Fallback skema lama
+       (tanpa kolom P4) otomatis. Uji live 25 Sep: 5 route bebas 5xx,
+       0 baris rugi.
 - [x] Redemisi poin + pemakaian saldo cashback — SELESAI (baseline
       `66a3db9` + fix `1b98a24`, 23 Sep 2026): kolom `sales.redeem`/
       `sales.cashback` + ledger `point_history` reason `redeem`/
@@ -236,6 +249,15 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       fiktif, tidak bisa dibayar). Setelah NMID siap, lanjut opsi
       (A) payload EMVCo statis client-side + `qrcode` (tanpa API, verifikasi
       manual kasir) / (B) gateway dinamis Xendit/Midtrans (API key + webhook).
+       **PROGRES 25 Sep (disetujui user):** opsi (A) v1 SUDAH dibangun
+       sebagai PLACEHOLDER pralayar: `src/lib/qris.ts` (encoder
+       EMVCo/QRIS-BI murni: TLV + CRC16-CCITT; statis 0111 / dinamis
+       0112+tag54) + UI `/admin/qris` (form NMID/NMID2/MCC/kota + preview
+       QR 1024px + download PNG + copy payload; state OFFLINE bila NMID
+       kosong) + settings `qris_*` (default kosong; audit via
+       saveSettings) + `npm run test:qris` 28/28. POS mock SVG lama
+       tidak disentuh (scope batch #5). NMID resmi dari provider tinggal
+       diisi di /admin/qris — QR langsung fungsional.
 - [x] Cetak label barcode produk — SELESAI (22 Sep): tombol "Label" di
       tabel /admin/produk membuka `ProductBarcodeLabel`
       (`src/components/admin/product-label.tsx`): QR berisi nilai field
@@ -645,7 +667,9 @@ konsistensi.
   (4) Sumbu x `SalesBarChart` `text-[9px]`→`text-[11px]`.
   Verifikasi: tsc 0, build EXIT 0, grep + scanner bersih,
   dual-push master+main @ `e9ebfdb`.
-  **Sisa pending:** QRIS/grosir (tunda, NMID). point_history SUDAH SELESAI
+  **Sisa pending:** QRIS/grosir (tunda, NMID) — **UPDATE 25 Sep:** opsi
+  (A) QRIS v1 placeholder + monitor grosir v1 SUDAH SELESAI (lihat item
+  atas); tinggal NMID resmi turun. point_history SUDAH SELESAI
   (25 Sep: riwayat poin & reward per member, layer tayangan ledger).
   (test ikon PWA Edge LULUS 24 Sep.)
 - [x] **PWA: banner notifikasi update** (25 Sep): SW baru (konten
