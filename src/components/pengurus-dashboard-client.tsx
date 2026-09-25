@@ -273,7 +273,7 @@ export function PengurusDashboardClient() {
                 {data.top.map((t, i) => (
                   <tr key={t.name} className="table-row">
                     <td className="td">
-                      <span className="mr-1.5 text-slate-400">{i + 1}.</span>
+                      <span className="mr-1.5 text-slate-500">{i + 1}.</span>
                       {t.name}
                     </td>
                     <td className="td text-right font-semibold">{t.qty}</td>
@@ -303,7 +303,7 @@ export function PengurusDashboardClient() {
                       <div className="h-full bg-accent-500" style={{ width: pct + '%' }} />
                     </div>
                     <span className="w-24 text-right font-semibold">{rp(v)}</span>
-                    <span className="w-10 text-right text-xs text-slate-400">{pct}%</span>
+                    <span className="w-10 text-right text-xs text-slate-500">{pct}%</span>
                   </div>
                 );
               })
@@ -311,7 +311,7 @@ export function PengurusDashboardClient() {
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 dark:border-navy-700">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
                 Laba kotor
               </p>
               <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">
@@ -319,7 +319,7 @@ export function PengurusDashboardClient() {
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
                 Arus kas bersih
               </p>
               <p className="text-lg font-extrabold">{rp(data.cash_net)}</p>

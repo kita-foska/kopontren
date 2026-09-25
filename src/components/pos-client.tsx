@@ -1078,11 +1078,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <span className="font-bold text-slate-800 dark:text-slate-200">
                 Shift Aktif: {currentShift.label || 'Sesi Kasir'}
               </span>
-              <span className="text-slate-400">·</span>
+              <span className="text-slate-500">·</span>
               <span className="text-slate-600 dark:text-slate-400">
                 Mulai: {fmtDateTime(currentShift.start_time).split(' ')[1] || currentShift.start_time}
               </span>
-              <span className="text-slate-400">·</span>
+              <span className="text-slate-500">·</span>
               <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                 {currentShift.sales_count} Transaksi ({rp(currentShift.sales_total)})
               </span>
@@ -1154,7 +1154,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           {/* Search bar & Barcode input */}
           <div className="mb-3 flex items-center gap-2">
             <div className="relative min-w-0 flex-1">
-              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                 <Search className="h-4 w-4" />
               </span>
               <input
@@ -1168,7 +1168,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               />
               {q && (
                 <button type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-slate-400 hover:text-slate-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-slate-500 hover:text-slate-600"
                   onClick={() => setQ('')}
                 >
                   <X className="h-4 w-4" />
@@ -1351,7 +1351,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   <button
                     type="button"
                     onClick={() => remove(l.product.id)}
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-slate-400 transition active:scale-95 hover:bg-rose-50 hover:text-rose-600 dark:text-slate-500 dark:hover:bg-navy-700 dark:hover:text-rose-400 sm:h-9 sm:w-9"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-slate-500 transition active:scale-95 hover:bg-rose-50 hover:text-rose-600 dark:text-slate-500 dark:hover:bg-navy-700 dark:hover:text-rose-400 sm:h-9 sm:w-9"
                     title="Hapus item"
                     aria-label={`Hapus ${l.product.name} dari keranjang`}
                   >
@@ -1390,7 +1390,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">
                       {rp(l.qty * l.price)}
                     </p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-500">
                       @{rp(l.price)}/{l.product.unit}
                     </p>
                   </div>
@@ -1411,7 +1411,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               );
             })}
             {cart.length === 0 && (
-              <div className="py-8 text-center text-xs text-slate-400">
+              <div className="py-8 text-center text-xs text-slate-500">
                 <div className="mb-1 flex justify-center">
                   <ShoppingCart className="h-7 w-7 text-slate-300 dark:text-slate-600" />
                 </div>
@@ -1480,7 +1480,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     {cbPreview > 0 ? ` · Saldo Reward +${rp(cbPreview)}` : ''}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className={redeemMax <= 0 ? 'text-slate-400 dark:text-slate-500' : ''}>
+                    <span className={redeemMax <= 0 ? 'text-slate-500 dark:text-slate-500' : ''}>
                       Tebus poin/saldo
                     </span>
                     <input
@@ -1506,7 +1506,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     className={
                       redeemAmt > 0
                         ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-slate-400 dark:text-slate-500'
+                        : 'text-slate-500 dark:text-slate-500'
                     }
                   >
                     {redeemMax <= 0
@@ -1563,7 +1563,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
                   <span className="min-w-0 truncate">{label}</span>
-                  <span className="ml-auto shrink-0 text-[9px] font-extrabold opacity-60">
+                  <span className="ml-auto shrink-0 text-[10px] font-extrabold opacity-60">
                     {i + 1}
                   </span>
                 </button>
@@ -1584,7 +1584,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               >
                 <Shuffle className="h-3.5 w-3.5 shrink-0" />
                 <span className="min-w-0 truncate">Campur</span>
-                <span className="ml-auto shrink-0 text-[9px] font-extrabold opacity-60">4</span>
+                <span className="ml-auto shrink-0 text-[10px] font-extrabold opacity-60">4</span>
               </button>
             </div>
 
@@ -1756,7 +1756,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </div>
 
             {/* Petunjuk hotkey (desktop) */}
-            <p className="hidden text-[10px] font-medium text-slate-400 lg:block dark:text-slate-500">
+            <p className="hidden text-[10px] font-medium text-slate-500 lg:block dark:text-slate-500">
               F1 Cari · F2 Pembeli · F3 Bayar · F4 Simpan · F5 Cetak · F6 Split · F7 Shift
               · 1–4 Metode · ? Semua
             </p>
@@ -1836,7 +1836,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <div className="text-center">
                 <p className="text-base font-extrabold tracking-tight">KOPONTREN AL ITTIHAD</p>
                 <p className="text-[11px] text-slate-500">Kasir & Pembukuan Pondok Pesantren</p>
-                <p className="text-[10px] text-slate-400">================================</p>
+                <p className="text-[10px] text-slate-500">================================</p>
               </div>
               <div className="mt-2 space-y-0.5 text-[11px]">
                 <div className="flex justify-between">
@@ -2113,7 +2113,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <p className="text-xs text-slate-500">
               NMID: ID102003004050 · KOPONTREN AL ITTIHAD
             </p>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-500 mt-1">
               Dapat discan menggunakan BCA, Mandiri, BSI, GoPay, OVO, Dana, ShopeePay
             </p>
           </div>
@@ -2282,7 +2282,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </div>
           ))}
         </div>
-        <p className="mt-3 text-[10px] leading-relaxed text-slate-400 dark:text-slate-500">
+        <p className="mt-3 text-[10px] leading-relaxed text-slate-500 dark:text-slate-500">
           Panah / + / − / Del hanya aktif di luar kolom ketik &amp; saat modal tertutup.
           Ctrl+H bisa ditahan browser tertentu (Chrome) — riwayat tetap bisa dibuka lewat
           menu Laporan &amp; Rekap.

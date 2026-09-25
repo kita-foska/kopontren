@@ -196,14 +196,14 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
           <p className="mt-1 text-xl font-extrabold text-slate-900 dark:text-slate-100">
             {filteredSales.length}
           </p>
-          <p className="text-[11px] text-slate-400">Periode terpilih</p>
+          <p className="text-[11px] text-slate-500">Periode terpilih</p>
         </div>
         <div className="card p-3">
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Total Penjualan</p>
           <p className="mt-1 text-xl font-extrabold text-accent-500 dark:text-accent-300">
             {rp(grandTotal)}
           </p>
-          <p className="text-[11px] text-slate-400">Omset kotor</p>
+          <p className="text-[11px] text-slate-500">Omset kotor</p>
         </div>
         <div className="card p-3 border-amber-500/30 bg-amber-500/5">
           <p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">
@@ -334,7 +334,7 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
                 </span>
                 <ChevronDown
                   className={
-                    'h-4 w-4 text-slate-400 transition-transform ' +
+                    'h-4 w-4 text-slate-500 transition-transform ' +
                     (open === s.id ? 'rotate-180' : '')
                   }
                 />

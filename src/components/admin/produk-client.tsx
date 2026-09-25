@@ -517,7 +517,7 @@ export function ProdukClient() {
                   <td className="td font-bold text-slate-900 dark:text-slate-100">{rp(p.base_price)}</td>
                   <td className="td text-slate-500 dark:text-slate-400">{rp(p.cost_price)}</td>
                   <td className="td">
-                    <span className={'text-xs font-semibold ' + (margin > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400')}>
+                    <span className={'text-xs font-semibold ' + (margin > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500')}>
                       +{rp(margin)} ({marginPct}%)
                     </span>
                   </td>
@@ -731,13 +731,13 @@ export function ProdukClient() {
                 + Tambah tier
               </button>
             </div>
-            <p className="mb-2 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+            <p className="mb-2 text-[11px] leading-snug text-slate-500 dark:text-slate-500">
               Beli ≥ jumlah minimum dapat diskon dari harga jual. Diskon dihitung dari harga
               satuan dasar; tier dengan jumlah minimum terkecil yang terpenuhi berlaku,
               dan bila ada pengaturan grosir global yang lebih besar, yang lebih besar dipakai.
             </p>
             {tiers.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-slate-300 py-2 text-center text-xs text-slate-400 dark:border-navy-600">
+              <p className="rounded-lg border border-dashed border-slate-300 py-2 text-center text-xs text-slate-500 dark:border-navy-600">
                 Belum ada tier grosir.
               </p>
             ) : (
@@ -767,7 +767,7 @@ export function ProdukClient() {
                         }
                       />
                     </div>
-                    <div className="w-28 shrink-0 pb-1 text-right text-[11px] text-slate-400 dark:text-slate-500">
+                    <div className="w-28 shrink-0 pb-1 text-right text-[11px] text-slate-500 dark:text-slate-500">
                       {t.discount_percent > 0 ? '≈ ' + rp(tierEffPrice(t)) : '—'}
                     </div>
                     <button

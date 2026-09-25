@@ -90,7 +90,7 @@ export function SalesBarChart({
       </div>
       <div className="mt-1.5 flex gap-[2px]">
         {bars.map((b, i) => (
-          <div key={b.day} className="flex-1 text-center text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+          <div key={b.day} className="flex-1 text-center text-[11px] font-semibold text-slate-500 dark:text-slate-500">
             {i % step === 0 ? wibShort(b.day) : ''}
           </div>
         ))}
@@ -106,7 +106,7 @@ export function SalesBarChart({
           <span className="h-2.5 w-2.5 rounded-sm bg-slate-300 dark:bg-navy-600" /> Tanpa penjualan
         </span>
         {showAnom && (
-          <span className="text-slate-400 dark:text-slate-500">
+          <span className="text-slate-500 dark:text-slate-500">
             rata-rata Rp {Math.round(mean).toLocaleString('id-ID')}/hari
           </span>
         )}
@@ -162,7 +162,7 @@ export function HourBarChart({ hours }: { hours: HourPoint[] }) {
           {hours.map((p) => (
             <div
               key={p.h}
-              className="flex-1 text-center text-[10px] font-semibold text-slate-400 dark:text-slate-500"
+              className="flex-1 text-center text-[10px] font-semibold text-slate-500 dark:text-slate-500"
             >
               {p.h % 3 === 0 ? p2(p.h) : ''}
             </div>
@@ -176,7 +176,7 @@ export function HourBarChart({ hours }: { hours: HourPoint[] }) {
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-amber-400" /> Puncak (jam tersibuk)
         </span>
-        <span className="text-slate-400 dark:text-slate-500">Semua jam dalam WIB</span>
+        <span className="text-slate-500 dark:text-slate-500">Semua jam dalam WIB</span>
       </div>
     </div>
   );

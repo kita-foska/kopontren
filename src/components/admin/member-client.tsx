@@ -284,7 +284,7 @@ export function MemberClient() {
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {total} ditemukan
             {!qDeb.trim() && (
-              <span className="ml-1 text-slate-400 dark:text-slate-500">
+              <span className="ml-1 text-slate-500 dark:text-slate-500">
                 ({members.length} dimuat)
               </span>
             )}
@@ -403,7 +403,7 @@ export function MemberClient() {
               <p className="text-xs text-slate-500 dark:text-slate-400">{m.address || '—'}</p>
               <div className="mt-1 flex items-center justify-between gap-2">
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{rp(m.total_spent)}</span>
-                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                <span className="text-[11px] text-slate-500 dark:text-slate-500">
                   Terdaftar {fmtDateTime(m.created_at)}
                 </span>
               </div>

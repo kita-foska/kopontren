@@ -153,7 +153,7 @@ export function NotificationListClient() {
 
       <div className="card overflow-hidden">
         {loading ? (
-          <p className="px-4 py-8 text-center text-sm text-slate-400">Memuat…</p>
+          <p className="px-4 py-8 text-center text-sm text-slate-500">Memuat…</p>
         ) : items.length === 0 ? (
           <Empty text={filter === 'unread' ? 'Tidak ada notifikasi belum dibaca' : 'Belum ada notifikasi'} />
         ) : (
@@ -171,7 +171,7 @@ export function NotificationListClient() {
                     <p className="text-sm font-bold">{n.title}</p>
                   </div>
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{n.message}</p>
-                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                     {fmtTime(n.created_at)}
                   </p>
                 </div>

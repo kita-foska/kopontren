@@ -213,7 +213,7 @@ export function NotificationSettingsClient() {
 
       {/* Toggle jenis */}
       {loading ? (
-        <div className="card p-8 text-center text-sm text-slate-400">Memuat…</div>
+        <div className="card p-8 text-center text-sm text-slate-500">Memuat…</div>
       ) : (
         groups.map((g) =>
           g.list.length ? (
@@ -245,7 +245,7 @@ export function NotificationSettingsClient() {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-500">
           Perubahan diterapkan saat tombol di-toggle (otomati tersimpan).
         </p>
         <button type="button"

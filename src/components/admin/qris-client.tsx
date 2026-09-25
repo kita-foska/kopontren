@@ -115,7 +115,7 @@ export function QrisClient() {
                 markDirty();
               }}
             />
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-500">
               NMID resmi dari provider QRIS (maks 32). Kosong = fitur offline.
             </p>
           </div>
@@ -172,8 +172,8 @@ export function QrisClient() {
         {offline ? (
           <div className="flex h-64 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center dark:border-slate-700 dark:bg-slate-800/40">
             <div>
-              <p className="font-bold text-slate-400">QRIS OFFLINE</p>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="font-bold text-slate-500">QRIS OFFLINE</p>
+              <p className="mt-1 text-xs text-slate-500">
                 NMID belum diset (placeholder pralayar). Isi NMID resmi di samping untuk
                 mengaktifkan QR.
               </p>

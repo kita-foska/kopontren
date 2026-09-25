@@ -204,12 +204,12 @@ export function MemberQrBadge({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-baseline justify-between">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
             Kartu Anggota Member
           </p>
           <button
             type="button"
-            className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="text-xs text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"
             onClick={onClose}
           >
             ✕
@@ -242,7 +242,7 @@ export function MemberQrBadge({
               <p className="truncate text-lg font-bold text-slate-900">{member.name}</p>
               <p className="text-xs text-slate-500">{member.phone || "—"}</p>
               {member.created_at && (
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-500">
                   Terdaftar {fmtDateTime(member.created_at)}
                 </p>
               )}
@@ -265,7 +265,7 @@ export function MemberQrBadge({
                 className="h-24 w-24 shrink-0 rounded-md"
               />
             ) : (
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-md bg-slate-100 text-center text-[10px] text-slate-400">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-md bg-slate-100 text-center text-[10px] text-slate-500">
                 {busy ? "Membuat QR…" : member.qr_code ? "Menggambar…" : "QR belum dibuat"}
               </div>
             )}

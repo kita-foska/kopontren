@@ -203,7 +203,7 @@ export function MigrateClient() {
                 <tbody>
                   {rows.slice(0, 200).map((r) => (
                     <tr key={`${r.line}-${r.barcode}`} className="border-t border-slate-100 dark:border-navy-700">
-                      <td className="px-3 py-1.5 text-slate-400">{r.line}</td>
+                      <td className="px-3 py-1.5 text-slate-500">{r.line}</td>
                       <td className="px-3 py-1.5">{r.name}</td>
                       <td className="px-3 py-1.5">{r.category || '-'}</td>
                       <td className="px-3 py-1.5">{rp(r.base_price)}</td>
@@ -215,7 +215,7 @@ export function MigrateClient() {
                 </tbody>
               </table>
               {rows.length > 200 && (
-                <p className="px-3 py-2 text-xs text-slate-400">
+                <p className="px-3 py-2 text-xs text-slate-500">
                   + {rows.length - 200} baris lain tidak ditampilkan.
                 </p>
               )}

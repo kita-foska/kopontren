@@ -99,7 +99,7 @@ function PlRow({
       >
         {label}
         {sub ? (
-          <span className="ml-2 text-xs font-normal text-slate-400 dark:text-slate-500">{sub}</span>
+          <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-500">{sub}</span>
         ) : null}
       </span>
       <span
@@ -504,7 +504,7 @@ export function LabaRugiTab() {
               neg={data.labaBersih < 0}
             />
             <div className="mt-3 border-t border-slate-200 pt-3 dark:border-navy-700">
-              <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-500">
                 Memo (di luar laba bersih)
               </h3>
               <PlRow
@@ -531,7 +531,7 @@ export function LabaRugiTab() {
                 value={rp(data.memo.ujrah_konsinyasi.total)}
                 sub={data.memo.ujrah_konsinyasi.count + ' jurnal komisi (otomatis saat terjual)'}
               />
-              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
                 Memo tidak dijumlahkan ke laba bersih.
               </p>
             </div>
@@ -614,7 +614,7 @@ export function NeracaTab() {
             <PlRow label="Total Aset" value={rp(data.aset_total)} strong />
             {data.rincian.stok_top.length > 0 && (
               <div className="mt-3 border-t border-slate-200 pt-3 dark:border-navy-700">
-                <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-500">
                   Stok terbesar (nilai)
                 </h3>
                 <ul className="space-y-1.5 text-sm">
@@ -652,7 +652,7 @@ export function NeracaTab() {
                 neg={data.modal_setara < 0}
                 strong
               />
-              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
                 Off-balance (tidak dijumlahkan): tagihan konsinyasi terbuka{' '}
                 <b className="text-slate-600 dark:text-slate-300">
                   {rp(data.off_balance.konsinyasi.total)}
@@ -664,7 +664,7 @@ export function NeracaTab() {
 
           <div className="card p-4">
             <h2 className="mb-2 font-bold">Tagihan Terbuka (5 terbesar)</h2>
-            <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            <h3 className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-500">
               Piutang
             </h3>
             {data.rincian.piutang_top.length === 0 ? (
@@ -682,7 +682,7 @@ export function NeracaTab() {
                 ))}
               </ul>
             )}
-            <h3 className="mt-3 mb-1 text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            <h3 className="mt-3 mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-500">
               Hutang
             </h3>
             {data.rincian.hutang_top.length === 0 ? (

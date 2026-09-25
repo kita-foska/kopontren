@@ -160,7 +160,7 @@ export function KasClient() {
                   {r.kind === 'entry' && (
                     <button type="button"
                       onClick={() => removeEntry(r.id)}
-                      className="ml-2 text-[10px] text-slate-400 underline hover:text-rose-600 dark:hover:text-rose-400"
+                      className="ml-2 text-[10px] text-slate-500 underline hover:text-rose-600 dark:hover:text-rose-400"
                     >
                       hapus
                     </button>
@@ -206,7 +206,7 @@ export function KasClient() {
                     <button type="button"
                       onClick={() => removeEntry(r.id)}
                       aria-label="Hapus jurnal manual ini"
-                      className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
+                      className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                     >
                       <Trash2 size={18} />
                     </button>
