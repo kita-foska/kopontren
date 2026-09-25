@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
+import { isPointUnit, pointReasonLabel, type PointEntry } from '@/lib/points';
 
 type Member = {
   id: number;
@@ -12,6 +13,7 @@ type Member = {
   points: number;
   total_spent: number;
   created_at: string;
+  cashback_balance?: number;
 };
 // API sekarang paginasi (limit 50) + agregat global untuk kartu ringkasan.
 type Resp = {
@@ -19,6 +21,16 @@ type Resp = {
   total: number;
   total_points: number;
   total_spent: number;
+  limit: number;
+  offset: number;
+};
+
+// Riwayat ledger poin & reward (GET /api/members/[id]/points) — tabel
+// point_history yang ditulis POST /api/sales (earn/redeem/cashback/
+// cashback_use) & DELETE /api/sales/[id] (void/refund/refund_cash).
+type PointsResp = {
+  entries: PointEntry[];
+  total: number;
   limit: number;
   offset: number;
 };
@@ -55,6 +67,18 @@ export function MemberClient() {
   const hasMoreRef = useRef(false);
   const lastOffsetRef = useRef(0);
   const lastLimitRef = useRef(50);
+
+  // ── Modal Riwayat Poin & Reward (ledger point_history, baca-saja) ──
+  // Guard busy per aksi (pola Batch A): satu request terbuka; ref "aktif"
+  // mencegah respons basi setelah modal pindah ke member lain.
+  const POINTS_LIMIT = 20;
+  const [pointsMember, setPointsMember] = useState<Member | null>(null);
+  const pointsActiveRef = useRef(0);
+  const [pointsRows, setPointsRows] = useState<PointEntry[]>([]);
+  const [pointsTotal, setPointsTotal] = useState(0);
+  const [pointsOffset, setPointsOffset] = useState(0);
+  const [pointsBusy, setPointsBusy] = useState(false);
+  const [pointsErr, setPointsErr] = useState('');
 
   useEffect(() => {
     const t = setTimeout(() => setQDeb(q), 300);
@@ -95,6 +119,47 @@ export function MemberClient() {
     setLoadingMore(true);
     await fetchPage(lastOffsetRef.current + lastLimitRef.current, lastLimitRef.current, '', true);
     setLoadingMore(false);
+  }
+
+  // ── Riwayat poin & reward (ledger point_history) ──
+  async function fetchPoints(mid: number, offset: number, append: boolean) {
+    const r = await api<PointsResp>(
+      `/api/members/${mid}/points?limit=${POINTS_LIMIT}&offset=${offset}`
+    );
+    // Modal bisa pindah ke member lain selama fetch — abaikan respons basi.
+    if (pointsActiveRef.current !== mid) return;
+    if (r.ok && r.data) {
+      setPointsRows((prev) => (append ? [...prev, ...(r.data!.entries || [])] : r.data!.entries || []));
+      setPointsTotal(r.data.total || 0);
+      setPointsOffset(offset);
+    } else {
+      setPointsErr(r.error || 'Gagal memuat riwayat poin.');
+    }
+  }
+
+  function openPoints(m: Member) {
+    if (pointsBusy) return;
+    pointsActiveRef.current = m.id;
+    setPointsMember(m);
+    setPointsRows([]);
+    setPointsTotal(0);
+    setPointsOffset(0);
+    setPointsErr('');
+    setPointsBusy(true);
+    fetchPoints(m.id, 0, false).finally(() => setPointsBusy(false));
+  }
+
+  function loadMorePoints() {
+    const m = pointsMember;
+    if (!m || pointsBusy || pointsOffset + POINTS_LIMIT >= pointsTotal) return;
+    setPointsBusy(true);
+    fetchPoints(m.id, pointsOffset + POINTS_LIMIT, true).finally(() => setPointsBusy(false));
+  }
+
+  function closePoints() {
+    if (pointsBusy) return;
+    pointsActiveRef.current = 0;
+    setPointsMember(null);
   }
 
   function onScroll() {
@@ -277,6 +342,13 @@ export function MemberClient() {
                     </button>
                     <span className="text-slate-300 dark:text-navy-600">|</span>
                     <button type="button"
+                      className="text-xs font-bold text-emerald-600 hover:underline dark:text-emerald-400"
+                      onClick={() => openPoints(m)}
+                    >
+                      Riwayat
+                    </button>
+                    <span className="text-slate-300 dark:text-navy-600">|</span>
+                    <button type="button"
                       className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
                       onClick={() => remove(m)}
                     >
@@ -328,6 +400,12 @@ export function MemberClient() {
                   onClick={() => openEdit(m)}
                 >
                   Ubah
+                </button>
+                <button type="button"
+                  className="h-11 flex-1 rounded-lg border border-emerald-200 bg-emerald-50/50 px-2 text-xs font-bold text-emerald-600 transition hover:bg-emerald-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-emerald-400"
+                  onClick={() => openPoints(m)}
+                >
+                  Riwayat
                 </button>
                 <button type="button"
                   className="h-11 flex-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-rose-400"
@@ -404,6 +482,104 @@ export function MemberClient() {
             ℹ️ Setiap transaksi belanja Rp 10.000 di kasir akan otomatis menambahkan 1 poin loyalitas untuk member ini.
           </p>
         </div>
+      </Modal>
+
+      {/* Modal Riwayat Poin & Reward (ledger point_history) — baca-saja.
+          Unit delta berjenis campur: poin (earn/redeem/void/refund) vs
+          rupiah/reward (cashback/cashback_use/refund_cash) — lib/points. */}
+      <Modal
+        open={pointsMember !== null}
+        title={pointsMember ? `Riwayat Poin & Reward — ${pointsMember.name}` : ''}
+        onClose={closePoints}
+        footer={
+          <button type="button" className="btn-ghost" onClick={closePoints}>
+            Tutup
+          </button>
+        }
+      >
+        {pointsMember && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-slate-100 p-2.5 text-xs dark:bg-navy-900/50">
+                <p className="font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Poin
+                </p>
+                <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">
+                  ★ {pointsMember.points}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-100 p-2.5 text-xs dark:bg-navy-900/50">
+                <p className="font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Saldo Reward
+                </p>
+                <p className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
+                  {rp(pointsMember.cashback_balance ?? 0)}
+                </p>
+              </div>
+            </div>
+            {pointsErr && (
+              <div className="rounded-lg bg-rose-50 p-2.5 text-xs text-rose-600 dark:bg-navy-900/40 dark:text-rose-300">
+                {pointsErr}{' '}
+                <button type="button" className="font-bold underline" onClick={() => openPoints(pointsMember)}>
+                  Muat ulang
+                </button>
+              </div>
+            )}
+            <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+              {pointsRows.length === 0 && !pointsErr && (
+                <p className="p-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                  Belum ada aktivitas poin/reward untuk member ini.
+                </p>
+              )}
+              {pointsRows.map((e) => {
+                const up = e.delta > 0;
+                const value = isPointUnit(e.reason)
+                  ? (up ? '+' : '−') + Math.abs(e.delta).toLocaleString('id-ID') + ' poin'
+                  : (up ? '+' : '−') + rp(Math.abs(e.delta));
+                return (
+                  <div
+                    key={e.id}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 p-2.5 dark:border-navy-700"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {pointReasonLabel(e.reason)}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {fmtDateTime(e.created_at)}
+                        {e.sale_id ? ` · Tx #${e.sale_id}` : ''}
+                      </p>
+                    </div>
+                    <span
+                      className={
+                        'whitespace-nowrap text-sm font-extrabold ' +
+                        (up
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : e.delta < 0
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-slate-500 dark:text-slate-400')
+                      }
+                    >
+                      {value}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {pointsOffset + POINTS_LIMIT < pointsTotal && !pointsErr && (
+              <div className="text-center">
+                <button
+                  type="button"
+                  className="btn-ghost text-xs"
+                  disabled={pointsBusy}
+                  onClick={loadMorePoints}
+                >
+                  {pointsBusy ? 'Memuat…' : 'Muat lebih banyak'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
 
       {confirmHost}

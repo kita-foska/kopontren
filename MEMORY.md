@@ -1249,6 +1249,43 @@ blocking)
   `rekap.ts` baris WA rekap ("Saldo Reward"), SYARIAH-CHECKLIST P1/P2 ✅.
   Label CSV P&L (`api/keuangan/csv/route.ts`) ter-commit di A1 `0564e71`.
 
+## Fix "Kesalahan Jaringan" Neraca + Fitur Riwayat Poin (24–25 Sep 2026)
+
+### Fix Kesalahan Jaringan (tab Neraca) — SELESAI & DUAL-PUSH
+- Root cause: exception tak tertangani di /api/neraca (Turso/Vercel transien)
+  bocor sebagai halaman HTML 500; `api()` di ui.tsx membaca badan non-JSON tsb
+  sebagai "Kesalahan jaringan." (padahal server error).
+- Commit `bb5ba7b` (ui.tsx: `api()` membedakan fetch-gagal = jaringan vs
+  respons non-JSON/5xx = "Server sedang bermasalah (HTTP X)" + tombol muat
+  ulang) + `6d6eae1` (route.ts /api/neraca: try/catch global -> JSON 500
+  "Gagal memuat neraca. Silakan coba lagi."; cache sukses terakhir tetap
+  backstop TTL 60 dtk) + `84e8ac6` (sw stamp + log sesi). dual-push
+  master+main @ `84e8ac6` (Vercel auto-build dari main).
+- Lesson penting: menulis .ts via PowerShell (Set-Content/Get-Content)
+  merusak encoding file (BOM + mojibake -> error tsc kaskade). Perbaikan
+  = `git checkout -- <file>` lalu terapkan ulang via editor Cline (UTF-8
+  bersih). JANGAN tulis kode .ts lewat PowerShell.
+
+### Fitur: Riwayat Poin & Reward per member (point_history) — TERVERIFIKASI LOKAL
+- Ledger `point_history` (tertulis POST /api/sales + DELETE /api/sales/[id],
+  sejak fitur redemsi 23 Sep) kini punya LAYER TAYANGAN.
+- Endpoint baru `GET /api/members/[id]/points?limit=&offset=` (tier 'member':
+  admin/manajer; limit default 20 maks 50; tanpa cache; JSON 500 on error —
+  pola neraca).
+- `src/lib/points.ts` (modul murni, teruji node:sqlite):
+  `POINT_REASON_LABEL` (7 reason: earn/redeem/void/refund = poin;
+  cashback/cashback_use/refund_cash = rupiah/"Reward") + `pointReasonLabel`
+  (fallback UPPER) + `isPointUnit` + `queryPointHistory` (ORDER BY
+  created_at DESC, id DESC) + `countPointHistory`.
+- `/admin/member`: aksi "Riwayat" (tabel desktop + kartu mobile Batch B) ->
+  modal: kartu saldo (poin + Saldo Reward), baris ledger terbaru-dulu
+  (label reason + delta berwarna + "Tx #id"), "Muat lebih banyak" (paginasi
+  20), empty state, error state + muat ulang, busy guard + guard respons
+  basi (ref member-aktif).
+- `npm run test:points` (27 cek, ALL_PASS). Regresi: 6 suite 0 gagal; tsc 0;
+  `next build` EXIT 0 (route /api/members/[id]/points terdaftar).
+- Sisa pending berikutnya: QRIS (butuh PPO eksternal) & grosir.
+
 ## ⚠️ ATURAN BAKU NGUDI SUSILO (24 Sep 2026, WIS DIBACA)
 
 ### Konteks

@@ -289,6 +289,14 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
   commit `eeb9a50`.
 
 ## Fitur
+- [x] **Riwayat poin & reward per member (point_history) — SELESAI (25 Sep 2026):**
+  endpoint baru `GET /api/members/[id]/points` (tier 'member', paginasi limit 20)
+  + `src/lib/points.ts` (label reason + deteksi unit delta + query, modul murni
+  teruji node:sqlite) + aksi "Riwayat" & modal di /admin/member (tabel + kartu
+  mobile, saldo poin & reward, "Muat lebih banyak", empty/error state,
+  busy-guard) + `npm run test:points` (27 cek). Ledger point_history sudah
+  tertulis sejak fitur redemsi (23 Sep); ini layer TAYANAN-nya. TSC 0,
+  build EXIT 0, regresi 6 suite 0 gagal, dual-push master+main.
 - [x] **Redemsi parsial — input nominal (24 Sep 2026):** POS ganti
   checkbox auto-max jadi input nominal Rp + tombol "Maks" + preview
   live "Tebus −Rp X (N poin + Rp Y cashback)". Backend tak berubah
@@ -599,7 +607,8 @@ konsistensi.
   (4) Sumbu x `SalesBarChart` `text-[9px]`→`text-[11px]`.
   Verifikasi: tsc 0, build EXIT 0, grep + scanner bersih,
   dual-push master+main @ `e9ebfdb`.
-  **Sisa pending:** QRIS/grosir/
-  point_history (tunda, NMID). (test ikon PWA Edge LULUS 24 Sep.)
+  **Sisa pending:** QRIS/grosir (tunda, NMID). point_history SUDAH SELESAI
+  (25 Sep: riwayat poin & reward per member, layer tayangan ledger).
+  (test ikon PWA Edge LULUS 24 Sep.)
 
 
