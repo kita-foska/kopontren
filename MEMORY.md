@@ -35,6 +35,35 @@
   langsung ketik; "Terima Konsinyasi" → toast "Konsinyasi diterima &
   tercatat"; kolom komisi auto-terisi saat nama pemilik cocok.
 
+### PWA: notifikasi update — banner "Versi anyar tersedia" (25 Sep)
+- **Audit awal:** `public/sw.js` sudah `skipWaiting()` (install) +
+  `clients.claim()` (activate) + marker SW-BUILD per build ✅; yang
+  KURANG: tidak ada listener `message` SKIP_WAITING, dan
+  `sw-register.tsx` tidak mendeteksi `updatefound` → user tak pernah
+  tahu ada versi baru (SW baru aktif di navigasi berikutnya saja).
+- **Implementasi (2 file):**
+  1. `sw.js`: `self.addEventListener('message', …)` →
+     `SKIP_WAITING` → `skipWaiting()` (eksplisit, untuk tombol Perbarui).
+  2. `sw-register.tsx`: state `updateAvailable` — listener
+     `updatefound` → `reg.installing` `statechange` → bila `installed`
+     DAN halaman masih punya `controller` → banner; + race-check
+     (`reg.installing !== reg.active` saat register). Banner kuning
+     bawah layar (fixed, z-50, 44px, print:hidden):
+     - **"Perbarui"** → postMessage SKIP_WAITING → tunggu
+       `controllerchange` → `location.reload()`; fallback `setTimeout`
+       2 detik bila event tak fire; guard double-reload.
+     - **"Nanti"** → `sessionStorage['kopontren_sw_update_dismissed']`
+       → banner lenyap utk sesi tab ini; muncul lagi saat aplikasi
+       ditutup & dibuka ulang (load baru).
+  Desain: TIDAK ada auto-reload (kasir boleh tetap mengetik; SW baru
+  otomatis ambil alih di navigasi berikutnya via claim-on-activate).
+- Verifikasi: `node --check sw.js` OK; `tsc --noEmit` exit 0;
+  `next build` EXIT 0 (51/51 halaman); regresi 6 suite 0 gagal
+  (margin 57, split 15, phone 26, konsinyasi 47, neraca 33, points 27).
+- Manual QA tunggun user di HP: deploy → tutup paksa PWA → buka lagi →
+  banner "🆕 Versi anyar tersedia" → tap "Perbarui" → reload versi baru;
+  atau "Nanti" → lenyap; tutup PWA → buka → banner muncul lagi.
+
 ### KEPUTUSAN FINAL P3+P4 → GUS FI · A3 LIVE · v16 MENUNGGU DEPLOY VERCEL
 - **P3 (tashih zakat) + P4 (proposal konsinyasi)**: keputusan user/Gus Fi (25 Sep) —
   dikirimkan sendiri oleh Gus Fi (P3 → ke ulama, P4 → ke pengurus); Cline standby

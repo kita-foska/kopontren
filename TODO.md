@@ -623,5 +623,15 @@ konsistensi.
   **Sisa pending:** QRIS/grosir (tunda, NMID). point_history SUDAH SELESAI
   (25 Sep: riwayat poin & reward per member, layer tayangan ledger).
   (test ikon PWA Edge LULUS 24 Sep.)
+- [x] **PWA: banner notifikasi update** (25 Sep): SW baru (konten
+  /sw.js berubah — marker SW-BUILD tiap build) kini memicu banner
+  kuning bawah layar "🆕 Versi anyar tersedia" + tombol "Nanti" /
+  "Perbarui" (`sw-register.tsx`: `updatefound`+`statechange`+race-check;
+  "Perbarui" → postMessage SKIP_WAITING → `controllerchange` → reload,
+  fallback timer 2 dtk; "Nanti" → sessionStorage, muncul lagi saat
+  aplikasi ditutup & dibuka ulang; TIDAK auto-reload biar kasir tak
+  terganggu). `sw.js` +handler `message` SKIP_WAITING. Verifikasi: tsc 0,
+  next build EXIT 0 (51 hal), regresi 6 suite 0 gagal. Manual QA HP:
+  deploy → tutup paksa PWA → buka → banner → tap "Perbarui" → reload.
 
 
