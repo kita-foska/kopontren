@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { parsePaySplit } from '@/lib/pay-methods';
-import { startOfDayJakarta } from '@/lib/format';
+import { startOfDayJakarta, utcToWib } from '@/lib/format';
 
 export async function GET(req: Request) {
   const user = await currentUser();
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
       .all(fromIso)) as Record<string, unknown>[]
   );
   const head = [
-    'created_at_utc',
+    'created_at_wib',
     'kasir',
     'customer',
     'metode',
@@ -64,7 +64,7 @@ export async function GET(req: Request) {
         // Split (fitur 3): mis. "cash=70000+tf=30000"; kosong bila tunggal.
         const pp = parsePaySplit(r.pay_split);
         return [
-          r.created_at,
+          utcToWib(String(r.created_at ?? '')),
           r.kasir,
           r.customer,
           r.pay_method,

@@ -69,6 +69,19 @@ export function startOfDayJakarta(offsetDays = 0): string {
 }
 
 /**
+ * Timestamp tersimpan (UTC ISO 'YYYY-MM-DDTHH:MM:SS.sssZ') → jam dinding
+ * WIB 'YYYY-MM-DD HH:MM'. WIB = UTC+7 offset tetap (tanpa DST) —
+ * aritmetika UTC murni, deterministik di zona waktu mesin mana pun.
+ * Dipakai export CSV: kolom waktu menampilkan jam lokal (WIB), bukan
+ * UTC mentah (selisih 7 jam membingungkan saat input manual).
+ */
+export function utcToWib(v: string | number | Date): string {
+  const d = toDate(v);
+  if (isNaN(d.getTime())) return String(v ?? '');
+  return new Date(d.getTime() + 7 * 3600 * 1000).toISOString().slice(0, 16).replace('T', ' ');
+}
+
+/**
  * Today's WIB calendar day as 'YYYY-MM-DD' (pure UTC arithmetic -
  * independent of the device's timezone). Jatuh tempo / tunggak memakai
  * hari kalender WIB sebagai acuan tunggal: server (payables) dan
