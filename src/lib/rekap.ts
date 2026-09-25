@@ -1,6 +1,6 @@
 // Plain-ASCII WhatsApp rekap builder (safe on every WA version: no emoji, no Unicode).
-import { parsePaySplit, payMethodLabel } from './pay-methods';
-import { rp, rpShort } from './format';
+import { parsePaySplit, payMethodLabel } from './pay-methods.ts';
+import { rp, rpShort } from './format.ts';
 import type { KeuanganPayload } from './keuangan';
 export type RekapItem = {
   product_name: string;

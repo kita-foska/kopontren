@@ -20,6 +20,7 @@
     "test:neraca": "node scripts/test-neraca.ts",
     "test:points": "node scripts/test-points.ts",
     "test:zakat": "node scripts/test-zakat.ts",
+    "test:rekap": "node scripts/test-rekap.ts",
     "test:wholesale": "node scripts/test-wholesale.ts",
     "test:qris": "node scripts/test-qris.ts",
     "test:fetch": "node scripts/test-fetch-util.ts"
