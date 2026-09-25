@@ -216,7 +216,7 @@ export function ZakatClient() {
             <span>
               Laba kotor (penjualan − COGS)
               {c ? (
-                <span className="ml-1 text-xs text-slate-400">sejak {fmtDate(c.period_start)}</span>
+                <span className="ml-1 text-xs text-slate-500">sejak {fmtDate(c.period_start)}</span>
               ) : null}
             </span>
             <span className={`font-bold ${c && c.laba < 0 ? 'text-rose-600 dark:text-rose-400' : ''}`}>
@@ -357,7 +357,7 @@ export function ZakatClient() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-400 dark:border-navy-800">
+                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500 dark:border-navy-800">
                   <th className="py-2 pr-3">Tanggal</th>
                   <th className="py-2 pr-3">Status</th>
                   <th className="py-2 pr-3 text-right">Harta Dagang</th>

@@ -14,7 +14,7 @@ export default async function KasirPage() {
     <Shell user={user}>
       <h1 className="mb-4 text-2xl font-extrabold tracking-tight">
         Kasir <span className="text-accent-500 dark:text-accent-300">POS</span>
-        <span className="ml-2 text-sm font-semibold text-slate-400 dark:text-slate-500">
+        <span className="ml-2 text-sm font-semibold text-slate-500 dark:text-slate-500">
           · transaksi otomatis menunggu laporan
         </span>
       </h1>

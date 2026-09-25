@@ -56,7 +56,7 @@ export function LowStockClient({ items }: { items: Item[] }) {
     <div className="card fade-up p-4">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="font-bold">
-          Stok Menipis <span className="text-xs text-slate-400">(&lt; 10, prediksi ±hari)</span>
+          Stok Menipis <span className="text-xs text-slate-500">(&lt; 10, prediksi ±hari)</span>
         </h2>
         {items.length > 0 && (
           <div className="flex gap-1.5">

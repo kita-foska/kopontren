@@ -188,7 +188,7 @@ export function NotificationBell() {
           </div>
           <ul className="max-h-80 overflow-y-auto">
             {items.length === 0 ? (
-              <li className="px-3 py-6 text-center text-sm text-slate-400">Belum ada notifikasi</li>
+              <li className="px-3 py-6 text-center text-sm text-slate-500">Belum ada notifikasi</li>
             ) : (
               items.map((n) => (
                 <li key={n.id}>
@@ -200,7 +200,7 @@ export function NotificationBell() {
                     <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
                       {n.message}
                     </p>
-                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                       {time(n.created_at)}
                     </p>
                   </button>

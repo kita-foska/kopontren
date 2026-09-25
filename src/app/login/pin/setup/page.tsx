@@ -150,7 +150,7 @@ export default function PinSetupPage() {
                 saat simpan.
               </p>
             )}
-            <div className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <div className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
               {step === 'pin' ? 'PIN' : 'Ulangi PIN'}
             </div>
             <PinDots value={value} maxLength={6} error={!!err} />

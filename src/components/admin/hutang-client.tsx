@@ -270,7 +270,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-xs text-slate-400 dark:text-slate-500">
+                  <span className="text-xs text-slate-500 dark:text-slate-500">
                     {fmtDateTime(x.created_at)}
                   </span>
                   <div className="flex gap-1.5">

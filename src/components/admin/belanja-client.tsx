@@ -182,7 +182,7 @@ export function BelanjaClient() {
           </div>
           <div className="card p-3 text-sm">
             Total pembelian: <b className="text-accent-500 dark:text-accent-300">{rp(inTotal)}</b>{' '}
-            <span className="text-xs text-slate-400">(dari semua data)</span>
+            <span className="text-xs text-slate-500">(dari semua data)</span>
             <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto">
               {data.purchases.map((x) => (
                 <div
@@ -249,7 +249,7 @@ export function BelanjaClient() {
           </div>
           <div className="card p-3 text-sm">
             Total pengeluaran: <b className="text-rose-600 dark:text-rose-400">{rp(outTotal)}</b>{' '}
-            <span className="text-xs text-slate-400">(dari semua data)</span>
+            <span className="text-xs text-slate-500">(dari semua data)</span>
             <div className="mt-2 max-h-64 space-y-1.5 overflow-y-auto">
               {data.expenses.map((x) => (
                 <div

@@ -140,7 +140,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
               <tr key={s.id} className="table-row">
                 <td className="td">
                   #{s.id}
-                  {s.label ? <span className="text-xs text-slate-400"> · {s.label}</span> : null}
+                  {s.label ? <span className="text-xs text-slate-500"> · {s.label}</span> : null}
                 </td>
                 <td className="td text-sm">{s.kasir_name || '-'}</td>
                 <td className="td text-xs text-slate-500 dark:text-slate-400">
@@ -190,7 +190,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
             <div className="flex min-h-[44px] items-center justify-between gap-2">
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 #{s.id}
-                {s.label ? <span className="text-xs font-normal text-slate-400"> · {s.label}</span> : null}
+                {s.label ? <span className="text-xs font-normal text-slate-500"> · {s.label}</span> : null}
               </p>
               {isAdmin ? (
                 <label className="flex min-h-[44px] items-center gap-2 text-xs font-semibold">

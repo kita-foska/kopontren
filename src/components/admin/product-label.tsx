@@ -111,7 +111,7 @@ export function ProductBarcodeLabel({
         className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
           Label Barcode Produk
         </p>
         <h3 className="mt-1 text-lg font-extrabold text-slate-900">{product.name}</h3>
@@ -129,7 +129,7 @@ export function ProductBarcodeLabel({
         ) : (
           <div className="mx-auto mt-3 h-52 w-52 animate-pulse rounded-lg bg-slate-100" />
         )}
-        <p className="mt-3 text-[11px] text-slate-400">
+        <p className="mt-3 text-[11px] text-slate-500">
           QR berisi nilai barcode produk — dapat discan kamera kasir atau
           diketik manual. Tambahkan label ke produk ini.
         </p>

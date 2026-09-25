@@ -169,7 +169,7 @@ export default function PinReauthPage() {
               {user?.display_name ? ` Halo, ${user.display_name}!` : ''} Masukkan PIN untuk
               melanjutkan.
             </p>
-            <div className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <div className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
               PIN
             </div>
             <PinDots value={value} maxLength={6} error={!!err} />
