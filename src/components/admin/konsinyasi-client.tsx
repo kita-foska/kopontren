@@ -47,7 +47,9 @@ const EMPTY_FORM = {
   item_name: '',
   unit: 'pcs',
   qty: 1,
-  agree_price: 0,
+  // Default KOSONG (placeholder "0"): saat kolom difokuskan/ketik, angka 0
+  // tidak perlu dihapus manual dulu (regresi: value 0 nyangkut).
+  agree_price: '' as string | number,
   commission_rate: '' as string | number,
   note: '',
 };
@@ -141,15 +143,25 @@ export function KonsinyasiClient() {
       showToast('Pemilik, barang & jumlah wajib diisi');
       return;
     }
+    // Harga boleh kosong (= 0); nilai string dari input dikonversi di sini.
+    const price = f.agree_price === '' ? 0 : Number(f.agree_price);
+    if (!Number.isFinite(price) || price < 0) {
+      showToast('Harga tidak valid');
+      return;
+    }
     // P4-B: rate disepakati (antardhin) — null = server resolve
     // (default per-pemilik → global). 0 = tanpa komisi, valid.
     const rateVal =
       f.commission_rate === '' || f.commission_rate === null
         ? null
         : Number(f.commission_rate);
+    // `action: 'create'` WAJIB — server switch-case pada field ini; tanpa
+    // field tsb request jatuh ke default "Aksi tidak dikenal" (regresi P4-B).
     await post(
       {
+        action: 'create',
         ...f,
+        agree_price: price,
         commission_rate:
           rateVal !== null && Number.isFinite(rateVal) ? rateVal : undefined,
       },
@@ -398,7 +410,8 @@ export function KonsinyasiClient() {
             min={0}
             className="input"
             value={f.agree_price}
-            onChange={(e) => setF({ ...f, agree_price: Number(e.target.value) })}
+            placeholder="0"
+            onChange={(e) => setF({ ...f, agree_price: e.target.value })}
           />
         </div>
         <div>

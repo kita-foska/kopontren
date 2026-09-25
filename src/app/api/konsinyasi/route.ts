@@ -115,6 +115,10 @@ export async function POST(req: Request) {
   const d = await db();
   const now = new Date().toISOString();
   try {
+    // Toleransi klien versi lama (cache PWA): POST form titipan tanpa field
+    // `action` diperlakukan sebagai 'create' — mencegah regresi "Aksi tidak
+    // dikenal" saat klien ber-cache lama bertemu server baru (P4-B).
+    if (!b.action) b.action = 'create';
     switch (b.action) {
       case 'create': {
         const owner = String(b.owner || '').trim();
