@@ -1405,6 +1405,50 @@ blocking)
   pola neraca).
 - `src/lib/points.ts` (modul murni, teruji node:sqlite):
   `POINT_REASON_LABEL` (7 reason: earn/redeem/void/refund = poin;
+
+## Sesi 25 Sep 2026 — Batch #4 UX polish + reports/csv WIB (ACC Gus Fi)
+
+- **Konteks**: setelah Batch #1 (pay_split import, `0dbecf4`) + #3 (zakat WIB,
+  `54b22e6`) terverifikasi LIVE, Gus Fi ACC #4 = Phase 2 UX (P3/P4) + fix
+  low-priority `reports/csv` UTC. #2 `stock_opname` dikonfirmasi selesai
+  (drop 24 Sep, `c46f4fa`).
+- **Audit temuan**:
+  - P3 teks "Menu pengurus … navigasi atas" (`src/app/page.tsx` L279) →
+    diupdate: "menu navigasi — baris atas di desktop, tombol hamburger di
+    layar kecil".
+  - P3 dropdown filter user `/admin/audit` hanya berisi user dari 50 log
+    pertama → **fix server-side**: `GET /api/audit` kini kembalikan `users`
+    (dari tabel `users WHERE active=1`, cache 60 dtk `audit:users`,
+    `invalidate` prefix sama dgn `audit:tables`); `audit-client.tsx` pakai
+    `data.users` + fallback turunan log (kompat respons lama).
+  - P3 hint `pin/setup` (cek sesi gagal → UI tanpa penjelasan) →
+    **TERVERIFIKASI SUDAH ADA** sejak Batch C (banner amber
+    "Tak bisa cek sesi — lanjutkan saja; validasi sesi tetap jalan saat
+    simpan", `src/app/login/pin/setup/page.tsx` L147-152). Tak ada kerja.
+  - Keyboard-nav tablist (APG, 4 grup) → **TERVERIFIKASI 4/4 terwired**:
+    belanja in/out (`belanja-client.tsx` L41), data backup/audit
+    (`data-client.tsx` L36), konsinyasi active/done (L62), POS kategori
+    (`pos-client.tsx` L227). Hook `useTablistNav` ada di
+    `src/components/ui.tsx` (FILE, bukan direktori — grep dir kosong
+    menipu).
+  - `reports/csv` timestamp UTC mentah → helper baru `utcToWib()` di
+    `lib/format.ts` (pure UTC+7 offset tetap → 'YYYY-MM-DD HH:MM',
+    deterministik tak tergantung TZ mesin); kolom CSV `created_at_utc`
+    kini `created_at_wib`.
+- **Commit + push**: `61dadd4` polish(ux) (3 files +30/−3) + `74f704d`
+  fix(reports/csv) (2 files +16/−3), dual-push `master` + `main`
+  (`c31a076..74f704d`). Vercel auto-deploy saka `main`.
+- **Verifikasi**: `tsc --noEmit` exit 0; `test:split`/`test:zakat`/
+  `test:wholesale` exit 0; `next build` EXIT 0 (SW-BUILD `a228a8be2623`).
+- **Catatan gotcha sesi ini**: `npm`/`npx` PowerShell kena execution
+  policy → pakai `npm.cmd`/`npx.cmd`; `git push ... 2>&1` di PowerShell
+  muncul NativeCommandError (kosmetik) tapi push sukses (cek ref
+  `c31a076..74f704d master -> master/main`); `Get-ChildItem` dir
+  `src/components/ui` kosong karena `ui` itu file `ui.tsx`.
+- **Tinggal manual (Gus Fi)**: cek `/admin/audit` (dropdown user lengkap),
+  export `/api/reports/csv` (kolom `created_at_wib`), teks dashboard
+  mobile.
+
   cashback/cashback_use/refund_cash = rupiah/"Reward") + `pointReasonLabel`
   (fallback UPPER) + `isPointUnit` + `queryPointHistory` (ORDER BY
   created_at DESC, id DESC) + `countPointHistory`.

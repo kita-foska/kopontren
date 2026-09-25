@@ -116,8 +116,10 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       zakat kolom `paid_at (WIB)` + nama file `wibToday()`; validasi
       `pay_split` import backup ter-lock (`normalizeSaleImport`).
       Test: `test:split` 22 checks + `test:zakat` 18 checks, TSC exit 0,
-      build OK. Sisa low-priority: timestamp export `reports/csv` masih
-      UTC mentah (kosmetik) — lihat MEMORY.md.
+      build OK. Sisa low-priority (RESOLVED 25 Sep, commit `74f704d`):
+      timestamp export `reports/csv` kini WIB
+      (kolom kini `created_at_wib` 'YYYY-MM-DD HH:MM' via helper `utcToWib`
+      di `lib/format.ts`; nama kolom lama `created_at_utc` tidak dipakai). — lihat MEMORY.md.
 - [x] **Phone duplicate guard format-insensitive** — SELESAI (commit
       `f2b398e`, 23 Sep 2026, dual-push master+main): helper bersama
       `phoneOwner` + `canonicalPhone` di `src/lib/phone.ts` — duplikat
@@ -221,7 +223,10 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       panel bantuan hotkey POS ada (cheatsheet `?`, F1–F9 + Ctrl-*);
       Toast `aria-live`. Live @ `c364b2c` (+ batch 5 hotkey POS),
       divalidasi ulang 23 Sep (grep + `git merge-base`). Keyboard-nav
-      tablist (APG, 4 grup) dilanjut di Batch E.
+      tablist (APG, 4 grup): TERVERIFIKASI 25 Sep (Batch #4) — 4 grup
+      (belanja in/out, data backup/audit, konsinyasi, POS kategori) sudah
+      terwired `useTablistNav` di `src/components/ui.tsx`; tak ada grup
+      tersisa.
 - [x] Validasi `pay_split` saat IMPORT backup (🟠, laporan review
       Fitur 3) — menunggu approval: normalisasi via `parsePaySplit`
       + Σ=total; non-valid → null (legacy).
@@ -461,7 +466,9 @@ konsistensi.
   read-only).
 - P3: teks "Menu pengurus … tersedia di navigasi atas" — di layout
   mobile navigasi ada di hamburger + bottom nav; kalimat
-  membingungkan.
+  membingungkan. **RESOLVED 25 Sep, commit `61dadd4`**: teks kini
+  "tersedia di menu navigasi — baris atas di desktop, tombol
+  hamburger di layar kecil".
 
 ### /kasir (POS)
 - Terbaik se-app: busy-guard, queue offline + toast sinkron,
@@ -529,6 +536,9 @@ konsistensi.
   (merah/hijau), purge 30/90/365 dengan confirm, "Muat lebih
   banyak log".
 - P3: dropdown filter user hanya berisi user dari 50 log pertama.
+  **RESOLVED 25 Sep, commit `61dadd4`**: `/api/audit` kini kembalikan
+  `users` dari tabel `users` (aktif, cache 60 dtk `audit:users`);
+  client pakai `data.users` + fallback ke turunan log.
 
 ### /admin/produk
 - P1 [bug] save modal tanpa busy guard.
