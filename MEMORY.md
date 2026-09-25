@@ -1601,5 +1601,20 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   `PATCH regenerate_qr` 403 (halaman /admin/member sendiri tak
   terjangkau kasir — tier 'member' = admin+manajer);
   (5) 24 bar di HP → scroll horizontal.
+- **Versi HTML P3 & P4 (25 Sep, ACC Gus Fi — "digawe ceklist html wae")**:
+  `P3-TASHIH-ZAKAT.html` + `P4-PROPOSAL-KONSINYASI.html` (standalone,
+  tanpa JS/dependency, mobile-friendly, print-ready, maroon
+  kopontren `#7a1c1c`). P3 = checklist tashih ulama (3 soal: haul /
+  harga emas 24K / modal HPP-vs-pasar + blok keputusan "Diterima /
+  dgn catatan / revisi / ditolak" + kolom identitas panel & tanggal +
+  lampiran teknis collapsible). P4 = proposal pengurus konsinyasi
+  (ringkas skema wakalah bil ujrah + tabel skema + 3 checkbox
+  persetujuan pengurus + tanda tangan + lampiran risiko/teknis).
+  Isine versi basa-awam dr `.md` asline (P3/P4 md tetep sumber
+  teknis; HTML = format kirim sing gampang dicentang nang HP/WA).
+  Tag balance terverif (P3 div 12/12 label 16/16; P4 div 8/8
+  label 7/7).
+
+
 
 

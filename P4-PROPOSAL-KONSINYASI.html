@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daftar Cek Proposal Pengurus — Komisi Konsinyasi · Kopontren Al Ittihad</title>
+<style>
+  :root{--maroon:#7a1c1c;--ink:#1d1d1f;--soft:#6b6b70;--bg:#faf8f5;--card:#fff;--line:#e5ddd5}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  .wrap{max-width:720px;margin:0 auto;padding:16px}
+  header{background:var(--maroon);color:#fff;padding:28px 20px}
+  header .wrap{padding:0}
+  h1{font-size:1.35rem;margin:0 0 6px;line-height:1.3}
+  .sub{font-size:.9rem;opacity:.9;margin:0}
+  .note{background:#fff7e6;border:1px solid #f3d99a;color:#5c4400;padding:12px 14px;border-radius:10px;font-size:.9rem;margin:14px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+  h2{font-size:1.05rem;color:var(--maroon);margin:0 0 8px}
+  h3{font-size:.95rem;margin:14px 0 6px}
+  p{margin:6px 0}
+  label.chk{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:#fff;cursor:pointer;min-height:44px}
+  input[type=checkbox]{width:22px;height:22px;min-width:22px;accent-color:var(--maroon);margin-top:2px}
+  input[type=text],input[type=date]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;min-height:44px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>div{flex:1 1 180px}
+  .meta{font-size:.8rem;color:var(--soft)}
+  details{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:14px 0}
+  summary{cursor:pointer;font-weight:600;color:var(--maroon);padding:6px 0;min-height:44px;display:flex;align-items:center}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;margin:8px 0}
+  th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+  th{background:#f6f2ec}
+  td.pick{background:#fbf3ec;font-weight:600}
+  ol.dec{padding-left:20px}
+  ol.dec li{margin:6px 0}
+  @media print{
+    header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{background:#fff}
+    .card,details,label.chk{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Proposal Pengurus — Komisi Konsinyasi Fleksibel (Akad Wakalah bil Ujrah)</h1>
+    <p class="sub">Kopontren Al Ittihad · 24 Sep 2026 · teknis SELESAI, menunggu persetujuan pengurus</p>
+  </div>
+</header>
+<div class="wrap">
+
+  <div class="note"><b>Penting:</b> dokumen ini <b>materi musyawarah pengurus, BUKAN fatwa</b>. Bagian teknis sudah diimplementasi &amp; teruji di aplikasi; dokumen ini meminta <b>persetujuan resmi pengurus</b> atas skema + parameter yang dipilih.</div>
+
+  <div class="card">
+    <h2>1. Latar Belakang (pendek)</h2>
+    <p>Toko mengambil <b>komisi dari penjualan barang konsinyasi</b> (barang titipan orang lain). Akad yang dipakai = <b>wakalah bil ujrah</b>: pemilik barang memberi kuasa ke toko untuk menjual, toko diberi upah (ujrah) — merujuk Fatwa DSN-MUI No. 113/2017. Komisi <b>disepakati di muka</b> dengan pemilik &amp; tercatat di baris titipan; tiap titipan boleh beda persentasenya (kesepakatan/antardhin), bukan harus seragam 20% — 20% hanya angka default.</p>
+  </div>
+
+  <div class="card">
+    <h2>2. Skema yang Dipegang (ringkas)</h2>
+    <table>
+      <tr><th>Aspek</th><th>Yang dipilih</th></tr>
+      <tr><td>Akad</td><td class="pick">Wakalah bil ujrah (bukan wadiah / bukan "barang laku = dibeli")</td></tr>
+      <tr><td>Kapan ujrah tercatat</td><td class="pick">Saat barang TERJUAL — barang kembali utuh = komisi 0 ("ora payu")</td></tr>
+      <tr><td>Besaran</td><td class="pick">Fleksibel per titipan (input "Komisi toko (%)"); boleh beda per pemilik/barang; default global 20; 0 = tanpa komisi</td></tr>
+      <tr><td>Rate lama</td><td class="pick">Terkunci saat titipan dibuat (snapshot) — <b>tak bisa diubah sepihak</b> di titipan yang sedang berjalan</td></tr>
+      <tr><td>Tagihan pemilik</td><td class="pick">Neto — pemilik dapat harga jual − komisi (mis. komisi 20% → pemilik 80%)</td></tr>
+      <tr><td>Catatan kas</td><td class="pick">Otomatis "Ujrah Kons. &lt;pemilik&gt; − &lt;barang&gt;" saat terjual (anti dobel hitung)</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>3. Yang Sudah Terpasang &amp; Terbukti Jalan</h2>
+    <p>Fitur komisi konsinyasi sudah berjalan di aplikasi (uji otomatis 47 kasus lulus). Contoh teruji: 4 barang terjual @ Rp10.000, komisi 20% → kas otomatis +Rp8.000 (ujrah), tagihan pemilik = Rp32.000. Barang kembali → ujrah 0, tagihan tak berubah.</p>
+  </div>
+
+  <div class="card">
+    <h2>4. Permohonan Keputusan Pengurus (☐ = beri tanda)</h2>
+    <label class="chk"><input type="checkbox"> <span><b>Setuju</b> skema komisi wakalah bil ujrah (ujrah tercatat saat barang terjual) sesuai implementasi di aplikasi.</span></label>
+    <label class="chk"><input type="checkbox"> <span><b>Setuju</b> komisi boleh <b>berbeda-beda per kesepakatan</b> dengan pemilik (input per titipan + default per pemilik); titipan yang sedang berjalan tetap terkunci (tidak diubah sepihak).</span></label>
+    <label class="chk"><input type="checkbox"> <span><b>Setuju</b> meneruskan sisa pertanyaan ke ulama: dasar hitung ujrah memakai persentase harga perjanjian (bukan harga jual aktual) — alternatif bila diperlukan = ujrah mitsli (lihat lampiran).</span></label>
+    <h3>Persetujuan</h3>
+    <div class="row">
+      <div><label class="meta">Nama / jabatan<br><input type="text"></label></div>
+      <div><label class="meta">Tanggal<br><input type="date"></label></div>
+    </div>
+    <p class="meta">Keputusan akan dicatat di berkas internal (MEMORY.md + SYARIAH-CHECKLIST.md, seksi "Keputusan user P4").</p>
+  </div>
+
+  <details>
+    <summary>Lampiran — risiko &amp; penjagaannya + detail teknis</summary>
+    <h3>Risiko &amp; penjagaan</h3>
+    <table>
+      <tr><th>#</th><th>Risiko</th><th>Penjaga</th></tr>
+      <tr><td>1</td><td>Dobel hitung ujrah di laporan</td><td>kas tercatat otomatis saat terjual + peringatan; dasar hitung ujrah menunggu tashih ulama (persentase harga perjanjian = ma'lum, sesuai Syafi'i; DSN-MUI No. 112/2017 membolehkan persentase yang disepakati; alternatif = ujrah mitsli)</td></tr>
+      <tr><td>2</td><td>Pengaturan berubah di tengah kontrak berjalan</td><td>rate terkunci per titipan (snapshot) — titipan lama tak berubah</td></tr>
+      <tr><td>3</td><td>Toko rugi bila 20% dianggap besar</td><td>parameter bisa diubah admin kapan saja untuk titipan BARU</td></tr>
+      <tr><td>4</td><td>Pemilik protes tagihan jadi neto</td><td>label UI jelas ("Tagihan pemilik", "Ujrah Rp …"); akad + besaran tercatat di baris titipan (bukti)</td></tr>
+      <tr><td>5</td><td>Rate fleksibel disalahgunakan</td><td>default per-pemilik hanya pre-fill (usulan) — yang mengikat = nilai disepakati saat input, tercatat per baris + jejak audit sumber rate</td></tr>
+    </table>
+    <h3>Detail teknis (tidak wajib dibaca)</h3>
+    <p class="meta">Setting: konsinyasi_commission (default 20, 0–100). Kolom DB: consignments.commission_rate (v15). Helper splitConsignment: komisi = floor(harga × rate/100), total persis tanpa pecahan rupiah. Ujrah di V1 off-P&amp;L (memo, baris "Ujrah Konsinyasi"). Rujukan: Fatwa DSN-MUI No. 113/2017 (wakalah) &amp; No. 112/2017 (kejelasan ujrah); Mughni (Ibnu Qudamah) soal gharar bentuk "laku = beli"; Bahtsul Masail HIPJAS VI 2023 (ujrah persenan). Dokumen sumber: P4-PROPOSAL-KONSINYASI.md.</p>
+  </details>
+
+</div>
+</body>
+</html>

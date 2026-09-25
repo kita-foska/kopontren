@@ -711,4 +711,12 @@ konsistensi.
   (c) preset 1/7/30/365 sinkron, (d) kasir → 403 pada "Perbarui QR",
   (e) 24 bar di HP scroll horizontal. Detail: MEMORY.md seksi
   "Sesi 25 Sep 2026 — Batch #5".
+- **Versi HTML P3/P4 kirim ulama & pengurus (25 Sep, ACC Gus Fi):
+  SELESAI (commit + dual-push terlampir):** `P3-TASHIH-ZAKAT.html`
+  (checklist tashih ulama zakat: 3 soal + blok keputusan + identitas
+  panel) & `P4-PROPOSAL-KONSINYASI.html` (proposal pengurus konsinyasi:
+  tabel skema + 3 checkbox persetujuan + tanda tangan). Standalone,
+  mobile-friendly, print-ready, basa-awam, tag balance terverif.
+  **Sisa:** kirim ke ulama (P3) & pengurus (P4) → catat keputusan
+  nang MEMORY.md + SYARIAH-CHECKLIST.md.
 
