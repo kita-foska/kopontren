@@ -1614,6 +1614,19 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   teknis; HTML = format kirim sing gampang dicentang nang HP/WA).
   Tag balance terverif (P3 div 12/12 label 16/16; P4 div 8/8
   label 7/7).
+- **VERIFIKASI GUS FI (25 Sep, pasca Batch #5) — DITERIMA (kode):**
+  Status ditandai jelas "SELESAI (kode) — nunggu uji manual HP,
+  bukan produksi penuh". Cek keamanan PII yang diminta: LULUS —
+  `GET/POST /api/members` guard tier 'pos' = [admin, manajer, kasir]
+  (auth.ts L65): gudang/pembelian/pengurus = 403, `qr_code` tak
+  bocor ke role yang tak perlu; `PATCH /api/members/[id]`
+  (regenerate_qr) `isAdmin()`-only. Ceklist manual diperluas:
+  (b) persistence qr_code (tutup→buka modal, QR harus sama),
+  (d) 403 kasir di level API (bukan hanya UI), (e) visual-check
+  scroll 24 bar (aria-label sudah ada; fallback agregasi 2-jam).
+  Lanjut: lapor hasil uji HP → Gus mutusake Batch UX-1 (font,
+  kontras, retry, `rp()`) vs nunggu validasi non-eng (P3/P4/NMID/
+  monitor grosir); grosir v2 + QRIS asli tetep nunggu trigger.
 
 
 

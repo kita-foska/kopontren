@@ -685,7 +685,7 @@ konsistensi.
 
 
 - **Batch #5: Kartu Membership + Jam Sibuk (25 Sep, ACC Gus Fi) —
-  SELESAI (kode, pra-dual-push):**
+  SELESAI (kode) — nunggu uji manual HP (bukan produksi penuh):**
   (1) Kartu Membership: `MemberQrBadge` ditulis ulang — modal kartu
   landscape maroon (pratinjau + print `@page landscape`) dgn badge tier
   (GOLD/SILVER), statistik Poin/Cashback/Total Belanja, footer
@@ -705,12 +705,24 @@ konsistensi.
   1/7/30/365 + callout puncak; silent-fail (console.error, tak
   merusak tab).
   Verifikasi: `tsc --noEmit` exit 0, `next build` EXIT 0 (52 rute,
-  `/api/reports/hourly` live di route table). **Sisa uji manual
+  `/api/reports/hourly` live di route table). **Cek keamanan PII
+  (selesai, instruksi Gus 25 Sep)**: `GET/POST /api/members` guard
+  tier 'pos' = admin/manajer/kasir (auth.ts L65) → gudang/pembelian/
+  pengurus TIDAK dapat akses (403), `qr_code` tak bocor;
+  `PATCH /api/members/[id]` `isAdmin()`-only. **Sisa uji manual
   (checklist)**: (a) cetak kartu per tier (tanpa/silver/gold),
-  (b) qr_code kosong → auto-generate → cetak → token discan,
-  (c) preset 1/7/30/365 sinkron, (d) kasir → 403 pada "Perbarui QR",
-  (e) 24 bar di HP scroll horizontal. Detail: MEMORY.md seksi
-  "Sesi 25 Sep 2026 — Batch #5".
+  (b) qr_code kosong → auto-generate → **persistence: tutup modal →
+  buka lagi → QR HARUS PADHA** (kalau ganti, berarti tak ke-save)
+  → cetak → token discan,
+  (c) preset 1/7/30/365 sinkron,
+  (d) kasir → 403 pada "Perbarui QR" **+ cek level API: kasir
+  `PATCH /api/members/[id] {regenerate_qr}` langsung = 403**,
+  (e) 24 bar di HP scroll horizontal (aria-label tiap bar sudah
+  ada — cukup verifikasi visual; bila terasa berat, opsi agregasi
+  2 jam sebagai fallback),
+  (f) setelah lulus semua → laporkan hasil ke Gus, dia mutusake
+  Batch UX-1 vs nunggu validasi non-eng (P3/P4/NMID/grosir).
+  Detail: MEMORY.md seksi "Sesi 25 Sep 2026 — Batch #5".
 - **Versi HTML P3/P4 kirim ulama & pengurus (25 Sep, ACC Gus Fi):
   SELESAI (commit + dual-push terlampir):** `P3-TASHIH-ZAKAT.html`
   (checklist tashih ulama zakat: 3 soal + blok keputusan + identitas
