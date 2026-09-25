@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { isPointUnit, pointReasonLabel, type PointEntry } from '@/lib/points';
+import { MemberQrBadge } from './member-qr-badge';
 
 type Member = {
   id: number;
@@ -14,6 +15,8 @@ type Member = {
   total_spent: number;
   created_at: string;
   cashback_balance?: number;
+  tier?: string; // '' | 'silver' | 'gold' (dihitung server)
+  qr_code?: string; // token QR membership (additive; auto-generate di kartu)
 };
 // API sekarang paginasi (limit 50) + agregat global untuk kartu ringkasan.
 type Resp = {
@@ -79,6 +82,9 @@ export function MemberClient() {
   const [pointsOffset, setPointsOffset] = useState(0);
   const [pointsBusy, setPointsBusy] = useState(false);
   const [pointsErr, setPointsErr] = useState('');
+
+  // ── Modal Kartu Membership (identitas + tier + QR + cetak) ──
+  const [cardMember, setCardMember] = useState<Member | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setQDeb(q), 300);
@@ -349,6 +355,13 @@ export function MemberClient() {
                     </button>
                     <span className="text-slate-300 dark:text-navy-600">|</span>
                     <button type="button"
+                      className="text-xs font-bold text-slate-600 hover:underline dark:text-slate-300"
+                      onClick={() => setCardMember(m)}
+                    >
+                      Kartu
+                    </button>
+                    <span className="text-slate-300 dark:text-navy-600">|</span>
+                    <button type="button"
                       className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
                       onClick={() => remove(m)}
                     >
@@ -406,6 +419,12 @@ export function MemberClient() {
                   onClick={() => openPoints(m)}
                 >
                   Riwayat
+                </button>
+                <button type="button"
+                  className="h-11 flex-1 rounded-lg border border-slate-200 bg-slate-50/50 px-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-slate-300"
+                  onClick={() => setCardMember(m)}
+                >
+                  Kartu
                 </button>
                 <button type="button"
                   className="h-11 flex-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-rose-400"
@@ -581,6 +600,20 @@ export function MemberClient() {
           </div>
         )}
       </Modal>
+
+      {/* Modal Kartu Membership — identitas + tier + QR + cetak.
+          Token kosong di-generate otomatis (peran admin; 403 → hint). */}
+      {cardMember && (
+        <MemberQrBadge
+          member={cardMember}
+          onClose={() => setCardMember(null)}
+          onQrChanged={(token) =>
+            setMembers((prev) =>
+              prev.map((x) => (x.id === cardMember.id ? { ...x, qr_code: token } : x))
+            )
+          }
+        />
+      )}
 
       {confirmHost}
       <Toast msg={toast} onClose={() => showToast('')} />
