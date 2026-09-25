@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PageSkeleton, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
+import { parseWholesaleJson } from '@/lib/wholesale';
 import { Download } from 'lucide-react';
 
 type Product = {
@@ -16,8 +17,18 @@ type Product = {
   stock: number;
   active: number;
   barcode?: string;
+  /** Grosir v1: tier per produk, JSON string [{min_qty, discount_percent}]
+   *  (subquery kolom `wholesale` di /api/products; '[]' bila tak ada). */
+  wholesale?: string;
 };
 type Resp = { products: Product[]; categories?: string[] };
+/** Baris tier grosir yang sedang disusun di form (belum disimpan). */
+type TierDraft = { min_qty: number; discount_percent: number };
+
+/** Parse kolom `wholesale` produk jadi daftar tier (modul bersama). */
+function parseTiers(raw?: string | null): TierDraft[] {
+  return parseWholesaleJson(raw) as TierDraft[];
+}
 
 const emptyForm = {
   id: 0,
@@ -52,6 +63,11 @@ export function ProdukClient() {
   const [stockBusy, setStockBusy] = useState(false);
   const [toggleBusy, setToggleBusy] = useState(false);
   const [label, setLabel] = useState<Product | null>(null);
+  // Grosir v1: daftar tier yang sedang disusun di form modal. Isinya draft
+  // (bisa duplikat/invalid); sinkronisasi ke DB (replace-all) dilakukan di
+  // save() HANYA setalah produk tersimpan (produk baru perlu id dulu).
+  const [tiers, setTiers] = useState<TierDraft[]>([]);
+  const [tiersBusy, setTiersBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,8 +106,23 @@ export function ProdukClient() {
   if (loading && products.length === 0) return <PageSkeleton />;
 
   function openEdit(p?: Product) {
-    if (p) setForm({ ...p, barcode: p.barcode ?? '' });
-    else setForm({ ...emptyForm });
+    if (p) {
+      setForm({ ...p, barcode: p.barcode ?? '' });
+      // Muat tier grosir dari kolom `wholesale` produk (diisi subquery
+      // /api/products) — bila field tidak ada (klien/cache lama), fetch
+      // langsung dari endpoint prices supaya form tetap utuh.
+      if (p.wholesale !== undefined) setTiers(parseTiers(p.wholesale));
+      else if (p.id) {
+        setTiers([]);
+        void (async () => {
+          const r = await api<{ tiers?: TierDraft[] }>('/api/products/' + p.id + '/prices');
+          if (r.ok && r.data?.tiers) setTiers(r.data.tiers);
+        })();
+      } else setTiers([]);
+    } else {
+      setForm({ ...emptyForm });
+      setTiers([]);
+    }
     setShow(true);
   }
 
@@ -104,12 +135,27 @@ export function ProdukClient() {
     setSaveBusy(true);
     try {
       const r = form.id
-        ? await api('/api/products/' + form.id, {
+        ? await api<{ ok?: boolean; id?: number }>('/api/products/' + form.id, {
             method: 'PUT',
             body: JSON.stringify(form),
           })
-        : await api('/api/products', { method: 'POST', body: JSON.stringify(form) });
+        : await api<{ ok?: boolean; id?: number }>('/api/products', {
+            method: 'POST',
+            body: JSON.stringify(form),
+          });
       if (r.ok) {
+        const productId = form.id || Number(r.data?.id);
+        // Simpan tier grosir HANYA bila form ini memang menampilkan seksi
+        // grosir (tiersBusy true = modal pernah membuka form dgn konteks
+        // tier: produk edit, atau user menambah baris tier). replace-all:
+        // array kosong = hapus semua tier produk ini.
+        if (tiersBusy && productId > 0) {
+          const tr = await api<{ ok?: boolean }>('/api/products/' + productId + '/prices', {
+            method: 'POST',
+            body: JSON.stringify({ tiers }),
+          });
+          if (!tr.ok) showToast('Produk tersimpan, namun tier grosir gagal: ' + (tr.error || ''));
+        }
         showToast(form.id ? 'Produk diperbarui' : 'Produk ditambahkan');
         setShow(false);
         load();
@@ -118,7 +164,29 @@ export function ProdukClient() {
       }
     } finally {
       setSaveBusy(false);
+      setTiersBusy(false);
     }
+  }
+
+  // ── Grosir v1: kelola tier (min_qty → discount%) per form ─────────────
+  function addTier() {
+    setTiersBusy(true);
+    setTiers((t) => [...t, { min_qty: 2, discount_percent: 0 }]);
+  }
+  function setTier(i: number, patch: Partial<TierDraft>) {
+    setTiersBusy(true);
+    setTiers((t) => t.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  }
+  function removeTier(i: number) {
+    setTiersBusy(true);
+    setTiers((t) => t.filter((_, j) => j !== i));
+  }
+  /** Harga efektif (Rp) bila diskon tier ini diterapkan ke base_price —
+   *  rumus sama dgn modul murni lib/wholesale (dipakai POS + test). */
+  function tierEffPrice(t: TierDraft): number {
+    const base = Number(form.base_price) || 0;
+    const pct = Math.max(0, Math.min(100, Number(t.discount_percent) || 0));
+    return Math.round((base * (100 - pct)) / 100);
   }
 
   async function setStock(p: Product) {
@@ -649,6 +717,72 @@ export function ProdukClient() {
               {F('stock', { numeric: true, label: 'Stok awal' })}
             </div>
           )}
+          {/* ── Grosir v1: tier harga per produk (min_qty → discount%) ── */}
+          <div className="col-span-2">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                Harga grosir (opsional)
+              </span>
+              <button
+                type="button"
+                className="btn-ghost px-2 py-1 text-xs"
+                onClick={addTier}
+              >
+                + Tambah tier
+              </button>
+            </div>
+            <p className="mb-2 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+              Beli ≥ jumlah minimum dapat diskon dari harga jual. Diskon dihitung dari harga
+              satuan dasar; tier dengan jumlah minimum terkecil yang terpenuhi berlaku,
+              dan bila ada pengaturan grosir global yang lebih besar, yang lebih besar dipakai.
+            </p>
+            {tiers.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-slate-300 py-2 text-center text-xs text-slate-400 dark:border-navy-600">
+                Belum ada tier grosir.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {tiers.map((t, i) => (
+                  <div key={i} className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <label className="label">Jumlah min</label>
+                      <input
+                        className="input"
+                        type="number"
+                        min={1}
+                        value={t.min_qty}
+                        onChange={(e) => setTier(i, { min_qty: Number(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="label">Diskon (%)</label>
+                      <input
+                        className="input"
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={t.discount_percent}
+                        onChange={(e) =>
+                          setTier(i, { discount_percent: Number(e.target.value) || 0 })
+                        }
+                      />
+                    </div>
+                    <div className="w-28 shrink-0 pb-1 text-right text-[11px] text-slate-400 dark:text-slate-500">
+                      {t.discount_percent > 0 ? '≈ ' + rp(tierEffPrice(t)) : '—'}
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-ghost px-2 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                      onClick={() => removeTier(i)}
+                      aria-label={`Hapus tier ${i + 1}`}
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </Modal>
       {label && <ProductBarcodeLabel product={label} onClose={() => setLabel(null)} />}

@@ -18,7 +18,8 @@
     "test:clientip": "node scripts/test-client-ip.ts",
     "test:konsinyasi": "node scripts/test-konsinyasi.ts",
     "test:neraca": "node scripts/test-neraca.ts",
-    "test:points": "node scripts/test-points.ts"
+    "test:points": "node scripts/test-points.ts",
+    "test:wholesale": "node scripts/test-wholesale.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.0",

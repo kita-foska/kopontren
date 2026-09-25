@@ -376,6 +376,10 @@ async function migrate(d: Db) {
   await d.exec("CREATE TABLE IF NOT EXISTS sale_cancellations (id INTEGER PRIMARY KEY, sale_id INTEGER NOT NULL, reason TEXT NOT NULL DEFAULT '', cancelled_by INTEGER, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
   // wholesale tiers: buy >= min_qty -> discount_percent off
   await d.exec("CREATE TABLE IF NOT EXISTS product_prices (id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, min_qty INTEGER NOT NULL DEFAULT 1, discount_percent INTEGER NOT NULL DEFAULT 0)");
+  // Grosir v1 (2026-09-25): index utk lookup tier per produk (UI admin +
+  // subquery kolom `wholesale` di /api/products). product_id asc supaya
+  // tier terbaca urut ambang naik.
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_product_prices_product ON product_prices(product_id, min_qty)');
   // bundles (items = JSON array of {product_id, qty})
   await d.exec("CREATE TABLE IF NOT EXISTS bundles (id INTEGER PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL DEFAULT 0, items TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
   // multi-store support (default store seeded when missing)

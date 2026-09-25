@@ -15,9 +15,24 @@ async function getProductsCache(live: boolean): Promise<{ products: unknown[]; c
   const key = live ? 'products:live' : 'products:all';
   return cached<{ products: unknown[]; categories: string[] }>(key, async () => {
     const d = await db();
+    // Kolom `wholesale` (Grosir v1): tier per produk sebagai JSON array
+    // [{min_qty, discount_percent}] via subquery — 1 round-trip, tanpa join
+    // terpisah. Tanpa tier => '[]' (json_group_array NULL di COALESCE).
+    // Urutan tier = min_qty ASC (pakai index idx_product_prices_product).
+    // Field baru additive: konsumen lama (klien tidak membaca `wholesale`)
+    // tetap berfungsi apa adanya.
+    const wholesaleCol =
+      `(SELECT COALESCE(json_group_array(json_object('min_qty', min_qty, 'discount_percent', discount_percent)), '[]')
+         FROM product_prices pp
+         WHERE pp.product_id = p.id
+         ORDER BY pp.min_qty) AS wholesale,`;
     const products: unknown[] = live
-      ? await d.prepare('SELECT * FROM products WHERE active = 1 ORDER BY category, name').all()
-      : await d.prepare('SELECT * FROM products ORDER BY category, name').all();
+      ? await d.prepare(
+          `SELECT p.*, ${wholesaleCol} FROM products p WHERE p.active = 1 ORDER BY p.category, p.name`
+        ).all()
+      : await d.prepare(
+          `SELECT p.*, ${wholesaleCol} FROM products p ORDER BY p.category, p.name`
+        ).all();
     const categories: string[] = (
       (await d
         .prepare("SELECT DISTINCT category FROM products WHERE active = 1 AND category != '' ORDER BY category")

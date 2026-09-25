@@ -15,6 +15,7 @@ import { rp, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { useHotkeys } from '@/lib/useHotkeys';
+import { effectiveWholesalePrice, parseWholesaleJson } from '@/lib/wholesale';
 import {
   Banknote,
   CameraOff,
@@ -116,8 +117,11 @@ type Product = {
   base_price: number;
   stock: number;
   barcode?: string;
+  /** Grosir v1: tier per produk, JSON string [{min_qty, discount_percent}]
+   *  (subquery kolom `wholesale` di /api/products; '[]' bila tak ada). */
+  wholesale?: string;
 };
-type CartLine = { product: Product; qty: number; price: number };
+type CartLine = { product: Product; qty: number; price: number; manual?: boolean };
 
 type ShiftInfo = {
   id: number;
@@ -319,6 +323,34 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     const v = Math.floor(Number(memberSettings?.[k]));
     return Number.isFinite(v) && v > 0 ? v : 0;
   };
+  // Grosir v1: setting global (wholesale_min=0 => nonaktif) + tier per
+  // produk. Rumus satu-satunya di lib/wholesale (test: node scripts/
+  // test-wholesale.ts). Diskon = MAKS(tier terbaik utk qty, global) vs
+  // base_price; harga manual kasir (input "Ubah harga") tidak di-restore.
+  const globalGrosir = {
+    min: numSetting('wholesale_min'),
+    discount: numSetting('wholesale_discount'),
+  };
+  const autoPrice = (p: Product, qty: number) =>
+    effectiveWholesalePrice(p.base_price, qty, parseWholesaleJson(p.wholesale), globalGrosir).price;
+  const grosirPct = (p: Product, qty: number) =>
+    effectiveWholesalePrice(p.base_price, qty, parseWholesaleJson(p.wholesale), globalGrosir).pct;
+  // Saat setting global tiba SETELAH baris sudah di keranjang (load
+  // paralel/refresh), recompute harga baris OTOMATIS; baris manual sengaja
+  // tidak disentuh. Ref supaya deps effect hanya memberSettings (fungsi
+  // autoPrice baru tiap render, jangan masuk deps).
+  const autoPriceRef = useRef(autoPrice);
+  autoPriceRef.current = autoPrice;
+  useEffect(() => {
+    if (!memberSettings) return;
+    setCart((c) =>
+      c.map((l) => {
+        if (l.manual) return l;
+        const np = autoPriceRef.current(l.product, l.qty);
+        return np === l.price ? l : { ...l, price: np };
+      })
+    );
+  }, [memberSettings]);
 
   const loadShift = useCallback(async () => {
     const r = await api<{ open: ShiftInfo | null }>('/api/shifts?current=1');
@@ -376,11 +408,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           showToast('Jumlah melebihi sisa stok (' + p.stock + ')');
           return c;
         }
+        // Qty naik: harga otomatis ikut tier/grosir (kecuali kasir sudah
+        // set harga manual baris ini — manual menang, tidak di-restore).
         return c.map((l) =>
-          l.product.id === p.id ? { ...l, qty: l.qty + 1 } : l
+          l.product.id === p.id
+            ? { ...l, qty: l.qty + 1, price: l.manual ? l.price : autoPrice(p, l.qty + 1) }
+            : l
         );
       }
-      return [...c, { product: p, qty: 1, price: p.base_price }];
+      return [...c, { product: p, qty: 1, price: autoPrice(p, 1), manual: false }];
     });
   }
 
@@ -452,18 +488,28 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   function setQty(id: number, qty: number) {
     setCart((c) =>
       c
-        .map((l) =>
-          l.product.id === id ? { ...l, qty: Math.max(0, Math.min(qty, l.product.stock)) } : l
-        )
+        .map((l) => {
+          if (l.product.id !== id) return l;
+          const q = Math.max(0, Math.min(qty, l.product.stock));
+          // Ubah qty: harga otomatis recompute (naik ambang grosir → turun,
+          // turun ambang → naik lagi); harga manual tetap tidak disentuh.
+          return { ...l, qty: q, price: l.manual ? l.price : autoPrice(l.product, q) };
+        })
         .filter((l) => l.qty > 0)
     );
   }
 
   function setPrice(id: number, price: number) {
-    setCart((c) => c.map((l) => (l.product.id === id ? { ...l, price } : l)));
+    setCart((c) =>
+      c.map((l) =>
+        l.product.id === id ? { ...l, price: Math.max(0, price), manual: true } : l
+      )
+    );
   }
 
   function remove(id: number) {
+    // Hapus baris: flag manual ikut hilang — bila produk ini ditambah lagi,
+    // harga kembali otomatis (keputusan grosir: tanpa auto-restore manual).
     setCart((c) => c.filter((l) => l.product.id !== id));
   }
 
@@ -1189,6 +1235,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
             {visible.map((p) => {
               const inCart = cart.find((l) => l.product.id === p.id);
+              const hasGrosirTier = parseWholesaleJson(p.wholesale).length > 0;
               return (
                 <button type="button"
                   key={p.id}
@@ -1212,9 +1259,18 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     {p.barcode && <span className="font-mono text-[10px]">#{p.barcode}</span>}
                   </div>
                   <div className="mt-2.5 flex items-end justify-between">
-                    <p className="text-sm font-extrabold text-accent-500 dark:text-accent-300">
-                      {rp(p.base_price)}
-                    </p>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-sm font-extrabold text-accent-500 dark:text-accent-300">
+                        {rp(p.base_price)}
+                      </p>
+                      {/* Grosir v1: produk ini punya tier — ada harga
+                          lebih murah saat qty mencapai ambang. */}
+                      {hasGrosirTier && (
+                        <span className="rounded bg-emerald-500/15 px-1 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+                          Grosir
+                        </span>
+                      )}
+                    </div>
                     <Badge tone={p.stock <= 0 ? 'red' : p.stock < 5 ? 'amber' : 'gray'}>
                       {p.stock} {p.unit}
                     </Badge>
@@ -1261,7 +1317,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
 
           {/* Cart items list */}
           <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-            {cart.map((l, idx) => (
+            {cart.map((l, idx) => {
+              // Grosir v1: % diskon aktif utk qty baris ini (tier terbaik
+              // MAKS global). Badge tampil hanya utk harga OTOMATIS — bila
+              // kasir sudah set harga manual, itu harga kasir (tanpa klaim
+              // grosir di struk), bukan harga sistem.
+              const gPct = l.manual ? 0 : grosirPct(l.product, l.qty);
+              return (
               <div
                 key={l.product.id}
                 className={
@@ -1272,9 +1334,20 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 }
               >
                 <div className="flex items-start justify-between gap-2">
-                  <p className="min-w-0 flex-1 break-words text-sm font-bold leading-tight text-slate-800 dark:text-slate-200">
-                    {l.product.name}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words text-sm font-bold leading-tight text-slate-800 dark:text-slate-200">
+                      {l.product.name}
+                    </p>
+                    {gPct > 0 ? (
+                      <span className="mt-0.5 inline-block rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+                        Grosir −{gPct}%
+                      </span>
+                    ) : l.manual ? (
+                      <span className="mt-0.5 inline-block rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
+                        Harga manual
+                      </span>
+                    ) : null}
+                  </div>
                   <button
                     type="button"
                     onClick={() => remove(l.product.id)}
@@ -1335,7 +1408,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
             {cart.length === 0 && (
               <div className="py-8 text-center text-xs text-slate-400">
                 <div className="mb-1 flex justify-center">
