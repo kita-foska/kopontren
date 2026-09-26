@@ -166,7 +166,7 @@ export function MigrateClient() {
             </button>
           )}
         </div>
-        {parseError && <p className="mt-2 text-sm text-red-500">{parseError}</p>}
+        {parseError && <p className="mt-2 text-sm text-rose-500">{parseError}</p>}
       </div>
 
       {phase === 'preview' && (
@@ -222,7 +222,7 @@ export function MigrateClient() {
             </div>
           )}
           {rowErrors.length > 0 && (
-            <div className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-300">
+            <div className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-600 dark:text-rose-300">
               <p className="font-bold">{rowErrors.length} baris dilewati:</p>
               <div className="mt-1 max-h-48 overflow-y-auto">
                 <table className="w-full">
@@ -234,7 +234,7 @@ export function MigrateClient() {
                   </thead>
                   <tbody>
                     {rowErrors.slice(0, 20).map((e, i) => (
-                      <tr key={i} className="border-t border-red-500/10">
+                      <tr key={i} className="border-t border-rose-500/10">
                         <td className="pr-3 align-top font-mono">{e.line}</td>
                         <td className="align-top">{stripBaris(e.message)}</td>
                       </tr>
@@ -268,7 +268,7 @@ export function MigrateClient() {
       )}
 
       {phase === 'error' && (
-        <div className="card border-red-500/40 p-4 text-sm text-red-600 dark:text-red-300">
+        <div className="card border-rose-500/40 p-4 text-sm text-rose-600 dark:text-rose-300">
           <p>Gagal: {fatal}</p>
           <button type="button"
             className="btn-ghost mt-3"
@@ -294,11 +294,11 @@ export function MigrateClient() {
             </div>
             <div>
               <p className="text-xs uppercase text-slate-500 dark:text-slate-400">Di-update</p>
-              <p className="text-2xl font-extrabold text-sky-600 dark:text-sky-400">{summary.updated}</p>
+              <p className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">{summary.updated}</p>
             </div>
             <div>
               <p className="text-xs uppercase text-slate-500 dark:text-slate-400">Gagal</p>
-              <p className="text-2xl font-extrabold text-red-600 dark:text-red-400">
+              <p className="text-2xl font-extrabold text-rose-600 dark:text-rose-400">
                 {summary.failed.length}
               </p>
             </div>
@@ -326,7 +326,7 @@ export function MigrateClient() {
             </div>
           )}
           {summary.failed.length > 0 && (
-            <div className="mt-2 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-300">
+            <div className="mt-2 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-600 dark:text-rose-300">
               <p className="font-bold">{summary.failed.length} baris gagal di database:</p>
               <div className="mt-1 max-h-48 overflow-y-auto">
                 <table className="w-full">
@@ -338,7 +338,7 @@ export function MigrateClient() {
                   </thead>
                   <tbody>
                     {summary.failed.map((e, i) => (
-                      <tr key={i} className="border-t border-red-500/10">
+                      <tr key={i} className="border-t border-rose-500/10">
                         <td className="pr-3 align-top font-mono">{e.line}</td>
                         <td className="align-top">{stripBaris(e.message)}</td>
                       </tr>

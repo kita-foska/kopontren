@@ -15,6 +15,17 @@
   --lborder: #e9d5d8;
   --ltext: #170a0e;
   --lsub: #7a1835;
+  /* UX-4 (fase A): role semantik warna — nilai SAMA dgn token
+     tailwind.config.ts (risk=rose, success=emerald, attention=amber,
+     info=blue, gold=aksen amber, wine=cetak kartu member).
+     Dipakai CSS non-Tailwind (chart, canvas, elemen kustom). */
+  --accent: #7a1835; /* accent-500 (brand/hero) */
+  --color-risk: #e11d48; /* rose-600 */
+  --color-success: #059669; /* emerald-600 */
+  --color-attention: #f59e0b; /* amber-500 */
+  --color-info: #2563eb; /* blue-600 */
+  --color-gold: #fbbf24; /* amber-400 (highlight premium) */
+  --color-wine: #7a1c1c; /* cetak kartu member */
 }
 
 html {
@@ -32,25 +43,26 @@ body {
 }
 
 .dark body {
-  background: #170a0e;
-  color: #f1f5f9;
+  background: var(--nbg);
+  color: var(--ntext);
 }
 body {
-  background: #faf5f6;
-  color: #170a0e;
+  background: var(--lbg);
+  color: var(--ltext);
 }
 
 @layer components {
   .card {
-    /* radius 16px (rounded-2xl) — design system */
-    @apply rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-navy-700 dark:bg-navy-800;
+    /* UX-4: radius/shadow via token (rounded-card = 16px, shadow-card =
+       shadow-sm — nilai identik dengan versi lama, hanya referensi token). */
+    @apply rounded-card border border-slate-200 bg-white shadow-card dark:border-navy-700 dark:bg-navy-800;
   }
   .input {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500/30 dark:border-navy-600 dark:bg-navy-900 dark:text-slate-100;
+    @apply w-full rounded-field border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500/30 dark:border-navy-600 dark:bg-navy-900 dark:text-slate-100;
     min-height: 44px; /* target sentuh a11y (standar 44px) */
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-field px-3.5 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
     min-height: 44px; /* target sentuh a11y (standar 44px) */
   }
   .btn-primary {
@@ -79,10 +91,11 @@ body {
   }
   /* ===== Modernisasi UI: hero FLAT (tanpa gradient) + micro-animasi 0.2s ===== */
   .hero-bg {
-    /* Solid flat #7A1835 (token burgundy) — aturan: tanpa gradient/shadow.
+    /* Solid flat token accent-500 (var --accent di :root) —
+       aturan: tanpa gradient/shadow.
        Rename UX-3: dari `.grad-hero` (nama lama, "grad" menipu karena
        sebenarnya flat solid, bukan gradient). */
-    background: #7a1835;
+    background: var(--accent);
   }
   .fade-up {
     animation: fade-up 0.2s ease both;

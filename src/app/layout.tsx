@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { SwRegister } from '@/components/sw-register';
+import { T } from '@/lib/tokens';
 
 // Font utama aplikasi (P1 audit UI): sebelum 26 Sep, 'Plus Jakarta Sans'
 // dideklarasikan di tailwind.config/globals.css tapi TIDAK pernah di-load
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#7A1835',
+  themeColor: T.accent500,
   width: 'device-width',
   initialScale: 1,
 };

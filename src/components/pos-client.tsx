@@ -16,6 +16,7 @@ import { strukWaText, shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { useHotkeys } from '@/lib/useHotkeys';
 import { effectiveWholesalePrice, parseWholesaleJson } from '@/lib/wholesale';
+import { T } from '@/lib/tokens';
 import {
   Banknote,
   BookOpen,
@@ -1132,7 +1133,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
 
       {/* Antrean transaksi offline: sinkron otomatis saat internet pulih */}
       {!isOnline && (
-        <div className="flex items-center gap-2 rounded-xl border border-sky-500/40 bg-sky-500/10 px-4 py-2.5 text-xs font-semibold text-sky-600 dark:text-sky-300">
+        <div className="flex items-center gap-2 rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-2.5 text-xs font-semibold text-blue-600 dark:text-blue-300">
           <Radio className="h-4 w-4 shrink-0" />
           Mode offline — POS tetap berjalan. Transaksi akan tersimpan & tersinkron otomatis.
         </div>
@@ -1995,7 +1996,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             {receipt.customer && <div>Pembeli : {receipt.customer}</div>}
             {receipt.memberName && <div>Member : {receipt.memberName}</div>}
           </div>
-          <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
+          <div style={{ borderTop: '1px dashed ' + T.black, margin: '4px 0' }}></div>
           {receipt.items.map((it, idx) => (
             <div key={idx} style={{ marginBottom: '3px' }}>
               <div>{it.product.name}</div>
@@ -2005,7 +2006,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               </div>
             </div>
           ))}
-          <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
+          <div style={{ borderTop: '1px dashed ' + T.black, margin: '4px 0' }}></div>
           {receipt.disc > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Diskon</span>
@@ -2108,11 +2109,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             {/* Mock QRIS code SVG for Kopontren */}
             <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
               <rect width="100" height="100" fill="white" />
-              <path d="M10 10h30v30h-30z M60 10h30v30h-30z M10 60h30v30h-30z" fill="#170a0e" />
+              <path d="M10 10h30v30h-30z M60 10h30v30h-30z M10 60h30v30h-30z" fill={T.navy900} />
               <path d="M15 15h20v20h-20z M65 15h20v20h-20z M15 65h20v20h-20z" fill="white" />
-              <path d="M20 20h10v10h-10z M70 20h10v10h-10z M20 70h10v10h-10z" fill="#7a1835" />
-              <path d="M45 15h10v10h-10z M45 35h10v20h-10z M60 55h15v10h-15z M60 75h10v15h-10z M75 65h15v25h-15z M35 60h10v10h-10z" fill="#170a0e" />
-              <circle cx="50" cy="50" r="8" fill="#7a1835" />
+              <path d="M20 20h10v10h-10z M70 20h10v10h-10z M20 70h10v10h-10z" fill={T.accent500} />
+              <path d="M45 15h10v10h-10z M45 35h10v20h-10z M60 55h15v10h-15z M60 75h10v15h-10z M75 65h15v25h-15z M35 60h10v10h-10z" fill={T.navy900} />
+              <circle cx="50" cy="50" r="8" fill={T.accent500} />
             </svg>
           </div>
           <div>

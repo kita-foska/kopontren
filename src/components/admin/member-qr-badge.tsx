@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
+import { T } from "@/lib/tokens";
 import { Toast, useConfirm, useToast } from "@/components/ui";
 import { rp, fmtDateTime } from "@/lib/format";
 
@@ -54,7 +55,7 @@ export function MemberQrBadge({
     QRCode.toDataURL(qr, {
       width: 480,
       margin: 2,
-      color: { dark: "#0f172a", light: "#ffffff" },
+      color: { dark: T.slate900, light: T.white },
       errorCorrectionLevel: "M",
     })
       .then((u) => {
@@ -137,27 +138,27 @@ export function MemberQrBadge({
     const spent = rp(member.total_spent ?? 0);
     const tierHtml =
       member.tier === "gold"
-        ? '<span class="tb" style="background:#f59e0b;color:#451a03">GOLD</span>'
+        ? `<span class="tb" style="background:${T.amber500};color:${T.amber950}">GOLD</span>`
         : member.tier === "silver"
-          ? '<span class="tb" style="background:#cbd5e1;color:#1e293b">SILVER</span>'
+          ? `<span class="tb" style="background:${T.slate300};color:${T.slate800}">SILVER</span>`
           : "";
     w.document.write(
       `<html><head><title>Kartu Member - ${name}</title><style>
         @page { size: landscape; margin: 12mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; background: #fff; }
-        .card { width: 700px; margin: 12px auto; border: 3px solid #0f172a; border-radius: 14px; overflow: hidden; }
-        .head { background: #7a1c1c; color: #fff; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
+        body { font-family: Arial, Helvetica, sans-serif; color: ${T.slate900}; background: ${T.white}; }
+        .card { width: 700px; margin: 12px auto; border: 3px solid ${T.slate900}; border-radius: 14px; overflow: hidden; }
+        .head { background: ${T.wine700}; color: ${T.white}; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
         .head b { letter-spacing: .05em; font-size: 15px; }
-        .head .sub { display: block; font-size: 11px; color: #fecaca; margin-top: 2px; }
+        .head .sub { display: block; font-size: 11px; color: ${T.rose200}; margin-top: 2px; }
         .head .tb { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: .08em; }
         .body { display: flex; gap: 20px; padding: 18px; align-items: center; }
         .info { flex: 1; font-size: 14px; }
         .info .n { font-size: 20px; font-weight: 700; }
-        .info .s { font-size: 12px; color: #475569; margin-top: 4px; }
-        .stats { display: flex; gap: 26px; margin-top: 14px; font-size: 12px; color: #334155; }
-        .stats b { display: block; font-size: 15px; color: #0f172a; }
-        .qr { width: 170px; height: 170px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; }
-        .foot { padding: 9px 18px; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; }
+        .info .s { font-size: 12px; color: ${T.slate600}; margin-top: 4px; }
+        .stats { display: flex; gap: 26px; margin-top: 14px; font-size: 12px; color: ${T.slate700}; }
+        .stats b { display: block; font-size: 15px; color: ${T.slate900}; }
+        .qr { width: 170px; height: 170px; padding: 8px; border: 1px solid ${T.slate300}; border-radius: 10px; background: ${T.white}; }
+        .foot { padding: 9px 18px; font-size: 10px; color: ${T.slate500}; border-top: 1px solid ${T.slate200}; }
       </style></head><body>
         <div class="card">
           <div class="head">
@@ -218,7 +219,7 @@ export function MemberQrBadge({
 
         {/* Pratinjau kartu landscape (sama dengan hasil cetak) */}
         <div className="mt-3 overflow-hidden rounded-xl border-2 border-slate-900 bg-white">
-          <div className="flex items-center justify-between bg-[#7a1c1c] px-4 py-2.5">
+          <div className="flex items-center justify-between bg-wine-700 px-4 py-2.5">
             <div>
               <p className="text-[11px] font-extrabold tracking-widest text-white">
                 KOPONTREN AL ITTIHAD

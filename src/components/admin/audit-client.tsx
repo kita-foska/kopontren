@@ -307,10 +307,10 @@ export function AuditClient() {
             </p>
             {viewLog.old_value && (
               <div>
-                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-red-600 dark:text-red-400">
+                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-rose-600 dark:text-rose-400">
                   Sebelum
                 </p>
-                <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-red-50 p-3 font-mono text-xs text-red-900 dark:bg-red-500/10 dark:text-red-200">
+                <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-rose-50 p-3 font-mono text-xs text-rose-900 dark:bg-rose-500/10 dark:text-rose-200">
                   {prettyJson(viewLog.old_value)}
                 </pre>
               </div>

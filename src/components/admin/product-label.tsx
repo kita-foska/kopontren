@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
+import { T } from "@/lib/tokens";
 import { rp } from "@/lib/format";
 
 export type LabelProduct = {
@@ -45,7 +46,7 @@ export function ProductBarcodeLabel({
       QRCode.toDataURL(product.barcode, {
         width: 480,
         margin: 1,
-        color: { dark: "#000000", light: "#ffffff" },
+        color: { dark: T.black, light: T.white },
       })
         .then((u) => {
           if (mounted) setDataUrl(u);
@@ -78,15 +79,15 @@ export function ProductBarcodeLabel({
     if (!w) return;
     w.document.write(
       `<!doctype html><html><head><meta charset="utf-8"/><title>Label - ${name}</title><style>
-        body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#fff;color:#000}
-        .h{font-size:11px;color:#334155;padding:10px 16px 8px}
-        .h b{font-size:13px;color:#0f172a}
+        body{font-family:Arial,Helvetica,sans-serif;margin:0;background:${T.white};color:${T.black}}
+        .h{font-size:11px;color:${T.slate700};padding:10px 16px 8px}
+        .h b{font-size:13px;color:${T.slate900}}
         .g{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
-        .l{border:2px solid #0f172a;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:64mm;break-inside:avoid}
+        .l{border:2px solid ${T.slate900};border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:64mm;break-inside:avoid}
         .l .t{font-weight:bold;font-size:14px;text-transform:uppercase;text-align:center;line-height:1.2}
         .l img{width:100px;height:100px}
         .l .p{font-size:16px;font-weight:bold}
-        .l .c{font-family:Consolas,monospace;font-size:11px;letter-spacing:1px;color:#0f172a}
+        .l .c{font-family:Consolas,monospace;font-size:11px;letter-spacing:1px;color:${T.slate900}}
         @media print{@page{margin:10mm}}
       </style></head><body>
       <div class="h"><b>KOPONTREN AL ITTIHAD</b> &mdash; label rak produk (${n} lembar)</div>
