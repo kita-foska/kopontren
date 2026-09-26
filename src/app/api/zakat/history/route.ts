@@ -8,6 +8,7 @@ type ZakatHistoryRow = {
   total_assets: number;
   nishab: number;
   status: string;
+  payment_type: string;
   zakat_amount: number;
   paid_at: string;
   note: string;
@@ -35,7 +36,7 @@ export async function GET(req: Request) {
   const rows = (
     await d
       .prepare(
-        `SELECT id, total_assets, nishab, status, zakat_amount, paid_at, note, created_at
+        `SELECT id, total_assets, nishab, status, payment_type, zakat_amount, paid_at, note, created_at
          FROM zakat_history ORDER BY paid_at DESC, id DESC`
       )
       .all()
@@ -44,9 +45,9 @@ export async function GET(req: Request) {
   const csv = new URL(req.url).searchParams.get('csv') === '1';
   if (csv) {
     const lines = [
-      'id,paid_at (WIB),status,total_assets,nishab,zakat_amount,note',
+      'id,paid_at (WIB),status,payment_type,total_assets,nishab,zakat_amount,note',
       ...rows.map((r) =>
-        [r.id, isoToWib(r.paid_at), r.status, r.total_assets, r.nishab, r.zakat_amount, r.note]
+        [r.id, isoToWib(r.paid_at), r.status, r.payment_type, r.total_assets, r.nishab, r.zakat_amount, r.note]
           .map(csvEscape)
           .join(',')
       ),

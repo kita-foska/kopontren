@@ -460,12 +460,17 @@ async function migrate(d: Db) {
   // pembayaran zakat (dicatat via POST /api/zakat).
   await d.exec("CREATE TABLE IF NOT EXISTS zakat_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT '')");
   await d.exec(
-    "CREATE TABLE IF NOT EXISTS zakat_history (id INTEGER PRIMARY KEY, total_assets INTEGER NOT NULL DEFAULT 0, nishab INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT '', zakat_amount INTEGER NOT NULL DEFAULT 0, paid_at TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))"
+    "CREATE TABLE IF NOT EXISTS zakat_history (id INTEGER PRIMARY KEY, total_assets INTEGER NOT NULL DEFAULT 0, nishab INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL DEFAULT '', zakat_amount INTEGER NOT NULL DEFAULT 0, paid_at TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), payment_type TEXT NOT NULL DEFAULT 'cash')"
   );
   // Default sesuai rumus zakat tijarah: nishab 85 gram, kadar 2,5%.
   // ON CONFLICT DO NOTHING -> nilai yang sudah diubah admin tetap tersimpan.
   await d.exec("INSERT INTO zakat_settings (key, value) VALUES ('nishab_gram', '85') ON CONFLICT(key) DO NOTHING");
   await d.exec("INSERT INTO zakat_settings (key, value) VALUES ('zakat_rate', '2.5') ON CONFLICT(key) DO NOTHING");
+  // v17: media pembayaran zakat per baris ('cash' | 'transfer' | 'qris' |
+  // 'other'; baris lama di-backfill 'cash' via DEFAULT — keputusan: baris
+  // lama hampir pasti dicatat tunai, '' justru bikin ambiguitas).
+  // Idempoten (guard PRAGMA table_info di execColumn), aman utk DB existing.
+  await execColumn(d, "ALTER TABLE zakat_history ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'cash'");
 
   // ── Keamanan (2026): PIN 4-6 digit + idle timeout sesi ──
   // sessions.last_activity: jejak aktivitas terakhir utk idle timeout (refresh
@@ -783,7 +788,13 @@ export async function saveZakatSettings(
 // -> halaman Konsinyasi PWA stuck "Memuat…" (pelaporan 24 Sep). Bump v16
 // memaksa DB existing (v15) menjalankan fullInit sekali lagi (idempoten);
 // cold start Turso pertama butuh ~15-20 s, hanya satu kali.
-const SCHEMA_VERSION = 16;
+// Bump v17 (2026): kolom baru zakat_history.payment_type (media
+// pembayaran zakat: cash/transfer/qris/other, default 'cash').
+// Purely additive (ADD COLUMN dgn DEFAULT; tidak menyentuh data lama)
+// -> TIDAK ada risiko kehilangan data; rollback aman (Turso SQLite
+// >=3.35: ALTER TABLE ... DROP COLUMN bila perlu). DB stempel v16
+// menjalankan fullInit sekali lagi saat cold start berikutnya.
+const SCHEMA_VERSION = 17;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

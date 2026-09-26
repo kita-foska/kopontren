@@ -4,6 +4,7 @@ import { canAccess, currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { notifyNewZakat } from '@/lib/notify';
 import { currentWibMonthDate, wibDayStartUtc, wibToday } from '@/lib/zakat-period';
+import { normalizePaymentType } from '@/lib/zakat-payment';
 
 export type ZakatCalculation = {
   total_assets: number;
@@ -142,8 +143,9 @@ export async function POST(req: Request) {
   if (!isAdmin(user))
     return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
 
-  const b = (await req.json().catch(() => ({}))) as { note?: string };
+  const b = (await req.json().catch(() => ({}))) as { note?: string; payment_type?: string };
   const note = String(b.note || '').trim().slice(0, 300);
+  const payment_type = normalizePaymentType(b.payment_type);
 
   const d = await db();
   const calc = await computeZakat();
@@ -151,10 +153,10 @@ export async function POST(req: Request) {
 
   const info = await d
     .prepare(
-      `INSERT INTO zakat_history (total_assets, nishab, status, zakat_amount, paid_at, note)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO zakat_history (total_assets, nishab, status, payment_type, zakat_amount, paid_at, note)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
-    .run(calc.total_assets, calc.nishab, calc.status, calc.zakat_amount, new Date().toISOString(), note);
+    .run(calc.total_assets, calc.nishab, calc.status, payment_type, calc.zakat_amount, new Date().toISOString(), note);
   const id = Number(info.lastInsertRowid);
 
   // Siklus baru HANYA bila zakat benar-benar dibayar (status 'wajib'):
@@ -170,6 +172,7 @@ export async function POST(req: Request) {
     total_assets: calc.total_assets,
     nishab: calc.nishab,
     status: calc.status,
+    payment_type: payment_type,
     zakat_amount: calc.zakat_amount,
     cycle_advanced,
     note: note || undefined,

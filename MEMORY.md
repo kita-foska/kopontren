@@ -1,5 +1,35 @@
 # MEMORY
 
+## 2026-09-26
+### ZAKAT v17: payment_type di zakat_history (26 Sep)
+- **Permintaan user**: catat media pembayaran zakat di riwayat zakat
+  (UI + API). 4 nilai: `cash` (tunai) / `transfer` (transfer bank) /
+  `qris` / `other` (lainnya); nilai tak dikenal atau kosong
+  dinormalisasi ke `cash` (konservatif, selaras default baris lama).
+- **Skema v16→17** (`src/db.ts`): kolom additive
+  `zakat_history.payment_type TEXT NOT NULL DEFAULT 'cash'`; DB
+  existing dapat kolom lewat `execColumn` idempoten (guard
+  `PRAGMA table_info`) saat cold start — tanpa rewrite baris lama.
+  `CREATE TABLE` fullInit ikut kolom + `SCHEMA_VERSION = 17`.
+- **Modul murni anyar `src/lib/zakat-payment.ts`** (pola
+  `zakat-period.ts`, tanpa dependensi Next): `ZAKAT_PAYMENT_TYPES`
+  (readonly const) + `ZakatPaymentType` + `normalizePaymentType(v)`.
+  Catatan: Next.js melarang *value export* selain HTTP handler di
+  `route.ts` (type-check `OmitWithNull` gagal) → helper TIDAK boleh
+  diekspor dari `src/app/api/zakat/route.ts`, dipindah ke lib.
+- **POST `/api/zakat`**: field opsional `payment_type` di body →
+  `normalizePaymentType` → INSERT `zakat_history`; `logAudit`
+  `zakat:record` after-JSON memuat payment_type.
+- **GET `/api/zakat/history`**: SELECT + tipe baris + ekspor CSV
+  kol. `payment_type` (setelah `note`); baris lama tampil 'cash'
+  (default DB).
+- **UI `/admin/zakat`** (`zakat-client.tsx`): select "Media
+  Pembayaran" di form catat zakat (default 'cash'), kolom "Media"
+  di tabel riwayat; `ZakatHistoryRow.payment_type: string`.
+- **Verifikasi**: `npm run test:zakat` 18/18 ALL_PASS; `next build`
+  EXIT 0. (Env lokal: `@next/swc` & 35 paket lainnya sempat rusak —
+  `npm install` memperbaiki; bukan issue kode.)
+
 ## 2026-09-25
 ### GROSIR v1: harga grosir per produk + integrasi POS (25 Sep)
 - **Scope (disetujui user): UI admin + API + POS + test.** Struk WA &

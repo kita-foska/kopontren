@@ -120,6 +120,14 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       timestamp export `reports/csv` kini WIB
       (kolom kini `created_at_wib` 'YYYY-MM-DD HH:MM' via helper `utcToWib`
       di `lib/format.ts`; nama kolom lama `created_at_utc` tidak dipakai). — lihat MEMORY.md.
+- [x] ZAKAT media pembayaran (v17, 26 Sep): kolom `payment_type` di
+      `zakat_history` (cash/transfer/qris/other; default 'cash' utk
+      baris lama, migrasi idempoten `execColumn` skema v16→17) +
+      select "Media Pembayaran" di form catat zakat `/admin/zakat`
+      + kolom riwayat + kolom CSV. Helper `normalizePaymentType` di
+      `src/lib/zakat-payment.ts` (Next.js tak izinkan value export
+      selain HTTP handler di route.ts). `test:zakat` 18/18 +
+      build EXIT 0. — detail MEMORY.md seksi 2026-09-26.
 - [x] **Phone duplicate guard format-insensitive** — SELESAI (commit
       `f2b398e`, 23 Sep 2026, dual-push master+main): helper bersama
       `phoneOwner` + `canonicalPhone` di `src/lib/phone.ts` — duplikat

@@ -37,6 +37,11 @@
 - [ ] Haul 1 tahun?
 - [ ] Kadar 2.5%?
 - [ ] Pengurangan hutang (payables open) ikut terkurangi?
+- [x] Media pembayaran zakat tercatat per baris riwayat (v17, 26 Sep:
+      `payment_type` cash/transfer/qris/other, default 'cash') —
+      murni pencatatan yang ma'lum (nilai jelas + ridha pencatat);
+      TIDAK menambah riba/ghharar/maysir; akad tetap kewajiban zakat
+      tijarah (nisab emas 24K + haul + kadar 2,5%).
 
 ## G. Tashih
 - [ ] Perlu tashih ulama?

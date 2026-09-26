@@ -36,10 +36,19 @@ type ZakatHistoryRow = {
   total_assets: number;
   nishab: number;
   status: string;
+  payment_type: string;
   zakat_amount: number;
   paid_at: string;
   note: string;
   created_at: string;
+};
+
+/** Label basa-awam utk media pembayaran (nilai DB tetap raw, skema v17). */
+const PAYMENT_LABELS: Record<string, string> = {
+  cash: 'Tunai',
+  transfer: 'Transfer',
+  qris: 'QRIS',
+  other: 'Lainnya',
 };
 
 function StatCard({
@@ -74,6 +83,7 @@ export function ZakatClient() {
   const [history, setHistory] = useState<ZakatHistoryRow[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
+  const [paymentType, setPaymentType] = useState('cash');
   const [toast, showToast, clearToast] = useToast();
 
   const load = useCallback(async () => {
@@ -132,7 +142,7 @@ export function ZakatClient() {
     setBusy(true);
     const r = await api<ZakatCalc & { cycle_advanced?: boolean }>('/api/zakat', {
       method: 'POST',
-      body: JSON.stringify({ note: note.trim() || undefined }),
+      body: JSON.stringify({ note: note.trim() || undefined, payment_type: paymentType }),
     });
     setBusy(false);
     if (r.ok) {
@@ -254,8 +264,20 @@ export function ZakatClient() {
         <button type="button" className="btn btn-ghost" onClick={() => window.print()}>
           Print
         </button>
+        <select
+          className="input ml-auto w-auto max-w-full"
+          value={paymentType}
+          onChange={(e) => setPaymentType(e.target.value)}
+          aria-label="Media pembayaran zakat"
+        >
+          {Object.entries(PAYMENT_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
         <input
-          className="input ml-auto w-56 max-w-full"
+          className="input w-56 max-w-full"
           placeholder="Catatan (opsional)"
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -360,6 +382,7 @@ export function ZakatClient() {
                 <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500 dark:border-navy-800">
                   <th className="py-2 pr-3">Tanggal</th>
                   <th className="py-2 pr-3">Status</th>
+                  <th className="py-2 pr-3">Pembayaran</th>
                   <th className="py-2 pr-3 text-right">Harta Dagang</th>
                   <th className="py-2 pr-3 text-right">Nishab</th>
                   <th className="py-2 pr-3 text-right">Zakat</th>
@@ -380,6 +403,7 @@ export function ZakatClient() {
                         <Badge tone="amber">Belum</Badge>
                       )}
                     </td>
+                    <td className="py-2 pr-3">{PAYMENT_LABELS[r.payment_type] ?? r.payment_type}</td>
                     <td className="py-2 pr-3 text-right">{rp(r.total_assets)}</td>
                     <td className="py-2 pr-3 text-right">{rp(r.nishab)}</td>
                     <td className="py-2 pr-3 text-right font-bold">{rp(r.zakat_amount)}</td>
