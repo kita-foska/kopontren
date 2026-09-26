@@ -18,6 +18,7 @@ import { useHotkeys } from '@/lib/useHotkeys';
 import { effectiveWholesalePrice, parseWholesaleJson } from '@/lib/wholesale';
 import {
   Banknote,
+  BookOpen,
   CameraOff,
   Check,
   Copy,
@@ -165,7 +166,7 @@ type Member = {
 };
 type MembersResp = { members: Member[] };
 
-/** Daftar pintasan lengkap kasir — tampil di panel cheatsheet (tombol/? key ?). */
+/** Daftar pintasan lengkap kasir — tampil di panel Panduan kasir (tombol "Panduan kasir" / key ?). */
 const CHEAT_ROWS: [string, string][] = [
   ['F1', 'Fokus pencarian produk'],
   ['F2', 'Fokus nama pembeli'],
@@ -1097,6 +1098,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCheatOpen(true)}
+            className="btn-ghost px-3 py-1 text-xs"
+          >
+            <BookOpen className="h-4 w-4" />
+            Panduan kasir
+          </button>
           {currentShift ? (
             <button type="button"
               onClick={() => {
@@ -2267,26 +2276,88 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         </div>
       </Modal>
 
-      {/* Cheatsheet: semua pintasan keyboard kasir (tombol ? / tekan ?) */}
-      <Modal open={cheatOpen} title="Pintasan Keyboard Kasir" onClose={() => setCheatOpen(false)}>
-        <div className="grid grid-cols-1 gap-1.5 text-xs sm:grid-cols-2">
-          {CHEAT_ROWS.map(([k, d]) => (
-            <div
-              key={k}
-              className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5 dark:bg-navy-900/40"
-            >
-              <span className="shrink-0 font-mono font-bold text-accent-500 dark:text-accent-300">
-                {k}
-              </span>
-              <span className="text-right text-slate-600 dark:text-slate-300">{d}</span>
+      {/* UX-2: Panduan kasir — cara transaksi + pintasan + jika ada masalah
+          (tombol ghost "Panduan kasir" di banner shift / tekan ?) */}
+      <Modal open={cheatOpen} title="Panduan Kasir" onClose={() => setCheatOpen(false)}>
+        <div className="space-y-4">
+          <section>
+            <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Cara transaksi
+            </h3>
+            <ol className="space-y-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              <li>
+                <span className="font-bold text-slate-800 dark:text-slate-100">1. Pilih produk</span> —
+                ketik nama / scan barcode di kolom pencarian (F1); di HP pakai tombol scan.
+              </li>
+              <li>
+                <span className="font-bold text-slate-800 dark:text-slate-100">2. Pilih pembeli</span>
+                (opsional) — ketik nama (F2) atau pilih member terdaftar (F8); poin loyalitas
+                tercatat otomatis.
+              </li>
+              <li>
+                <span className="font-bold text-slate-800 dark:text-slate-100">3. Bayar</span> —
+                pilih metode: 1 tunai · 2 QRIS · 3 transfer · 4 campur (F6). Tunai: ketik uang
+                diterima (F3), kembalian terhitung otomatis.
+              </li>
+              <li>
+                <span className="font-bold text-slate-800 dark:text-slate-100">4. Simpan</span> (F4) —
+                transaksi tercatat di shift &amp; laporan.
+              </li>
+              <li>
+                <span className="font-bold text-slate-800 dark:text-slate-100">5. Struk</span> (F5 / Ctrl+P) —
+                cetak, atau bagikan via WA dari struk.
+              </li>
+            </ol>
+          </section>
+          <section>
+            <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Pintasan
+            </h3>
+            <div className="grid grid-cols-1 gap-1.5 text-xs sm:grid-cols-2">
+              {CHEAT_ROWS.map(([k, d]) => (
+                <div
+                  key={k}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5 dark:bg-navy-900/40"
+                >
+                  <span className="shrink-0 font-mono font-bold text-accent-500 dark:text-accent-300">
+                    {k}
+                  </span>
+                  <span className="text-right text-slate-600 dark:text-slate-300">{d}</span>
+                </div>
+              ))}
             </div>
-          ))}
+            <p className="mt-3 text-[10px] leading-relaxed text-slate-600 dark:text-slate-400">
+              Panah / + / − / Del hanya aktif di luar kolom ketik &amp; saat modal tertutup.
+              Ctrl+H bisa ditahan browser tertentu (Chrome) — riwayat tetap bisa dibuka lewat
+              menu Laporan &amp; Rekap.
+            </p>
+          </section>
+          <section>
+            <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Jika ada masalah
+            </h3>
+            <ul className="space-y-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              <li>
+                <span className="font-bold text-slate-800 dark:text-slate-100">Internet mati</span> —
+                lanjutkan transaksi saja; ia antre offline &amp; sinkron otomatis saat internet
+                pulih (banner biru di atas).
+              </li>
+              <li>
+                <span className="font-bold text-slate-800 dark:text-slate-100">Item salah di keranjang</span> —
+                pindah seleksi (↑ / ↓), ubah qty (+ / −), hapus (Del), atau reset seluruh
+                pesanan (Ctrl+R).
+              </li>
+              <li>
+                <span className="font-bold text-slate-800 dark:text-slate-100">Sudah tersimpan tapi keliru</span> —
+                buka Laporan &amp; Rekap (Ctrl+H) untuk cek; pengembalian produk lewat halaman Retur.
+              </li>
+              <li>
+                <span className="font-bold text-slate-800 dark:text-slate-100">Lupa pintasan</span> —
+                tekan ? kapan saja untuk membuka panduan ini.
+              </li>
+            </ul>
+          </section>
         </div>
-        <p className="mt-3 text-[10px] leading-relaxed text-slate-600 dark:text-slate-400">
-          Panah / + / − / Del hanya aktif di luar kolom ketik &amp; saat modal tertutup.
-          Ctrl+H bisa ditahan browser tertentu (Chrome) — riwayat tetap bisa dibuka lewat
-          menu Laporan &amp; Rekap.
-        </p>
       </Modal>
 
       {/* Fix 1: sticky bottom bar — mobile/tablet (<lg) saja, tampil
