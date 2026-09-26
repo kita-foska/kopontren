@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   PageSkeleton,
+  Empty,
   api,
   Badge,
   Toast,
@@ -126,7 +127,7 @@ export function BelanjaClient() {
       </div>
       {tab === 'in' ? (
         <>
-          <div className="card mb-3 grid grid-cols-2 gap-2 p-3 sm:grid-cols-5">
+          <div id="belanja-form-in" className="card mb-3 grid grid-cols-2 gap-2 p-3 sm:grid-cols-5">
             <div>
               <label className="label">Produk</label>
               <select
@@ -201,14 +202,23 @@ export function BelanjaClient() {
                 </div>
               ))}
               {data.purchases.length === 0 && (
-                <p className="text-sm text-slate-500">Belum ada.</p>
+                <Empty
+                  compact
+                  text="Belum ada."
+                  ctaLabel="Catat belanja"
+                  ctaOnClick={() =>
+                    document
+                      .getElementById('belanja-form-in')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }
+                />
               )}
             </div>
           </div>
         </>
       ) : (
         <>
-          <div className="card mb-3 grid grid-cols-2 gap-2 p-3 sm:grid-cols-4">
+          <div id="belanja-form-out" className="card mb-3 grid grid-cols-2 gap-2 p-3 sm:grid-cols-4">
             <div>
               <label className="label">Uraian</label>
               <input
@@ -268,7 +278,18 @@ export function BelanjaClient() {
                   </span>
                 </div>
               ))}
-              {data.expenses.length === 0 && <p className="text-sm text-slate-500">Belum ada.</p>}
+              {data.expenses.length === 0 && (
+                <Empty
+                  compact
+                  text="Belum ada."
+                  ctaLabel="Catat pengeluaran"
+                  ctaOnClick={() =>
+                    document
+                      .getElementById('belanja-form-out')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }
+                />
+              )}
             </div>
           </div>
         </>

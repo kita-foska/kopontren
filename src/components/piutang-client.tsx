@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, todayWibStr } from '@/lib/format';
 
 type Debt = {
@@ -145,7 +145,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
         </div>
       </div>
 
-      <div className="card mb-3 p-3">
+      <div id="piutang-form" className="card mb-3 p-3">
         <p className="mb-2 text-sm font-bold">Catat piutang baru</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           <div>
@@ -261,7 +261,18 @@ export function PiutangClient({ admin }: { admin: boolean }) {
               </div>
             );
           })}
-          {debts.length === 0 && <p className="text-sm text-slate-500">Belum ada.</p>}
+          {debts.length === 0 && (
+            <Empty
+              compact
+              text="Belum ada."
+              ctaLabel="Catat piutang"
+              ctaOnClick={() =>
+                document
+                  .getElementById('piutang-form')
+                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            />
+          )}
         </div>
       </div>
 

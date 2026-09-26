@@ -175,7 +175,12 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
             {all.length === 0 && openList.length === 0 && (
               <tr>
                 <td className="td py-6 text-center text-sm text-slate-500" colSpan={7}>
-                  Belum ada shift yang ditutup. Buka shift dulu di menu Kasir (POS).
+                  Belum ada shift yang ditutup.
+                  <div className="mt-2">
+                    <a href="/kasir" className="btn-ghost text-xs">
+                      Buka di Kasir
+                    </a>
+                  </div>
                 </td>
               </tr>
             )}
@@ -225,7 +230,12 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
         ))}
         {all.length === 0 && openList.length === 0 && (
           <div className="p-4 text-center text-sm text-slate-500">
-            Belum ada shift yang ditutup. Buka shift dulu di menu Kasir (POS).
+            Belum ada shift yang ditutup.
+            <div className="mt-2 flex justify-center">
+              <a href="/kasir" className="btn-ghost text-xs">
+                Buka di Kasir
+              </a>
+            </div>
           </div>
         )}
       </div>

@@ -3,8 +3,9 @@ import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
-import { StatusBadge } from '@/components/ui';
+import { Empty, StatusBadge } from '@/components/ui';
 import { payMethodLabel } from '@/lib/pay-methods';
+import { ShoppingCart } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -148,9 +149,13 @@ export default async function DashboardPage() {
               Transaksi terakhir
             </h2>
             {lastSales.length === 0 ? (
-              <p className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                Belum ada transaksi.
-              </p>
+              <Empty
+                icon={<ShoppingCart className="h-7 w-7" />}
+                text="Belum ada transaksi."
+                ctaLabel="Mulai transaksi"
+                ctaHref="/kasir"
+                ctaVariant="primary"
+              />
             ) : (
               <ul className="divide-y divide-slate-100 dark:divide-navy-700">
                 {lastSales.map((s) => (

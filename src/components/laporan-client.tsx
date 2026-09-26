@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PageSkeleton, api, apiRetry, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, apiRetry, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, startOfDayJakarta } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit, payMethodLabel } from '@/lib/pay-methods';
@@ -20,7 +20,16 @@ type Sale = {
 };
 type ListResp = { sales: Sale[]; total?: number };
 
-export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?: 'all' | 'today' }) {
+export function LaporanClient({
+  admin,
+  scope = 'all',
+  canPos = false,
+}: {
+  admin: boolean;
+  scope?: 'all' | 'today';
+  /** CTA "Mulai transaksi" di empty state hanya utk role yg bisa buka POS. */
+  canPos?: boolean;
+}) {
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   // Total baris dari server (COUNT /api/sales) — "N" utk notifikasi
@@ -381,12 +390,19 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
           </div>
         ))}
         {filteredSales.length === 0 && (
-          <div className="card py-12 text-center text-sm text-slate-500">
-            <div className="mb-1 flex justify-center">
-              <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600" />
-            </div>
-            {q ? 'Tidak ada transaksi yang cocok dengan filter pencarian.' : 'Belum ada transaksi pada periode ini.'}
-          </div>
+          <Empty
+            icon={<FileText className="h-8 w-8" />}
+            text={
+              q
+                ? 'Tidak ada transaksi yang cocok dengan filter pencarian.'
+                : 'Belum ada transaksi pada periode ini.'
+            }
+            // UX-2: CTA "Mulai transaksi" hanya utk role yg bisa buka POS
+            // (admin/manajer/kasir). Pengurus read-only: teks saja.
+            {...(!q && canPos
+              ? { ctaLabel: 'Mulai transaksi', ctaHref: '/kasir', ctaVariant: 'primary' as const }
+              : {})}
+          />
         )}
       </div>
       {/* Notifikasi pagination: N = total baris dari server (COUNT), jadi

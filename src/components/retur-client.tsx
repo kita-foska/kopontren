@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Toast, useToast } from '@/components/ui';
+import { api, Badge, Empty, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type SaleItem = {
@@ -99,7 +99,7 @@ export function ReturClient() {
 
   return (
     <div>
-      <div className="card mb-3 p-3">
+      <div id="retur-form" className="card mb-3 p-3">
         <p className="mb-2 text-sm font-bold">Catat retur</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <div>
@@ -203,7 +203,18 @@ export function ReturClient() {
               </span>
             </div>
           ))}
-          {rets.length === 0 && <p className="text-sm text-slate-500">Belum ada.</p>}
+          {rets.length === 0 && (
+            <Empty
+              compact
+              text="Belum ada."
+              ctaLabel="Catat retur"
+              ctaOnClick={() =>
+                document
+                  .getElementById('retur-form')
+                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            />
+          )}
         </div>
       </div>
 

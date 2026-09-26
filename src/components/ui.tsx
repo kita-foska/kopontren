@@ -319,11 +319,60 @@ export function useConfirm() {
   return { ask, host };
 }
 
-export function Empty({ text, action }: { text: string; action?: React.ReactNode }) {
+export function Empty({
+  text,
+  action,
+  icon,
+  ctaLabel,
+  ctaHref,
+  ctaOnClick,
+  ctaVariant = 'ghost',
+  compact,
+}: {
+  text: string;
+  action?: React.ReactNode;
+  /** Ikon opsional di atas teks (mis. Lucide, ukuran h-7 w-7). */
+  icon?: React.ReactNode;
+  /** CTA siap pakai: render tombol/link (target sentuh 44px dari base .btn).
+      ctaHref = link antar-halaman; ctaOnClick = aksi di halaman (buka form
+      / scroll ke form). Default ghost (halaman admin padat); primary utk
+      halaman aksi (dashboard kasir / laporan). */
+  ctaLabel?: string;
+  ctaHref?: string;
+  ctaOnClick?: () => void;
+  ctaVariant?: 'primary' | 'ghost';
+  /** Padding kecil utk konteks padat (sel tabel, box sub-list). */
+  compact?: boolean;
+}) {
+  // UX-2: CTA opsional di empty state — kosong bukan dead-end, tapi arah.
+  const ctaClass =
+    (ctaVariant === 'primary' ? 'btn-primary' : 'btn-ghost') + (compact ? ' text-xs' : '');
+  const cta = ctaLabel ? (
+    ctaHref ? (
+      <a href={ctaHref} className={ctaClass}>
+        {ctaLabel}
+      </a>
+    ) : (
+      <button type="button" className={ctaClass} onClick={ctaOnClick}>
+        {ctaLabel}
+      </button>
+    )
+  ) : null;
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-navy-600 dark:text-slate-400">
+    <div
+      className={
+        'rounded-2xl border border-dashed border-slate-300 text-center text-slate-500 dark:border-navy-600 dark:text-slate-400 ' +
+        (compact ? 'px-3 py-4 text-xs' : 'px-4 py-8 text-sm')
+      }
+    >
+      {icon && <div className="mb-2 flex justify-center text-slate-300 dark:text-slate-600">{icon}</div>}
       {text}
-      {action && <div className="mt-3 flex justify-center">{action}</div>}
+      {(cta || action) && (
+        <div className="mt-3 flex flex-col items-center gap-2">
+          {cta}
+          {action}
+        </div>
+      )}
     </div>
   );
 }

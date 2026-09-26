@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageSkeleton, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 import { parseWholesaleJson } from '@/lib/wholesale';
@@ -590,8 +590,14 @@ export function ProdukClient() {
             })}
             {filtered.length === 0 && (
               <tr>
-                <td className="td py-8 text-center text-sm text-slate-500" colSpan={8}>
-                  {q || cat ? 'Tidak ada produk yang cocok dengan pencarian.' : 'Belum ada produk.'}
+                <td className="td" colSpan={8}>
+                  <Empty
+                    compact
+                    text={q || cat ? 'Tidak ada produk yang cocok dengan pencarian.' : 'Belum ada produk.'}
+                    {...(!q && !cat
+                      ? { ctaLabel: 'Tambah produk', ctaOnClick: () => openEdit() }
+                      : {})}
+                  />
                 </td>
               </tr>
             )}
@@ -682,9 +688,13 @@ export function ProdukClient() {
           );
         })}
         {filtered.length === 0 && (
-          <div className="p-4 text-center text-sm text-slate-500">
-            {q || cat ? 'Tidak ada produk yang cocok dengan pencarian.' : 'Belum ada produk.'}
-          </div>
+          <Empty
+            compact
+            text={q || cat ? 'Tidak ada produk yang cocok dengan pencarian.' : 'Belum ada produk.'}
+            {...(!q && !cat
+              ? { ctaLabel: 'Tambah produk', ctaOnClick: () => openEdit() }
+              : {})}
+          />
         )}
       </div>
 
@@ -737,9 +747,12 @@ export function ProdukClient() {
               dan bila ada pengaturan grosir global yang lebih besar, yang lebih besar dipakai.
             </p>
             {tiers.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-slate-300 py-2 text-center text-xs text-slate-500 dark:border-navy-600">
-                Belum ada tier grosir.
-              </p>
+              <Empty
+                compact
+                text="Belum ada tier grosir."
+                ctaLabel="+ Tambah tier"
+                ctaOnClick={addTier}
+              />
             ) : (
               <div className="space-y-2">
                 {tiers.map((t, i) => (

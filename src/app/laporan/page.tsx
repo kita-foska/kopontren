@@ -26,7 +26,7 @@ export default async function LaporanPage() {
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         Daftar transaksi, tandai sudah/belum dilapor, dan kirim rekap ke WhatsApp pengurus.
       </p>
-      <LaporanClient admin={isManager(user)} />
+      <LaporanClient admin={isManager(user)} canPos={canAccess(user, 'pos')} />
     </Shell>
   );
 }

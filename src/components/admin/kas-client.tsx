@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { Trash2 } from 'lucide-react';
 
@@ -103,7 +103,7 @@ export function KasClient() {
         </p>
       </div>
 
-      <div className="card mb-3 grid grid-cols-2 gap-2 p-3 sm:grid-cols-4">
+      <div id="kas-form" className="card mb-3 grid grid-cols-2 gap-2 p-3 sm:grid-cols-4">
         <div>
           <label className="label">Jenis jurnal</label>
           <select
@@ -182,8 +182,17 @@ export function KasClient() {
             ))}
             {data.rows.length === 0 && (
               <tr>
-                <td className="td py-5 text-center text-sm text-slate-500" colSpan={4}>
-                  Belum ada gerakan kas.
+                <td className="td" colSpan={4}>
+                  <Empty
+                    compact
+                    text="Belum ada gerakan kas."
+                    ctaLabel="Catat jurnal kas"
+                    ctaOnClick={() =>
+                      document
+                        .getElementById('kas-form')
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  />
                 </td>
               </tr>
             )}
@@ -229,7 +238,14 @@ export function KasClient() {
           </div>
         ))}
         {data.rows.length === 0 && (
-          <div className="p-4 text-center text-sm text-slate-500">Belum ada gerakan kas.</div>
+          <Empty
+            compact
+            text="Belum ada gerakan kas."
+            ctaLabel="Catat jurnal kas"
+            ctaOnClick={() =>
+              document.getElementById('kas-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          />
         )}
       </div>
       {confirmHost}

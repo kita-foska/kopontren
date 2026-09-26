@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { api, Badge, Empty, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { isPointUnit, pointReasonLabel, type PointEntry } from '@/lib/points';
 import { MemberQrBadge } from './member-qr-badge';
+import { Users } from 'lucide-react';
 
 type Member = {
   id: number;
@@ -378,8 +379,15 @@ export function MemberClient() {
             )}
             {members.length === 0 && (
               <tr>
-                <td className="td py-8 text-center text-sm text-slate-500" colSpan={6}>
-                  {qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
+                <td className="td" colSpan={6}>
+                  <Empty
+                    compact
+                    icon={<Users className="h-6 w-6" />}
+                    text={qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
+                    {...(!qDeb
+                      ? { ctaLabel: 'Tambah member', ctaOnClick: () => openEdit() }
+                      : {})}
+                  />
                 </td>
               </tr>
             )}
@@ -437,9 +445,13 @@ export function MemberClient() {
           ))}
           {padBottom > 0 && <div aria-hidden="true" style={{ height: padBottom }} />}
           {members.length === 0 && (
-            <div className="p-6 text-center text-sm text-slate-500">
-              {qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
-            </div>
+            <Empty
+              compact
+              text={qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
+              {...(!qDeb
+                ? { ctaLabel: 'Tambah member', ctaOnClick: () => openEdit() }
+                : {})}
+            />
           )}
         </div>
         </div>

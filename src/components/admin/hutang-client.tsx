@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, todayWibStr } from '@/lib/format';
 
 type Payable = {
@@ -178,7 +178,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
           </p>
         </div>
       </div>
-      <div className="card mb-3 p-3">
+      <div id="hutang-form" className="card mb-3 p-3">
         <p className="mb-2 text-sm font-bold">Catat hutang baru</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           <div>
@@ -295,7 +295,17 @@ export function HutangClient({ admin }: { admin: boolean }) {
               </div>
             );
           })}
-          {payables.length === 0 && <p className="text-sm text-slate-500">Belum ada.</p>}
+          {payables.length === 0 && (
+            <Empty
+              text="Belum ada."
+              ctaLabel="Catat hutang"
+              ctaOnClick={() =>
+                document
+                  .getElementById('hutang-form')
+                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+            />
+          )}
         </div>
       </div>
 
