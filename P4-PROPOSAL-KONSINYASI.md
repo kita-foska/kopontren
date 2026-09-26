@@ -15,6 +15,8 @@
   Bahtsul Masail — sebelumnya tertulis "ju'alah")
 - Status teknis: SELESAI (pushed master+main, menunggu approval
   pengurus + tashih sisa ke ulama)
+  · 26 Sep: +mapping akuntansi PROVISIONAL (menunggu tashih
+    pengasuh; lihat seksi I)
 
 ### A. Latar Belakang
 Pengurus berkeputusan: toko mengambil komisi 20% dari harga jual
@@ -138,3 +140,21 @@ barang terjual, snapshot per titipan, tanpa perubahan sepihak):
   ujrah mitsli (upah layak). Menunggu konfirmasi ulama.
 - Terminologi di UI/dokumen/komentar kode diubah ju'alah →
   wakalah bil ujrah; mekanik & data TIDAK berubah.
+
+### I. Mapping akuntansi (PROVISIONAL — 26 Sep)
+Dokumen only (FASE 2 Step 3), tanpa perubahan kode:
+1. **Barang supplier (pemilik titipan) ≠ revenue Kopontren** —
+   hasil bersih penjualan titipan adalah hak pemilik, bukan
+   pendapatan toko.
+2. **Ujrah Kopontren = revenue** — di V1 dicatat **off-P&L
+   (memo)**, baris "Ujrah Konsinyasi" pada laporan P&L;
+   **dipindahkan ke pendapatan setelah tashih pengasuh**.
+3. **Hak supplier (pemilik titipan) = settlement payable** —
+   tagihan neto komisi (harga jual − ujrah) adalah kewajiban
+   toko.
+
+**Status:** Provisional — implemented based on strongest available
+fiqh position. Pending tashih by pengasuh. Subject to correction.
+(26 Sep 2026; tercatat di SYARIAH-CHECKLIST.md item P4 + TODO
+A1.1; versi html: P4-PROPOSAL-KONSINYASI.html seksi "Mapping
+akuntansi".)

@@ -91,6 +91,27 @@
 - **Catatan**: skema v18 add-ops — DB turunan (Vercel Turso)
   butuh migration/PRAGMA saat cold start; jangan rewrite data.
 
+### FASE 2 Step 3: dokumen P4 only — SELESAI (26 Sep, commit 3, dual-push master+main)
+- **Perintah user (26 Sep, pasca-verify commit 2 `ebe2e8a`)**:
+  lanjutkan Step 3 = P4 dokumen only — TANPA perubahan kode,
+  TANPA migrasi baru; tunjukkan diff sebelum commit; tunggu review.
+- **Mapping akuntansi P4** (posisi fiqh terkuat, PROVISIONAL)
+  ditambahkan ke `SYARIAH-CHECKLIST.md` (item P4) +
+  `P4-PROPOSAL-KONSINYASI.html`: (a) barang supplier (pemilik
+  titipan) ≠ revenue Kopontren; (b) ujrah Kopontren = revenue —
+  V1 off-P&L (memo baris "Ujrah Konsinyasi"), dipindahkan ke
+  pendapatan setelah tashih pengasuh; (c) hak supplier =
+  settlement payable (tagihan neto komisi). Label: "Provisional —
+  implemented based on strongest available fiqh position. Pending
+  tashih by pengasuh. Subject to correction."
+- **TODO.md**: item A1.1 (koreksi keuangan pascataashih P4)
+  ditambahkan; item Step 3 di-update ke status DRAFT.
+- **Status: SELESAI — Commit 3 (26 Sep, dual-push origin master +
+  master:main; 5 file: SYARIAH-CHECKLIST + P4 html/md + TODO +
+  MEMORY).** Klarifikasi user 26 Sep: `P4-PROPOSAL-KONSINYASI.md`
+  (sumber md) KINI ikut di-update agar md ≡ html (divergence =
+  risiko audit).
+
 ### UI/UX audit high-priority: perbaikan P1–P4 (26 Sep)
 - **P1 font**: 'Plus Jakarta Sans' dideklarasikan di
   `tailwind.config.ts`/`globals.css` tapi TIDAK PERNAH di-load

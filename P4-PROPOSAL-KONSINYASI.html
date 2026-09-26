@@ -46,7 +46,7 @@
 <header>
   <div class="wrap">
     <h1>Proposal Pengurus — Komisi Konsinyasi Fleksibel (Akad Wakalah bil Ujrah)</h1>
-    <p class="sub">Kopontren Al Ittihad · 24 Sep 2026 · teknis SELESAI, menunggu persetujuan pengurus</p>
+    <p class="sub">Kopontren Al Ittihad · 24 Sep 2026 · teknis SELESAI, menunggu persetujuan pengurus · <b>26 Sep: +mapping akuntansi PROVISIONAL (menunggu tashih pengasuh)</b></p>
   </div>
 </header>
 <div class="wrap">
@@ -102,6 +102,11 @@
     </table>
     <h3>Detail teknis (tidak wajib dibaca)</h3>
     <p class="meta">Setting: konsinyasi_commission (default 20, 0–100). Kolom DB: consignments.commission_rate (v15). Helper splitConsignment: komisi = floor(harga × rate/100), total persis tanpa pecahan rupiah. Ujrah di V1 off-P&amp;L (memo, baris "Ujrah Konsinyasi"). Rujukan: Fatwa DSN-MUI No. 113/2017 (wakalah) &amp; No. 112/2017 (kejelasan ujrah); Mughni (Ibnu Qudamah) soal gharar bentuk "laku = beli"; Bahtsul Masail HIPJAS VI 2023 (ujrah persenan). Dokumen sumber: P4-PROPOSAL-KONSINYASI.md.</p>
+    <h3>Mapping akuntansi (PROVISIONAL — 26 Sep)</h3>
+    <div class="note">
+      <b>Posisi akuntansi P4:</b> (1) <b>barang supplier (pemilik titipan) ≠ revenue Kopontren</b> — hasil bersih penjualan titipan adalah hak pemilik, bukan pendapatan toko; (2) <b>ujrah Kopontren = revenue</b> — di V1 dicatat <b>off-P&L (memo)</b>, baris "Ujrah Konsinyasi" pada laporan P&amp;L; <b>dipindahkan ke pendapatan setelah tashih pengasuh</b>; (3) <b>hak supplier (pemilik titipan) = settlement payable</b> — tagihan neto komisi (harga jual − ujrah) adalah kewajiban toko.
+    </div>
+    <p class="meta"><b>Status:</b> Provisional — implemented based on strongest available fiqh position. Pending tashih by pengasuh. Subject to correction. (26 Sep 2026; dokumen hanya — tanpa perubahan kode; tercatat di SYARIAH-CHECKLIST.md item P4 + TODO A1.1.)</p>
   </details>
 
 </div>

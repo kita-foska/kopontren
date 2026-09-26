@@ -163,10 +163,20 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [ ] Diverifikasi: judul MUI Fatwa No. 78/2023 (untuk pengasuh) —
       referensi lama "DSN-MUI 8/2008" keliru (riset 26 Sep; lihat
       P3-TASHIH-ZAKAT.md §D footnote koreksi sitasi).
-- [ ] FASE 2 — Step 3 (dokumen P4 hanya): lanjut setelah review +
-      commit Step 2 (plan user, 26 Sep). Tunggu keputusan
-      `P3-TASHIH-ZAKAT.md` (pengasuh); terapkan revisi hasil tashih
-      = komit terpisah. Lihat SYARIAH-CHECKLIST.md seksi F.
+- [x] FASE 2 — Step 3 (dokumen P4 hanya) — SELESAI (26 Sep,
+      commit 3, dual-push master+main): mapping akuntansi P4
+      (supplier ≠ revenue Kopontren; ujrah = revenue — off-P&L
+      memo V1 → pendapatan setelah tashih; hak supplier =
+      settlement payable) + item A1.1 + sinkron md & html
+      (keputusan user 26 Sep: md sumber ikut di-update).
+      Tunggu keputusan `P3-TASHIH-ZAKAT.md` (pengasuh); terapkan
+      revisi hasil tashih = komit terpisah. Lihat SYARIAH-CHECKLIST.md
+      seksi F.
+- [ ] **A1.1 (koreksi keuangan pascataashih P4)**: pindahkan ujrah
+      konsinyasi dari off-P&L (memo, baris "Ujrah Konsinyasi") ke
+      pendapatan setelah tashih pengasuh + klasifikasi tagihan
+      pemilik = settlement payable (kewajiban toko). Eksekusi =
+      komit terpisah setelah hasil tashih turun (bukan sekarang).
 - [ ] **sw.js refactor template-generate (FOLLOW-UP terpisah,
       BUKAN sekarang)** — ubah `scripts/inject-sw-version.mjs`
       dari in-place stamp menjadi MEN-GENERATE: template ter-track
