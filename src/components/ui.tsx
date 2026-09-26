@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // alias agar tidak men-shadow type KeyboardEvent global (DOM) yang
 // dipakai handler ESC Modal di bawah.
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { X } from 'lucide-react';
+import { X, CircleHelp } from 'lucide-react';
 import { fetchTimeout, fetchRetry, isAbort } from '@/lib/fetch-util';
 
 const tones: Record<string, string> = {
@@ -14,13 +14,17 @@ const tones: Record<string, string> = {
   green: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300',
   red: 'bg-rose-500/15 text-rose-600 dark:text-rose-300',
   gray: 'bg-slate-500/15 text-slate-600 dark:text-slate-300',
+  // UX-3: maroon = warna identitas (token burgundy #7A1835),
+  // gold = highlight/special. Kontras AA 4.5:1 di kedua tema.
+  maroon: 'bg-accent-500/15 text-accent-700 dark:text-accent-300',
+  gold: 'bg-amber-400/25 text-amber-800 dark:text-amber-200',
 };
 
 export function Badge({
   tone = 'gray',
   children,
 }: {
-  tone?: 'blue' | 'amber' | 'green' | 'red' | 'gray';
+  tone?: 'blue' | 'amber' | 'green' | 'red' | 'gray' | 'maroon' | 'gold';
   children: React.ReactNode;
 }) {
   return (
@@ -381,15 +385,48 @@ export function Empty({
  * Badge status terpadu (design system): mapping status -> tone + label
  * baku, supaya semua halaman menampilkan status dengan warna yang sama.
  * Status tak dikenal: tone gray, label = nilai mentah (aman).
+ * `tone`/`label` = override eksplisit (mis. jumlah dinamis di atas status
+ * baku, atau warna khusus tak termasuk map).
  */
-const STATUS_MAP: Record<string, { tone: 'green' | 'amber' | 'gray'; label: string }> = {
+const STATUS_MAP: Record<
+  string,
+  { tone: 'blue' | 'amber' | 'green' | 'red' | 'gray' | 'maroon' | 'gold'; label: string }
+> = {
   reported: { tone: 'green', label: 'Sudah Dilaporkan' },
   unreported: { tone: 'amber', label: 'Belum Dilaporkan' },
+  // Piutang / Hutang
+  open: { tone: 'amber', label: 'Belum Lunas' },
+  settled: { tone: 'green', label: 'Lunas' },
+  overdue: { tone: 'red', label: 'Tunggak' },
+  // Konsinyasi
+  active: { tone: 'green', label: 'Aktif' },
+  done: { tone: 'gray', label: 'Selesai' },
+  // Produk stok
+  habis: { tone: 'red', label: 'Habis' },
+  tipis: { tone: 'amber', label: 'Tipis' },
+  aman: { tone: 'green', label: 'Aman' },
+  // Zakat
+  wajib: { tone: 'amber', label: 'Wajib' },
+  belum: { tone: 'gray', label: 'Belum Wajib' },
+  provisional: { tone: 'blue', label: 'Provisional' },
+  // Shift
+  running: { tone: 'green', label: 'Buka' },
+  closed: { tone: 'gray', label: 'Tutup' },
 };
 
-export function StatusBadge({ status }: { status: string }) {
-  const m = STATUS_MAP[status] ?? { tone: 'gray' as const, label: status };
-  return <Badge tone={m.tone}>{m.label}</Badge>;
+type BadgeTone = 'blue' | 'amber' | 'green' | 'red' | 'gray' | 'maroon' | 'gold';
+
+export function StatusBadge({
+  status,
+  tone,
+  label,
+}: {
+  status: string;
+  tone?: BadgeTone;
+  label?: string;
+}) {
+  const m = STATUS_MAP[status] ?? { tone: 'gray' as BadgeTone, label: status };
+  return <Badge tone={tone ?? m.tone}>{label ?? m.label}</Badge>;
 }
 
 /**
@@ -421,6 +458,94 @@ export function PageSkeleton() {
       </div>
       <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Memuat data…</p>
     </div>
+  );
+}
+
+/**
+ * TermTip (UX-3): tooltip penjelasan istilah teknis/istilah keislaman
+ * (HPP, Nisab, Haul, Ujrah, dll.) di samping label. Hover = buka,
+ * klik/tap = pin (mobile); ESC / klik luar = tutup. Posisi otomatis:
+ * elemen di separuh kanan layar → anchor `right` (tooltip ke kiri),
+ * separuh kiri → anchor `left` (tooltip ke kanan). Deteksi via
+ * getBoundingClientRect saat buka (sekali, murah).
+ */
+export function TermTip({
+  term,
+  tip,
+  children,
+}: {
+  term?: string;
+  tip: string;
+  children?: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  // Pinned (klik/tap) vs hover: tooltip harus tetap terbuka setelah
+  // kursor keluar dari area trigger bila mode pinned.
+  const [pinned, setPinned] = useState(false);
+  // anchor: 'left' = tooltip di kanan elemen; 'right' = di kiri elemen.
+  const [anchor, setAnchor] = useState<'left' | 'right'>('left');
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setPinned(false);
+      return;
+    }
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const openNow = () => {
+    const el = ref.current;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      // Elemen di separuh kanan viewport → tooltip merapat ke kanan
+      // (anchor right) agar tak meluber keluar layar.
+      setAnchor(r.left > window.innerWidth / 2 ? 'right' : 'left');
+    }
+    setOpen(true);
+  };
+
+  return (
+    <span className="relative inline-block align-baseline" ref={ref}>
+      {children ?? <span className="font-semibold">{term}</span>}
+      <button
+        type="button"
+        aria-label={term ? `Jelaskan: ${term}` : 'Jelaskan istilah'}
+        onClick={() => {
+          setOpen(true);
+          setPinned((v) => !v);
+        }}
+        onMouseEnter={openNow}
+        onMouseLeave={() => {
+          if (!pinned) setOpen(false);
+        }}
+        className="ml-1 inline-flex align-middle text-slate-400 hover:text-accent-500 dark:hover:text-accent-300"
+      >
+        <CircleHelp className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className={
+            'absolute top-full z-50 mt-1 max-w-[220px] rounded-lg bg-white p-2 text-xs font-normal shadow-lg ring-1 ring-slate-200 dark:bg-navy-800 dark:ring-navy-600 ' +
+            (anchor === 'right' ? 'right-0' : 'left-0')
+          }
+        >
+          {tip}
+        </span>
+      )}
+    </span>
   );
 }
 
