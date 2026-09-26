@@ -826,3 +826,223 @@ konsistensi.
   Detail: MEMORY.md seksi "UX-3" di bawah 2026-09-26.
   **Berikutnya: UX-4** (merujuk goal document 8 fase).
 
+
+---
+
+# RENCANA KEDEPAN — UX MASTER PLAN & BACKLOG (usulan 26 Sep, belum mulai — nunggu ACC Gus)
+
+> Disusun 26 Sep 2026 (sesi AI) atas usulan user. **Ini rencana, BUKAN
+> daftar fitur yang akan langsung di-coding.** Tidak ada kode baru
+> sebelum ACC. Semua item di bawah masih **backlog usulan**; prioritas
+> & fase baru jadi rencana kerja. Status engineering terkini:
+> **UX-2 SEDANG BERJALAN; UX-3 BELUM DIMULAI; UX-4 audit (koleksi data)
+> selesai, report belum di-ACC.** Laporan lengkap: `PROGRESS-2026-09.md`.
+
+## Arah utama (visi user)
+
+Membuat pengalaman **"Kopontren Operating System"**: pengurus paham
+situasi, kasir cepat, gudang aman, kasir lama tidak bingung, pengurus
+bisa mengambil keputusan, sistem syariah jelas, audit trail kuat,
+backup aman, offline tetap percaya diri.
+
+## Roadmap fase (urutan usulan user)
+
+| Fase  | Isi                                                                 | Status |
+| ----- | ------------------------------------------------------------------- | ------ |
+| UX-2  | EmptyState CTA + Panduan Kasir                                      | 🔄 berjalan (komit 1 EmptyState sdh, komit 2 PanduanKasir nunggu) |
+| UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ⏳ belum mulai |
+| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep) | 📋 rancang, nunggu ACC |
+| UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat | 📋 rancang |
+| UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
+| UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
+| UX-8  | **Operational Safety**: audit trail komunikatif, backup rasa aman, freeze/immutable, health center, reconciliation | 📋 rancang |
+
+Catatan: item "35. Consistency Audit" direkomendasikan user untuk
+dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
+
+## 10 prioritas paling worth it (pilihan user)
+
+1. **Design System global** — warna, tipografi, spacing, button, input,
+   card, table, modal, toast, badge, chart harus punya "jantung" yang sama.
+2. **Dashboard menjadi Command Center** — pusat komando: apa yang
+   terjadi hari ini, mana yang perlu perhatian, keputusan apa yang harus
+   dibuat, apa yang berisiko, apa yang belum dituntaskan.
+3. **Role-based UX** — kasir beda, admin beda, pengurus beda, gudang
+   beda; setiap role punya "ruang kerjanya sendiri".
+4. **Attention System** — mana yang penting, mana hanya informasi, mana
+   perlu tindakan; jangan semua sama pentingnya.
+5. **Universal Empty / Loading / Error / Success States** — semua modul
+   punya alur state yang sama.
+6. **Global Search / Ctrl+K** — cari produk, customer, transaksi, tag,
+   invoice, kasir, tanggal; command palette terasa.
+7. **"Explain This Number"** — setiap angka besar bisa diklik, tooltip
+   menjelaskan formula (omzet bruto, laba kotor = omzet − HPP, neraca
+   harus balanced, zakat = (aset − kewajiban) × kadar, konsinyasi =
+   harga × rate).
+8. **Offline & Sync Confidence** — indikator sinkronisasi, status
+   online/offline, antrian transaksi, timestamp.
+9. **Financial Reconciliation Checks** — kasir total vs kas, stok vs
+   purchase vs penjualan, piutang vs payment, hutang vs settlement;
+   auto-detect mismatch + tombol "Periksa".
+10. **Golden Path + Smoke Test** — jalur kritis (login → POS jual →
+    tutup shift → rekap → buka laporan) selalu punya test otomatis
+    "apakah sistem masih hidup?".
+
+## Gate kualitas (dari user)
+
+**5 rasa:** profesional · elegan · modern · mudah dipahami · tenang.
+**6 kata:** bersih · konsisten · modern · informatif · cepat · tenang.
+
+## Backlog item (nomor mengikuti kelompok usulan user)
+
+### Kelompok E — Experience Layer (E1–E40)
+
+**E1–E10 (fondasi & pola):**
+- [ ] E1 Visual Identity — brand warna/ikon/logo/spacing/kepribadian visual (dark + light theme).
+- [ ] E2 Dashboard komunikatif — kartu ringkas, angka penting, perhatian hari ini, risiko, keputusan; jangan wall of text.
+- [ ] E3 Human Language — label manusia, istilah minimal, "Bahasa apa kasir perlu tahu?".
+- [ ] E4 Micro-explanation — tooltip/deskripsi, contoh: "Laba Kotor = Omzet – HPP".
+- [ ] E5 StatusBadge seragam — warna & label status transaksi (pending/paid/partial/void/cashless/cash/return).
+- [ ] E6 Empty State + CTA — pola universal: kosong → alasan → tindakan ("Belum ada transaksi — Mulai POS / Input manual / Export contoh").
+- [ ] E7 Error manusiawi — error + saran, bukan `500`; "Permintaan gagal. Coba lagi, atau hubungi admin bila terus terjadi."
+- [ ] E8 Loading skeleton — semua tabel/kartu/chart; jangan hanya spinner.
+- [ ] E9 Kasir berbeda — mode cepat/tenang, area besar untuk aksi utama, tidak banyak klik, tidak terasa admin.
+- [ ] E10 Admin command center — bukan sekadar CRUD, tapi pusat keputusan.
+
+**E11–E20 (bantuan & mobile):**
+- [ ] E11 Recent Activity — "Apa yang terjadi?" (jurnal mini: transaksi, stok, kas, retur).
+- [ ] E12 Global Search / Ctrl+K — cari semua; command palette, hasil terkelompok, highlight, Enter → buka, Esc → tutup; HP = search bar + quick action.
+- [ ] E13 Cheat sheet — ringkasan fungsi/shortcut, contoh modal "Panduan Kasir" F1–F9.
+- [ ] E14 Feedback premium — toast sukses/gagal + animasi, auto-dismiss, stackable; jangan hanya alert().
+- [ ] E15 Confirm dialog aman — hapus/ubah data penting → dialog + ketik "HAPUS"; jangan confirm() browser.
+- [ ] E16 Undo ringan — aksi kecil, "Kamu menghapus 1 produk — Urungkan" (5 detik).
+- [ ] E17 Mobile app-like — target sentuh besar, swipe, FAB, bottom sheet, gesture; jangan tabel 12 kolom di HP.
+- [ ] E18 Tabel → card di HP — responsive: tabel desktop, card mobile.
+- [ ] E19 Drill down — klik angka → detail (omzet → transaksi, stok → mutasi).
+- [ ] E20 Grafik jangan kebanyakan — hanya yang membantu keputusan; label, warna jelas, tooltip, klik detail.
+
+**E21–E30 (warna, dark mode, help, syariah, audit):**
+- [ ] E21 Warna bermakna — success/warning/danger/info/netral konsisten.
+- [ ] E22 Dark mode palette — bukan inverte buta; dark = tenang, high contrast, bukan menyilaukan.
+- [ ] E23 Contextual help — "?", panel bantuan per halaman, jawaban pendek.
+- [ ] E24 Istilah syariah dua lapis — "zakat perdagangan" + tooltip "pengelolaan harta dagang…"; jangan tebar istilah tanpa konteks.
+- [ ] E25 Tandai provisional — label "Menunggu tashih" utk keputusan belum final (P3/P4).
+- [ ] E26 Audit trail komunikatif — "SIAPA melakukan APA KAPAN"; log filter + timeline.
+- [ ] E27 Mode Pengurus — view ringkas: kas, stok, piutang, hutang, performa; bukan dashboard teknis.
+- [ ] E28 Sidebar grouping — Kelola / Keuangan / Laporan / Sistem; jangan semua rata.
+- [ ] E29 Onboarding — panduan pertama per role, 3 langkah.
+- [ ] E30 First Run Checklist — alur awal: atur shift → input kas awal → buat produk → login kasir.
+
+**E31–E40 (detail, performa, akuntabilitas):**
+- [ ] E31 Printer premium — struk rapi, header kopontren, total jelas, watermark; bukan CSS dump.
+- [ ] E32 Nomor transaksi — ID mudah dibaca, konsisten, "INV-2026-000123".
+- [ ] E33 Action→Result — "Simpan" → berubah, toast, refresh relevan; jangan diam.
+- [ ] E34 Performance — data besar, pagination/infinite scroll, filter cepat.
+- [ ] E35 Consistency Audit — audit komprehensif UI (warna, tipografi, spacing, component patterns, empty states, iconography, copywriting); **jalankan setelah UX-3** → jadi input UX-4.
+- [ ] E36 Accessibility — keyboard navigation, focus state, contrast WCAG, screen reader, font scalable.
+- [ ] E37 Help Center — mini FAQ/glossary, icon "?".
+- [ ] E38 Progressive disclosure — detail saat dibutuhkan (expand, tab, drill-down).
+- [ ] E39 Naming kamus resmi — istilah global di `src/lib/glossary.ts`: "Omzet", "Laba Kotor", "Zakat Dagang", "Konsinyasi", "Ujrah", "Settlement".
+- [ ] E40 Karakter — system yang "tenang, jelas, dan aman".
+
+### Kelompok P — 15 perkara kelas profesional (P1–P15)
+
+- [ ] P1 Zero Thinking UX — user hanya berpikir untuk keputusan bisnis, bukan cara pakai aplikasi.
+- [ ] P2 Role-based experience — kasir fokus bertransaksi; pengurus fokus insight & risiko; admin setup & keamanan; gudang input kelola stok; pembelian supplier & stok; member info/reward.
+- [ ] P3 Attention System — indikator penting/risiko/perlu tindakan/berita/success, jangan semua notification merah.
+- [ ] P4 Smart defaults — default yang benar (rentang 1–30 hari, status open, stok minimum, tanggal hari ini) agar tidak banyak mengetik.
+- [ ] P5 Jangan ketik hal yang bisa dipilih — form minimal input, lebih banyak pilih/dari data.
+- [ ] P6 Undo-first — kesalahan ringan bisa dibatalkan tanpa takut.
+- [ ] P7 Audit trail immutable — log tidak bisa dihapus; siapa, apa, kapan, perubahan apa.
+- [ ] P8 "Explain This Number" — tooltip formula + sumber data.
+- [ ] P9 Angka punya source — drill down / sumber / klik → detail.
+- [ ] P10 Period context — semua angka harus context periode ("Rp10 jt per 30 hari").
+- [ ] P11 Freeze / Close Period — tutup periode keuangan; data tetap bisa dilihat, tidak bisa diubah diam-diam.
+- [ ] P12 Backup rasa aman — terakhir, cadangan, restore, otomatis/semi-otomatis, bukan "backup sekali lalu lupa".
+- [ ] P13 Health Center — status sistem: DB, koneksi, versi, cache, log, backup terakhir, notifikasi.
+- [ ] P14 Offline confidence — kasir online/offline/nyinkron; status per modul.
+- [ ] P15 Confidence language — label jelas: "Terakhir diperbarui 2 menit lalu", "Data lengkap", "Menunggu sinkronisasi".
+
+### Kelompok Q — kelas profesional lanjutan (Q41–Q95, nomor mengikuti usulan user)
+
+**Dashboard & insight:**
+- [ ] Q41 Command Center pengurus — ringkasan kas, stok, piutang, hutang, penjualan, laba.
+- [ ] Q42 Insight hari ini — apa yang naik, turun, belum, dan butuh tindakan.
+- [ ] Q43 Peringatan risiko — stok menipis, piutang tak tertagih, kas menipis, diskon besar.
+- [ ] Q44 Perbandingan periode — hari vs kemarin, minggu vs minggu sebelumnya, bulan vs bulan sebelumnya.
+- [ ] Q45 Target vs aktual — omzet, laba, target kas harian.
+- [ ] Q46 Top produk / top kasir / top transaksi — ranking berguna.
+- [ ] Q47 Trend sederhana — grafik tidak berlebihan, tetap komunikatif.
+- [ ] Q48 "Klik angka → detail" — semua dashboard bisa di-drill-down.
+
+**Notifikasi & komunikasi:**
+- [ ] Q49 Pusat notifikasi — bukan sembarangan popup.
+- [ ] Q50 Kategori notifikasi — risiko, sukses, pengingat, update sistem.
+- [ ] Q51 Level keparahan — info / peringatan / kritis.
+- [ ] Q52 Pesan action-oriented — "Stok X menipis. Tambah stok."
+- [ ] Q53 Do not disturb / prioritas — jangan semua sama pentingnya.
+- [ ] Q54 Toast sementara vs notification persistent.
+- [ ] Q55 Email/WA rekap — untuk pengurus.
+
+**Keuangan & kontrol:**
+- [ ] Q56 Health check — apakah data kas, stok, penjualan masih konsisten?
+- [ ] Q57 Rekonsiliasi — kasir total vs kas, stok vs penjualan.
+- [ ] Q58 Freeze period — tutup periode laporan.
+- [ ] Q59 Audit trail komunikatif — siapa melakukan apa.
+- [ ] Q60 Immutable log — log tidak bisa dihapus.
+- [ ] Q61 Diff perubahan — sebelum/d sesudah.
+- [ ] Q62 Approval flow — perubahan besar bisa perlu persetujuan.
+- [ ] Q63 Lock record — data kunci tidak bisa diam-diam berubah.
+- [ ] Q64 Export laporan siap presentasi — bukan sekadar CSV.
+- [ ] Q65 Dashboard untuk pengurus — angka penting + interpretasi.
+
+**Peringatan & risiko:**
+- [ ] Q66 Stok minimum warning.
+- [ ] Q67 Stok mati (slow-moving) — produk lama tidak laku.
+- [ ] Q68 Piutang jatuh tempo — tagih dulu.
+- [ ] Q69 Diskon terlalu besar — perlu perhatian.
+- [ ] Q70 Harga terkeluar.
+- [ ] Q71 Transaksi abnormal — nilai sangat besar.
+- [ ] Q72 Konsolidasi data — deteksi anomali.
+
+**Operasional & manajemen:**
+- [ ] Q73 Saved views — simpan filter favorit.
+- [ ] Q74 Deep link — link langsung ke item.
+- [ ] Q75 Advanced reports — kustom report.
+- [ ] Q76 Keyboard shortcuts — power user.
+- [ ] Q77 Quick actions — dari halaman mana pun, tindakan cepat.
+- [ ] Q78 Stock opname — stok fisik vs sistem.
+- [ ] Q79 Perbaikan/penyesuaian stok — alasan & approval.
+- [ ] Q80 Supplier scorecard — performa supplier.
+- [ ] Q81 Product health — produk bagus/rugi.
+- [ ] Q82 Price history — ubah harga terlacak.
+- [ ] Q83 Business simulation — "bagaimana jika margin naik 5%?".
+- [ ] Q84 Cash flow forecast — perkiraan kas.
+- [ ] Q85 Cash back safety — jangan bikin rugi.
+- [ ] Q86 Profit warning — peringatan saat margin rendah.
+- [ ] Q87 Margin guard — cegah penjualan rugi.
+- [ ] Q88 Low cash alert — peringatan kas menipis.
+- [ ] Q89 Slow-moving inventory — stok lama.
+- [ ] Q90 Duplicate detection — data duplikat.
+
+**Keamanan & backup:**
+- [ ] Q91 Session timeout — penguncian setelah tidak aktif.
+- [ ] Q92 2FA — otentikasi dua langkah.
+- [ ] Q93 Backup reminder — ingatan backup berkala.
+- [ ] Q94 Backup restore test — backup bisa diuji.
+- [ ] Q95 Jangan over-engineer — fitur hanya masuk jika: menghemat waktu, mencegah kesalahan, meningkatkan kontrol, memberi kejelasan laporan, memperkuat keamanan, atau mendukung keputusan.
+
+## Hal yang TIDAK boleh dilakukan dulu (dari Bagian 35 laporan)
+
+Sampai tashih selesai: jangan anggap 24K final, jangan anggap market
+valuation final, jangan ubah haul berdasar asumsi sendiri, jangan
+anggap ta'jil menggeser haul, jangan anggap 20% ketentuan syariah,
+jangan masukkan seluruh penjualan konsinyasi sebagai revenue, jangan
+treat settlement pemilik sebagai expense, jangan ubah mapping akuntansi
+P4 diam-diam, jangan bikin keputusan fiqih baru demi kebutuhan coding.
+
+## Checklist tambahan utk verifikasi manual HP (usulan, masuk daftar Gus)
+
+- [ ] **TermTip mobile viewport edge check** (setelah UX-3 selesai):
+  tooltip istilah di layar sempit — pastikan tidak overflow/melewati tepi
+  layar, terbaca, dan bisa ditutup; bila perlu fallback bottom-sheet di HP.

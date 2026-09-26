@@ -65,6 +65,40 @@
     pengurus/dashboard). Alasan: nama lama "grad" menipu karena
     background-nya solid flat, bukan gradient.
   - Verifikasi: `tsc --noEmit` exit 0 (0 error).
+
+### Konsolidasi revisi progres + rencana depan UX (26 Sep, sesi AI)
+- **Revisi user (10 poin) diterapkan di dokumen** (tidak mengubah kode):
+  "SIAP PRODUKSI" → **Engineering: Production Candidate;
+  Operational/Syariah: Pending Verification/Tashih**; klaim "0
+  engineering WIP" dihapus (UX-2 masih berjalan, UX-3 belum mulai);
+  **zakat 24K diturunkan ke PROVISIONAL/configurable** (MUI Komisi
+  Fatwa 2026 masih mengkaji karat utk zakat penghasilan; std 14K
+  BAZNAS 2026 = zakat pendapatan/jasa — jangan digeneralisasi ke
+  perdagangan; riwayat std di `zakat_gold_standards` append-only);
+  akumulasi harian = mekanisme implementasi (bukan fiqih final);
+  ta'jil = provisional, tidak menggeser haul; **P4 "default 20%" =
+  preset operasional, bukan ketentuan syariah**; mapping akuntansi
+  (supplier goods ≠ revenue; ujrah → revenue; hak pemilik →
+  settlement payable) = **provisional nunggu tashih P4**.
+- **BARU `PROGRESS-2026-09.md`**: laporan 36 bagian (periode
+  18–26 Sep) versi revisi + rujukan (MUI, BAZNAS zakat perdagangan,
+  DSN-MUI 113/2017, BAZNAS zakat penghasilan 2026). HEAD git aktual
+  saat konsolidasi = `10c8e87` (komit UX-1a P1–P4), clean.
+- **TODO.md**: seksi baru "RENCANA KEDEPAN — UX MASTER PLAN & BACKLOG
+  (usulan, nunggu ACC)" — roadmap fase UX-2..UX-8 (UX-4 = Design
+  System, UX-5 = IA/role-based, UX-6 = Attention + Explain This
+  Number, UX-7 = Power User/Ctrl+K, UX-8 = Operational Safety),
+  10 prioritas utama, gate kualitas "5 rasa / 6 kata", backlog
+  **E1–E40 (Experience Layer) + P1–P15 + Q41–Q95** (95 item,
+  BELUM kode — tunggu ACC), aturan "jangan dulu" Bagian-35, +
+  checklist HP **"TermTip mobile viewport edge check"** (masuk
+  daftar Gus setelah UX-3).
+- **SYARIAH-CHECKLIST.md**: 4 edit target nyelarke revisi (Seksi F
+  nisab/karat provisional; tabel baris 10; P3-b; P4) — klaim lama
+  24K-final dipertahan sebagai histori 24 Sep, di-overwrite
+  in-line "Koreksi 26 Sep".
+- Commit lokal master; **belum push** (nunggu Gus).
+
 ### ZAKAT v17: payment_type di zakat_history (26 Sep)
 - **Permintaan user**: catat media pembayaran zakat di riwayat zakat
   (UI + API). 4 nilai: `cash` (tunai) / `transfer` (transfer bank) /
