@@ -35,7 +35,10 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // P1 audit: pakai var(--font-jakarta) (di-set next/font di
+        // layout.tsx) agar utilitas font-sans ikut font yang sama;
+        // fallback chain tetap bila var tak tersedia.
+        sans: ['var(--font-jakarta)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
     },
   },

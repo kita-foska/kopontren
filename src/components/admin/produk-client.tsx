@@ -731,7 +731,7 @@ export function ProdukClient() {
                 + Tambah tier
               </button>
             </div>
-            <p className="mb-2 text-[11px] leading-snug text-slate-500 dark:text-slate-500">
+            <p className="mb-2 text-[11px] leading-snug text-slate-600 dark:text-slate-400">
               Beli ≥ jumlah minimum dapat diskon dari harga jual. Diskon dihitung dari harga
               satuan dasar; tier dengan jumlah minimum terkecil yang terpenuhi berlaku,
               dan bila ada pengaturan grosir global yang lebih besar, yang lebih besar dipakai.
@@ -767,7 +767,7 @@ export function ProdukClient() {
                         }
                       />
                     </div>
-                    <div className="w-28 shrink-0 pb-1 text-right text-[11px] text-slate-500 dark:text-slate-500">
+                    <div className="w-28 shrink-0 pb-1 text-right text-[11px] text-slate-600 dark:text-slate-400">
                       {t.discount_percent > 0 ? '≈ ' + rp(tierEffPrice(t)) : '—'}
                     </div>
                     <button

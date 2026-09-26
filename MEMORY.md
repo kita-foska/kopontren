@@ -30,6 +30,44 @@
   EXIT 0. (Env lokal: `@next/swc` & 35 paket lainnya sempat rusak —
   `npm install` memperbaiki; bukan issue kode.)
 
+### UI/UX audit high-priority: perbaikan P1–P4 (26 Sep)
+- **P1 font**: 'Plus Jakarta Sans' dideklarasikan di
+  `tailwind.config.ts`/`globals.css` tapi TIDAK PERNAH di-load
+  (tanpa @import/fontsource) → app render pakai system font.
+  Fix: `next/font/google` `Plus_Jakarta_Sans` di `src/app/layout.tsx`
+  (self-hosted, `variable: '--font-jakarta'`, `display: 'swap'`) +
+  `<html className={jakarta.variable}>`; `globals.css`
+  body `font-family` & `tailwind.config.ts` `fontFamily.sans` kini
+  mengawali dengan `var(--font-jakarta)` (fallback chain tetap).
+- **P2 tema**: init script `layout.tsx` dulu selalu paksa 'dark'.
+  Kini: bila belum ada cookie `theme` eksplisit, ikut OS
+  `prefers-color-scheme` (light/dark); cookie eksplisit tetap menang;
+  fallback catch tetap dark. `globals.css`: `:root{color-scheme:
+  light}` + `html.dark{color-scheme:dark}` (scrollbar/control browser
+  ikut tema).
+- **P3 kontras WCAG AA**: `text-amber-600` → `text-amber-700` di
+  20 tempat/11 file (dashboard, banner POS, badge, kartu
+  hutang/piutang, migrate, zakat, laporan, `admin/data`,
+  member-qr; tone Badge `amber` di `ui.tsx` ikut); pair
+  `text-slate-500 dark:text-slate-500` → `text-slate-600
+  dark:text-slate-400` di 26 tempat/9 file; label sumbu/legenda
+  chart & 'Memuat data…' PageSkeleton (ui.tsx) diperkuat serupa.
+- **P4 input & keseragaman**: keyboard numerik fisik di
+  `pin-pad.tsx` (angka 0–9 = digit, Backspace = hapus, Escape =
+  clear; guard: abaikan bila fokus di input/textarea/select; handler
+  via ref agar listener satu-kali tetap fresh); target sentuh 44px —
+  hamburger sidebar mobile & notification bell `h-9 w-9`→`h-10 w-10`;
+  `tabular-nums` pada nilai kartu dashboard, blok totals/mix/
+  close-shift POS, rata-rata chart; `role="alert"` pada paragraf
+  error login + PIN auth + PIN setup; `prefers-reduced-motion` kini
+  mematikan juga utilitas Tailwind (pulse/ping/bounce/spin);
+  `manifest.json` `background_color` → `#170A0E` (brand, bukan
+  putih).
+- **Verifikasi**: `next build` OK (52/52 static pages, type check
+  lulus). Sisa audit yang TIDAK dikerjakan hari ini (prioritas
+  lanjutan di TODO): rekap kasir `GET /` tanpa data (P1 fungsional)
+  & label total belanja menipu di `belanja-client` — masih open.
+
 ## 2026-09-25
 ### GROSIR v1: harga grosir per produk + integrasi POS (25 Sep)
 - **Scope (disetujui user): UI admin + API + POS + test.** Struk WA &

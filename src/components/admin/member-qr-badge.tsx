@@ -276,7 +276,7 @@ export function MemberQrBadge({
           </p>
         </div>
 
-        {hint && <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-400">{hint}</p>}
+        {hint && <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-400">{hint}</p>}
 
         <div className="mt-4 flex items-center gap-2">
           <button

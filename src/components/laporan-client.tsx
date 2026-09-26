@@ -208,13 +208,13 @@ export function LaporanClient({ admin, scope = 'all' }: { admin: boolean; scope?
           <p className="text-[11px] text-slate-500">Omset kotor</p>
         </div>
         <div className="card p-3 border-amber-500/30 bg-amber-500/5">
-          <p className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+          <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
             Menunggu Rekap
           </p>
-          <p className="mt-1 text-xl font-extrabold text-amber-600 dark:text-amber-400">
+          <p className="mt-1 text-xl font-extrabold text-amber-700 dark:text-amber-400">
             {unreported.length}
           </p>
-          <p className="text-[11px] text-amber-600/70">{rp(unreportedTotal)}</p>
+          <p className="text-[11px] text-amber-700/70">{rp(unreportedTotal)}</p>
         </div>
         <div className="card p-3 border-emerald-500/30 bg-emerald-500/5">
           <p className="text-xs font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">

@@ -1103,7 +1103,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 setShiftModalType('close');
                 setShiftModalOpen(true);
               }}
-              className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-bold text-amber-600 hover:bg-amber-500/20 dark:text-amber-300"
+              className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 font-bold text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"
             >
               Tutup Shift & Rekap
             </button>
@@ -1343,7 +1343,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                         Grosir −{gPct}%
                       </span>
                     ) : l.manual ? (
-                      <span className="mt-0.5 inline-block rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
+                      <span className="mt-0.5 inline-block rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
                         Harga manual
                       </span>
                     ) : null}
@@ -1390,7 +1390,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">
                       {rp(l.qty * l.price)}
                     </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-500">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
                       @{rp(l.price)}/{l.product.unit}
                     </p>
                   </div>
@@ -1480,7 +1480,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     {cbPreview > 0 ? ` · Saldo Reward +${rp(cbPreview)}` : ''}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className={redeemMax <= 0 ? 'text-slate-500 dark:text-slate-500' : ''}>
+                    <span className={redeemMax <= 0 ? 'text-slate-600 dark:text-slate-400' : ''}>
                       Tebus poin/saldo
                     </span>
                     <input
@@ -1506,7 +1506,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     className={
                       redeemAmt > 0
                         ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-slate-500 dark:text-slate-500'
+                        : 'text-slate-600 dark:text-slate-400'
                     }
                   >
                     {redeemMax <= 0
@@ -1518,7 +1518,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                           } · saldo reward ${rp(selectedMember.cashback_balance || 0)} · maks ${rp(redeemMax)}`}
                   </div>
                   {redeemInputNum > redeemMax && redeemMax > 0 && (
-                    <div className="text-amber-600 dark:text-amber-400">
+                    <div className="text-amber-700 dark:text-amber-400">
                       Nominal melebihi saldo — ditinjau ke maksimal {rp(redeemMax)}.
                     </div>
                   )}
@@ -1619,7 +1619,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 </div>
                 <div
                   className={
-                    'flex items-center justify-between font-bold ' +
+                    'tabular-nums flex items-center justify-between font-bold ' +
                     (mixSum === total
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : 'text-rose-500 dark:text-rose-400')
@@ -1715,7 +1715,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             )}
 
             {/* Totals & Change */}
-            <div className="space-y-1 border-t border-slate-200 pt-2 text-xs dark:border-navy-700">
+            <div className="tabular-nums space-y-1 border-t border-slate-200 pt-2 text-xs dark:border-navy-700">
               <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>Subtotal</span>
                 <span>{rp(subtotal)}</span>
@@ -1911,7 +1911,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   </div>
                 )}
                 {receipt.tier && (
-                  <div className="flex justify-between font-bold text-amber-600 dark:text-amber-400">
+                  <div className="flex justify-between font-bold text-amber-700 dark:text-amber-400">
                     <span>Tier member</span>
                     <span>
                       {receipt.tier === 'gold' ? (
@@ -2203,7 +2203,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">
               <Check className="mr-1 h-3.5 w-3.5 align-[-3px]" /> Shift <b>{closingSummary.label || '#' + closingSummary.id}</b> telah ditutup dan siap untuk serah terima kasir.
             </div>
-            <div className="space-y-1 text-xs">
+            <div className="tabular-nums space-y-1 text-xs">
               <div className="flex justify-between">
                 <span>Kasir</span>
                 <b>{closingSummary.kasir_name || cashier || 'Kasir'}</b>
@@ -2282,7 +2282,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </div>
           ))}
         </div>
-        <p className="mt-3 text-[10px] leading-relaxed text-slate-500 dark:text-slate-500">
+        <p className="mt-3 text-[10px] leading-relaxed text-slate-600 dark:text-slate-400">
           Panah / + / − / Del hanya aktif di luar kolom ketik &amp; saat modal tertutup.
           Ctrl+H bisa ditahan browser tertentu (Chrome) — riwayat tetap bisa dibuka lewat
           menu Laporan &amp; Rekap.

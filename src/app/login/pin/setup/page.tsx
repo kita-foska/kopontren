@@ -145,7 +145,7 @@ export default function PinSetupPage() {
         {ready && (
           <>
             {checkFailed && (
-              <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-600 dark:text-amber-300">
+              <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-center text-xs text-amber-700 dark:text-amber-300">
                 Tak bisa cek sesi — lanjutkan saja; validasi sesi tetap jalan
                 saat simpan.
               </p>
@@ -174,7 +174,7 @@ export default function PinSetupPage() {
               {busy ? 'Menyimpan…' : step === 'pin' ? 'Lanjut' : 'Simpan'}
             </button>
             {err && (
-              <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-300">
+              <p role="alert" className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-300">
                 {err}
               </p>
             )}

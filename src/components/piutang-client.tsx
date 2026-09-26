@@ -118,7 +118,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Belum lunas
           </p>
-          <p className="mt-1 text-2xl font-extrabold text-amber-600 dark:text-amber-400">{rp(open)}</p>
+          <p className="mt-1 text-2xl font-extrabold text-amber-700 dark:text-amber-400">{rp(open)}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">{openCount} pelanggan</p>
         </div>
         <div className="card p-4">
@@ -236,7 +236,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-xs text-slate-500 dark:text-slate-500">
+                  <span className="text-xs text-slate-600 dark:text-slate-400">
                     {fmtDateTime(x.created_at)}
                   </span>
                   <div className="flex gap-1.5">

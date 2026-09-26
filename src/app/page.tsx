@@ -77,7 +77,7 @@ export default async function DashboardPage() {
   return (
     <Shell user={user}>
       {user.pw_default === 1 && (
-        <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-300">
+        <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
           <b>Perhatian:</b> password Anda masih default.{' '}
           {user.role === 'admin' ? (
             <>
@@ -115,7 +115,7 @@ export default async function DashboardPage() {
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Penjualan hari ini
               </p>
-              <p className="mt-1 text-2xl font-extrabold text-accent-500 dark:text-accent-300">
+              <p className="tabular-nums mt-1 text-2xl font-extrabold text-accent-500 dark:text-accent-300">
                 {rp(salesToday.t)}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400">{salesToday.c} transaksi</p>
@@ -124,7 +124,7 @@ export default async function DashboardPage() {
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Stok menipis (&lt; 5)
               </p>
-              <p className="mt-1 text-2xl font-extrabold text-amber-600 dark:text-amber-400">{lowStock.length}</p>
+              <p className="tabular-nums mt-1 text-2xl font-extrabold text-amber-700 dark:text-amber-400">{lowStock.length}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 dari {activeProducts} produk aktif
               </p>
@@ -137,7 +137,7 @@ export default async function DashboardPage() {
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Belum dilaporkan
             </p>
-            <p className="mt-1 text-2xl font-extrabold text-amber-600 dark:text-amber-400">{unreported.c}</p>
+            <p className="tabular-nums mt-1 text-2xl font-extrabold text-amber-700 dark:text-amber-400">{unreported.c}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {rp(unreported.t)} menunggu rekap oleh admin/pengurus
             </p>
@@ -193,7 +193,7 @@ export default async function DashboardPage() {
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Penjualan hari ini
           </p>
-          <p className="mt-1 text-2xl font-extrabold text-accent-500 dark:text-accent-300">
+          <p className="tabular-nums mt-1 text-2xl font-extrabold text-accent-500 dark:text-accent-300">
             {rp(salesToday.t)}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400">{salesToday.c} transaksi</p>
@@ -206,7 +206,7 @@ export default async function DashboardPage() {
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Belum dilaporkan
           </p>
-          <p className="mt-1 text-2xl font-extrabold text-amber-600 dark:text-amber-400">{unreported.c}</p>
+          <p className="tabular-nums mt-1 text-2xl font-extrabold text-amber-700 dark:text-amber-400">{unreported.c}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {rp(unreported.t)} menunggu rekap
           </p>
@@ -216,7 +216,7 @@ export default async function DashboardPage() {
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Arus kas hari ini
             </p>
-            <p className="mt-1 text-2xl font-extrabold">{rp(row.inn - row.out)}</p>
+            <p className="mt-1 text-2xl font-extrabold tabular-nums">{rp(row.inn - row.out)}</p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               masuk {rp(row.inn)} / keluar {rp(row.out)}
             </p>
@@ -226,7 +226,7 @@ export default async function DashboardPage() {
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Produk aktif
           </p>
-          <p className="mt-1 text-2xl font-extrabold">{activeProducts}</p>
+          <p className="mt-1 text-2xl font-extrabold tabular-nums">{activeProducts}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             {lowStock.length} stok menipis
           </p>
@@ -267,7 +267,7 @@ export default async function DashboardPage() {
               {lowStock.map((p) => (
                 <li key={p.name} className="flex items-center justify-between text-sm">
                   <span>{p.name}</span>
-                  <span className="font-semibold text-amber-600 dark:text-amber-400">
+                  <span className="tabular-nums font-semibold text-amber-700 dark:text-amber-400">
                     {p.stock} {p.unit}
                   </span>
                 </li>

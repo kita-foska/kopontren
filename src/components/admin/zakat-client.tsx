@@ -66,7 +66,7 @@ function StatCard({
     tone === 'ok'
       ? 'text-emerald-600 dark:text-emerald-400'
       : tone === 'warn'
-        ? 'text-amber-600 dark:text-amber-400'
+        ? 'text-amber-700 dark:text-amber-400'
         : 'text-slate-800 dark:text-slate-100';
   return (
     <div className="card p-4">

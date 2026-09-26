@@ -128,6 +128,24 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       `src/lib/zakat-payment.ts` (Next.js tak izinkan value export
       selain HTTP handler di route.ts). `test:zakat` 18/18 +
       build EXIT 0. — detail MEMORY.md seksi 2026-09-26.
+- [x] UI/UX audit high-priority: P1–P4 (26 Sep, lanjut FASE 2
+      23 Sep): **P1** font 'Plus Jakarta Sans' kini benar-benar
+      di-load via `next/font/google` di `layout.tsx`
+      (`--font-jakarta` self-hosted, tampil swap) + globals.css/
+      tailwind.config.ts; **P2** tema default ikut OS
+      `prefers-color-scheme` (cookie eksplisit tetap menang) +
+      `color-scheme` light/dark di globals.css; **P3** kontras WCAG
+      AA — `text-amber-600`→`-700` (20 tempat/11 file, ikut Badge
+      tone amber di ui.tsx) & pair `slate-500 dark:slate-500`→
+      `slate-600 dark:slate-400` (26 tempat/9 file) + label chart/
+      PageSkeleton; **P4** keyboard numerik fisik di pin-pad.tsx
+      (0–9/Backspace/Escape, guard input terfokus), touch target
+      44px (hamburger sidebar & bell h-9→h-10), `tabular-nums`
+      (kartu dashboard, totals/mix/close-shift POS, rata-rata
+      chart), `role="alert"` 3 paragraf error (login/PIN auth/PIN
+      setup), `prefers-reduced-motion` menjangkau utilitas
+      animate-*, manifest background `#170A0E`. Build 52/52 OK.
+      — detail MEMORY.md seksi 2026-09-26.
 - [x] **Phone duplicate guard format-insensitive** — SELESAI (commit
       `f2b398e`, 23 Sep 2026, dual-push master+main): helper bersama
       `phoneOwner` + `canonicalPhone` di `src/lib/phone.ts` — duplikat

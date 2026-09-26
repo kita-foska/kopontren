@@ -176,7 +176,7 @@ export function MigrateClient() {
           </h2>
           <div className="mb-3 flex flex-wrap gap-2 text-xs">
             {w.costZero.length > 0 && (
-              <span className="rounded-full bg-amber-500/15 px-3 py-1 font-semibold text-amber-600 dark:text-amber-300">
+              <span className="rounded-full bg-amber-500/15 px-3 py-1 font-semibold text-amber-700 dark:text-amber-300">
                 {w.costZero.length} harga modal = 0
               </span>
             )}

@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light; /* P2 audit: deklarasi color-scheme agar scrollbar /
+                          control browser ikut tema (dulu: default, tak selaras) */
   --nbg: #170a0e;
   --nsurface: #221015;
   --nborder: #3a1d24;
@@ -19,8 +21,14 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+html.dark {
+  color-scheme: dark; /* pasangan dari :root di atas */
+}
+
 body {
-  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* P1 audit: var(--font-jakarta) (self-hosted via next/font, layout.tsx)
+     didahulikan; 'Plus Jakarta Sans' + system = fallback bila var tak ada. */
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 .dark body {
@@ -115,10 +123,16 @@ body {
   }
 }
 
+/* P4 audit: hormati prefers-reduced-motion — matikan juga animasi utilitas
+   Tailwind (pulse skeleton, ping, bounce, spin), bukan cuma animasi custom. */
 @media (prefers-reduced-motion: reduce) {
   .fade-up,
-  .chart-bar {
-    animation: none;
+  .chart-bar,
+  .animate-ping,
+  .animate-pulse,
+  .animate-bounce,
+  .animate-spin {
+    animation: none !important;
   }
 }
 

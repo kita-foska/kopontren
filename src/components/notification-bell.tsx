@@ -139,7 +139,7 @@ export function NotificationBell() {
         aria-expanded={open}
         aria-controls="notif-panel"
         title="Notifikasi"
-        className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
+        className="relative grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
       >
         <Bell className="h-5 w-5" />
         {count > 0 && (

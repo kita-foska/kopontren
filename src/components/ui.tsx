@@ -9,7 +9,8 @@ import { fetchTimeout, fetchRetry, isAbort } from '@/lib/fetch-util';
 
 const tones: Record<string, string> = {
   blue: 'bg-accent-500/15 text-accent-600 dark:text-accent-300',
-  amber: 'bg-amber-500/15 text-amber-600 dark:text-amber-300',
+  // P3 audit: light text-amber-700 (dulu -600 ≈3:1 di bg terang, gagal AA).
+  amber: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
   green: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300',
   red: 'bg-rose-500/15 text-rose-600 dark:text-rose-300',
   gray: 'bg-slate-500/15 text-slate-600 dark:text-slate-300',
@@ -369,7 +370,7 @@ export function PageSkeleton() {
           />
         ))}
       </div>
-      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Memuat data…</p>
+      <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Memuat data…</p>
     </div>
   );
 }

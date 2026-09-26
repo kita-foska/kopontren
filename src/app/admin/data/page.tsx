@@ -19,7 +19,7 @@ export default async function DataPage() {
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
-        Data & <span className="text-amber-600 dark:text-amber-400">Backup</span>
+        Data & <span className="text-amber-700 dark:text-amber-400">Backup</span>
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
         Cadangkan rutin (mis. tiap akhir bulan) ke folder / WhatsApp agar tidak kehilangan data.
