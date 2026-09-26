@@ -43,8 +43,28 @@
   Perencanaan future-proof: TODO.md line ~180 "sw.js refactor
   template-generate" bakal ngasilake `public/sw.src.js` ter-track +
   `public/sw.js` generated + `public/sw.js` ing `.gitignore`.
-- **Berikutnya: UX-3** = TermTip + StatusBadge + rename `.grad-hero`
-  (lanjutkan merujuk goal document 8 fase).
+- **UX-3: TermTip + StatusBadge + rename `.grad-hero`** (26 Sep):
+  - **TermTip** (`src/components/ui.tsx`): hover + click/tap pin, ikon
+    `CircleHelp` (lucide), render di bawah label, `max-w-[220px]`,
+    anchor `left`/`right` otomatis via `getBoundingClientRect()`
+    (elemen di separuh kanan layar → tooltip ke kiri). ESC + klik luar
+    tutup. Diterapkan di: `laporan-admin-client` (HPP, Laba Kotor),
+    `zakat-client` (Nishab, Haul, Kadar, Mode Penilaian),
+    `produk-client` (HPP tabel + form), `konsinyasi-client` (Komisi).
+  - **StatusBadge diperluas** (`ui.tsx`): `STATUS_MAP` kini mencakup
+    `open`, `settled`, `overdue`, `active`, `done`, `habis`, `tipis`,
+    `aman`, `wajib`, `belum`, `provisional`, `running`, `closed`
+    (13 status). Tambah tone `maroon` dan `gold` ke `Badge`.
+    `StatusBadge` menerima override `tone` + `label` untuk jumlah
+    dinamis. Diterapkan di: `piutang-client`, `hutang-client`,
+    `konsinyasi-client` (status Selesai/Aktif), `produk-client`
+    (Habis/Tipis/Aman).
+  - **Rename `.grad-hero` → `.hero-bg`**: definisi di `globals.css`
+    + 7 file tsx (login, pin, pin/setup, admin/dashboard,
+    admin/notifications, admin/notifications/settings, page.tsx,
+    pengurus/dashboard). Alasan: nama lama "grad" menipu karena
+    background-nya solid flat, bukan gradient.
+  - Verifikasi: `tsc --noEmit` exit 0 (0 error).
 ### ZAKAT v17: payment_type di zakat_history (26 Sep)
 - **Permintaan user**: catat media pembayaran zakat di riwayat zakat
   (UI + API). 4 nilai: `cash` (tunai) / `transfer` (transfer bank) /

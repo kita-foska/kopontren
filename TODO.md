@@ -821,7 +821,8 @@ konsistensi.
   catatan Chrome), Jika ada masalah (4 bullet aksi konkret);
   tsc 0, build EXIT 0, dual-push @ `e7130c3`.
   **Sisa:** pixel-check real device oleh Gus Fi (breakage →
-  follow-up commit). **Berikutnya: UX-3 (TermTip + StatusBadge +
-  rename `.grad-hero`)** — rencanakan dari goal document.
-  Detail: MEMORY.md seksi "UX-2" di bawah 2026-09-26.
+  follow-up commit). **UX-3 (TermTip + StatusBadge + rename
+  `.hero-bg`)** — SELESAI 26 Sep, commit berikut.
+  Detail: MEMORY.md seksi "UX-3" di bawah 2026-09-26.
+  **Berikutnya: UX-4** (merujuk goal document 8 fase).
 
