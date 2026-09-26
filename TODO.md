@@ -796,5 +796,22 @@ konsistensi.
   tabel skema + 3 checkbox persetujuan + tanda tangan). Standalone,
   mobile-friendly, print-ready, basa-awam, tag balance terverif.
   **Sisa:** kirim ke ulama (P3) & pengurus (P4) → catat keputusan
-  nang MEMORY.md + SYARIAH-CHECKLIST.md.
+    nang MEMORY.md + SYARIAH-CHECKLIST.md.
+- [x] **UX-2: EmptyState CTA + PanduanKasir (26 Sep, ACC Gus Fi) —
+  SELESAI (2 commit, dual-push master+main):** acuan goal document
+  (3 file, 95 usulan, 8 fase UX-2→UX-8); UX-2 = R2 + R4.
+  (1) **R2 `32d0538`** — `EmptyState` `ctaVariant="primary"` di
+  dashboard + laporan (15 site), scroll-to-form (6 ID), `canAccess`
+  laporan, upgrade banner shift POS; 12 file +225/−51; tsc 0,
+  build EXIT 0 (53 rute), smoke 10/10, dual-push @ `32d0538`.
+  (2) **R4 `e7130c3`** — `pos-client.tsx` (1 file, +90/−19):
+  tombol ghost "Panduan kasir" (BookOpen) di banner shift + modal
+  "Panduan Kasir" 3 seksi: Cara transaksi (5 langkah; pembeli
+  opsional: F2 nama bebas / F8 member), Pintasan (CHEAT_ROWS +
+  catatan Chrome), Jika ada masalah (4 bullet aksi konkret);
+  tsc 0, build EXIT 0, dual-push @ `e7130c3`.
+  **Sisa:** pixel-check real device oleh Gus Fi (breakage →
+  follow-up commit). **Berikutnya: UX-3 (TermTip + StatusBadge +
+  rename `.grad-hero`)** — rencanakan dari goal document.
+  Detail: MEMORY.md seksi "UX-2" di bawah 2026-09-26.
 

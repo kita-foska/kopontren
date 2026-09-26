@@ -1,6 +1,40 @@
 # MEMORY
 
 ## 2026-09-26
+### UX-2: EmptyState CTA + PanduanKasir (26 Sep)
+- **Acuan goal document (Gus Fi, 3 file, 95 usulan, 8 fase UX-2 s.d.
+  UX-8).** UX-2 = R2 (EmptyState CTA) + R4 (PanduanKasir) — SELESAI
+  hari ini, 2 commit, dual-push master+main tiap commit.
+- **R2 — EmptyState CTA** (commit `32d0538`, 12 file, +225/−51):
+  `EmptyState` menerima `ctaVariant="primary"` — hanya dashboard +
+  laporan yang pakai primary; CTA scroll-to-form (6 ID target
+  terverifikasi) + import `canAccess` di laporan; upgrade banner
+  shift di POS. Verifikasi: tsc 0, `next build` EXIT 0 (53 rute —
+  +1 `/api/zakat/gold-standards` dari `ebe2e8a`, expected), smoke
+  10/10 route (307→login utk guarded), dual-push @ `32d0538`.
+- **R4 — PanduanKasir** (commit `e7130c3`, 1 file `pos-client.tsx`,
+  +90/−19): tombol ghost "Panduan kasir" (ikon `BookOpen`) di banner
+  shift + modal "Panduan Kasir" 3 seksi: (1) **Cara transaksi** —
+  5 langkah: 1 pilih produk (F1/scan), 2 pilih pembeli
+  **(opsional)**: F2 nama bebas / F8 member terdaftar (poin
+  loyalitas otomatis), 3 bayar: 1 tunai · 2 QRIS · 3 transfer ·
+  4 campur (F6) + F3 uang diterima, 4 simpan (F4), 5 struk
+  (F5 / Ctrl+P) + bagikan WA; (2) **Pintasan** — CHEAT_ROWS +
+  catatan (panah/+/-/Del di luar kolom ketik; Ctrl+H bisa ditahan
+  Chrome → via menu Laporan); (3) **Jika ada masalah** — 4 bullet
+  aksi konkret: internet mati (lanjutkan saja, antre offline
+  sinkron otomatis), item salah (↑↓ / +− / Del / Ctrl+R), sudah
+  tersimpan tapi keliru (buka Laporan & Rekap Ctrl+H; retur via
+  halaman Retur), lupa pintasan (tekan ?). Opsionalnya pembeli
+  terverifikasi di `checkout()`: payload `customer`/`member_id`
+  boleh kosong. Verifikasi: tsc 0, build EXIT 0, dual-push @
+  `e7130c3`. **Pixel-check real device: Gus Fi pasca-push** —
+  bila ada breakage → follow-up commit.
+- **SW.js guard**: `public/sw.js` TIDAK di-track git (gitignored) —
+  tak mungkin ikut commit; `git checkout -- public/sw.js` menghasilkan
+  "pathspec did not match" = konfirmasi file tak ter-track.
+- **Berikutnya: UX-3** = TermTip + StatusBadge + rename `.grad-hero`
+  (lanjutkan merujuk goal document 8 fase).
 ### ZAKAT v17: payment_type di zakat_history (26 Sep)
 - **Permintaan user**: catat media pembayaran zakat di riwayat zakat
   (UI + API). 4 nilai: `cash` (tunai) / `transfer` (transfer bank) /
