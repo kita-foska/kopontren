@@ -53,6 +53,8 @@
 
   <div class="note"><b>Penting:</b> dokumen ini adalah <b>materi musyawarah/review ulama, BUKAN fatwa</b>. Semua rumus di bawah hanya OPSI TEKNIS aplikasi — hukum tiap opsi diputuskan ulama. Prinsip: "Syariah nomer 1, fitur nomer 2."</div>
 
+  <div class="note"><b>Status (26 Sep 2026): PROVISIONAL.</b> Implementasi P3 Step 2 sudah berjalan di aplikasi: haul tetap 1 tahun (anchor <code>haul_start_date</code>; pembayaran = ta'jil, tidak me-reset), log verifikasi harga emas <code>zakat_gold_standards</code> (append-only), dan mode penilaian <code>valuation_mode</code> (market default / hpp fallback). Semua posisi — termasuk koreksi sitasi "DSN-MUI Fatwa No. 8/2008" → "MUI Fatwa No. 78/2023 [judul: menunggu pengasuh]" — menunggu tashih pengasuh; subject to correction.</div>
+
   <div class="card">
     <h2>1. Latar Belakang (pendek)</h2>
     <p>Aplikasi kami menghitung zakat dagang otomatis: harta dagang = <b>modal + laba + piutang − hutang</b>, lalu dibandingkan dengan nisab (85 gram emas × harga emas) untuk menentukan wajib/belum. Ada tiga bagian rumus yang mengandung pilihan fikih dan <b>perlu tashih</b>: (1) cara menghitung laba per haul, (2) cara memverifikasi harga emas, (3) cara menilai modal (HPP atau nilai pasar).</p>
@@ -62,7 +64,7 @@
     <h2>2. Tiga Pertanyaan untuk Ulama (☐ = beri tanda)</h2>
     <div class="q">
       <b>Soal 1 — Haul (masa zakat).</b><br>
-      <span class="meta">Kondisi aplikasi: laba dihitung sejak zakat terakhir DIBAYAR. Kalau zakat dibayar tiap bulan, periode laba pendek. Standar zakat tijarah umumnya = harta dagang SELURUH pada jatuh haul.</span><br>
+      <span class="meta">Kondisi aplikasi (sejak 26 Sep): periode laba di-ANCHOR pada <code>haul_start_date</code> (haul tetap 1 tahun); <code>last_zakat_date</code> tidak me-reset siklus (pembayaran = ta'jil), hanya audit + fallback bila haul start kosong. Akumulasi (accrual) proporsional hari haul ditampilkan di UI. Standar zakat tijarah umumnya = harta dagang SELURUH pada jatuh haul.</span><br>
       <b>Mengapa?</b> "Laba terakumulasi sejak pembayaran terakhir" boleh sebagai cara praktis, atau harus pakai haul 1 tahun yang tetap?
     </div>
     <label class="chk"><input type="checkbox"> <span><b>Opsi A:</b> Mekanik saat ini (sejak pembayaran terakhir) sah sebagai cara praktis.</span></label>
@@ -71,7 +73,7 @@
 
     <div class="q">
       <b>Soal 2 — Harga emas (nisab).</b><br>
-      <span class="meta">Kondisi aplikasi: harga emas per gram diisi manual oleh admin, wajib <b>24 karat murni</b> (emas 14 karat tidak sah — sudah dikonfirmasi Muktamar NU ke-35). Nisab = 85 g × harga tersebut. Belum ada sumber harga resmi + catatan kapan terakhir dicek.</span><br>
+      <span class="meta">Kondisi aplikasi: harga emas diisi manual oleh admin; standar saat ini PROVISIONAL <b>24 karat murni</b> (emas 14 karat tidak layak — riset Muktamar NU ke-35; menunggu tashih). Nisab = 85 g × harga tersebut. Sejak 26 Sep ada log verifikasi <code>zakat_gold_standards</code> (append-only: karat, harga/g, sumber, tanggal, oleh) — entri terbaru = standar terkini.</span><br>
       <b>Mengapa?</b> (a) sumber harga resmi mana (Antam / spot dunia / harga daerah), (b) frekuensi verifikasi + dicatat di mana, (c) bila ragu, opsi hati-hati yang mana (pakai harga tertinggi / tunda zakat)?
     </div>
     <label class="chk"><input type="checkbox"> <span><b>Sumber harga:</b> <input type="text" placeholder="mis. Antam / Pegadaian / harga daerah"></span></label>
@@ -80,7 +82,7 @@
 
     <div class="q">
       <b>Soal 3 — Modal (barang dagangan dinilai berapa).</b><br>
-      <span class="meta">Kondisi aplikasi: modal = stok × HPP (harga perolehan, bukan harga jual). Ada dua pendekatan baku: (a) modal murni — hanya untung yang dizakati (sebagian ulama Hanafi); (b) modal + untung (mayoritas & DSN-MUI 8/2008) — dan bila (b), persediaan dinilai pada HPP atau harga jual saat jatuh haul?</span><br>
+      <span class="meta">Kondisi aplikasi (sejak 26 Sep): modal = stok × (mode <code>valuation_mode</code> "market": harga jual produk — V1 proxy harga pasar | mode "hpp": harga perolehan). Ada dua pendekatan baku: (a) modal murni — hanya untung yang dizakati (sebagian ulama Hanafi); (b) modal + untung (mayoritas &amp; MUI Fatwa No. 78/2023 [judul: menunggu pengasuh]) — dan bila (b), persediaan dinilai pada HPP atau harga jual saat jatuh haul? Jawaban provisional aplikasi: mode market (default) | hpp (fallback).</span><br>
       <b>Mengapa?</b> Memakai modal HPP sekarang (angka terendah, hati-hati terhadap harta) sudah cukup, atau harus ke nilai pasar / pendekatan hanya-untung?
     </div>
     <label class="chk"><input type="checkbox"> <span><b>Opsi A:</b> Modal HPP (kondisi saat ini) sah.</span></label>
@@ -106,14 +108,19 @@
   <details>
     <summary>Lampiran teknis (tidak wajib dibaca)</summary>
     <h3>Rumus di aplikasi (sekarang)</h3>
-<pre>modal    = Σ stok × HPP (produk aktif, stok &gt; 0)
-laba     = Σ penjualan − Σ modal barang terjual (sejak periode mulai)
-periode  = zakat terakhir dibayar || awal haul || awal bulan WIB
-piutang  = Σ piutang belum dibayar
-hutang   = Σ hutang belum dibayar
-harta    = modal + laba + piutang − hutang
-nisab    = 85 g × harga emas (Rp, input manual; wajib 24 karat murni)
-zakat    = harta × 2,5% (bila harta ≥ nisab &amp; harga emas sudah terisi)
+<pre>modal      = Σ stok × (mode "market": harga jual [V1: proxy pasar]
+            | mode "hpp": HPP) — produk aktif, stok &gt; 0
+laba       = Σ penjualan − Σ modal barang terjual (sejak anchor)
+anchor     = haul_start_date (di-anchor, pembayaran ta'jil TIDAK
+            me-reset) || last_zakat_date (fallback) || awal bulan WIB
+piutang    = Σ piutang belum dibayar
+hutang     = Σ hutang belum dibayar
+harta      = modal + laba + piutang − hutang
+harga Emas = standar emas TERKINI (log zakat_gold_standards,
+            append-only) bila ada, selain itu setting gold_price
+nisab      = 85 g × harga efektif (standar 24K PROVISIONAL)
+zakat      = harta × 2,5% (bila harta ≥ nisab &amp; harga terisi)
+accrued    = zakat × (hari sejak anchor / 365) — provisional
 Catatan: zakat TIDAK otomatis masuk kas — hanya perhitungan + riwayat;
 pelunasan tanggung jawab admin. Contoh angka akan diisi tim aplikasi
 saat presentasi.</pre>
@@ -122,9 +129,10 @@ saat presentasi.</pre>
       <tr><th>No</th><th>Kitab / rujukan</th><th>Bab / topik</th></tr>
       <tr><td>1</td><td>Mughni (Ibnu Qudamah)</td><td>Kitab Zakaat, bab zakat al-tijarah &amp; haul</td></tr>
       <tr><td>2</td><td>'Umdah al-Ahkam (Muwaffaqi)</td><td>Bab nisab al-tijarah &amp; penilaian harta</td></tr>
-      <tr><td>3</td><td>DSN-MUI Fatwa No. 8/2008</td><td>Nisab 85 g, kadar 2,5%, haul 1 tahun, harta = total aset dagang</td></tr>
+      <tr><td>3</td><td>MUI Fatwa No. 78/2023 [judul: menunggu pengasuh]</td><td>Nisab 85 g, kadar 2,5%, haul 1 tahun, harta = total aset dagang</td></tr>
       <tr><td>4</td><td>(opsi) Al-Hawi / Kasyaf al-Qina'</td><td>Nilai budhl: perolehan vs pasar saat jatuh haul</td></tr>
     </table>
+    <p class="meta"><b>Koreksi sitasi (riset 26 Sep 2026):</b> baris 3 semula tertulis "DSN-MUI Fatwa No. 8/2008" — keliru: No. 08/DSN-MUI/IV/2000 = fatwa pembiayaan musyarakah, bukan zakat; DSN-MUI (Sharia Board MUI) berdomain muamalah/keuangan syariah, bukan fatwa zakat (domain Komisi Fatwa MUI). Nomor "78/2023" diberikan tim &amp; BELUM TERVERIFIKASI — judul &amp; substansi diverifikasi pengasuh sebelum dokumen ini jadi dasar tashih.</p>
     <p class="meta">Halaman spesifik silakan dilengkapi panel. Dokumen sumber: P3-TASHIH-ZAKAT.md (repo kopontren).</p>
   </details>
 

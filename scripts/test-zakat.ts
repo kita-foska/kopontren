@@ -1,6 +1,8 @@
 /**
- * Runtime test periode zakat WIB (UTC+7) — modul murni
- * src/lib/zakat-period.ts (digunakan route /api/zakat + export CSV).
+ * Runtime test modul zakat — modul murni:
+ * - src/lib/zakat-period.ts (periode WIB; diguna route /api/zakat + CSV)
+ * - src/lib/zakat-valuation.ts (P3 Step 2 PROVISIONAL: penilaian,
+ *   accrual, anchor haul, settlement — menunggu tashih pengasuh)
  * Menutup known-issue ±7 jam: boundary periode & timestamp CSV harus
  * WIB, bukan UTC. Dijalankan LANGSUNG oleh Node (type-stripping):
  *     npm run test:zakat       (== node scripts/test-zakat.ts)
@@ -12,6 +14,15 @@ import {
   wibDayStartUtc,
   wibToday,
 } from '../src/lib/zakat-period.ts';
+import {
+  computeAccrual,
+  computeBalance,
+  computeHaulAnchor,
+  computeValuation,
+  computeZakatAmount,
+  resolveValuationMode,
+  type ProductRow,
+} from '../src/lib/zakat-valuation.ts';
 
 let passes = 0;
 let failures = 0;
@@ -76,6 +87,64 @@ function main(): void {
   ok('query: 07:00 WIB 1 Sep masuk periode', saleWibEarly >= d91);
   const salePrevDay = '2026-08-31T16:59:59.000Z'; // 23:59 WIB 31 Agu
   ok('query: 23:59 WIB 31 Agu TIDAK masuk', !(salePrevDay >= d91));
+
+  // ═══ P3 Step 2 (PROVISIONAL — menunggu tashih): 7 skenario baru ═══
+  const prods: ProductRow[] = [
+    { stock: 10, base_price: 50000, cost_price: 30000 },
+    { stock: 4, base_price: 10000, cost_price: 6000 },
+  ];
+  // 1) valuation: market vs hpp (laba + piutang − hutang)
+  const mv = computeValuation('market', prods, 100000, 50000, 25000);
+  const hv = computeValuation('hpp', prods, 100000, 50000, 25000);
+  ok('valuation: market = Σ stok×base_price', mv.modal === 540000, String(mv.modal));
+  ok('valuation: hpp = Σ stok×cost_price', hv.modal === 324000, String(hv.modal));
+  ok(
+    'valuation: total = modal+laba+piutang−hutang',
+    mv.total_assets === 540000 + 100000 + 50000 - 25000,
+    String(mv.total_assets)
+  );
+  ok('valuation: floor 0 (kewajiban > harta)', computeValuation('market', [], 0, 0, 1000).total_assets === 0);
+  ok(
+    'valuation: normalisasi mode (trim/case/unknown->market)',
+    resolveValuationMode('  HPP ') === 'hpp' &&
+      resolveValuationMode('pasar') === 'market' &&
+      resolveValuationMode(undefined) === 'market'
+  );
+
+  // 2) accrual: 0 hari = 0
+  ok('accrual: 0 hari = 0', computeAccrual(4000000, 2.5, 0) === 0);
+  // 3) accrual: 365 hari = penuh (4jt × 2,5% = 100rb)
+  ok('accrual: 365 hari = penuh', computeAccrual(4000000, 2.5, 365) === 100000, String(computeAccrual(4000000, 2.5, 365)));
+  ok('accrual: cap 365 (730 hari tak lebih)', computeAccrual(4000000, 2.5, 730) === 100000);
+
+  // 4) settlement: overpaid
+  const over = computeBalance(100000, 120000);
+  ok('settlement: overpaid 20rb', over.overpaid === 20000 && over.underpaid === 0 && over.net === 20000, JSON.stringify(over));
+  // 5) settlement: underpaid
+  const under = computeBalance(100000, 80000);
+  ok('settlement: underpaid 20rb', under.underpaid === 20000 && under.overpaid === 0 && under.net === -20000, JSON.stringify(under));
+
+  // 6) nisab belum tercapai
+  const below = computeZakatAmount(8000000, 8500000, 2.5);
+  ok(
+    'nisab: belum tercapai -> zakat 0 + shortfall',
+    below.zakat === 0 && below.status === 'belum_nisab' && below.shortfall === 500000,
+    JSON.stringify(below)
+  );
+  const at = computeZakatAmount(8500000, 8500000, 2.5);
+  ok('nisab: tepat = wajib (8,5jt × 2,5% = 212,5rb)', at.zakat === 212500 && at.status === 'wajib', String(at.zakat));
+
+  // 7) haul anchor: fallback chain (haul_start -> last_payment -> current_month)
+  const a1 = computeHaulAnchor('2026-09-01', '2025-09-01', '2026-09-25');
+  ok('anchor: haul_start diprioritaskan (ta\'jil tak menggeser)', a1.source === 'haul_start' && a1.anchor === '2026-09-01');
+  ok('anchor: days_elapsed 24 hari', a1.days_elapsed === 24, String(a1.days_elapsed));
+  ok('anchor: haul_end +1 tahun', a1.haul_end === '2027-09-01' && a1.status === 'belum_haul');
+  const a2 = computeHaulAnchor('', '2025-09-01', '2026-09-25');
+  ok('anchor: fallback pembayaran terakhir', a2.source === 'last_payment' && a2.anchor === '2025-09-01');
+  ok('anchor: 389 hari -> cap 365 + haul_jatuh', a2.days_elapsed === 365 && a2.status === 'haul_jatuh', String(a2.days_elapsed));
+  const a3 = computeHaulAnchor('', '', '2026-09-25');
+  ok('anchor: fallback awal bulan berjalan', a3.source === 'current_month' && a3.anchor === '2026-09-01' && a3.days_elapsed === 24);
+  ok('anchor: leap Feb-29 -> haul_end clamp Mar-01', computeHaulAnchor('2024-02-29', '', '2024-03-01').haul_end === '2025-03-01');
 
   console.log('---');
   console.log('PASS: ' + passes + '  FAIL: ' + failures);

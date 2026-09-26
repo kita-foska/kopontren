@@ -33,7 +33,10 @@
 - [ ] Sistem proteksi marjin aktif (anti jual di bawah HPP tanpa kendali)?
 
 ## F. Zakat (kalau relevan)
-- [ ] Nisab 85 gr emas **murni 24 karat** (bisa dikonfigurasi; harga emas 24K dicek berkala — emas 14/18K TIDAK boleh jadi dasar nisab, Muktamar NU ke-35)?
+- [ ] Nisab 85 gr emas **murni 24 karat** (PROVISIONAL — menunggu tashih;
+      bisa dikonfigurasi; standar emas terekam di log `zakat_gold_standards`
+      (append-only, skema v18); harga emas 24K dicek berkala — emas
+      14/18K TIDAK boleh jadi dasar nisab, Muktamar NU ke-35)?
 - [ ] Haul 1 tahun?
 - [ ] Kadar 2.5%?
 - [ ] Pengurangan hutang (payables open) ikut terkurangi?
@@ -42,13 +45,28 @@
       murni pencatatan yang ma'lum (nilai jelas + ridha pencatat);
       TIDAK menambah riba/ghharar/maysir; akad tetap kewajiban zakat
       tijarah (nisab emas 24K + haul + kadar 2,5%).
-- **STATUS PROVISIONAL (zakat tijarah — FASE 2 Step 1)**: Provisional
-  — implemented based on strongest available fiqh position. Pending
-  tashih by pengasuh. Subject to correction. (Formula periodik
-  konservatif: haul 1 tahun tetap, laba sejak `last_zakat_date`,
-  modal @ HPP, harga emas 24K manual + media pembayaran v17.)
-  Step 2 FASE 2 = terapkan koreksi hasil tashih pengasuh (logika
-  P3: haul, gold standard, penaksiran nilai) — komit terpisah.
+- **STATUS PROVISIONAL (zakat tijarah — FASE 2 Step 1 + Step 2)**:
+  Provisional — implemented based on strongest available fiqh position.
+  Pending tashih by pengasuh. Subject to correction.
+  - Step 1 (sudah SELESAI sebelumnya): formula periodik konservatif
+    (haul 1 tahun tetap, laba terakumulasi sejak `last_zakat_date`,
+    modal @ HPP, harga emas 24K manual) + pencatatan media pembayaran
+    v17.
+  - Step 2 (26 Sep, PROVISIONAL, sebelum hasil tashih): haul anchor
+    `haul_start_date` (pembayaran zakat = ta'jil, TIDAK me-reset
+    siklus; `last_zakat_date` hanya audit + fallback), log standar
+    emas `zakat_gold_standards` (append-only: karat, harga/g, sumber,
+    tanggal, oleh; entri terbaru = standar terkini), `valuation_mode`
+    market (default; V1 proxy = harga jual) / hpp (fallback) —
+    `src/lib/zakat-valuation.ts` + route `/api/zakat/gold-standards`
+    + UI `/admin/zakat`; `test:zakat` 37/37.
+  - **Koreksi sitasi (riset 26 Sep):** referensi dokumen tashih lama
+    "DSN-MUI Fatwa No. 8/2008" KELIRU (No. 08/DSN-MUI/IV/2000 =
+    pembiayaan musyarakah, bukan zakat; DSN-MUI berdomain muamalah,
+    bukan fatwa zakat) → diganti "MUI Fatwa No. 78/2023 [judul:
+    menunggu pengasuh]" (nomor belum terverifikasi).
+  - Step 3 (P4 dokumen hanya) + revisi hasil tashih pengasuh =
+    komit terpisah.
 
 ## G. Tashih
 - [ ] Perlu tashih ulama?
@@ -70,13 +88,13 @@
 | 7 | Tier Silver/Gold | Status | ✅ | Badge saja, ambang jelas di setting |
 | 8 | Diskon (member/grosir/ultah) | Hibah | ✅ | Jelas, cap 90%, ultah = tawadhi' |
 | 9 | Retur/Refund | Khiyar ('aib/syarat) | ✅ | Alur sah; P2 SELESAI — rollback poin/reward saat retur penuh (f4479b3) |
-| 10 | Zakat tijarah | Kewajiban | ❓ | Nisab/kadar ok; formula laba periodik & modal HPP perlu tashih; harga emas = **24K murni** (Muktamar NU ke-35) |
+| 10 | Zakat tijarah | Kewajiban | ❓ | Nisab/kadar ok; formula laba periodik & modal HPP perlu tashih; harga emas = **24K murni** (Muktamar NU ke-35). Step 2 P3 provisional (26 Sep): haul anchor + `valuation_mode` market/hpp + log `zakat_gold_standards` — menunggu tashih |
 | 11 | Shift / setor kas | Wakalah | ✅ | Kontrol internal, jurnal kas atomik |
 | 12 | QRIS | — | ⏸️ | Masih MOCK — jangan produksi sebelum NMID |
 
 ### Keputusan user P (tashih ulama)
 1. **P1 — Terminologi "Cashback"** → ✅ SELESAI (24 Sep 2026, commit f4479b3 + follow-up label WA/CSV/soft-flag): label UI jadi **"Saldo Reward"**; poin "Poin Reward". Mekanisme tidak berubah (tetap store-credit).
 2. **P2 — Lubang exploit poin** (beli → tebus reward → retur barang + uang, poin tetap) → ✅ SELESAI (f4479b3): balikkan poin & saldo reward saat retur penuh (jejak ledger `reason='return'`). Tashih tersisa: bolehkah store membatalkan reward yang sudah cair? (biasanya boleh, karena mughannash/dhalalah)
-3. **P3 — Zakat**: (a) pakai haul 1 tahun tetap; laba diakumulasikan secara konservatif sejak awal haul, bukan sejak `last_zakat_date`, (b) harga emas diverifikasi berkala, (c) apakah modal disekap pada nilai pasar (atau tetap HPP)? — semua menunggu keputusan ulama. Draft tashih: `P3-TASHIH-ZAKAT.md` (24 Sep 2026). **P3-b (riset 24 Sep):** nisab = 85 g emas **murni 24 karat** — emas 14 karat TIDAK sah (Muktamar NU ke-35; Syafi'i: nisab emas murni) → app wajib pakai harga emas 24K; label UI zakat + dokumen sudah disetel.
+3. **P3 — Zakat**: (a) pakai haul 1 tahun tetap; laba diakumulasikan secara konservatif sejak awal haul, bukan sejak `last_zakat_date`, (b) harga emas diverifikasi berkala, (c) apakah modal disekap pada nilai pasar (atau tetap HPP)? — semua menunggu keputusan ulama. Draft tashih: `P3-TASHIH-ZAKAT.md` (24 Sep 2026). **P3-b (riset 24 Sep):** nisab = 85 g emas **murni 24 karat** — emas 14 karat TIDAK sah (Muktamar NU ke-35; Syafi'i: nisab emas murni) → app wajib pakai harga emas 24K; label UI zakat + dokumen sudah disetel. **P3 Step 2 (26 Sep, PROVISIONAL — sebelum hasil tashih):** (a) terapkan: `haul_start_date` jadi anchor siklus (pembayaran = ta'jil, tidak me-reset), (b) log `zakat_gold_standards` (append-only) untuk verifikasi berkala, (c) `valuation_mode` market/hpp + accrued proporsional hari haul. Semua status provisional menunggu tashih pengasuh; **koreksi sitasi 26 Sep:** referensi "DSN-MUI Fatwa No. 8/2008" keliru → diganti "MUI Fatwa No. 78/2023 [judul: menunggu pengasuh]" (nomor belum terverifikasi; lihat §F + `P3-TASHIH-ZAKAT.md` §D).
 4. **P4 — Konsinyasi + komisi store**: jika suatu hari store mau komisi, pakai **wakalah bil ujrah** (koreksi 24 Sep dr "ju'alah" — dsr Syafi'i, bentuk "laku = beli" = gharar; ref. Fatwa DSN-MUI No. 113/DSN-MUI/IX/2017; komisi % disepakati di muka, tercatat di baris konsinyasi). → ✅ SELESAI (24 Sep 2026): komisi 20% (ujrah) dicatat otomatis sebagai kas masuk "Ujrah Kon. …" hanya saat barang TERJUAL; tagihan pemilik neto komisi; rate per titipan di-snapshot (`consignments.commission_rate`), admin bisa ubah via setting `konsinyasi_commission`. Proposal pengurus: `P4-PROPOSAL-KONSINYASI.md` (24 Sep). **P4-B (24 Sep):** komisi boleh BEDA-BEDA per kesepakatan (antardhin) — field input per titipan + default per-pemilik (`konsinyasi_owner_rates` JSON; kartu "Rate per-pemilik" di /admin/konsinyasi); prioritas eksplisit > per-pemilik > global; titipan aktif tetap snapshot (tanpa perubahan sepihak). **P4-Tashih (riset 24 Sep):** (a) koreksi terminologi ju'alah → wakalah bil ujrah diterapkan di UI/dokumen/kode — mekanik & data TAK berubah; (b) basis ujrah V1 = % harga PERJANJIAN (ma'lum, sesuai Syafi'i); harga jual aktual = gharar dlm pendapat klasik (DSN-MUI 112/IX/2017 membolehkan persentase yg disepakati; alternatif: ujrah mitsli) — tunggu konfirmasi ulama; (c) komisi persenan = ujrah ma'lum (mayoritas Bahtsul Masail HIPJAS VI 2023, Hasyiyah al-Jamal).
 5. **P5 — Denda keterlambatan**: JANGAN pernah diimplementasikan sebagai pendapatan store. Jika ada insentif ketepatan waktu → **ta'zir/ta'zhir ke kas amal** (contoh: donasi ke kas pondok), bukan masuk kas store.

@@ -151,11 +151,22 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       pembayaran v17, commit `2bd27a1`) — **STATUS: Provisional —
       implemented based on strongest available fiqh position. Pending
       tashih by pengasuh. Subject to correction.**
-- [ ] FASE 2 — Step 2: terapkan hasil tashih pengasuh (logika P3:
-      haul, gold standard 24K, penaksiran nilai/modal) — ubah
-      formula/nilai di `src/lib/zakat.ts` + UI + `test:zakat`;
-      komit terpisah. Tunggu keputusan `P3-TASHIH-ZAKAT.md`
-      (pengasuh). Lihat SYARIAH-CHECKLIST.md seksi F.
+- [x] FASE 2 — Step 2 (PROVISIONAL, 26 Sep): logika P3 terimplementasi
+      SEBELUM hasil tashih: haul anchor (`haul_start_date`; pembayaran
+      = ta'jil, tidak me-reset), log standar emas
+      `zakat_gold_standards` (append-only, skema v18),
+      `valuation_mode` market (default; V1 proxy harga jual) / hpp
+      (fallback) — `src/lib/zakat-valuation.ts` (murni) + route
+      `/api/zakat` & `/api/zakat/gold-standards` + UI `/admin/zakat`
+      + `test:zakat` (37 kasus). **Status: Provisional — menunggu
+      tashih pengasuh. Subject to correction.**
+- [ ] Diverifikasi: judul MUI Fatwa No. 78/2023 (untuk pengasuh) —
+      referensi lama "DSN-MUI 8/2008" keliru (riset 26 Sep; lihat
+      P3-TASHIH-ZAKAT.md §D footnote koreksi sitasi).
+- [ ] FASE 2 — Step 3 (dokumen P4 hanya): lanjut setelah review +
+      commit Step 2 (plan user, 26 Sep). Tunggu keputusan
+      `P3-TASHIH-ZAKAT.md` (pengasuh); terapkan revisi hasil tashih
+      = komit terpisah. Lihat SYARIAH-CHECKLIST.md seksi F.
 - [ ] **sw.js refactor template-generate (FOLLOW-UP terpisah,
       BUKAN sekarang)** — ubah `scripts/inject-sw-version.mjs`
       dari in-place stamp menjadi MEN-GENERATE: template ter-track

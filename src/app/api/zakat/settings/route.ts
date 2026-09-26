@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db, getZakatSettings, saveZakatSettings } from '@/db';
 import { canAccess, currentUser, isAdmin } from '@/lib/auth';
+import { resolveValuationMode } from '@/lib/zakat-valuation';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -17,6 +18,7 @@ export async function GET() {
     zakat_rate: Number(s.zakat_rate) || 0,
     haul_start_date: s.haul_start_date,
     last_zakat_date: s.last_zakat_date,
+    valuation_mode: resolveValuationMode(s.valuation_mode), // P3 Step 2 (provisional)
   });
 }
 
@@ -62,6 +64,10 @@ export async function POST(req: Request) {
       patch[k] = v;
     }
   }
+  if (b.valuation_mode !== undefined) {
+    // P3 Step 2 (provisional): 'market' (default) | 'hpp' (fallback).
+    patch.valuation_mode = resolveValuationMode(b.valuation_mode);
+  }
 
   if (Object.keys(patch).length === 0)
     return NextResponse.json({ error: 'Tidak ada pengaturan untuk disimpan' }, { status: 400 });
@@ -77,6 +83,7 @@ export async function POST(req: Request) {
       zakat_rate: Number(s.zakat_rate) || 0,
       haul_start_date: s.haul_start_date,
       last_zakat_date: s.last_zakat_date,
+      valuation_mode: resolveValuationMode(s.valuation_mode),
     },
   });
 }

@@ -37,15 +37,59 @@
   tetap, laba terakumulasi sejak `last_zakat_date`, modal @ HPP,
   harga emas manual 24K; + pencatatan media pembayaran v17.)
   FASE 2: Step 1 (implementasi posisi terkuat) SELESAI — menunggu
-  tashih pengasuh (`P3-TASHIH-ZAKAT.md`); Step 2 = terapkan hasil
-  tashih (logika P3: haul, gold standard, penaksiran nilai) di
-  `src/lib/zakat.ts` + UI + `test:zakat`, komit terpisah.
-- **Catatan audit — formula yang live masih FORMULA LAMA**:
-  `modal + laba − hutang − piutang` + HPP, harga emas manual 24K
-  (v17 hanya menambah pencatatan media pembayaran, TANPA mengubah
-  formula). Status provisional = keputusan untuk MENJAGANYA secara
-  sementara, BUKAN formula baru. Step 2 (hasil tashih pengasuh)
-  yang akan mengubah formula/logika P3.
+  tashih pengasuh (`P3-TASHIH-ZAKAT.md`). (Step 2 provisional
+  terapkan di entry di bawah: "ZAKAT — FASE 2 Step 2".)
+- **Catatan audit (waktu itu) — formula yang live masih FORMULA
+  LAMA**: `modal + laba + piutang − hutang` + HPP, harga emas
+  manual 24K (v17 hanya menambah pencatatan media pembayaran,
+  TANPA mengubah formula). Status provisional = keputusan untuk
+  MENJAGANYA secara sementara, BUKAN formula baru. (Koreksi
+  trancribes lama: kutipan "modal + laba − hutang − piutang" salah;
+  code asli `src/app/api/zakat/route.ts` = `modal + laba +
+  piutang − hutang`.)
+
+### ZAKAT — FASE 2 Step 2: logika P3 provisional (26 Sep)
+- **Lakukan Step 2 SEBELUM hasil tashih** (keputusan user): logika
+  P3 diimplementasikan sebagai posisi provisional; revisi hasil
+  tashih pengasuh = komit terpisah (Step 3 = P4 dokumen hanya).
+- **Modul murni anyar `src/lib/zakat-valuation.ts`** (pola
+  `zakat-period.ts`, tanpa dependensi Next): `computeValuation`
+  (mode market/hpp; market default, V1 proxy = harga jual produk),
+  `computeAccrual` (proporsional hari haul sejak anchor),
+  `computeHaulAnchor` (fallback: `haul_start_date` →
+  `last_zakat_date` → awal bulan WIB; clamp ≤1 thn utk anomali
+  + 29 Feb), `computeBalance`.
+- **Haul anchor**: `last_zakat_date` TIDAK lagi me-reset siklus
+  akumulasi — pembayaran zakat = ta'jil, hanya audit trail +
+  fallback bila `haul_start_date` kosong.
+- **Skema v17→18** (`src/db.ts`, add-ops `execAdditive`):
+  `zakat_gold_standards` (append-only: karat, price, source,
+  price_date, created_by; index `price_date` DESC) +
+  `ZAKAT_SETTING_DEFAULTS.valuation_mode = 'market'`.
+- **Route `/api/zakat`**: GET+POST memuat `valuation_mode`,
+  `haul_anchor`, `accrued`, `days_in_haul`; GET juga
+  `gold_standard` (log terbaru) → harga efektif; cache
+  `zakat:calc` TTL 15 mtk.
+- **Route anyar `/api/zakat/gold-standards`**: GET (tier
+  `laporan`+) 100 baris terbaru; POST admin-only (insert).
+- **UI `/admin/zakat`** (`zakat-client.tsx`): label status
+  provisional + banner amber, select `valuation_mode` +
+  form/tabel log standar emas (TANPA hapus — append-only),
+  stat card Haul & Akumulasi, detail kalkulasi memuat
+  anchor/hari/accrual/standar emas (setting vs log).
+- **Test `scripts/test-zakat.ts`**: +9 kasus (total 37) — mode
+  penilaian (market/hpp), accrued proporsional + edge (anchor
+  masa depan = 0), settlement balance, fallback anchor. SEMUA PASS.
+- **Verifikasi**: `npm run test:zakat` 37/37 ALL_PASS;
+  `npx tsc --noEmit` EXIT 0; `next build` EXIT 0.
+- **Koreksi sitasi P3 (riset 26 Sep)**: "DSN-MUI Fatwa No.
+  8/2008" keliru (No. 08/DSN-MUI/IV/2000 = musyarakah, bukan
+  zakat; DSN-MUI berdomain muamalah) → "MUI Fatwa No. 78/2023
+  [judul: menunggu pengasuh]" (nomor dari tim, BELUM TERVERIFIKASI
+  — placeholder sampai pengasuh verifikasi). Tersimpan di
+  `P3-TASHIH-ZAKAT.md` §D (md+html), SYARIAH-CHECKLIST §F, TODO.
+- **Catatan**: skema v18 add-ops — DB turunan (Vercel Turso)
+  butuh migration/PRAGMA saat cold start; jangan rewrite data.
 
 ### UI/UX audit high-priority: perbaikan P1–P4 (26 Sep)
 - **P1 font**: 'Plus Jakarta Sans' dideklarasikan di

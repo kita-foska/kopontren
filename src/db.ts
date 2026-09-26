@@ -471,6 +471,15 @@ async function migrate(d: Db) {
   // lama hampir pasti dicatat tunai, '' justru bikin ambiguitas).
   // Idempoten (guard PRAGMA table_info di execColumn), aman utk DB existing.
   await execColumn(d, "ALTER TABLE zakat_history ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'cash'");
+  // ── v18 (2026-09-26): FASE 2 Step 2 (P3 PROVISIONAL — menunggu
+  // tashih pengasuh; subject to correction): log verifikasi standar
+  // harga emas. APPEND-ONLY: hanya INSERT dari kode app (endpoint
+  // /api/zakat/gold-standards tidak punya PUT/DELETE); setiap entri
+  // verifikasi = baris baru. `price_date` = tanggal acuan harga;
+  // standar TERKINI = baris ber-price_date terbaru (ORDER BY
+  // price_date DESC, id DESC). decided_by = user yang mencatat.
+  await d.exec("CREATE TABLE IF NOT EXISTS zakat_gold_standards (id INTEGER PRIMARY KEY, karat TEXT NOT NULL DEFAULT '24K', price_per_gram INTEGER NOT NULL DEFAULT 0, source TEXT NOT NULL DEFAULT '', price_date TEXT NOT NULL DEFAULT '', decided_by TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')))");
+  await d.exec("CREATE INDEX IF NOT EXISTS idx_zgs_price_date ON zakat_gold_standards(price_date)");
 
   // ── Keamanan (2026): PIN 4-6 digit + idle timeout sesi ──
   // sessions.last_activity: jejak aktivitas terakhir utk idle timeout (refresh
@@ -694,6 +703,10 @@ export const ZAKAT_SETTING_DEFAULTS: Record<string, string> = {
   zakat_rate: '2.5', // kadar zakat (%)
   haul_start_date: '', // tanggal mulai haul (YYYY-MM-DD, kosong = auto awal bulan)
   last_zakat_date: '', // zakat terakhir dibayar (YYYY-MM-DD)
+  // P3 Step 2 (PROVISIONAL — menunggu tashih pengasuh): mode penilaian
+  // harta dagang. 'market' (default; V1 proxy harga pasar = kolom
+  // products.base_price) | 'hpp' (fallback: harga perolehan cost_price).
+  valuation_mode: 'market',
 };
 
 let _zakatSettingsCache: { at: number; value: Record<string, string> } | null = null;
@@ -794,7 +807,14 @@ export async function saveZakatSettings(
 // -> TIDAK ada risiko kehilangan data; rollback aman (Turso SQLite
 // >=3.35: ALTER TABLE ... DROP COLUMN bila perlu). DB stempel v16
 // menjalankan fullInit sekali lagi saat cold start berikutnya.
-const SCHEMA_VERSION = 17;
+// Bump v18 (2026-09-26): FASE 2 Step 2 (P3 provisional, menunggu
+// tashih pengasuh) — tabel baru zakat_gold_standards (log append-only
+// verifikasi harga emas; CREATE TABLE IF NOT EXISTS di migrate()) +
+// setting key valuation_mode (default 'market', ON-CONFLICT-free krena
+// hanya dibaca via ZAKAT_SETTING_DEFAULTS saat key belum ada).
+// Purely additive; DB stempel v17 menjalankan fullInit sekali lagi
+// saat cold start berikutnya (~15-20 s satu kali).
+const SCHEMA_VERSION = 18;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
