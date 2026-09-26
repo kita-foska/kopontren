@@ -146,6 +146,25 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       setup), `prefers-reduced-motion` menjangkau utilitas
       animate-*, manifest background `#170A0E`. Build 52/52 OK.
       — detail MEMORY.md seksi 2026-09-26.
+- [x] FASE 2 (P3 tashih ulama zakat) — Step 1: implementasi posisi
+      fiqih terkuat (zakat periodik konservatif + pencatatan media
+      pembayaran v17, commit `2bd27a1`) — **STATUS: Provisional —
+      implemented based on strongest available fiqh position. Pending
+      tashih by pengasuh. Subject to correction.**
+- [ ] FASE 2 — Step 2: terapkan hasil tashih pengasuh (logika P3:
+      haul, gold standard 24K, penaksiran nilai/modal) — ubah
+      formula/nilai di `src/lib/zakat.ts` + UI + `test:zakat`;
+      komit terpisah. Tunggu keputusan `P3-TASHIH-ZAKAT.md`
+      (pengasuh). Lihat SYARIAH-CHECKLIST.md seksi F.
+- [ ] **sw.js refactor template-generate (FOLLOW-UP terpisah,
+      BUKAN sekarang)** — ubah `scripts/inject-sw-version.mjs`
+      dari in-place stamp menjadi MEN-GENERATE: template ter-track
+      (mis. `public/sw.src.js`) + `public/sw.js` menjadi generated
+      + `public/sw.js` masuk `.gitignore`. Eliminasi root-cause
+      mutasi in-place. Verifikasi: perilaku SW di deploy TETAP
+      SAMA + build lokal/Cloud. Detail: MEMORY.md seksi
+      "PWA Installability" item guardrail.
+
 - [x] **Phone duplicate guard format-insensitive** — SELESAI (commit
       `f2b398e`, 23 Sep 2026, dual-push master+main): helper bersama
       `phoneOwner` + `canonicalPhone` di `src/lib/phone.ts` — duplikat

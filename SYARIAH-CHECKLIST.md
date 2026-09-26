@@ -42,6 +42,13 @@
       murni pencatatan yang ma'lum (nilai jelas + ridha pencatat);
       TIDAK menambah riba/ghharar/maysir; akad tetap kewajiban zakat
       tijarah (nisab emas 24K + haul + kadar 2,5%).
+- **STATUS PROVISIONAL (zakat tijarah — FASE 2 Step 1)**: Provisional
+  — implemented based on strongest available fiqh position. Pending
+  tashih by pengasuh. Subject to correction. (Formula periodik
+  konservatif: haul 1 tahun tetap, laba sejak `last_zakat_date`,
+  modal @ HPP, harga emas 24K manual + media pembayaran v17.)
+  Step 2 FASE 2 = terapkan koreksi hasil tashih pengasuh (logika
+  P3: haul, gold standard, penaksiran nilai) — komit terpisah.
 
 ## G. Tashih
 - [ ] Perlu tashih ulama?

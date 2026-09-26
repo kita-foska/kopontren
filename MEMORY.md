@@ -30,6 +30,23 @@
   EXIT 0. (Env lokal: `@next/swc` & 35 paket lainnya sempat rusak —
   `npm install` memperbaiki; bukan issue kode.)
 
+### ZAKAT — FASE 2: status provisional (26 Sep)
+- **STATUS PROVISIONAL**: Provisional — implemented based on strongest
+  available fiqh position. Pending tashih by pengasuh. Subject to
+  correction. (Formula periodik konservatif per P3: haul 1 tahun
+  tetap, laba terakumulasi sejak `last_zakat_date`, modal @ HPP,
+  harga emas manual 24K; + pencatatan media pembayaran v17.)
+  FASE 2: Step 1 (implementasi posisi terkuat) SELESAI — menunggu
+  tashih pengasuh (`P3-TASHIH-ZAKAT.md`); Step 2 = terapkan hasil
+  tashih (logika P3: haul, gold standard, penaksiran nilai) di
+  `src/lib/zakat.ts` + UI + `test:zakat`, komit terpisah.
+- **Catatan audit — formula yang live masih FORMULA LAMA**:
+  `modal + laba − hutang − piutang` + HPP, harga emas manual 24K
+  (v17 hanya menambah pencatatan media pembayaran, TANPA mengubah
+  formula). Status provisional = keputusan untuk MENJAGANYA secara
+  sementara, BUKAN formula baru. Step 2 (hasil tashih pengasuh)
+  yang akan mengubah formula/logika P3.
+
 ### UI/UX audit high-priority: perbaikan P1–P4 (26 Sep)
 - **P1 font**: 'Plus Jakarta Sans' dideklarasikan di
   `tailwind.config.ts`/`globals.css` tapi TIDAK PERNAH di-load
@@ -703,6 +720,26 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   jalan via `npm run build` → `scripts/inject-sw-version.mjs`) ⇒
   `public/sw.js` tak berubah di git saat test lokal; Vercel
   men-stamp sendiri tiap deploy.
+- **Guardrail sw.js (26 Sep — keputusan user, commit docs
+  `2bd27a1`/`10c8e87` telah ikut memuat stamp — HARMLESS):**
+  `public/sw.js` = **source file with build stamp**, BUKAN pure
+  artifact (di-stamp in-place tiap `npm run build`). Keputusan:
+  **tetap tracked (Option A) + guardrail `skip-worktree`**.
+  Nilai stamp ter-commit **tidak memengaruhi production** —
+  Vercel selalu re-stamp di cloud build. Disiplin:
+  1. **JANGAN commit `public/sw.js` versi ter-stamp**; sebelum
+     commit: `git checkout -- public/sw.js`.
+  2. Clone `D` memakai `skip-worktree`
+     (`git update-index --skip-worktree public/sw.js`) agar
+     mutasi stamp lokal tak men-`pollute` status.
+     **KHUSUS clone `D` — JANGAN terapkan di clone `kp`.**
+     (Perintah bersifat per-clone; cek dengan `git ls-files -v |
+     Select-String '^S'`.)
+  3. Follow-up (BELUM, terpisah): refactor template-generate —
+     `public/sw.src.js` sebagai template ter-track;
+     `inject-sw-version.mjs` MEN-GENERATE `public/sw.js`
+     (template+stamp); `public/sw.js` masuk `.gitignore`. Lihat
+     item di TODO.md.
 
 ## PWA Favicon — Ikon Taskbar/Start Menu (22 Sep 2026, commit `046b80c`)
 - **Akar masalah:** `public/favicon.ico` lama KORUP (10.861 byte, ICO
