@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // alias agar tidak men-shadow type KeyboardEvent global (DOM) yang
 // dipakai handler ESC Modal di bawah.
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { X, CircleHelp } from 'lucide-react';
+import { CircleHelp, Loader2, X } from 'lucide-react';
 import { fetchTimeout, fetchRetry, isAbort } from '@/lib/fetch-util';
 
 const tones: Record<string, string> = {
@@ -44,6 +44,205 @@ export function initials(name: string): string {
   if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/* ── UX-4 FASE B (B1): primitive Button — inti UX-4
+   7 varian × 3 ukuran; a11y: min touch target 44px (kecuali variant link),
+   iconOnly wajib aria-label, loading = spinner + aria-busy, active =
+   aria-pressed (toggle/filter chip), focus-visible ring, type default
+   'button' (aman form). Fase B.2–B.4: migrasi 208 <button> + 13 <a>
+   ad-hoc/`btn-*` → <Button>; B.4 menghapus 5 rules CSS .btn* dari
+   globals.css. */
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'ghost'
+  | 'danger'
+  | 'amber'
+  | 'gold'
+  | 'link';
+export type ButtonSize = 'sm' | 'md' | 'lg';
+
+const BTN_BASE =
+  'inline-flex items-center justify-center gap-1.5 rounded-field font-semibold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
+
+const BTN_SIZE: Record<ButtonSize, string> = {
+  // Target sentuh a11y: md = 44px (standar); sm = 36px utk area padat.
+  sm: 'min-h-[36px] px-2.5 py-1 text-xs',
+  md: 'min-h-11 px-3.5 py-2 text-sm',
+  lg: 'min-h-[52px] px-5 py-3 text-base',
+};
+
+const BTN_ICON: Record<ButtonSize, string> = {
+  // Kotak persegi (width = height) untuk tombol ikon.
+  sm: 'h-9 w-9 p-0',
+  md: 'h-11 w-11 p-0',
+  lg: 'h-[52px] w-[52px] p-0',
+};
+
+const BTN_VARIANT: Record<ButtonVariant, string> = {
+  // Maroon brand = token accent-500 (burgundy #7a1835, UX-3).
+  primary: 'bg-accent-500 text-white hover:bg-accent-600',
+  // Netral terisi (bedanya dg ghost: ghost transparan).
+  secondary:
+    'border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-navy-600 dark:bg-navy-800 dark:text-slate-200 dark:hover:bg-navy-700',
+  // Transparan + border netral (padanan rules .btn-ghost saat ini).
+  ghost:
+    'border border-slate-300 bg-transparent text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700',
+  // Semantik risk = rose-600 (tone risk UX-4).
+  danger: 'bg-rose-600 text-white hover:bg-rose-700',
+  // Semantik attention = amber-500.
+  amber: 'bg-amber-500 text-slate-900 hover:bg-amber-400',
+  // Highlight premium (token gold #fbbf24) — khusus tier/badge, bukan aksi umum.
+  gold: 'bg-amber-400 text-slate-900 hover:bg-amber-300',
+  // Teks-only: tanpa min-height (44px hanya utk tombol sejati).
+  // Teks-only: tanpa min-height/padding (ukuran di-skip utk link → inherit).
+  link: 'text-accent-600 underline-offset-2 hover:underline dark:text-accent-300',
+};
+
+// active=true → chip/toggle terpilih (fill accent, override bg varian).
+const BTN_ACTIVE = 'border-accent-500 bg-accent-500 text-white hover:bg-accent-500';
+
+type ButtonBaseProps = Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'type' | 'className'
+> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  type?: 'button' | 'submit' | 'reset';
+  /** Ikon depan (lucide, sizing kelas h/w oleh pemanggil). */
+  icon?: React.ReactNode;
+  /** Persegi (sm 36 / md 44 / lg 52 px); wajib aria-label. */
+  iconOnly?: boolean;
+  /** Spinner Loader2 + disabled + aria-busy (tombol tidak bisa diklik). */
+  loading?: boolean;
+  /** Label pengganti children saat loading (mis. 'Memproses…'). Opsional. */
+  loadingLabel?: React.ReactNode;
+  /** Keadaan terpilih (filter chip/toggle) → fill accent + aria-pressed. */
+  active?: boolean;
+  /** Lebar penuh (mengganti utilitas w-full ad-hoc). */
+  full?: boolean;
+  /** Override/merge terakhir — tetap bisa utk kasus khusus (kartu/tile). */
+  className?: string;
+};
+
+/** Branch <button> (default): `href` dilarang agar tersamaran <a> tak sengaja. */
+type ButtonAsButton = ButtonBaseProps & { as?: 'button'; href?: never };
+/** Branch <a>: `href` WAJIB. Bila as='a' tanpa href saat runtime →
+    fallback render <button> + console.warn (jaringan pengaman). */
+type ButtonAsLink = Omit<ButtonBaseProps, 'type' | 'disabled' | 'focusable'> & {
+  as: 'a';
+  href: string;
+};
+
+export type ButtonProps = ButtonAsButton | ButtonAsLink;
+
+export function Button(props: ButtonProps) {
+  // 2.5: destructure eksplisit key kustom → `...rest` hanya sisakan atribut
+  // HTML (self-documenting; tak ada key kustom bocor ke DOM).
+  const {
+    variant: variantProp = 'primary',
+    size = 'md',
+    icon,
+    iconOnly,
+    loading,
+    active,
+    full,
+    className,
+    as,
+    loadingLabel,
+    ...rest
+  } = props;
+  // Atribut HTML sisa utk bacaan runtime (menghindari indeksasi tipe union).
+  const attrs = rest as Record<string, unknown>;
+  const type = (attrs['type'] as 'button' | 'submit' | 'reset' | undefined) ?? 'button';
+
+  // 2.2: kombinasi iconOnly + variant="link" tak didukung → dev-warn +
+  // fallback ke "ghost" agar tetap ada frame persegi.
+  const variant: ButtonVariant =
+    iconOnly && variantProp === 'link'
+      ? ((typeof console !== 'undefined') &&
+          console.warn('[Button] iconOnly + variant="link" tak didukung; fallback ke "ghost".'),
+        'ghost')
+      : variantProp;
+
+  const cls = [
+    BTN_BASE,
+    // 2.1: link = teks-only → skip metrik ukuran (min-height/padding) agar tak
+    // ada konflik kelas min-h-* antar-size & variant.
+    variant === 'link' ? '' : BTN_SIZE[size],
+    iconOnly ? BTN_ICON[size] : '',
+    BTN_VARIANT[variant],
+    active ? BTN_ACTIVE : '',
+    full ? 'w-full' : '',
+    loading ? 'pointer-events-none' : '',
+    className ?? '',
+  ].filter(Boolean).join(' ');
+
+  // Ikon depan / spinner: loading → Loader2 muter; iconOnly → tanpa teks.
+  const lead = loading ? (
+    <Loader2
+      aria-hidden="true"
+      className={'h-' + (size === 'sm' ? '4' : '5') + ' w-' + (size === 'sm' ? '4' : '5') + ' animate-spin'}
+    />
+  ) : (
+    icon
+  );
+  // 2.3: bila loadingLabel diberikan, ia menggantikan children saat loading.
+  const content =
+    loading && loadingLabel != null ? loadingLabel : (attrs['children'] as React.ReactNode);
+
+  // 2.6: iconOnly tanpa teks & tanpa aria-label → dev-warn (Boolean check).
+  if (
+    iconOnly &&
+    !attrs['aria-label'] &&
+    attrs['children'] == null &&
+    typeof console !== 'undefined'
+  )
+    console.warn('[Button] iconOnly: tambahkan aria-label (a11y tanpa teks).');
+
+  // Branch <a>: as='a' + href wajib.
+  if (as === 'a' && attrs['href']) {
+    // 2.4: <a> tak memakai aria-pressed (bukan role button); state aktif
+    // memakai aria-current. Buang atribut <button>-only.
+    const linkRest = { ...attrs };
+    delete linkRest['disabled'];
+    delete linkRest['focusable'];
+    delete linkRest['type'];
+    delete linkRest['children'];
+    return (
+      <a
+        {...(linkRest as object)}
+        href={attrs['href'] as string}
+        className={cls}
+        aria-busy={loading || undefined}
+        aria-current={active ? 'true' : undefined}
+      >
+        {lead}
+        {iconOnly ? null : content}
+      </a>
+    );
+  }
+
+  // Fallback: as='a' tanpa href → render <button> (jaringan pengaman runtime).
+  if (as === 'a' && typeof console !== 'undefined')
+    console.warn('[Button] as="a" tanpa href — fallback ke <button>.');
+
+  const btnRest = { ...attrs };
+  delete btnRest['children'];
+  return (
+    <button
+      {...(btnRest as object)}
+      type={type}
+      disabled={Boolean(attrs['disabled']) || loading}
+      aria-busy={loading || undefined}
+      aria-pressed={active ?? undefined}
+      className={cls}
+    >
+      {lead}
+      {iconOnly ? null : content}
+    </button>
+  );
 }
 
 /**
@@ -207,14 +406,16 @@ export function Modal({
       >
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-bold">{title}</h3>
-          {/* min 44px: target sentuh a11y di layar kecil */}
-          <button type="button"
-            onClick={onClose}
+          {/* min 44px: target sentuh a11y (B1: Button iconOnly md = persegi 44px) */}
+          <Button
+            variant="ghost"
+            size="md"
+            iconOnly
             aria-label="Tutup dialog"
-            className="grid min-h-11 min-w-11 place-items-center rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"
-          >
-            <X className="h-5 w-5" />
-          </button>
+            onClick={onClose}
+            icon={<X className="h-5 w-5" />}
+            className="hover:bg-slate-100 dark:hover:bg-navy-700"
+          />
         </div>
         <div>{children}</div>
         {footer && <div className="mt-4 flex justify-end gap-2">{footer}</div>}
@@ -307,12 +508,16 @@ export function useConfirm() {
       onClose={cancel}
       footer={
         <>
-          <button type="button" className="btn-ghost" onClick={cancel} disabled={busy}>
+          <Button variant="ghost" onClick={cancel} disabled={busy}>
             Batal
-          </button>
-          <button type="button" className="btn-danger" onClick={onConfirm} disabled={busy}>
+          </Button>
+          <Button
+            variant={req.confirmLabel === 'Hapus' ? 'danger' : 'primary'}
+            loading={busy}
+            onClick={onConfirm}
+          >
             {busy ? 'Memproses…' : req.confirmLabel}
-          </button>
+          </Button>
         </>
       }
     >
@@ -337,29 +542,31 @@ export function Empty({
   action?: React.ReactNode;
   /** Ikon opsional di atas teks (mis. Lucide, ukuran h-7 w-7). */
   icon?: React.ReactNode;
-  /** CTA siap pakai: render tombol/link (target sentuh 44px dari base .btn).
+  /** CTA siap pakai: render tombol/link (B1: via Button, target sentuh
+      44px pada md; ctaVariant kini ButtonVariant — superset nilai lama).
       ctaHref = link antar-halaman; ctaOnClick = aksi di halaman (buka form
       / scroll ke form). Default ghost (halaman admin padat); primary utk
       halaman aksi (dashboard kasir / laporan). */
   ctaLabel?: string;
   ctaHref?: string;
   ctaOnClick?: () => void;
-  ctaVariant?: 'primary' | 'ghost';
+  ctaVariant?: ButtonVariant;
   /** Padding kecil utk konteks padat (sel tabel, box sub-list). */
   compact?: boolean;
 }) {
   // UX-2: CTA opsional di empty state — kosong bukan dead-end, tapi arah.
-  const ctaClass =
-    (ctaVariant === 'primary' ? 'btn-primary' : 'btn-ghost') + (compact ? ' text-xs' : '');
+  // B1: render via <Button>; ctaVariant kini ButtonVariant (superset — nilai
+  // lama 'primary'/'ghost' tetap valid).
+  const ctaCls = compact ? 'text-xs' : '';
   const cta = ctaLabel ? (
     ctaHref ? (
-      <a href={ctaHref} className={ctaClass}>
+      <Button as="a" href={ctaHref} variant={ctaVariant} className={ctaCls}>
         {ctaLabel}
-      </a>
+      </Button>
     ) : (
-      <button type="button" className={ctaClass} onClick={ctaOnClick}>
+      <Button variant={ctaVariant} className={ctaCls} onClick={ctaOnClick}>
         {ctaLabel}
-      </button>
+      </Button>
     )
   ) : null;
   return (
@@ -519,8 +726,9 @@ export function TermTip({
   return (
     <span className="relative inline-block align-baseline" ref={ref}>
       {children ?? <span className="font-semibold">{term}</span>}
-      <button
-        type="button"
+      <Button
+        variant="link"
+        icon={<CircleHelp className="h-3.5 w-3.5" />}
         aria-label={term ? `Jelaskan: ${term}` : 'Jelaskan istilah'}
         onClick={() => {
           setOpen(true);
@@ -530,10 +738,8 @@ export function TermTip({
         onMouseLeave={() => {
           if (!pinned) setOpen(false);
         }}
-        className="ml-1 inline-flex align-middle text-slate-400 hover:text-accent-500 dark:hover:text-accent-300"
-      >
-        <CircleHelp className="h-3.5 w-3.5" />
-      </button>
+        className="ml-1 align-middle text-slate-400 hover:text-accent-500 dark:hover:text-accent-300"
+      />
       {open && (
         <span
           role="tooltip"
