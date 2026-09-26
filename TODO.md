@@ -495,6 +495,16 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       EXIT 0 (48 page). JANGAN HAPUS (udh dijaga): CSV data user
       (`stok-*.csv`, `_products_update.csv`), `src/`, `public/sw.js`
       (artefak build — jangan commit), `public/icon-*.png`, script
+       Koreksi 26 Sep (Cline, verifikasi `git ls-files` +
+       `check-ignore` + `git log --all -- public/sw.js`): `public/sw.js`
+       ini TER-TRACK di git + skip-worktree aktif (flag `S`) →
+       perubahan stamp tak pernah muncul di `git status`, tapi file
+       ini tetap bisa ter-`git add` manual bila sengaja. Jadi
+       "artefak build, jangan commit" berarti: jangan pernah
+       `git add public/sw.js` / `git commit -a`; plan refactor
+       (~baris 180, TODO sw.js template-generate) akan membuat
+       `public/sw.src.js` ter-track + `public/sw.js` generated +
+       di-gitignore, yang mengeliminasi root-cause secara struktural.
       user (`build.ps1`, `smoke.ps1`, `server.ps1`, `rebuild.bat`),
       `state.txt` + `DEPLOY-VERCEL.txt` (tracked). `scripts/zz-*`
       = kosong (ora ana).

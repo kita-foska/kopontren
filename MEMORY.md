@@ -30,9 +30,19 @@
   boleh kosong. Verifikasi: tsc 0, build EXIT 0, dual-push @
   `e7130c3`. **Pixel-check real device: Gus Fi pasca-push** —
   bila ada breakage → follow-up commit.
-- **SW.js guard**: `public/sw.js` TIDAK di-track git (gitignored) —
-  tak mungkin ikut commit; `git checkout -- public/sw.js` menghasilkan
-  "pathspec did not match" = konfirmasi file tak ter-track.
+- **SW.js guard — KOREKSI 26 Sep (verifikasi `git ls-files` +
+  `check-ignore` + `ls-files -v` + `git log --all`)**: `public/sw.js`
+  **TER-TRACK** ing index; **bukan** gitignored (`check-ignore`
+  kosong, ora ana pattern sw ing `.gitignore`). `git ls-files -v` =
+  `S public/sw.js` → skip-worktree AKTIF, file katon werni ing
+  `git status`. `git log --all -- public/sw.js` katon stempel
+  SW-BUILD sawetara commit kepungkur (`3b38685`, `d3e99f5`, etc.) —
+  file iki saged ing repo. Dadi bener = opsi (a), **bukan** (b)
+  (klaim UX-2 "gitignored/ta track" ora bener). Guard sing bener:
+  skip-worktree + disiplin mboten `git add public/sw.js` dhewe.
+  Perencanaan future-proof: TODO.md line ~180 "sw.js refactor
+  template-generate" bakal ngasilake `public/sw.src.js` ter-track +
+  `public/sw.js` generated + `public/sw.js` ing `.gitignore`.
 - **Berikutnya: UX-3** = TermTip + StatusBadge + rename `.grad-hero`
   (lanjutkan merujuk goal document 8 fase).
 ### ZAKAT v17: payment_type di zakat_history (26 Sep)
