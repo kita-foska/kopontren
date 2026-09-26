@@ -825,6 +825,9 @@ konsistensi.
   `.hero-bg`)** — SELESAI 26 Sep, commit berikut.
   Detail: MEMORY.md seksi "UX-3" di bawah 2026-09-26.
   **Berikutnya: UX-4** (merujuk goal document 8 fase).
+**UPDATE 26 Sep:** FASE A (design tokens) SELESAI @ `5698b74`
+(9 file, +143/−47; tsc exit 0, build 53/53 rute). Berikut:
+FASE B — Button primitive (ngunggu ACC Gus).
 
 
 ---
@@ -835,8 +838,8 @@ konsistensi.
 > daftar fitur yang akan langsung di-coding.** Tidak ada kode baru
 > sebelum ACC. Semua item di bawah masih **backlog usulan**; prioritas
 > & fase baru jadi rencana kerja. Status engineering terkini:
-> **UX-2 SEDANG BERJALAN; UX-3 BELUM DIMULAI; UX-4 audit (koleksi data)
-> selesai, report belum di-ACC.** Laporan lengkap: `PROGRESS-2026-09.md`.
+> **UPDATE 26 Sep: UX-2 + UX-3 SELESAI; UX-4 FASE A SELESAI @ 5698b74 (design tokens)
+> FASE B (Button primitive) ngunggu ACC.** Laporan lengkap: `PROGRESS-2026-09.md`.
 
 ## Arah utama (visi user)
 
@@ -851,7 +854,7 @@ backup aman, offline tetap percaya diri.
 | ----- | ------------------------------------------------------------------- | ------ |
 | UX-2  | EmptyState CTA + Panduan Kasir                                      | 🔄 berjalan (komit 1 EmptyState sdh, komit 2 PanduanKasir nunggu) |
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ⏳ belum mulai |
-| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep) | 📋 rancang, nunggu ACC |
+| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A SELESAI @ 5698b74) | 📋 FASE A SELESAI @ 5698b74; FASE B rancang, nunggu ACC |
 | UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat | 📋 rancang |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |

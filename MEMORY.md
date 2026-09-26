@@ -1,6 +1,33 @@
 # MEMORY
 
 ## 2026-09-26
+### UX-4 FASE A: Design Tokens — SELESAI 26 Sep (commit 5698b74, dual-push master+main)
+- Acuan: goal document UX (95 usulan, 8 fase; roadmap E1-E40/P1-P15/Q41-Q95).
+  Re-implementasi dari versi kp (D: primary mulai 26 Sep). 9 file, +143/−47:
+  (1) `tailwind.config.ts`: role alias `risk`=rose, `success`=emerald,
+  `attention`=amber, `info`=blue, `gold`=amber, `wine`=#7A1C1C; fontSize
+  2xs/1xs; radius card/field; shadow card; zIndex nav/overlay/modal/toast/pop.
+  (2) `globals.css`: var semantik `:root`; `.card`/`.input`/`.btn`/`.hero-bg` → token.
+  (3) `src/lib/tokens.ts` BARU: objek `T` (25 key) utk JS/SVG/inline/print.
+  (4) `layout.tsx`: themeColor `T.accent500`.
+  (5)–(9) `member-qr-badge` (13 edit), `migrate-client` (8), `audit-client` (2),
+  `product-label` (7), `pos-client` (8): red→rose, sky→blue,
+  hex mentah → `T.*` / `bg-wine-700`.
+- Aturan ke depan: hex mentah di komponen larangan; wajib `T.*` /
+  kelas Tailwind. (Hex sisa hanya di file token + 1 komentar doc
+  `ui.tsx:17`, bukan style — accepted.)
+- Verifikasi: `tsc --noEmit` exit 0; sweep `red-*`/`sky-*` = 0;
+  `next build` exit 0, 53/53 rute.
+- Catatan: push S3 ikut mem-push `a16e058` (revisi laporan 26 Sep)
+  yang tadinya baru local D.
+
+### Aturan kerja repo (S5, 26 Sep)
+- **Hanya `D:\Ngudi Susilo\kopontren-app` utk write + commit (primary).**
+- `C:\Users\baiti\Desktop\kp` = reference (hanya baca). Pasca-push dari
+  D, bila perlu kp: `git fetch origin && git reset --hard origin/master`
+  (untracked scratch di kp dihapus manual dulu).
+- kp di-resync ke head origin setiap selesai push.
+
 ### UX-2: EmptyState CTA + PanduanKasir (26 Sep)
 - **Acuan goal document (Gus Fi, 3 file, 95 usulan, 8 fase UX-2 s.d.
   UX-8).** UX-2 = R2 (EmptyState CTA) + R4 (PanduanKasir) — SELESAI
