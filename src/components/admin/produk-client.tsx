@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageSkeleton, Empty, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, StatusBadge, Modal, TermTip, Toast, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 import { parseWholesaleJson } from '@/lib/wholesale';
@@ -315,9 +315,12 @@ export function ProdukClient() {
     showToast(products.length + ' produk diekspor ke CSV');
   }
 
-  const F = (k: keyof typeof form, o?: { numeric?: boolean; label?: string; ph?: string }) => (
+  const F = (
+    k: keyof typeof form,
+    o?: { numeric?: boolean; label?: React.ReactNode; ph?: string }
+  ) => (
     <div>
-      <label className="label">{o?.label || k}</label>
+      <label className="label">{o?.label ?? k}</label>
       <input
         className="input"
         type={o?.numeric ? 'number' : 'text'}
@@ -477,7 +480,14 @@ export function ProdukClient() {
               </th>
               <th className="th">Produk & Barcode</th>
               <th className="th">Harga Jual</th>
-              <th className="th">HPP / Beli</th>
+              <th className="th">
+                <TermTip
+                  term="HPP / Beli"
+                  tip="Harga Pokok Penjualan = biaya modal membeli produk per satuan. Digunakan untuk hitung margin, laba kotor, dan dasar zakat (mode HPP konservatif)."
+                >
+                  HPP / Beli
+                </TermTip>
+              </th>
               <th className="th">Margin</th>
               <th className="th">Stok</th>
               <th className="th">Status</th>
@@ -538,11 +548,11 @@ export function ProdukClient() {
                         {stockBusy ? '…' : 'Simpan'}
                       </button>
                       {p.stock <= 0 ? (
-                        <Badge tone="red">Habis</Badge>
+                        <StatusBadge status="habis" />
                       ) : p.stock < 5 ? (
-                        <Badge tone="amber">Tipis</Badge>
+                        <StatusBadge status="tipis" />
                       ) : (
-                        <Badge tone="green">Aman</Badge>
+                        <StatusBadge status="aman" />
                       )}
                     </div>
                   </td>
@@ -657,11 +667,11 @@ export function ProdukClient() {
                   </button>
                 </div>
                 {p.stock <= 0 ? (
-                  <Badge tone="red">Habis</Badge>
+                  <StatusBadge status="habis" />
                 ) : p.stock < 5 ? (
-                  <Badge tone="amber">Tipis</Badge>
+                  <StatusBadge status="tipis" />
                 ) : (
-                  <Badge tone="green">Aman</Badge>
+                  <StatusBadge status="aman" />
                 )}
               </div>
               <div className="mt-2 flex gap-2">
@@ -718,7 +728,17 @@ export function ProdukClient() {
           {F('category', { label: 'Kategori', ph: 'Madu / Minuman / Camilan / Sembako' })}
           {F('unit', { label: 'Satuan', ph: 'pcs / botol / box / kg' })}
           {F('base_price', { numeric: true, label: 'Harga jual (Rp) *' })}
-          {F('cost_price', { numeric: true, label: 'HPP / harga beli modal (Rp)' })}
+          {F('cost_price', {
+            numeric: true,
+            label: (
+              <TermTip
+                term="HPP / Beli"
+                tip="Harga Pokok Penjualan = biaya modal membeli produk per satuan. Digunakan untuk hitung margin, laba kotor, dan dasar zakat (mode HPP konservatif)."
+              >
+                HPP / harga beli modal (Rp)
+              </TermTip>
+            ),
+          })}
           <div className="col-span-2">
             {F('barcode', { label: 'Barcode / Kode SKU (opsional)', ph: 'Scan barcode atau ketik kode unik' })}
           </div>

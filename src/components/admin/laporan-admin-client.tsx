@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, apiRetry, PageSkeleton, Toast, useToast } from '@/components/ui';
+import { api, apiRetry, PageSkeleton, TermTip, Toast, useToast } from '@/components/ui';
 import { rp, startOfDayJakarta, todayWibStr } from '@/lib/format';
 import { HourBarChart, type HourPoint } from '../charts';
 import { buildLabaRugiWa, shareRekap } from '@/lib/rekap';
@@ -80,7 +80,7 @@ function PlRow({
   neg,
   indent,
 }: {
-  label: string;
+  label: React.ReactNode;
   value: string;
   sub?: string;
   strong?: boolean;
@@ -191,12 +191,12 @@ export function LaporanAdminClient() {
   if (!s) return <p className="text-sm text-slate-500">Memuat…</p>;
 
   const cards = [
-    { label: 'Penjualan', value: rp(s.sales_total), sub: s.sales_count + ' transaksi', cls: 'text-accent-500 dark:text-accent-300' },
-    { label: 'HPP (biaya produk)', value: rp(s.cogs), sub: 'basis harga beli', cls: 'text-amber-700 dark:text-amber-400' },
-    { label: 'Laba kotor', value: rp(s.profit), sub: 'penjualan − HPP', cls: s.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' },
-    { label: 'Kas keluar (belanja)', value: rp(s.purchases_total), sub: 'stok masuk', cls: 'text-rose-600 dark:text-rose-400' },
-    { label: 'Pengeluaran', value: rp(s.expenses_total), sub: 'listrik, operasional', cls: 'text-rose-600 dark:text-rose-400' },
-    { label: 'Arus kas neto', value: rp(s.cash_net), sub: 'masuk − keluar', cls: s.cash_net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' },
+    { key: 'penjualan', label: 'Penjualan', value: rp(s.sales_total), sub: s.sales_count + ' transaksi', cls: 'text-accent-500 dark:text-accent-300' },
+    { key: 'hpp', label: <TermTip term="HPP" tip="Harga Pokok Penjualan = biaya modal membeli produk. Dasar hitung laba/kotor dan zakat (mode HPP konservatif).">HPP (biaya produk)</TermTip>, value: rp(s.cogs), sub: 'basis harga beli', cls: 'text-amber-700 dark:text-amber-400' },
+    { key: 'laba', label: <TermTip term="Laba Kotor" tip="Selisih penjualan bruto dikurangi HPP, sebelum beban operasional. Indikator sehat/tidaknya harga jual.">Laba Kotor</TermTip>, value: rp(s.profit), sub: 'penjualan − HPP', cls: s.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' },
+    { key: 'kas-keluar', label: 'Kas Keluar (belanja)', value: rp(s.purchases_total), sub: 'stok masuk', cls: 'text-rose-600 dark:text-rose-400' },
+    { key: 'pengeluaran', label: 'Pengeluaran', value: rp(s.expenses_total), sub: 'listrik, operasional', cls: 'text-rose-600 dark:text-rose-400' },
+    { key: 'arus-kas', label: 'Arus Kas Neto', value: rp(s.cash_net), sub: 'masuk − keluar', cls: s.cash_net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' },
   ];
 
   // Jam Sibuk: jam puncak (transaksi terbanyak) + label periode ramah
@@ -269,7 +269,7 @@ export function LaporanAdminClient() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {cards.map((c) => (
-          <div key={c.label} className="card p-4">
+          <div key={c.key} className="card p-4">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               {c.label}
             </p>
@@ -468,7 +468,7 @@ export function LabaRugiTab() {
             <PlRow indent label="Redeem poin/saldo" value={'−' + rp(data.pendapatan.redeem)} neg />
             <PlRow indent label="Retur tercatat" value={'−' + rp(data.pendapatan.retur)} neg />
             <PlRow label="Pendapatan Bersih" value={rp(data.pendapatan.bersih)} strong />
-            <PlRow label="HPP (COGS)" value={'−' + rp(data.hpp)} neg sub="snapshot saat penjualan" />
+            <PlRow label={<TermTip term="HPP (COGS)" tip="Harga Pokok Penjualan (COGS) dihitung dari snapshot HPP saat penjualan — bukan HPP harga beli terkini. Bila HPP item tak tercatat, pakai harga beli produk saat ini.">HPP (COGS)</TermTip>} value={'−' + rp(data.hpp)} neg sub="snapshot saat penjualan" />
             <PlRow label="Laba Kotor" value={rp(data.labaKotor)} strong />
             <PlRow
               label="Beban Operasional"

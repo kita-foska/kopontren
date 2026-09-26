@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, Empty, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, StatusBadge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, todayWibStr } from '@/lib/format';
 
 type Debt = {
@@ -229,10 +229,11 @@ export function PiutangClient({ admin }: { admin: boolean }) {
                     {x.note && <p className="mt-0.5 text-xs italic text-slate-500">{x.note}</p>}
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <Badge tone={x.status === 'settled' ? 'green' : 'amber'}>
-                      {x.status === 'settled' ? 'Lunas' : 'Sisa ' + rp(x.remaining)}
-                    </Badge>
-                    {overdue && <Badge tone="red">Tunggak</Badge>}
+                    <StatusBadge
+                      status={x.status === 'settled' ? 'settled' : 'open'}
+                      label={x.status === 'settled' ? 'Lunas' : 'Sisa ' + rp(x.remaining)}
+                    />
+                    {overdue && <StatusBadge status="overdue" />}
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-2">

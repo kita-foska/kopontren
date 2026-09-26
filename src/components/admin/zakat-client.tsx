@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Empty, Toast, useToast } from '@/components/ui';
+import { api, Badge, Empty, TermTip, Toast, useToast } from '@/components/ui';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { fmtDate, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
@@ -97,7 +97,7 @@ function StatCard({
   sub,
   tone,
 }: {
-  label: string;
+  label: React.ReactNode;
   value: string;
   sub?: string;
   tone?: 'ok' | 'warn' | 'neutral';
@@ -275,7 +275,14 @@ export function ZakatClient() {
           sub="modal + laba + piutang − hutang"
         />
         <StatCard
-          label="Nishab"
+          label={
+            <TermTip
+              term="Nishab"
+              tip="Ambang minimum harta dagang (modal + laba + piutang − hutang) agar kewajiban zakat mulai berlaku. Dibandingkan dengan harga emas hari ini (24K standar, 85 gram × harga/gram)."
+            >
+              Nishab
+            </TermTip>
+          }
           value={c ? rp(c.nishab) : '—'}
           sub={c ? `${c.nishab_gram} gram × ${rp(c.gold_price)}/gram` : undefined}
         />
@@ -293,7 +300,14 @@ export function ZakatClient() {
         />
         {/* P3 Step 2 (PROVISIONAL — menunggu tashih): haul + akumulasi */}
         <StatCard
-          label="Haul (provisional)"
+          label={
+            <TermTip
+              term="Haul"
+              tip="Siklus hitung zakat: zakat dagang dibayar 1× setahun saat harta melewati nishab. Anchor = tanggal mulai haul / pembayaran terakhir / awal bulan berjalan (fallback chain). (PROVISIONAL — menunggu tashih pengasuh.)"
+            >
+              Haul (provisional)
+            </TermTip>
+          }
           value={c ? fmtDate(c.haul_anchor.anchor) : '—'}
           tone={c?.haul_anchor.status === 'haul_jatuh' ? 'warn' : 'neutral'}
           sub={
@@ -440,7 +454,14 @@ export function ZakatClient() {
               </p>
             </div>
             <div>
-              <label className="label">Kadar zakat (%)</label>
+              <label className="label">
+                <TermTip
+                  term="Kadar"
+                  tip="Persentase zakat dagang. Standar 2,5% (1/40). Dapat disesuaikan di pengaturan — berlaku untuk harta yang sudah melewati nishab."
+                >
+                  Kadar zakat (%)
+                </TermTip>
+              </label>
               <input
                 className="input"
                 type="number"
@@ -455,7 +476,14 @@ export function ZakatClient() {
               </p>
             </div>
             <div>
-              <label className="label">Penilaian harta dagang (provisional)</label>
+              <label className="label">
+                <TermTip
+                  term="Mode Penilaian"
+                  tip="Cara menghitung modal harta dagang: 'Nilai pasar' = harga jual produk (proxy, provisional; P4 menyusul) atau 'HPP' = harga beli modal (konservatif). Pengaruh langsung pada zakat yang dihitung."
+                >
+                  Penilaian harta dagang (provisional)
+                </TermTip>
+              </label>
               <select
                 className="input"
                 value={s.valuation_mode}

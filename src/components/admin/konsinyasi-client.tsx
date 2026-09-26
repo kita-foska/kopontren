@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   api,
   Badge,
+  StatusBadge,
+  TermTip,
   Toast,
   useConfirm,
   useToast,
@@ -260,7 +262,7 @@ export function KonsinyasiClient() {
               {k.owner_phone ? ' · ' + k.owner_phone : ''}
             </p>
           </div>
-          <Badge tone={doneMode ? 'gray' : 'green'}>{doneMode ? 'Selesai' : 'Aktif'}</Badge>
+          <StatusBadge status={doneMode ? 'done' : 'active'} />
         </div>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           Diterima {k.qty_received} {k.unit} @ {rp(k.agree_price)}
@@ -476,7 +478,14 @@ export function KonsinyasiClient() {
             </p>
           </div>
           <div>
-            <label className="label">Komisi toko (%)</label>
+            <label className="label">
+              <TermTip
+                term="Komisi"
+                tip="Upah toko dari jual konsinyasi. Disepakati bersama (bisa per pemilik/barang; 0 = tanpa komisi). Catatan otomatis saat barang terjual — bukan di muka. Bagian pemilik = harga − komisi. (PROVISIONAL sampai tashih)."
+              >
+                Komisi toko (%)
+              </TermTip>
+            </label>
             <input
               type="number"
               min={0}

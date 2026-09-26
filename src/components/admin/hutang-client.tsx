@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, Empty, api, Badge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, Badge, StatusBadge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, todayWibStr } from '@/lib/format';
 
 type Payable = {
@@ -262,11 +262,12 @@ export function HutangClient({ admin }: { admin: boolean }) {
                     {x.note && <p className="mt-0.5 text-xs italic text-slate-500">{x.note}</p>}
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <Badge tone={x.status === 'settled' ? 'green' : 'amber'}>
-                      {x.status === 'settled' ? 'Lunas' : 'Sisa ' + rp(x.remaining)}
-                    </Badge>
-                    {overdueRow && <Badge tone="red">Tunggak</Badge>}
-                    {dueSoonRow && <Badge tone="amber">Awas jatuh tempo</Badge>}
+                    <StatusBadge
+                      status={x.status === 'settled' ? 'settled' : 'open'}
+                      label={x.status === 'settled' ? 'Lunas' : 'Sisa ' + rp(x.remaining)}
+                    />
+                    {overdueRow && <StatusBadge status="overdue" />}
+                    {dueSoonRow && <StatusBadge status="open" label="Awas Jatuh Tempo" />}
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-2">
