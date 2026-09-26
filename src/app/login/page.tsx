@@ -43,7 +43,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grad-hero relative grid min-h-screen place-items-center overflow-hidden p-4">
+    <div className="hero-bg relative grid min-h-screen place-items-center overflow-hidden p-4">
       {/* Soft radial glow layers for depth */}
       <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-accent-400/20 blur-3xl" />

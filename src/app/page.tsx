@@ -184,7 +184,7 @@ export default async function DashboardPage() {
       ) : (
         /* ===== Layout lain (admin/manajer/pengurus/member): ringkasan penuh. ===== */
         <div className="space-y-4">
-          <div className="grad-hero mb-5 rounded-2xl p-5 text-white">
+          <div className="hero-bg mb-5 rounded-2xl p-5 text-white">
             <h1 className="text-2xl font-extrabold tracking-tight">
               Ringkasan <span className="text-white/80">Hari Ini</span>
             </h1>

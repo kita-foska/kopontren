@@ -147,7 +147,7 @@ export default async function AdminDashboardPage() {
   return (
     <Shell user={user}>
       {/* Hero flat (design system: tanpa gradient/shadow — PHASE 1) */}
-      <div className="grad-hero mb-5 rounded-2xl p-5 text-white">
+      <div className="hero-bg mb-5 rounded-2xl p-5 text-white">
         <h1 className="text-2xl font-extrabold tracking-tight">
           Dashboard <span className="text-white/80">Admin</span>
         </h1>

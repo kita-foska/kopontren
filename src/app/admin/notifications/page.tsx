@@ -15,7 +15,7 @@ export default async function AdminNotificationsPage() {
   if (!isAdmin(user)) redirect('/admin/dashboard');
   return (
     <Shell user={user}>
-      <div className="grad-hero mb-5 rounded-2xl p-5 text-white shadow-md">
+      <div className="hero-bg mb-5 rounded-2xl p-5 text-white shadow-md">
         <h1 className="text-2xl font-extrabold tracking-tight">
           Notifikasi <span className="text-white/80">Admin</span>
         </h1>

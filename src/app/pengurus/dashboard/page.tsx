@@ -94,7 +94,7 @@ export default async function PengurusDashboardPage() {
 
   return (
     <Shell user={user}>
-      <div className="grad-hero mb-5 rounded-2xl p-5 text-white shadow-md">
+      <div className="hero-bg mb-5 rounded-2xl p-5 text-white shadow-md">
         <h1 className="text-2xl font-extrabold tracking-tight">
           Dashboard <span className="text-white/80">Global</span>
         </h1>

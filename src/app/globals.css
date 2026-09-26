@@ -78,8 +78,10 @@ body {
     @apply border-t border-slate-100 dark:border-navy-700;
   }
   /* ===== Modernisasi UI: hero FLAT (tanpa gradient) + micro-animasi 0.2s ===== */
-  .grad-hero {
-    /* Solid flat #7A1835 (token burgundy) — aturan: tanpa gradient/shadow. */
+  .hero-bg {
+    /* Solid flat #7A1835 (token burgundy) — aturan: tanpa gradient/shadow.
+       Rename UX-3: dari `.grad-hero` (nama lama, "grad" menipu karena
+       sebenarnya flat solid, bukan gradient). */
     background: #7a1835;
   }
   .fade-up {
