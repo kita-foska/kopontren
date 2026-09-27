@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PageSkeleton, Table, Td, Trow, Empty, api, apiRetry, Badge, Button, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Table, Td, Trow, Empty, api, apiRetry, Badge, Button, FilterPill, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, startOfDayJakarta } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit, payMethodLabel } from '@/lib/pay-methods';
@@ -245,18 +245,13 @@ export function LaporanClient({
             [30, '30 hari'],
             [0, 'Semua'],
           ].map(([v, label]) => (
-            <button type="button"
+            <FilterPill
               key={v}
+              active={period === v}
               onClick={() => setPeriod(v as number)}
-              className={
-                'rounded-full px-3 py-1 text-xs font-bold transition ' +
-                (period === v
-                  ? 'bg-accent-500 text-white shadow-sm'
-                  : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
-              }
             >
               {label}
-            </button>
+            </FilterPill>
           ))}
           <select
             className="input w-auto text-xs"

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageSkeleton, Table, Td, TEmpty, Trow, Th, Empty, api, Button, StatusBadge, Modal, TermTip, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Table, Td, TEmpty, Trow, Th, Empty, api, Button, StatusBadge, Modal, TermTip, Toast, TogglePill, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 import { parseWholesaleJson } from '@/lib/wholesale';
@@ -548,18 +548,14 @@ export function ProdukClient() {
                     </div>
                   </Td>
                   <Td>
-                    <button type="button"
+                    <TogglePill
+                      mode="tinted"
+                      active={!!p.active}
                       onClick={() => toggleActive(p)}
                       disabled={toggleBusy}
-                      className={
-                        'rounded-full px-2.5 py-0.5 text-xs font-bold transition ' +
-                        (p.active
-                          ? 'bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400'
-                          : 'bg-slate-500/15 text-slate-500 hover:bg-slate-500/25')
-                      }
                     >
                       {p.active ? 'Aktif' : 'Nonaktif'}
-                    </button>
+                    </TogglePill>
                   </Td>
                   <Td className="text-right">
                     <div className="flex items-center justify-end gap-2">

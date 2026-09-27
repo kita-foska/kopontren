@@ -7,8 +7,10 @@ import {
   api,
   Badge,
   Button,
+  FilterPill,
   Modal,
   Toast,
+  TogglePill,
   useToast,
   useTablistNav,
 } from '@/components/ui';
@@ -1210,34 +1212,24 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               aria-label="Kategori produk"
               onKeyDown={onCatTabKeyDown}
             >
-              <button type="button"
+              <FilterPill
                 role="tab"
                 aria-selected={!cat}
+                active={!cat}
                 onClick={() => setCat('')}
-                className={
-                  'shrink-0 rounded-full px-3 py-1 text-xs font-bold transition ' +
-                  (!cat
-                    ? 'bg-accent-500 text-white shadow-sm'
-                    : 'border border-slate-300 text-slate-600 hover:border-slate-400 dark:border-navy-600 dark:text-slate-300')
-                }
               >
                 Semua
-              </button>
+              </FilterPill>
               {categories.map((c) => (
-                <button type="button"
+                <FilterPill
                   key={c}
                   role="tab"
                   aria-selected={cat === c}
+                  active={cat === c}
                   onClick={() => setCat(c)}
-                  className={
-                    'shrink-0 rounded-full px-3 py-1 text-xs font-bold transition ' +
-                    (cat === c
-                      ? 'bg-accent-500 text-white shadow-sm'
-                      : 'border border-slate-300 text-slate-600 hover:border-slate-400 dark:border-navy-600 dark:text-slate-300')
-                  }
                 >
                   {c}
-                </button>
+                </FilterPill>
               ))}
             </div>
           </div>
@@ -1558,45 +1550,33 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   { v: 'tf', label: 'Transfer', Icon: Landmark },
                 ] as const
               ).map(({ v, label, Icon }, i) => (
-                <button type="button"
+                <TogglePill
                   key={v}
+                  active={pay === v && !mix}
                   title={i + 1 + '. ' + label}
                   onClick={() => {
                     setPay(v);
                     setMix(false);
                   }}
-                  className={
-                    'flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold transition ' +
-                    (pay === v && !mix
-                      ? 'bg-accent-500 text-white shadow-sm'
-                      : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
-                  }
+                  icon={<Icon className="h-3.5 w-3.5 shrink-0" />}
+                  badge={i + 1}
                 >
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="min-w-0 truncate">{label}</span>
-                  <span className="ml-auto shrink-0 text-[10px] font-extrabold opacity-60">
-                    {i + 1}
-                  </span>
-                </button>
+                  {label}
+                </TogglePill>
               ))}
-              <button
-                type="button"
+              <TogglePill
+                active={mix}
+                accent="amber"
                 onClick={() => {
                   setMix(true);
                   setReceived('');
                 }}
                 title="4. Pembayaran campur (split) tunai/transfer/QRIS"
-                className={
-                  'flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold transition ' +
-                  (mix
-                    ? 'bg-amber-500 text-white shadow-sm'
-                    : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800')
-                }
+                icon={<Shuffle className="h-3.5 w-3.5 shrink-0" />}
+                badge={4}
               >
-                <Shuffle className="h-3.5 w-3.5 shrink-0" />
-                <span className="min-w-0 truncate">Campur</span>
-                <span className="ml-auto shrink-0 text-[10px] font-extrabold opacity-60">4</span>
-              </button>
+                Campur
+              </TogglePill>
             </div>
 
             {/* Split pembayaran (fitur 3): nominal tiap metode, Σ = total */}
