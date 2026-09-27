@@ -1,6 +1,57 @@
 # MEMORY
 
 ## 2026-09-27
+### UX-4 FASE D: tabel primitives + cleanup CSS legacy — SELESAI 27 Sep (4 commit, dual-push master+main)
+- **D0 `4dd28c2`**: chore(css) — hapus 5 rules `.btn` yatim
+  (`.btn`/`.btn-primary`/`.btn-ghost`/`.btn-danger`/`.btn-amber`)
+  dr `globals.css` (debt B.4: laporan sebelumnya menyebut sudah
+  terhapus, padahal belum) + 2 komentar stale di `ui.tsx`.
+- **D1 `0637ee7`**: feat(ui) — tambah primitive `Table`/`Th`/`Td`/
+  `Trow`/`TEmpty` + 3 konstanta kelas (TH_CLS, TD_CLS, TROW_BORDER)
+  di akhir `ui.tsx` (add-only; kelas legacy `.th`/`.td`/`.table-row`
+  dibake sebagai Tailwind supaya `globals.css` bisa dibersihkan
+  pasca-migrasi). `Table`: w-full + `minW` + `stickyHead`; `Trow`:
+  hover + border none/top/bottom + spread atribut tr mentah;
+  `TEmpty`: baris colSpan penuh + teks tengah.
+- **D2a `9a20a1b`**: refactor(admin) — migrasikan 7 tabel legacy ke
+  primitives (dual-push).
+- **D2b `5ac6080`**: refactor(tables) — migrasikan 4 tabel admin
+  terakhir: `kas-client` (4 kol + TEmpty colSpan 4 + CTA
+  scroll-to-form), `pengguna-client` (5 kol + TEmpty colSpan 5),
+  `migrate-client` (3 tabel: T1 stickyHead + T2/T3 rose panel,
+  `Trow border="none"` + pemisah border-t rose), `zakat-client`
+  (2 tabel: T4 `border="bottom"` + highlight emerald kondisional +
+  last:border-0; T5 log history). 5 file, +126/−141; rules
+  `.th`/`.td`/`.table-row` dihapus dr `globals.css` (−9 baris).
+  `kas`+`pengguna` = 2 file terakhir yg pakai CSS legacy (scan
+  repo-wide); `migrate`+`zakat` manual Tailwind → dimigrasi utk
+  konsistensi, bukan cleanup CSS.
+- **Delta approved (keputusan 27 Sep, Opsi A — 6+2)**:
+  (1) header `px-3 py-2`→`px-3 py-2.5` + bold uppercase slate-500;
+  (2) sel `py-1.5`/`py-2`→`py-2.5` (8→10px); (3) rose panel
+  (migrate T2/T3) teks 12→14px; (4) `w-full`→`min-w-[32rem]`;
+  (5) weight/werna header dibake nang primitive; (6) zakat
+  `w-full`→`min-w-[32rem]` + sel 10px; (7) kas+pengguna: dividers
+  & hover `.table-row` ilang → selaras bahasa app-wide D2a (ora
+  dividers, ora hover; konsistensi nggantosi keunikan per-file;
+  manawa dikepengke, siji baris `Trow className` per file);
+  (8) kolom pungkasan `px-3` simetris (zakat T4/T5 + migrate
+  T2/T3 kolom "Alasan": padding 12px kiwa-tengen).
+- Verifikasi: `tsc --noEmit` EXIT 0; `npm run build` EXIT 0
+  (53/53 rute); grep `className="th"`/`className="td"`/`table-row`
+  nang `src/**` = 0 referensi fungsional (sisa = 2 doc comment
+  `ui.tsx` L833/L906 — follow-up opsional, ana item TODO);
+  `public/sw.js` clean (stamping build tak ngrusak file tracked).
+- **Exception disengka (tinggal)**: 79 raw `<button>` Phase B
+  (chip sub-sm "Maks" `pos-client`, toggle status `px-2.5 py-0.5`
+  `produk-client`, tombol fill emerald "Riwayat" `member-client` —
+  liwat keputusan FASE B2/C2/C3 di ndhuwur; revisit manawa 5+
+  chip sub-sm).
+- **Pixel-check real device: GUS FI pasca-push** — 4 halaman durung
+  visual diverifikasi: `/admin/audit`, `/admin/member`,
+  `/admin/produk`, `/admin/data` (+ tabel FASE D liyane manawa
+  durung ketoke). Breakage → follow-up commit.
+
 ### UX-4 FASE C: migrasi Button + hapus CSS legacy — SELESAI 27 Sep (commit 3a59c9a, dual-push master+main)
 - 30 file (+561/−583): ~120 tombol raw `.btn/*` digantikan komponen
   `<Button>` (FASE B.1 @ `592b230`: 5 varian primary/outline/ghost/

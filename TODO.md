@@ -834,6 +834,26 @@ dual-push master+main.
 **Berikutnya:** pixel-check real device oleh Gus Fi (tombol kini
 global min-height 44px; breakage → follow-up commit); UX-5.
 
+**UPDATE 27 Sep (FASE D):** FASE D (tabel) SELESAI — D0 `4dd28c2`
+(hapus rules `.btn` yatim, close debt B.4), D1 `0637ee7`
+(primitive `Table`/`Th`/`Td`/`Trow`/`TEmpty` di `ui.tsx`),
+D2a `9a20a1b` (migrasi 7 tabel legacy), D2b `5ac6080` (migrasi
+4 tabel: kas, pengguna, migrate, zakat + hapus CSS legacy
+`.th`/`.td`/`.table-row` dr `globals.css`; tsc exit 0, build
+EXIT 0 53/53, dual-push master+main). Delta approved (Opsi A,
+6+2): header bold, sel 10px, rose panel 14px, `w-full`→
+`min-w-[32rem]`, weight/werna header nang primitive, zakat 10px,
+divider/hover kas+pengguna dihapus (sesuai bahasa D2a), padding
+`px-3` simetris kolom pungkasan. **Sisa:** pixel-check real
+device oleh Gus Fi — 4 halaman durung visual diverifikasi:
+`/admin/audit`, `/admin/member`, `/admin/produk`, `/admin/data`
+(+ tabel FASE D liyane manawa durung ketoke); 79 raw button
+Phase B tetep disengka (chip sub-sm dll). **Berikutnya: FASE E**
+(Card unification + FilterPill/TogglePill).
+- [ ] (follow-up opsional) refresh doc comment stale `ui.tsx`
+  L833/L906 (masih merujuk CSS legacy `.th`/`.td` sing wis
+  dihapus).
+
 
 ---
 
@@ -843,10 +863,14 @@ global min-height 44px; breakage → follow-up commit); UX-5.
 > daftar fitur yang akan langsung di-coding.** Tidak ada kode baru
 > sebelum ACC. Semua item di bawah masih **backlog usulan**; prioritas
 > & fase baru jadi rencana kerja. Status engineering terkini:
-> **UPDATE 27 Sep: UX-2 + UX-3 SELESAI; UX-4 SELESAI 27 Sep (FASE A
-> design tokens @ 5698b74; Button primitive @ 592b230; migrasi
-> <Button> ke 30 file + hapus CSS legacy @ 3a59c9a; sisa: pixel-check
-> real device Gus Fi).** Laporan lengkap: `PROGRESS-2026-09.md`.
+> **UPDATE 27 Sep: UX-2 + UX-3 SELESAI; UX-4 FASE A–D SELESAI 27 Sep
+> (design tokens @ 5698b74; Button primitive @ 592b230; migrasi
+> <Button> ke 30 file + hapus CSS legacy @ 3a59c9a; FASE D tabel:
+> D1 @ 0637ee7 · D2a @ 9a20a1b · D2b @ 5ac6080 + hapus CSS legacy
+> `.th`/`.td`/`.table-row`; sisa: pixel-check real device Gus Fi —
+> 4 halaman admin durung visual diverifikasi; 79 raw button Phase B
+> tetep disengka); next FASE E: Card unification +
+> FilterPill/TogglePill.** Laporan lengkap: `PROGRESS-2026-09.md`.
 
 ## Arah utama (visi user)
 
@@ -861,7 +885,7 @@ backup aman, offline tetap percaya diri.
 | ----- | ------------------------------------------------------------------- | ------ |
 | UX-2  | EmptyState CTA + Panduan Kasir                                      | ✅ selesai 26 Sep (@ `32d0538` + `e7130c3`) |
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
-| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A SELESAI @ 5698b74) | ✅ selesai 27 Sep: FASE A @ `5698b74` · Button @ `592b230` · migrasi + hapus CSS legacy @ `3a59c9a`; sisa: pixel-check real device |
+| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–D SELESAI 27 Sep; next FASE E: Card unification + FilterPill/TogglePill) | ✅ A–D selesai 27 Sep: A @ `5698b74` · B Button @ `592b230` · C @ `3a59c9a` · D tabel @ `0637ee7`+`9a20a1b`+`5ac6080`; sisa: pixel-check real device (4 hal. admin) + FASE E rancang |
 | UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat | 📋 rancang |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
