@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, Empty, api, StatusBadge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Button, Empty, api, StatusBadge, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, todayWibStr } from '@/lib/format';
 
 type Debt = {
@@ -133,13 +133,15 @@ export function PiutangClient({ admin }: { admin: boolean }) {
                 ['all', 'Semua'],
               ] as const
             ).map(([k, label]) => (
-              <button type="button"
+              <Button
                 key={k}
+                variant="ghost"
+                size="sm"
+                active={filter === k}
                 onClick={() => setFilter(k)}
-                className={filter === k ? 'btn-primary !py-1.5 text-xs' : 'btn-ghost !py-1.5 text-xs'}
               >
                 {label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -186,9 +188,9 @@ export function PiutangClient({ admin }: { admin: boolean }) {
             />
           </div>
           <div className="flex items-end">
-            <button type="button" className="btn-primary w-full" disabled={busy} onClick={create}>
+            <Button variant="primary" full disabled={busy} onClick={create}>
               {busy ? 'Menyimpan…' : 'Catat'}
-            </button>
+            </Button>
           </div>
         </div>
         <div className="mt-2">
@@ -242,20 +244,21 @@ export function PiutangClient({ admin }: { admin: boolean }) {
                   </span>
                   <div className="flex gap-1.5">
                     {x.status === 'open' && (
-                      <button type="button"
-                        className="btn-amber !px-2.5 !py-1 text-xs"
+                      <Button
+                        variant="amber"
+                        size="sm"
                         onClick={() => {
                           setPayFor(x);
                           setPayAmt(x.remaining);
                         }}
                       >
                         Terima Bayar
-                      </button>
+                      </Button>
                     )}
                     {admin && (
-                      <button type="button" className="btn-danger !px-2.5 !py-1 text-xs" onClick={() => del(x.id)}>
+                      <Button variant="danger" size="sm" onClick={() => del(x.id)}>
                         Hapus
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -283,12 +286,12 @@ export function PiutangClient({ admin }: { admin: boolean }) {
         onClose={() => setPayFor(null)}
         footer={
           <>
-            <button type="button" className="btn-ghost" onClick={() => setPayFor(null)}>
+            <Button variant="ghost" onClick={() => setPayFor(null)}>
               Batal
-            </button>
-            <button type="button" className="btn-primary" disabled={busy} onClick={pay}>
+            </Button>
+            <Button variant="primary" disabled={busy} onClick={pay}>
               {busy ? 'Menyimpan…' : 'Simpan'}
-            </button>
+            </Button>
           </>
         }
       >

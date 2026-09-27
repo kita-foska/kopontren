@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, Badge, Empty, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { api, Badge, Button, Empty, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { isPointUnit, pointReasonLabel, type PointEntry } from '@/lib/points';
 import { MemberQrBadge } from './member-qr-badge';
@@ -276,9 +276,9 @@ export function MemberClient() {
             onChange={(e) => setQ(e.target.value)}
           />
           {q && (
-            <button type="button" className="btn-ghost px-2.5 py-1.5 text-xs" onClick={() => setQ('')}>
+            <Button variant="ghost" size="sm" onClick={() => setQ('')}>
               Reset
-            </button>
+            </Button>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -290,9 +290,9 @@ export function MemberClient() {
               </span>
             )}
           </span>
-          <button type="button" className="btn-primary" onClick={() => openEdit()}>
+          <Button variant="primary" onClick={() => openEdit()}>
             + Tambah Member
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -341,33 +341,36 @@ export function MemberClient() {
                 </td>
                 <td className="td text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <button type="button"
-                      className="text-xs font-bold text-accent-500 hover:underline dark:text-accent-300"
-                      onClick={() => openEdit(m)}
-                    >
+                    <Button variant="link" size="sm" onClick={() => openEdit(m)}>
                       Ubah
-                    </button>
+                    </Button>
                     <span className="text-slate-300 dark:text-navy-600">|</span>
-                    <button type="button"
-                      className="text-xs font-bold text-emerald-600 hover:underline dark:text-emerald-400"
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-emerald-600 dark:text-emerald-400"
                       onClick={() => openPoints(m)}
                     >
                       Riwayat
-                    </button>
+                    </Button>
                     <span className="text-slate-300 dark:text-navy-600">|</span>
-                    <button type="button"
-                      className="text-xs font-bold text-slate-600 hover:underline dark:text-slate-300"
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-slate-600 dark:text-slate-300"
                       onClick={() => setCardMember(m)}
                     >
                       Kartu
-                    </button>
+                    </Button>
                     <span className="text-slate-300 dark:text-navy-600">|</span>
-                    <button type="button"
-                      className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-rose-600 dark:text-rose-400"
                       onClick={() => remove(m)}
                     >
                       Hapus
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -416,30 +419,21 @@ export function MemberClient() {
                 </span>
               </div>
               <div className="mt-2 flex gap-2">
-                <button type="button"
-                  className="h-11 flex-1 rounded-lg border border-accent-200 bg-accent-100/50 px-2 text-xs font-bold text-accent-600 transition hover:bg-accent-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-accent-300"
-                  onClick={() => openEdit(m)}
-                >
+                <Button variant="secondary" size="md" className="flex-1" onClick={() => openEdit(m)}>
                   Ubah
-                </button>
+                </Button>
                 <button type="button"
                   className="h-11 flex-1 rounded-lg border border-emerald-200 bg-emerald-50/50 px-2 text-xs font-bold text-emerald-600 transition hover:bg-emerald-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-emerald-400"
                   onClick={() => openPoints(m)}
                 >
                   Riwayat
                 </button>
-                <button type="button"
-                  className="h-11 flex-1 rounded-lg border border-slate-200 bg-slate-50/50 px-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-slate-300"
-                  onClick={() => setCardMember(m)}
-                >
+                <Button variant="secondary" size="md" className="flex-1" onClick={() => setCardMember(m)}>
                   Kartu
-                </button>
-                <button type="button"
-                  className="h-11 flex-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-rose-400"
-                  onClick={() => remove(m)}
-                >
+                </Button>
+                <Button variant="danger" size="md" className="flex-1" onClick={() => remove(m)}>
                   Hapus
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -457,9 +451,9 @@ export function MemberClient() {
         </div>
         {!qDeb.trim() && hasMoreRef.current && (
           <div className="border-t border-slate-200 p-3 text-center dark:border-navy-700">
-            <button type="button" className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+            <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
               {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -471,12 +465,12 @@ export function MemberClient() {
         onClose={() => setShow(false)}
         footer={
           <>
-            <button type="button" className="btn-ghost" onClick={() => setShow(false)}>
+            <Button variant="ghost" onClick={() => setShow(false)}>
               Batal
-            </button>
-            <button type="button" className="btn-primary" disabled={busy} onClick={save}>
+            </Button>
+            <Button variant="primary" disabled={busy} onClick={save}>
               {busy ? 'Menyimpan…' : 'Simpan'}
-            </button>
+            </Button>
           </>
         }
       >
@@ -523,9 +517,9 @@ export function MemberClient() {
         title={pointsMember ? `Riwayat Poin & Reward — ${pointsMember.name}` : ''}
         onClose={closePoints}
         footer={
-          <button type="button" className="btn-ghost" onClick={closePoints}>
+          <Button variant="ghost" onClick={closePoints}>
             Tutup
-          </button>
+          </Button>
         }
       >
         {pointsMember && (
@@ -551,9 +545,14 @@ export function MemberClient() {
             {pointsErr && (
               <div className="rounded-lg bg-rose-50 p-2.5 text-xs text-rose-600 dark:bg-navy-900/40 dark:text-rose-300">
                 {pointsErr}{' '}
-                <button type="button" className="font-bold underline" onClick={() => openPoints(pointsMember)}>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="font-bold underline"
+                  onClick={() => openPoints(pointsMember)}
+                >
                   Muat ulang
-                </button>
+                </Button>
               </div>
             )}
             <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
@@ -599,14 +598,14 @@ export function MemberClient() {
             </div>
             {pointsOffset + POINTS_LIMIT < pointsTotal && !pointsErr && (
               <div className="text-center">
-                <button
-                  type="button"
-                  className="btn-ghost text-xs"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   disabled={pointsBusy}
                   onClick={loadMorePoints}
                 >
                   {pointsBusy ? 'Memuat…' : 'Muat lebih banyak'}
-                </button>
+                </Button>
               </div>
             )}
           </div>

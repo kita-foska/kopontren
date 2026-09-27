@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
+import { Button } from '@/components/ui';
+
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -98,13 +100,14 @@ export default function LoginPage() {
               {err}
             </p>
           )}
-          <button
+          <Button
             type="submit"
             disabled={busy || !username || !password}
-            className="btn-primary w-full shadow-md shadow-accent-500/20"
+            variant="primary"
+            className="w-full shadow-md shadow-accent-500/20"
           >
             {busy ? 'Memproses…' : 'Masuk'}
-          </button>
+          </Button>
         </form>
         <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-300">
           Akun dibuat oleh Pengurus. Hubungi pengurus jika belum punya username.

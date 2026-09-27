@@ -3,6 +3,8 @@
 import { useRef, useState } from 'react';
 import { parseImport, importWarnings, type ImportRow, type RowError } from '@/lib/product-import';
 import { fetchTimeout } from '@/lib/fetch-util';
+import { Button } from '@/components/ui';
+
 
 type BatchResult = {
   inserted: number;
@@ -156,14 +158,14 @@ export function MigrateClient() {
           />
           {fileName && <span className="text-sm text-slate-500 dark:text-slate-400">{fileName}</span>}
           {phase === 'preview' && rows.length > 0 && (
-            <button type="button" className="btn-primary" onClick={() => void startImport()}>
+            <Button variant="primary" onClick={() => void startImport()}>
               Import {rows.length} baris
-            </button>
+            </Button>
           )}
           {phase === 'done' && summary && (
-            <button type="button" className="btn-ghost" onClick={downloadReport}>
+            <Button variant="ghost" onClick={downloadReport}>
               Unduh Laporan (JSON)
-            </button>
+            </Button>
           )}
         </div>
         {parseError && <p className="mt-2 text-sm text-rose-500">{parseError}</p>}
@@ -270,15 +272,14 @@ export function MigrateClient() {
       {phase === 'error' && (
         <div className="card border-rose-500/40 p-4 text-sm text-rose-600 dark:text-rose-300">
           <p>Gagal: {fatal}</p>
-          <button type="button"
-            className="btn-ghost mt-3"
+          <Button variant="ghost" className="mt-3"
             onClick={() => {
               setPhase('preview');
               setFatal('');
             }}
           >
             Coba lagi
-          </button>
+          </Button>
         </div>
       )}
 

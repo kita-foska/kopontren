@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Empty, TermTip, Toast, useToast } from '@/components/ui';
+import { api, Badge, Button, Empty, TermTip, Toast, useToast } from '@/components/ui';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { fmtDate, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
@@ -384,18 +384,18 @@ export function ZakatClient() {
 
       {/* Aksi */}
       <div className="card flex flex-wrap items-center gap-2 p-4 print:hidden">
-        <button type="button" className="btn btn-primary" onClick={() => load()} disabled={busy}>
+        <Button variant="primary" onClick={() => load()} disabled={busy}>
           Hitung Ulang
-        </button>
-        <button type="button" className="btn btn-amber" onClick={recordHistory} disabled={busy || !c}>
+        </Button>
+        <Button variant="amber" onClick={recordHistory} disabled={busy || !c}>
           Simpan ke Riwayat
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={exportCsv} disabled={history === null}>
+        </Button>
+        <Button variant="ghost" onClick={exportCsv} disabled={history === null}>
           Export CSV
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={() => window.print()}>
+        </Button>
+        <Button variant="ghost" onClick={() => window.print()}>
           Print
-        </button>
+        </Button>
         <select
           className="input ml-auto w-auto max-w-full"
           value={paymentType}
@@ -518,9 +518,9 @@ export function ZakatClient() {
                   {s.last_zakat_date ? fmtDate(s.last_zakat_date) : 'belum pernah'}
                 </span>
               </p>
-              <button type="button" className="btn btn-primary" onClick={saveSettings} disabled={busy}>
+              <Button variant="primary" onClick={saveSettings} disabled={busy}>
                 Simpan Pengaturan
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -589,14 +589,9 @@ export function ZakatClient() {
                 />
                 Juga simpan ke Pengaturan (nilai fallback)
               </label>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={logGold}
-                disabled={busy}
-              >
+              <Button variant="primary" onClick={logGold} disabled={busy}>
                 Catat Verifikasi
-              </button>
+              </Button>
             </div>
           </div>
         ) : null}

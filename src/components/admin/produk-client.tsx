@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageSkeleton, Empty, api, StatusBadge, Modal, TermTip, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, Button, StatusBadge, Modal, TermTip, Toast, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 import { parseWholesaleJson } from '@/lib/wholesale';
@@ -361,13 +361,17 @@ export function ProdukClient() {
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
             {filtered.length} dari {products.length} produk
           </span>
-          <button type="button" className="btn-ghost inline-flex items-center gap-1.5" onClick={exportCsv}>
-            <Download className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Download className="h-4 w-4" />}
+            onClick={exportCsv}
+          >
             Export CSV
-          </button>
-          <button type="button" className="btn-primary" onClick={() => openEdit()}>
+          </Button>
+          <Button variant="primary" onClick={() => openEdit()}>
             + Tambah Produk
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -384,13 +388,14 @@ export function ProdukClient() {
             value={bulkStock}
             onChange={(e) => setBulkStock(e.target.value)}
           />
-          <button type="button"
-            className="btn-ghost px-2.5 py-1 text-xs"
+          <Button
+            variant="ghost"
+            size="sm"
             disabled={bulkBusy || bulkStock === ''}
             onClick={() => void bulk('stock', { delta: Number(bulkStock) })}
           >
             Terapkan Stok
-          </button>
+          </Button>
           <select
             className="input w-auto py-1"
             value={bulkCat}
@@ -403,15 +408,17 @@ export function ProdukClient() {
               </option>
             ))}
           </select>
-          <button type="button"
-            className="btn-ghost px-2.5 py-1 text-xs"
+          <Button
+            variant="ghost"
+            size="sm"
             disabled={bulkBusy || !bulkCat}
             onClick={() => void bulk('category', { value: bulkCat })}
           >
             Terapkan Kategori
-          </button>
-          <button type="button"
-            className="btn-danger px-2.5 py-1 text-xs"
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
             disabled={bulkBusy}
             onClick={() =>
               ask({
@@ -423,42 +430,25 @@ export function ProdukClient() {
             }
           >
             Hapus Massal
-          </button>
-          <button type="button" className="btn-ghost px-2.5 py-1 text-xs" onClick={() => setSelected(new Set())}>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setSelected(new Set())}>
             Batal
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Category Pills */}
       {categories.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-1.5 overflow-x-auto pb-1">
-          <button type="button"
-            onClick={() => setCat('')}
-            className={
-              'rounded-full px-3 py-1 text-xs font-bold transition ' +
-              (!cat
-                ? 'bg-accent-500 text-white shadow-sm'
-                : 'border border-slate-300 text-slate-600 hover:border-slate-400 dark:border-navy-600 dark:text-slate-300')
-            }
-          >
+          <Button variant="ghost" size="sm" active={!cat} onClick={() => setCat('')}>
             Semua ({products.length})
-          </button>
+          </Button>
           {categories.map((c) => {
             const count = products.filter((p) => p.category === c).length;
             return (
-              <button type="button"
-                key={c}
-                onClick={() => setCat(c)}
-                className={
-                  'rounded-full px-3 py-1 text-xs font-bold transition ' +
-                  (cat === c
-                    ? 'bg-accent-500 text-white shadow-sm'
-                    : 'border border-slate-300 text-slate-600 hover:border-slate-400 dark:border-navy-600 dark:text-slate-300')
-                }
-              >
+              <Button variant="ghost" size="sm" active={cat === c} key={c} onClick={() => setCat(c)}>
                 {c} ({count})
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -540,13 +530,14 @@ export function ProdukClient() {
                         value={stockEdits[p.id] ?? p.stock}
                         onChange={(e) => setStockEdits((s) => ({ ...s, [p.id]: e.target.value }))}
                       />
-                      <button type="button"
-                        className="btn-ghost px-2 py-1 text-xs"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         disabled={stockBusy}
                         onClick={() => setStock(p)}
                       >
                         {stockBusy ? '…' : 'Simpan'}
-                      </button>
+                      </Button>
                       {p.stock <= 0 ? (
                         <StatusBadge status="habis" />
                       ) : p.stock < 5 ? (
@@ -572,27 +563,27 @@ export function ProdukClient() {
                   </td>
                   <td className="td text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button type="button"
-                        className="text-xs font-bold text-accent-500 hover:underline dark:text-accent-300"
+                      <Button
+                        variant="link"
+                        size="sm"
                         onClick={() => openLabel(p)}
                         title={p.barcode ? 'Cetak label barcode produk' : 'Isi dulu barcode produk'}
                       >
                         Label
-                      </button>
+                      </Button>
                       <span className="text-slate-300 dark:text-navy-600">|</span>
-                      <button type="button"
-                        className="text-xs font-bold text-accent-500 hover:underline dark:text-accent-300"
-                        onClick={() => openEdit(p)}
-                      >
+                      <Button variant="link" size="sm" onClick={() => openEdit(p)}>
                         Ubah
-                      </button>
+                      </Button>
                       <span className="text-slate-300 dark:text-navy-600">|</span>
-                      <button type="button"
-                        className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="text-rose-600 dark:text-rose-400"
                         onClick={() => deleteProduct(p)}
                       >
                         Hapus
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -631,18 +622,16 @@ export function ProdukClient() {
                     {p.barcode ? ' · ' + p.barcode : ''}
                   </p>
                 </div>
-                <button type="button"
-                  onClick={() => toggleActive(p)}
+                <Button
+                  variant="ghost"
+                  size="md"
+                  active={Boolean(p.active)}
                   disabled={toggleBusy}
-                  className={
-                    'min-h-[44px] shrink-0 rounded-full px-3 py-1 text-xs font-bold transition ' +
-                    (p.active
-                      ? 'bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400'
-                      : 'bg-slate-500/15 text-slate-500 hover:bg-slate-500/25')
-                  }
+                  className="shrink-0"
+                  onClick={() => toggleActive(p)}
                 >
                   {p.active ? 'Aktif' : 'Nonaktif'}
-                </button>
+                </Button>
               </div>
               <div className="mt-2 flex items-center justify-between gap-2">
                 <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -658,13 +647,14 @@ export function ProdukClient() {
                     onChange={(e) => setStockEdits((s) => ({ ...s, [p.id]: e.target.value }))}
                     aria-label={'Stok ' + p.name}
                   />
-                  <button type="button"
-                    className="btn-ghost h-11 px-2 text-xs sm:h-9"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     disabled={stockBusy}
                     onClick={() => setStock(p)}
                   >
                     {stockBusy ? '…' : 'Simpan'}
-                  </button>
+                  </Button>
                 </div>
                 {p.stock <= 0 ? (
                   <StatusBadge status="habis" />
@@ -675,24 +665,15 @@ export function ProdukClient() {
                 )}
               </div>
               <div className="mt-2 flex gap-2">
-                <button type="button"
-                  className="h-11 flex-1 rounded-lg border border-accent-200 bg-accent-100/50 px-2 text-xs font-bold text-accent-600 transition hover:bg-accent-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-accent-300"
-                  onClick={() => openLabel(p)}
-                >
+                <Button variant="secondary" size="md" className="flex-1" onClick={() => openLabel(p)}>
                   Label
-                </button>
-                <button type="button"
-                  className="h-11 flex-1 rounded-lg border border-accent-200 bg-accent-100/50 px-2 text-xs font-bold text-accent-600 transition hover:bg-accent-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-accent-300"
-                  onClick={() => openEdit(p)}
-                >
+                </Button>
+                <Button variant="secondary" size="md" className="flex-1" onClick={() => openEdit(p)}>
                   Ubah
-                </button>
-                <button type="button"
-                  className="h-11 flex-1 rounded-lg border border-rose-200 bg-rose-50/50 px-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-navy-600 dark:bg-navy-900/40 dark:text-rose-400"
-                  onClick={() => deleteProduct(p)}
-                >
+                </Button>
+                <Button variant="danger" size="md" className="flex-1" onClick={() => deleteProduct(p)}>
                   Hapus
-                </button>
+                </Button>
               </div>
             </div>
           );
@@ -714,12 +695,12 @@ export function ProdukClient() {
         onClose={() => setShow(false)}
         footer={
           <>
-            <button type="button" className="btn-ghost" onClick={() => setShow(false)}>
+            <Button variant="ghost" onClick={() => setShow(false)}>
               Batal
-            </button>
-            <button type="button" className="btn-primary" disabled={saveBusy} onClick={save}>
+            </Button>
+            <Button variant="primary" disabled={saveBusy} onClick={save}>
               {saveBusy ? 'Menyimpan…' : 'Simpan'}
-            </button>
+            </Button>
           </>
         }
       >
@@ -753,13 +734,9 @@ export function ProdukClient() {
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                 Harga grosir (opsional)
               </span>
-              <button
-                type="button"
-                className="btn-ghost px-2 py-1 text-xs"
-                onClick={addTier}
-              >
+              <Button variant="ghost" size="sm" onClick={addTier}>
                 + Tambah tier
-              </button>
+              </Button>
             </div>
             <p className="mb-2 text-[11px] leading-snug text-slate-600 dark:text-slate-400">
               Beli ≥ jumlah minimum dapat diskon dari harga jual. Diskon dihitung dari harga
@@ -803,14 +780,15 @@ export function ProdukClient() {
                     <div className="w-28 shrink-0 pb-1 text-right text-[11px] text-slate-600 dark:text-slate-400">
                       {t.discount_percent > 0 ? '≈ ' + rp(tierEffPrice(t)) : '—'}
                     </div>
-                    <button
-                      type="button"
-                      className="btn-ghost px-2 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
                       onClick={() => removeTier(i)}
                       aria-label={`Hapus tier ${i + 1}`}
                     >
                       Hapus
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>

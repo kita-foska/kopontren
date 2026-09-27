@@ -6,6 +6,7 @@ import {
   Empty,
   api,
   Badge,
+  Button,
   Toast,
   useToast,
   useTablistNav,
@@ -106,24 +107,22 @@ export function BelanjaClient() {
   return (
     <div>
       <div className="mb-3 flex gap-2" role="tablist" onKeyDown={onTabKeyDown}>
-        <button
-          type="button"
+        <Button
           role="tab"
           aria-selected={tab === 'in'}
+          variant={tab === 'in' ? 'primary' : 'ghost'}
           onClick={() => setTab('in')}
-          className={tab === 'in' ? 'btn-primary' : 'btn-ghost'}
         >
           Stok Masuk (Belanja)
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           role="tab"
           aria-selected={tab === 'out'}
+          variant={tab === 'out' ? 'primary' : 'ghost'}
           onClick={() => setTab('out')}
-          className={tab === 'out' ? 'btn-primary' : 'btn-ghost'}
         >
           Pengeluaran
-        </button>
+        </Button>
       </div>
       {tab === 'in' ? (
         <>
@@ -172,13 +171,12 @@ export function BelanjaClient() {
               />
             </div>
             <div className="flex items-end">
-              <button type="button"
-                className="btn-primary w-full"
+              <Button variant="primary" full
                 disabled={busy === 'in'}
                 onClick={addPurchase}
               >
                 {busy === 'in' ? 'Menyimpan…' : 'Catat'}
-              </button>
+              </Button>
             </div>
           </div>
           <div className="card p-3 text-sm">
@@ -248,13 +246,12 @@ export function BelanjaClient() {
               />
             </div>
             <div className="flex items-end">
-              <button type="button"
-                className="btn-primary w-full"
+              <Button variant="primary" full
                 disabled={busy === 'out'}
                 onClick={addExpense}
               >
                 {busy === 'out' ? 'Menyimpan…' : 'Catat'}
-              </button>
+              </Button>
             </div>
           </div>
           <div className="card p-3 text-sm">

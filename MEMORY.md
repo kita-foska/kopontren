@@ -1,5 +1,19 @@
 # MEMORY
 
+## 2026-09-27
+### UX-4 FASE B2 (C2): keputusan chip sub-sm — "Maks" (27 Sep)
+- Chip sub-sm (mis. "Maks" di `pos-client`, toggle status `px-2.5 py-0.5`
+  di tabel `produk-client`) **disengaja dipertahankan sebagai raw
+  button** — tak di-`<Button>`-kan. Alasan: terlalu kecil untuk size
+  Button saiki (sm 36 / md 44 / lg 52 px) + override min-height via
+  `className` rapuh (Tailwind CSS order). **Revisit manawa mudhun
+  5+ chip sub-sm** → tambah size `xs` ing wiwitan.
+- Link variant: override werna teks via `className` aman & deterministik
+  (slate/rose/emerald mudhun accent ing CSS generated — alphabetik),
+  nalika override werna fill (bg-*) LORA bisa (slate/rose menang) →
+  tombol fill emerald (mis. "Riwayat" kartu mobile `member-client`)
+  tetep raw button, dilaporaké minangka exception.
+
 ## 2026-09-26
 ### UX-4 FASE A: Design Tokens — SELESAI 26 Sep (commit 5698b74, dual-push master+main)
 - Acuan: goal document UX (95 usulan, 8 fase; roadmap E1-E40/P1-P15/Q41-Q95).

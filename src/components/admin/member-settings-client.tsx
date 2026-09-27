@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api, Toast, useToast } from '@/components/ui';
+import { api, Button, Toast, useToast } from '@/components/ui';
 
 type Settings = Record<string, string>;
 
@@ -129,9 +129,9 @@ export function MemberSettingsClient() {
         ))}
       </div>
       <div className="mt-4 flex items-center gap-2">
-        <button type="button" className="btn-primary" onClick={save} disabled={busy}>
+        <Button variant="primary" onClick={save} disabled={busy}>
           {busy ? 'Menyimpan…' : 'Simpan Pengaturan'}
-        </button>
+        </Button>
       </div>
       <Toast msg={toast} onClose={() => showToast('')} />
     </div>

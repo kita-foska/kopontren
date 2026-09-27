@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   api,
   Badge,
+  Button,
   Modal,
   Toast,
   useToast,
@@ -1099,14 +1100,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<BookOpen className="h-4 w-4" />}
             onClick={() => setCheatOpen(true)}
-            className="btn-ghost px-3 py-1 text-xs"
           >
-            <BookOpen className="h-4 w-4" />
             Panduan kasir
-          </button>
+          </Button>
           {currentShift ? (
             <button type="button"
               onClick={() => {
@@ -1118,15 +1119,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               Tutup Shift & Rekap
             </button>
           ) : (
-            <button type="button"
+            <Button variant="primary" size="sm"
               onClick={() => {
                 setShiftModalType('open');
                 setShiftModalOpen(true);
               }}
-              className="btn-primary px-3 py-1 text-xs"
             >
               + Buka Shift Kasir
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -1144,13 +1144,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <Zap className="h-3.5 w-3.5 shrink-0" />
             {offlineQueue.length} transaksi offline menunggu sinkronisasi…
           </span>
-          <button type="button"
+          <Button variant="amber" size="sm"
             onClick={() => void flushQueue()}
-            disabled={flushing || !isOnline}
-            className="btn-amber px-3 py-1 text-[11px]"
+            disabled={!isOnline}
+            loading={flushing}
+            loadingLabel="Sinkronisasi…"
           >
-            {flushing ? 'Sinkronisasi…' : 'Sinkronkan Sekarang'}
-          </button>
+            Sinkronkan Sekarang
+          </Button>
         </div>
       )}
 
@@ -1453,13 +1454,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       </option>
                     ))}
                 </select>
-                <button type="button"
-                  className="btn-ghost px-2.5 py-1 text-xs whitespace-nowrap"
+                <Button variant="ghost" size="sm"
+                  className="whitespace-nowrap"
                   onClick={() => setMemberModal(true)}
                   title="Tambah member baru"
                 >
                   + Baru
-                </button>
+                </Button>
               </div>
               {selectedMember && (
                 <div className="mt-1 space-y-0.5 rounded bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300">
@@ -1502,15 +1503,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       disabled={redeemMax <= 0}
                       onChange={(e) => setRedeemInput(e.target.value)}
                     />
-                    <button
-                      type="button"
-                      className="btn-ghost px-1.5 py-0.5 text-[11px]"
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       disabled={redeemMax <= 0}
                       onClick={() => setRedeemInput(String(redeemMax))}
                       title="Tebus semua (maksimal)"
                     >
                       Maks
-                    </button>
+                    </Button>
                   </div>
                   <div
                     className={
@@ -1772,13 +1773,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </p>
 
             {/* Checkout Button */}
-            <button type="button"
+            <Button variant="primary" size="md" full
               onClick={checkout}
-              disabled={busy || cart.length === 0}
-              className="btn-primary w-full py-2.5 text-sm font-bold shadow-md active:scale-[0.98]"
+              disabled={cart.length === 0}
+              loading={busy}
+              loadingLabel="Menyimpan Transaksi…"
+              className="font-bold shadow-md"
             >
-              {busy ? 'Menyimpan Transaksi…' : `Bayar ${rp(total)} (F4)`}
-            </button>
+              Bayar {rp(total)} (F4)
+            </Button>
           </div>
         </div>
       </div>
@@ -1791,31 +1794,30 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         footer={
           <div className="w-full space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <button type="button"
-                className="btn-ghost inline-flex items-center gap-1.5 text-xs"
+              <Button variant="ghost" size="sm"
+                icon={<Copy className="h-3.5 w-3.5" />}
                 onClick={copyStrukText}
               >
-                <Copy className="h-3.5 w-3.5" />
                 Salin Struk
-              </button>
+              </Button>
               <div className="ml-auto flex items-center gap-2">
-                <button type="button"
-                  className="btn-ghost inline-flex items-center gap-1.5 text-xs font-bold"
+                <Button variant="ghost" size="sm"
+                  icon={<MessageCircle className="h-3.5 w-3.5" />}
+                  className="font-bold"
                   onClick={handleSendWaStruk}
                 >
-                  <MessageCircle className="h-3.5 w-3.5" />
                   Kirim WA
-                </button>
-                <button type="button"
-                  className="btn-primary inline-flex items-center gap-1.5 text-xs font-bold"
+                </Button>
+                <Button variant="primary" size="sm"
+                  icon={<Printer className="h-3.5 w-3.5" />}
+                  className="font-bold"
                   onClick={printStruk}
                 >
-                  <Printer className="h-3.5 w-3.5" />
                   Cetak Struk (F5)
-                </button>
-                <button type="button" className="btn-ghost text-xs" onClick={() => setReceipt(null)}>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setReceipt(null)}>
                   Tutup
-                </button>
+                </Button>
               </div>
             </div>
             <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
@@ -2079,9 +2081,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         title="Scan Barcode dengan Kamera"
         onClose={() => setScanModal(false)}
         footer={
-          <button type="button" className="btn-ghost" onClick={() => setScanModal(false)}>
+          <Button variant="ghost" onClick={() => setScanModal(false)}>
             Tutup
-          </button>
+          </Button>
         }
       >
         <CameraScan
@@ -2099,9 +2101,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         title="Pembayaran QRIS Kopontren"
         onClose={() => setQrisModal(false)}
         footer={
-          <button type="button" className="btn-primary" onClick={() => setQrisModal(false)}>
+          <Button variant="primary" onClick={() => setQrisModal(false)}>
             Tutup
-          </button>
+          </Button>
         }
       >
         <div className="text-center space-y-3 p-2">
@@ -2137,17 +2139,17 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         onClose={() => setShiftModalOpen(false)}
         footer={
           <>
-            <button type="button" className="btn-ghost" onClick={() => setShiftModalOpen(false)}>
+            <Button variant="ghost" onClick={() => setShiftModalOpen(false)}>
               Batal
-            </button>
+            </Button>
             {shiftModalType === 'open' ? (
-              <button type="button" className="btn-primary" onClick={handleOpenShift}>
+              <Button variant="primary" onClick={handleOpenShift}>
                 Buka Shift Sekarang
-              </button>
+              </Button>
             ) : (
-              <button type="button" className="btn-danger" onClick={handleCloseShift}>
+              <Button variant="danger" onClick={handleCloseShift}>
                 Konfirmasi Tutup Shift
-              </button>
+              </Button>
             )}
           </>
         }
@@ -2203,9 +2205,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         title="Rekap Shift Berhasil Ditutup"
         onClose={() => setClosingSummary(null)}
         footer={
-          <button type="button" className="btn-primary" onClick={() => setClosingSummary(null)}>
+          <Button variant="primary" onClick={() => setClosingSummary(null)}>
             Selesai
-          </button>
+          </Button>
         }
       >
         {closingSummary && (
@@ -2242,12 +2244,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         onClose={() => setMemberModal(false)}
         footer={
           <>
-            <button type="button" className="btn-ghost" onClick={() => setMemberModal(false)}>
+            <Button variant="ghost" onClick={() => setMemberModal(false)}>
               Batal
-            </button>
-            <button type="button" className="btn-primary" onClick={saveMember}>
+            </Button>
+            <Button variant="primary" onClick={saveMember}>
               Simpan Member
-            </button>
+            </Button>
           </>
         }
       >
@@ -2478,9 +2480,9 @@ function CameraScan({ onCode, onClose }: { onCode: (code: string) => void; onClo
         <p className="mt-1 text-xs text-slate-500">
           Alternatif: ketik nomor barcode di kolom pencarian, lalu tekan Enter.
         </p>
-        <button type="button" className="btn-ghost mt-3" onClick={onClose}>
+        <Button variant="ghost" className="mt-3" onClick={onClose}>
           Tutup
-        </button>
+        </Button>
       </div>
     );
   }
@@ -2495,9 +2497,9 @@ function CameraScan({ onCode, onClose }: { onCode: (code: string) => void; onClo
       </div>
       <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <span>{status === 'starting' ? 'Menyalakan kamera…' : 'Arahkan barcode ke dalam bingkai'}</span>
-        <button type="button" className="btn-ghost px-3 py-1 text-xs" onClick={onClose}>
+        <Button variant="ghost" size="sm" onClick={onClose}>
           Batal (ESC)
-        </button>
+        </Button>
       </div>
     </div>
   );

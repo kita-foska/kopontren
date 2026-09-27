@@ -1,10 +1,11 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { canAccess, currentUser } from '@/lib/auth';
 import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { LowStockClient } from '@/components/admin/low-stock-client';
+import { Button } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -184,21 +185,21 @@ export default async function AdminDashboardPage() {
         <div className="card fade-up p-4">
           <h2 className="mb-2 font-bold">Aksi cepat</h2>
           <div className="flex flex-wrap gap-2">
-            <Link href="/kasir" className="btn-primary">
+            <Button variant="primary" as="a" href="/kasir">
               + Jual (POS)
-            </Link>
-            <Link href="/admin/produk" className="btn-ghost">
+            </Button>
+            <Button variant="ghost" as="a" href="/admin/produk">
               Kelola Produk
-            </Link>
-            <Link href="/admin/laporan" className="btn-ghost">
+            </Button>
+            <Button variant="ghost" as="a" href="/admin/laporan">
               Laporan Pengurus
-            </Link>
-            <Link href="/admin/pengguna" className="btn-ghost">
+            </Button>
+            <Button variant="ghost" as="a" href="/admin/pengguna">
               Pengguna
-            </Link>
-            <Link href="/admin/data" className="btn-ghost">
+            </Button>
+            <Button variant="ghost" as="a" href="/admin/data">
               Data &amp; Backup
-            </Link>
+            </Button>
           </div>
         </div>
         <LowStockClient items={stockForecast} />

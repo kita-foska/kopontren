@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react';
 import type { Role } from '@/lib/auth';
-import { Avatar, ROLE_LABEL } from './ui';
+import { Avatar, Button, ROLE_LABEL } from './ui';
 
 // Prefetch selektif: menu utama + halaman admin yang paling sering dibuka.
 // Halaman jarang (kontrakan, piutang, retur, audit, data, dsb.) tidak di-prefetch
@@ -156,13 +156,15 @@ export function Sidebar({
               {ROLE_LABEL[role] ?? role.toUpperCase()}
             </p>
           </div>
-          <button type="button"
-            onClick={onClose}
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<X className="h-4 w-4" />}
             aria-label="Tutup menu"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-slate-200 text-sm text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-700"
-          >
-            <X className="h-4 w-4" />
-          </button>
+            className="shrink-0"
+            onClick={onClose}
+          />
         </div>
         <nav className="flex-1 overflow-y-auto px-3 pb-6">
           {groups.map((g) => (
@@ -198,29 +200,35 @@ export function Sidebar({
         {/* Aksi panel (dipindah dari header): ganti tema + keluar.
             Ikon dinamis: dark → Sun (klik = ke light), light → Moon (klik = ke dark). */}
         <div className="mt-2 space-y-1 border-t border-slate-200 px-2 pb-2 pt-2 dark:border-navy-600">
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            full
+            icon={
+              <>
+                <Sun className="hidden h-5 w-5 text-amber-400 dark:block" />
+                <Moon className="h-5 w-5 text-slate-500 dark:hidden" />
+              </>
+            }
+            className="justify-start gap-3"
             onClick={() => {
               onToggleTheme();
               onClose();
             }}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700"
           >
-            <Sun className="hidden h-5 w-5 text-amber-400 dark:block" />
-            <Moon className="h-5 w-5 text-slate-500 dark:hidden" />
             Ganti Tema
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="ghost"
+            full
+            icon={<LogOut className="h-5 w-5" />}
+            className="justify-start gap-3 text-rose-600 dark:text-rose-400"
             onClick={() => {
               onClose();
               void onLogout();
             }}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-navy-700/60"
           >
-            <LogOut className="h-5 w-5" />
             Keluar
-          </button>
+          </Button>
         </div>
       </aside>
     </>,
@@ -313,15 +321,17 @@ export function HamburgerNav({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button"
-        onClick={() => setOpen(true)}
+      <Button
+        variant="ghost"
+        size="sm"
+        iconOnly
+        icon={<Menu className="h-5 w-5" />}
         aria-label="Buka menu navigasi"
         aria-expanded={open}
         title="Menu"
-        className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
+        className="shrink-0"
+        onClick={() => setOpen(true)}
+      />
       <Sidebar
         name={name}
         role={role}

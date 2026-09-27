@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   api,
+  Button,
   Badge,
   Toast,
   useConfirm,
@@ -165,34 +166,24 @@ export function DataClient() {
     <div className="space-y-4">
       {/* Tabs */}
       <div className="flex gap-2 border-b border-slate-200 pb-2 dark:border-navy-700" role="tablist" onKeyDown={onTabKeyDown}>
-        <button
-          type="button"
+        <Button
+          variant={activeTab === 'backup' ? 'primary' : 'ghost'}
+          size="md"
           role="tab"
           aria-selected={activeTab === 'backup'}
           onClick={() => setActiveTab('backup')}
-          className={
-            'rounded-lg px-4 py-2 text-sm font-bold transition ' +
-            (activeTab === 'backup'
-              ? 'bg-accent-500 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-800')
-          }
         >
-          Backup & Ekspor Data
-        </button>
-        <button
-          type="button"
+          Backup &amp; Ekspor Data
+        </Button>
+        <Button
+          variant={activeTab === 'audit' ? 'primary' : 'ghost'}
+          size="md"
           role="tab"
           aria-selected={activeTab === 'audit'}
           onClick={() => setActiveTab('audit')}
-          className={
-            'rounded-lg px-4 py-2 text-sm font-bold transition ' +
-            (activeTab === 'audit'
-              ? 'bg-accent-500 text-white shadow-sm'
-              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-800')
-          }
         >
           Audit Log (Rekam Jejak)
-        </button>
+        </Button>
       </div>
 
       {activeTab === 'backup' && (
@@ -207,13 +198,9 @@ export function DataClient() {
                 Unduh salinan lengkap seluruh database (produk, penjualan, retur, piutang, hutang dagang, kas, konsinyasi, member, shift, notifikasi, pengaturan notifikasi & audit log) untuk arsip / pindah server.
               </p>
             </div>
-            <button type="button"
-              className="btn-primary w-full"
-              disabled={busy === 'dl'}
-              onClick={exportJson}
-            >
+            <Button variant="primary" full disabled={busy === 'dl'} onClick={exportJson}>
               {busy === 'dl' ? 'Mengunduh…' : 'Unduh Backup JSON'}
-            </button>
+            </Button>
           </div>
 
           <div className="card flex flex-col justify-between p-4">
@@ -226,13 +213,9 @@ export function DataClient() {
                 Unduh rekap detail semua transaksi item penjualan format CSV yang bisa dibuka langsung di Microsoft Excel.
               </p>
             </div>
-            <button type="button"
-              className="btn-ghost w-full font-bold"
-              disabled={busy === 'dl'}
-              onClick={exportSalesCsv}
-            >
+            <Button variant="ghost" full className="font-bold" disabled={busy === 'dl'} onClick={exportSalesCsv}>
               {busy === 'dl' ? 'Mengunduh…' : 'Unduh CSV Penjualan'}
-            </button>
+            </Button>
           </div>
 
           <div className="card flex flex-col justify-between p-4">
@@ -252,13 +235,9 @@ export function DataClient() {
               className="hidden"
               onChange={importJson}
             />
-            <button type="button"
-              className="btn-ghost w-full font-bold"
-              disabled={busy === 'import'}
-              onClick={() => fileRef.current?.click()}
-            >
+            <Button variant="ghost" full className="font-bold" disabled={busy === 'import'} onClick={() => fileRef.current?.click()}>
               {busy === 'import' ? 'Memproses…' : 'Pilih File Backup'}
-            </button>
+            </Button>
           </div>
 
           <div className="card flex flex-col justify-between border-rose-200 bg-rose-50/20 p-4 dark:border-rose-950 dark:bg-rose-950/10">
@@ -271,13 +250,9 @@ export function DataClient() {
                 Kosongkan seluruh data operasional (penjualan, retur, piutang, hutang dagang, stok, kas, konsinyasi, notifikasi). Akun login pengurus, audit log & pengaturan tetap aman.
               </p>
             </div>
-            <button type="button"
-              className="btn-danger w-full"
-              disabled={busy === 'reset'}
-              onClick={resetAll}
-            >
+            <Button variant="danger" full disabled={busy === 'reset'} onClick={resetAll}>
               {busy === 'reset' ? 'Menghapus…' : 'Hapus Semua Data'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -307,9 +282,9 @@ export function DataClient() {
                 <option value={50}>50 log</option>
               </select>
             </div>
-            <button type="button" className="btn-ghost px-3 py-1 text-xs" onClick={() => loadLogs()}>
+            <Button variant="ghost" size="sm" onClick={() => loadLogs()}>
               Refresh Log
-            </button>
+            </Button>
           </div>
 
           <div className="card overflow-x-auto">
@@ -365,9 +340,9 @@ export function DataClient() {
           </div>
           {canMore && (
             <div className="p-1 text-center">
-              <button type="button" className="btn-ghost text-xs" onClick={loadMoreLogs} disabled={loadingMore}>
+              <Button variant="ghost" size="sm" onClick={loadMoreLogs} disabled={loadingMore}>
                 {loadingMore ? 'Memuat…' : 'Muat lebih banyak log'}
-              </button>
+              </Button>
             </div>
           )}
         </div>

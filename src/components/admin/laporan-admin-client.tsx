@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, apiRetry, PageSkeleton, TermTip, Toast, useToast } from '@/components/ui';
+import { api, apiRetry, Button, PageSkeleton, TermTip, Toast, useToast } from '@/components/ui';
 import { rp, startOfDayJakarta, todayWibStr } from '@/lib/format';
 import { HourBarChart, type HourPoint } from '../charts';
 import { buildLabaRugiWa, shareRekap } from '@/lib/rekap';
@@ -262,9 +262,9 @@ export function LaporanAdminClient() {
             {label}
           </button>
         ))}
-        <button type="button" onClick={csv} className="btn-ghost ml-auto">
+        <Button variant="ghost" className="ml-auto" onClick={csv}>
           Unduh CSV
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
@@ -444,9 +444,15 @@ export function LabaRugiTab() {
             <input type="date" className="input" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
           </span>
         )}
-        <button type="button" onClick={shareWa} className="btn-ghost ml-auto" title="Bagikan via WhatsApp">
-          <MessageCircle size={14} /> Bagikan
-        </button>
+        <Button
+          variant="ghost"
+          className="ml-auto"
+          icon={<MessageCircle size={14} />}
+          onClick={shareWa}
+          title="Bagikan via WhatsApp"
+        >
+          Bagikan
+        </Button>
       </div>
 
       {loading && !data ? (
@@ -584,9 +590,9 @@ export function NeracaTab() {
         <span className="text-xs text-slate-500 dark:text-slate-400">
           Snapshot per {todayWibStr()} · V1
         </span>
-        <button type="button" onClick={() => void load()} className="btn-ghost ml-auto">
+        <Button variant="ghost" className="ml-auto" onClick={() => void load()}>
           Muat ulang
-        </button>
+        </Button>
       </div>
 
       {loading && !data ? (

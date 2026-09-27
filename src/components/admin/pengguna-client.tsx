@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, api, Badge, Modal, Toast, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Button, Modal, Toast, useToast } from '@/components/ui';
 import { fmtDate } from '@/lib/format';
 
 type User = {
@@ -248,9 +248,9 @@ export function PenggunaClient() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
             </div>
-            <button type="button" className="btn-primary w-full" disabled={createBusy} onClick={createUser}>
+            <Button variant="primary" full disabled={createBusy} onClick={createUser}>
               {createBusy ? 'Membuat…' : '+ Buat Akun'}
-            </button>
+            </Button>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Kasir: POS & rekap. Pengurus: operasional + pembukuan (tanpa Pengguna &amp; Data).
               Admin: akses penuh.
@@ -276,9 +276,9 @@ export function PenggunaClient() {
               value={ownPw.next}
               onChange={(e) => setOwnPw({ ...ownPw, next: e.target.value })}
             />
-            <button type="button" className="btn-ghost w-full" disabled={ownPwBusy} onClick={changeOwnPw}>
+            <Button variant="ghost" full disabled={ownPwBusy} onClick={changeOwnPw}>
               {ownPwBusy ? 'Menyimpan…' : 'Simpan Password Baru'}
-            </button>
+            </Button>
           </div>
         </div>
         <div className="card p-4">
@@ -313,9 +313,9 @@ export function PenggunaClient() {
                 setOwnPin({ ...ownPin, confirm: e.target.value.replace(/\D/g, '') })
               }
             />
-            <button type="button" className="btn-ghost w-full" disabled={ownPinBusy} onClick={changeOwnPin}>
+            <Button variant="ghost" full disabled={ownPinBusy} onClick={changeOwnPin}>
               {ownPinBusy ? 'Menyimpan…' : 'Ganti PIN'}
-            </button>
+            </Button>
           </div>
         </div>
         <div className="card p-4">
@@ -332,9 +332,9 @@ export function PenggunaClient() {
               value={timeout}
               onChange={(e) => setTimeoutSec(e.target.value.replace(/\D/g, ''))}
             />
-            <button type="button" className="btn-primary" disabled={timeoutBusy || !timeout} onClick={saveTimeout}>
+            <Button variant="primary" disabled={timeoutBusy || !timeout} onClick={saveTimeout}>
               {timeoutBusy ? 'Menyimpan…' : 'Simpan'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -420,12 +420,12 @@ export function PenggunaClient() {
         onClose={() => setPwModal(null)}
         footer={
           <>
-            <button type="button" className="btn-ghost" onClick={() => setPwModal(null)}>
+            <Button variant="ghost" onClick={() => setPwModal(null)}>
               Batal
-            </button>
-            <button type="button" className="btn-primary" disabled={resetPwBusy} onClick={resetPw}>
+            </Button>
+            <Button variant="primary" disabled={resetPwBusy} onClick={resetPw}>
               {resetPwBusy ? 'Menyimpan…' : 'Reset'}
-            </button>
+            </Button>
           </>
         }
       >
@@ -444,12 +444,12 @@ export function PenggunaClient() {
         onClose={() => setPinModal(null)}
         footer={
           <>
-            <button type="button" className="btn-ghost" onClick={() => setPinModal(null)}>
+            <Button variant="ghost" onClick={() => setPinModal(null)}>
               Batal
-            </button>
-            <button type="button" className="btn-primary" disabled={resetPinBusy} onClick={resetPin}>
+            </Button>
+            <Button variant="primary" disabled={resetPinBusy} onClick={resetPin}>
               {resetPinBusy ? 'Menyimpan…' : 'Reset'}
-            </button>
+            </Button>
           </>
         }
       >

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { api, Badge, Empty, Toast, useToast } from '@/components/ui';
+import { api, Badge, Button, Empty, Toast, useToast } from '@/components/ui';
 import { shareWa } from '@/lib/rekap';
 import { Copy, MessageCircle } from 'lucide-react';
 
@@ -60,21 +60,23 @@ export function LowStockClient({ items }: { items: Item[] }) {
         </h2>
         {items.length > 0 && (
           <div className="flex gap-1.5">
-            <button type="button"
-              className="btn-ghost inline-flex items-center gap-1 px-2.5 py-1 text-xs"
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Copy className="h-3.5 w-3.5" />}
               onClick={copyMsg}
             >
-              <Copy className="h-3.5 w-3.5" />
               Salin
-            </button>
-            <button type="button"
-              className="btn-primary inline-flex items-center gap-1 px-2.5 py-1 text-xs"
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<MessageCircle className="h-3.5 w-3.5" />}
               onClick={() => void sendWa()}
               disabled={busy}
             >
-              <MessageCircle className="h-3.5 w-3.5" />
               Notif WA
-            </button>
+            </Button>
           </div>
         )}
       </div>

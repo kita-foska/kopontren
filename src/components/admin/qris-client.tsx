@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { api, Toast, useToast } from '@/components/ui';
+import { api, Button, Toast, useToast } from '@/components/ui';
 import { buildQris } from '@/lib/qris';
 
 type QrisSettings = {
@@ -161,9 +161,9 @@ export function QrisClient() {
             pengaturan toko. Perubahan NMID/NMID2/MCC/kota tercatat di audit trail.
           </div>
           <div>
-            <button className="btn-primary" onClick={save} disabled={saving || !dirty}>
+            <Button variant="primary" onClick={save} disabled={saving || !dirty}>
               {saving ? 'Menyimpan…' : dirty ? 'Simpan' : 'Sudah tersimpan'}
-            </button>
+            </Button>
           </div>
         </div>
       </section>
@@ -193,12 +193,12 @@ export function QrisClient() {
               BCA, Mandiri, BSI, GoPay, OVO, Dana, ShopeePay.
             </p>
             <div className="flex justify-center gap-2">
-              <a className="btn-primary" href={qr} download="qris-kopontren.png">
+              <Button variant="primary" as="a" href={qr} download="qris-kopontren.png">
                 Download PNG
-              </a>
-              <button className="btn-ghost" onClick={copyPayload} disabled={!payload}>
+              </Button>
+              <Button variant="ghost" onClick={copyPayload} disabled={!payload}>
                 {copied ? 'Tersalin ✓' : 'Copy Payload'}
-              </button>
+              </Button>
             </div>
             {payload && (
               <pre className="max-h-24 overflow-auto rounded-lg bg-slate-100 p-2 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">

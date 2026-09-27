@@ -3,7 +3,7 @@ import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
-import { Empty, StatusBadge } from '@/components/ui';
+import { Button, Empty, StatusBadge } from '@/components/ui';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { ShoppingCart } from 'lucide-react';
 
@@ -103,12 +103,14 @@ export default async function DashboardPage() {
             <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Sesi kasir · {dateLine}
             </p>
-            <a
+            <Button
+              variant="primary"
+              as="a"
               href="/kasir"
-              className="btn-primary mt-3 flex w-full items-center justify-center gap-2 py-4 text-base font-bold"
+              className="mt-3 flex w-full items-center justify-center gap-2 py-4 text-base font-bold"
             >
               MULAI JUAL <span className="text-sm font-semibold opacity-70">(POS)</span>
-            </a>
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -242,24 +244,24 @@ export default async function DashboardPage() {
           <h2 className="mb-2 font-bold">Aksi cepat</h2>
           <div className="flex flex-wrap gap-2">
             {canAccess(user, 'pos') && (
-              <a href="/kasir" className="btn-primary">
+              <Button variant="primary" as="a" href="/kasir">
                 + Jual (POS)
-              </a>
+              </Button>
             )}
             {canAccess(user, 'laporan') && (
-              <a href="/laporan" className="btn-ghost">
+              <Button variant="ghost" as="a" href="/laporan">
                 Laporan & Rekap
-              </a>
+              </Button>
             )}
             {canAccess(user, 'supplier') && (
-              <a href="/admin/belanja" className="btn-ghost">
+              <Button variant="ghost" as="a" href="/admin/belanja">
                 Belanja & Stok
-              </a>
+              </Button>
             )}
             {isManager(user) && (
-              <a href="/admin/kas" className="btn-ghost">
+              <Button variant="ghost" as="a" href="/admin/kas">
                 Pembukuan
-              </a>
+              </Button>
             )}
           </div>
         </div>

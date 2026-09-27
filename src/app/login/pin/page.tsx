@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { PinDots, PinPad } from '@/components/pin-pad';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
+import { Button } from '@/components/ui';
+
 
 type PUser = { username: string; display_name: string };
 type Session = {
@@ -128,12 +130,13 @@ export default function PinReauthPage() {
             <p className="text-center text-sm text-slate-600 dark:text-slate-300">
               Sesi tidak ditemukan. Silakan login dengan username &amp; password.
             </p>
-            <button type="button"
-              className="btn-primary w-full shadow-md shadow-accent-500/20"
+            <Button type="button"
+              variant="primary"
+              className="w-full shadow-md shadow-accent-500/20"
               onClick={() => (window.location.href = '/login')}
             >
               Ke Login
-            </button>
+            </Button>
           </div>
         )}
 
@@ -143,8 +146,9 @@ export default function PinReauthPage() {
               Gagal memeriksa sesi — jaringan lambat atau server belum siap
               (timeout 10 dtk).
             </p>
-            <button type="button"
-              className="btn-primary w-full shadow-md shadow-accent-500/20"
+            <Button type="button"
+              variant="primary"
+              className="w-full shadow-md shadow-accent-500/20"
               onClick={() => {
                 setErr('');
                 setValue('');
@@ -152,7 +156,7 @@ export default function PinReauthPage() {
               }}
             >
               Coba Lagi
-            </button>
+            </Button>
             <button type="button"
               className="w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               onClick={() => (window.location.href = '/login')}
@@ -189,13 +193,14 @@ export default function PinReauthPage() {
               }}
               disabled={busy}
             />
-            <button type="button"
-              className="btn-primary mt-4 w-full shadow-md shadow-accent-500/20"
+            <Button type="button"
+              variant="primary"
+              className="mt-4 w-full shadow-md shadow-accent-500/20"
               disabled={busy || value.length < 4}
               onClick={verify}
             >
               {busy ? 'Memeriksa…' : 'Lanjutkan'}
-            </button>
+            </Button>
             {err && (
               <p role="alert" className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-300">
                 {err}

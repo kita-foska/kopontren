@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PageSkeleton, Empty, api, apiRetry, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Empty, api, apiRetry, Badge, Button, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, startOfDayJakarta } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit, payMethodLabel } from '@/lib/pay-methods';
@@ -276,34 +276,28 @@ export function LaporanClient({
         </div>
 
         <div className="flex items-center gap-2">
-          <button type="button"
-            onClick={downloadCsv}
-            className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<FileDown className="h-3.5 w-3.5" />}
             title="Download laporan transaksi format Excel/CSV"
+            onClick={downloadCsv}
           >
-            <span className="inline-flex items-center gap-1.5">
-              <FileDown className="h-3.5 w-3.5" />
-              Unduh CSV
-            </span>
-          </button>
-          <button type="button"
+            Unduh CSV
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Smartphone className="h-3.5 w-3.5" />}
             onClick={shareWa}
             disabled={unreported.length === 0}
-            className="btn-ghost px-2.5 py-1.5 text-xs font-bold"
           >
-            <span className="inline-flex items-center gap-1.5">
-              <Smartphone className="h-3.5 w-3.5" />
-              Rekap WA ({unreported.length})
-            </span>
-          </button>
+            Rekap WA ({unreported.length})
+          </Button>
           {admin && (
-            <button type="button"
-              onClick={markAll}
-              disabled={unreported.length === 0}
-              className="btn-amber px-2.5 py-1.5 text-xs font-bold"
-            >
+            <Button variant="amber" size="sm" onClick={markAll} disabled={unreported.length === 0}>
               Tandai Semua Laporan
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -373,16 +367,18 @@ export function LaporanClient({
                   Kasir: {s.kasir_name || 'Kasir'} · Transaksi #{s.id}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    active={s.status === 'unreported'}
                     onClick={() => toggleStatus(s)}
-                    className={s.status === 'unreported' ? 'btn-primary px-3 py-1 text-xs' : 'btn-ghost px-3 py-1 text-xs'}
                   >
                     {s.status === 'unreported' ? 'Tandai Sudah Dilapor' : 'Kembali ke Belum'}
-                  </button>
+                  </Button>
                   {admin && (
-                    <button type="button" onClick={() => remove(s.id)} className="btn-danger px-3 py-1 text-xs">
+                    <Button variant="danger" size="sm" onClick={() => remove(s.id)}>
                       Hapus
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>

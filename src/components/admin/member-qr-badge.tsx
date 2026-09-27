@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { T } from "@/lib/tokens";
-import { Toast, useConfirm, useToast } from "@/components/ui";
+import { Button, Toast, useConfirm, useToast } from "@/components/ui";
 import { rp, fmtDateTime } from "@/lib/format";
 
 export type MemberQrMember = {
@@ -280,20 +280,20 @@ export function MemberQrBadge({
         {hint && <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-400">{hint}</p>}
 
         <div className="mt-4 flex items-center gap-2">
-          <button
-            type="button"
-            className="btn btn-primary flex-1"
+          <Button
+            variant="primary"
+            className="flex-1"
             disabled={!dataUrl || busy}
             onClick={cetak}
           >
             Cetak Kartu
-          </button>
-          <button type="button" className="btn btn-ghost" disabled={busy} onClick={perbarui}>
+          </Button>
+          <Button variant="ghost" disabled={busy} onClick={perbarui}>
             Perbarui QR
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
             Tutup
-          </button>
+          </Button>
         </div>
       </div>
       <Toast msg={toast} onClose={() => showToast('')} />

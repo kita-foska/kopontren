@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Empty, Toast, useToast } from '@/components/ui';
+import { api, Button, Badge, Empty, Toast, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 
 type SaleItem = {
@@ -165,9 +165,9 @@ export function ReturClient() {
             </label>
           </div>
           <div className="flex items-end">
-            <button type="button" className="btn-primary w-full" disabled={busy} onClick={submit}>
+            <Button variant="primary" full disabled={busy} onClick={submit}>
               {busy ? 'Menyimpan…' : 'Simpan Retur'}
-            </button>
+            </Button>
           </div>
         </div>
         {selItem && (

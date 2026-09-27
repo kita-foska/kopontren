@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, Empty, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import { Button, PageSkeleton, Empty, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { Trash2 } from 'lucide-react';
 
@@ -134,9 +134,9 @@ export function KasClient() {
           />
         </div>
         <div className="flex items-end">
-          <button type="button" className="btn-primary w-full" disabled={busy} onClick={addEntry}>
+          <Button variant="primary" full disabled={busy} onClick={addEntry}>
             {busy ? 'Menyimpan…' : 'Tambah Jurnal'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -158,12 +158,14 @@ export function KasClient() {
                     {kindBadge[r.kind]?.label || r.kind}
                   </Badge>
                   {r.kind === 'entry' && (
-                    <button type="button"
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="ml-2 text-[10px] text-slate-500 underline hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400"
                       onClick={() => removeEntry(r.id)}
-                      className="ml-2 text-[10px] text-slate-500 underline hover:text-rose-600 dark:hover:text-rose-400"
                     >
                       hapus
-                    </button>
+                    </Button>
                   )}
                 </td>
                 <td className="td text-sm">{r.label}</td>
@@ -212,13 +214,14 @@ export function KasClient() {
                     {kindBadge[r.kind]?.label || r.kind}
                   </Badge>
                   {r.kind === 'entry' && (
-                    <button type="button"
-                      onClick={() => removeEntry(r.id)}
+                    <Button
+                      variant="ghost"
+                      size="md"
+                      iconOnly
+                      icon={<Trash2 size={18} />}
                       aria-label="Hapus jurnal manual ini"
-                      className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                      onClick={() => removeEntry(r.id)}
+                    />
                   )}
                 </div>
                 <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{r.label}</p>

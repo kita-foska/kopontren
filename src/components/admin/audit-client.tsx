@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { Button, api, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { fmtDateTime } from '@/lib/format';
 
 type Log = {
@@ -166,12 +166,12 @@ export function AuditClient() {
           />
         </div>
         <div className="flex items-end gap-2">
-          <button type="button" className="btn-ghost flex-1" onClick={() => purge(90)}>
+          <Button variant="ghost" className="flex-1" onClick={() => purge(90)}>
             Bersihkan &gt;90h
-          </button>
-          <button type="button" className="btn-ghost flex-1" onClick={() => purge(365)}>
+          </Button>
+          <Button variant="ghost" className="flex-1" onClick={() => purge(365)}>
             Bersihkan &gt;1th
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -289,9 +289,9 @@ export function AuditClient() {
       </div>
       {canMore && (
         <div className="p-1 text-center">
-          <button type="button" className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+          <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
             {loadingMore ? 'Memuat…' : 'Muat lebih banyak log'}
-          </button>
+          </Button>
         </div>
       )}
       {viewLog && (

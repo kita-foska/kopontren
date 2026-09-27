@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   api,
   Badge,
+  Button,
   StatusBadge,
   TermTip,
   Toast,
@@ -234,16 +235,16 @@ export function KonsinyasiClient() {
       return (
         <div className="text-sm text-slate-500">
           <p>{loadErr}</p>
-          <button
-            type="button"
-            className="btn-ghost mt-2"
+          <Button
+            variant="ghost"
+            className="mt-2"
             onClick={() => {
               setLoadErr('');
               load();
             }}
           >
             Coba lagi
-          </button>
+          </Button>
         </div>
       );
     return <p className="text-sm text-slate-500">Memuat…</p>;
@@ -281,9 +282,9 @@ export function KonsinyasiClient() {
         </div>
         {doneMode ? (
           <div className="mt-3 flex justify-end">
-            <button type="button" className="btn-ghost" disabled={busy} onClick={() => bukaLagi(k)}>
+            <Button variant="ghost" disabled={busy} onClick={() => bukaLagi(k)}>
               Buka lagi
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-6">
@@ -307,18 +308,18 @@ export function KonsinyasiClient() {
                 onChange={(e) => act(k.id, { pay: Number(e.target.value) })}
               />
             </div>
-            <button type="button" className="btn-ghost" disabled={busy} onClick={() => jual(k)}>
+            <Button variant="ghost" disabled={busy} onClick={() => jual(k)}>
               Jual
-            </button>
-            <button type="button" className="btn-ghost" disabled={busy} onClick={() => kembalikan(k)}>
+            </Button>
+            <Button variant="ghost" disabled={busy} onClick={() => kembalikan(k)}>
               Kembalikan
-            </button>
-            <button type="button" className="btn-amber" disabled={busy} onClick={() => bayar(k)}>
+            </Button>
+            <Button variant="amber" disabled={busy} onClick={() => bayar(k)}>
               Bayar
-            </button>
-            <button type="button" className="btn-danger" disabled={busy} onClick={() => tutup(k)}>
+            </Button>
+            <Button variant="danger" disabled={busy} onClick={() => tutup(k)}>
               Tutup
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -532,14 +533,9 @@ export function KonsinyasiClient() {
           )}
         </div>
         <div className="mt-3">
-          <button
-            type="button"
-            className="btn-primary w-full"
-            disabled={busy}
-            onClick={create}
-          >
+          <Button variant="primary" full disabled={busy} onClick={create}>
             {busy ? 'Menyimpan…' : 'Terima Konsinyasi'}
-          </button>
+          </Button>
           <p className="mt-1 text-center text-xs text-slate-500 dark:text-slate-400">
             Komisi dicatat otomatis saat barang terjual — tidak dibayar di muka.
           </p>
@@ -562,14 +558,9 @@ export function KonsinyasiClient() {
             {Object.entries(data.owner_rates || {}).map(([o, r]) => (
               <div key={o} className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-bold">{o} — komisi {r}%</span>
-                <button
-                  type="button"
-                  className="btn-danger"
-                  disabled={busy}
-                  onClick={() => delOwnerRate(o)}
-                >
+                <Button variant="danger" disabled={busy} onClick={() => delOwnerRate(o)}>
                   Hapus
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -598,9 +589,9 @@ export function KonsinyasiClient() {
               onChange={(e) => setOrRate(e.target.value)}
             />
           </div>
-          <button type="button" className="btn-primary" disabled={busy} onClick={saveOwnerRate}>
+          <Button variant="primary" disabled={busy} onClick={saveOwnerRate}>
             Simpan
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -614,24 +605,24 @@ export function KonsinyasiClient() {
       </p>
 
       <div className="mb-3 flex gap-2" role="tablist" onKeyDown={onTabKeyDown}>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          active={tab === 'active'}
           role="tab"
           aria-selected={tab === 'active'}
           onClick={() => setTab('active')}
-          className={tab === 'active' ? 'btn-primary' : 'btn-ghost'}
         >
           Aktif ({active.length})
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="ghost"
+          active={tab === 'done'}
           role="tab"
           aria-selected={tab === 'done'}
           onClick={() => setTab('done')}
-          className={tab === 'done' ? 'btn-primary' : 'btn-ghost'}
         >
           Selesai ({done.length})
-        </button>
+        </Button>
       </div>
 
       {tab === 'active' ? (
@@ -657,9 +648,9 @@ export function KonsinyasiClient() {
       )}
       {canMore && (
         <div className="p-1 text-center">
-          <button type="button" className="btn-ghost text-xs" onClick={loadMore} disabled={loadingMore}>
+          <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
             {loadingMore ? 'Memuat…' : 'Muat riwayat lebih lama'}
-          </button>
+          </Button>
         </div>
       )}
       {confirmHost}

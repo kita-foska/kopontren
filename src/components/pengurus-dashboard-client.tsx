@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { SalesBarChart, type DailyPoint } from '@/components/charts';
-import { PageSkeleton, Toast, api, apiRetry, useToast } from '@/components/ui';
+import { Button, PageSkeleton, Toast, api, apiRetry, useToast } from '@/components/ui';
 import { fmtDate, rp } from '@/lib/format';
 import { shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
@@ -195,9 +195,9 @@ export function PengurusDashboardClient() {
     return (
       <div className="card p-4">
         <p className="text-sm text-rose-600 dark:text-rose-300">{err}</p>
-        <button type="button" className="btn-ghost mt-2" onClick={() => void load(days)}>
+        <Button variant="ghost" className="mt-2" onClick={() => void load(days)}>
           Ulangi
-        </button>
+        </Button>
       </div>
     );
 
@@ -225,18 +225,18 @@ export function PengurusDashboardClient() {
             ))}
           </div>
           <div className="flex flex-wrap gap-2 print:hidden">
-            <button type="button" className="btn-ghost" onClick={exportCsv}>
+            <Button variant="ghost" onClick={exportCsv}>
               Export CSV
-            </button>
-            <button type="button" className="btn-ghost" onClick={() => void exportXlsx()} disabled={busy === 'xlsx'}>
+            </Button>
+            <Button variant="ghost" onClick={() => void exportXlsx()} disabled={busy === 'xlsx'}>
               {busy === 'xlsx' ? 'Membuat…' : 'Export Excel'}
-            </button>
-            <button type="button" className="btn-ghost" onClick={printPdf}>
+            </Button>
+            <Button variant="ghost" onClick={printPdf}>
               Cetak / PDF
-            </button>
-            <button type="button" className="btn-primary" onClick={() => void waReport()} disabled={busy === 'wa'}>
+            </Button>
+            <Button variant="primary" onClick={() => void waReport()} disabled={busy === 'wa'}>
               {busy === 'wa' ? 'Membuka…' : 'Laporan via WA'}
-            </button>
+            </Button>
           </div>
         </div>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">

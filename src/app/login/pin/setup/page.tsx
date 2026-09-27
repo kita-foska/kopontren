@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { PinDots, PinPad } from '@/components/pin-pad';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
+import { Button } from '@/components/ui';
+
 
 /**
  * Halaman setup / reset PIN (ditempuh setelah login — `?reset`/belum ada PIN).
@@ -133,12 +135,13 @@ export default function PinSetupPage() {
             <p className="text-center text-sm text-slate-600 dark:text-slate-300">
               Memeriksa sesi… bila tidak dilanjutkan, silakan login.
             </p>
-            <button type="button"
-              className="btn-ghost w-full"
+            <Button type="button"
+              variant="ghost"
+              className="w-full"
               onClick={() => (window.location.href = '/login?reset=1')}
             >
               Ke Login
-            </button>
+            </Button>
           </div>
         )}
 
@@ -166,13 +169,14 @@ export default function PinSetupPage() {
               }}
               disabled={busy}
             />
-            <button type="button"
-              className="btn-primary mt-4 w-full shadow-md shadow-accent-500/20"
+            <Button type="button"
+              variant="primary"
+              className="mt-4 w-full shadow-md shadow-accent-500/20"
               disabled={busy || value.length < 4}
               onClick={() => keypressAuto()}
             >
               {busy ? 'Menyimpan…' : step === 'pin' ? 'Lanjut' : 'Simpan'}
-            </button>
+            </Button>
             {err && (
               <p role="alert" className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-300">
                 {err}

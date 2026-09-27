@@ -133,6 +133,8 @@ type ButtonAsButton = ButtonBaseProps & { as?: 'button'; href?: never };
 type ButtonAsLink = Omit<ButtonBaseProps, 'type' | 'disabled' | 'focusable'> & {
   as: 'a';
   href: string;
+  // Unduhan aset (mis. PNG QRIS) — diteruskan ke <a> lewat linkRest.
+  download?: string;
 };
 
 export type ButtonProps = ButtonAsButton | ButtonAsLink;

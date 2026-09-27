@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import { api, Badge, Button, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { payMethodLabel } from '@/lib/pay-methods';
 
@@ -110,13 +110,14 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
                 {openShift.sales_count} transaksi · {rp(openShift.sales_total)}
               </span>
               {/* Kasir hanya melihat shift-nya sendiri; admin semua. API tetap menegakkan izin. */}
-              <button type="button"
-                className="btn-danger h-11 px-2 py-1 sm:h-auto"
+              <Button
+                variant="danger"
+                size="sm"
                 disabled={busy === 'close' + openShift.id}
                 onClick={() => close(openShift.id)}
               >
                 Tutup Shift
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -177,9 +178,9 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
                 <td className="td py-6 text-center text-sm text-slate-500" colSpan={7}>
                   Belum ada shift yang ditutup.
                   <div className="mt-2">
-                    <a href="/kasir" className="btn-ghost text-xs">
+                    <Button variant="ghost" as="a" size="sm" href="/kasir">
                       Buka di Kasir
-                    </a>
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -232,18 +233,18 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
           <div className="p-4 text-center text-sm text-slate-500">
             Belum ada shift yang ditutup.
             <div className="mt-2 flex justify-center">
-              <a href="/kasir" className="btn-ghost text-xs">
+              <Button variant="ghost" as="a" size="sm" href="/kasir">
                 Buka di Kasir
-              </a>
+              </Button>
             </div>
           </div>
         )}
       </div>
       {canMore && (
         <div className="p-1 text-center">
-          <button type="button" className="btn-ghost h-11 px-4 text-xs sm:h-9" onClick={loadMore} disabled={loadingMore}>
+          <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
             {loadingMore ? 'Memuat…' : 'Muat shift lama lainnya'}
-          </button>
+          </Button>
         </div>
       )}
       {confirmHost}

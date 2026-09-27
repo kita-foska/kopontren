@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { CheckCheck, RefreshCw, ExternalLink } from 'lucide-react';
-import { api, Badge, Empty } from '@/components/ui';
+import { api, Badge, Button, Empty } from '@/components/ui';
 
 type Notif = {
   id: number;
@@ -109,44 +109,27 @@ export function NotificationListClient() {
     <div className="space-y-3">
       <div className="card flex flex-wrap items-center justify-between gap-2 p-3">
         <div className="flex items-center gap-1">
-          <button type="button"
-            onClick={() => setFilter('all')}
-            className={
-              'rounded-lg px-3 py-1.5 text-xs font-bold ' +
-              (filter === 'all'
-                ? 'bg-accent-500 text-white'
-                : 'text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700')
-            }
-          >
+          <Button variant="ghost" size="sm" active={filter === 'all'} onClick={() => setFilter('all')}>
             Semua
-          </button>
-          <button type="button"
-            onClick={() => setFilter('unread')}
-            className={
-              'rounded-lg px-3 py-1.5 text-xs font-bold ' +
-              (filter === 'unread'
-                ? 'bg-accent-500 text-white'
-                : 'text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700')
-            }
-          >
+          </Button>
+          <Button variant="ghost" size="sm" active={filter === 'unread'} onClick={() => setFilter('unread')}>
             Belum dibaca{unread ? ` (${unread})` : ''}
-          </button>
+          </Button>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button"
-            onClick={load}
-            className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-700"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> Segarkan
-          </button>
+          <Button variant="ghost" size="sm" icon={<RefreshCw className="h-3.5 w-3.5" />} onClick={load}>
+            Segarkan
+          </Button>
           {unread > 0 && (
-            <button type="button"
-              onClick={markAll}
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<CheckCheck className="h-3.5 w-3.5" />}
               disabled={busy}
-              className="flex items-center gap-1 rounded-lg bg-accent-500 px-3 py-1.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50"
+              onClick={markAll}
             >
-              <CheckCheck className="h-3.5 w-3.5" /> Tandai semua dibaca
-            </button>
+              Tandai semua dibaca
+            </Button>
           )}
         </div>
       </div>
@@ -177,20 +160,24 @@ export function NotificationListClient() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   {n.link && (
-                    <button type="button"
+                    <Button
+                      variant="link"
+                      size="sm"
+                      icon={<ExternalLink className="h-3.5 w-3.5" />}
                       onClick={() => open(n)}
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-bold text-accent-600 hover:bg-accent-500/10 dark:text-accent-300"
                     >
-                      <ExternalLink className="h-3.5 w-3.5" /> Buka
-                    </button>
+                      Buka
+                    </Button>
                   )}
                   {!n.read && (
-                    <button type="button"
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="text-slate-500 dark:text-slate-300"
                       onClick={() => markOne(n.id)}
-                      className="rounded-md px-2 py-1 text-[11px] font-bold text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700"
                     >
                       Tandai dibaca
-                    </button>
+                    </Button>
                   )}
                 </div>
               </li>
