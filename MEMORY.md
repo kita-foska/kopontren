@@ -1,6 +1,95 @@
 # MEMORY
 
 ## 2026-09-27
+### UX-4 FASE F: Typography scale cleanup - audit + ACC SELESAI 27 Sep (F0; F1-F3 nunggu ACC per-commit)
+- **Audit read-only (27 Sep, F0)**: `text-[10px]` = 26 +
+  `text-[11px]` = 36 = **62 situs, 17 file** (ora ana
+  arbitrary px liyane; angka 67 saka rencana 26 Sep = stale,
+  tree saiki = 62). Per file: pos-client 23,
+  member-qr-badge 8, charts 4, notification-bell 4,
+  laporan-client 4, produk-client 3, ui 2,
+  pengurus-dashboard 2, member-client 2, sidebar 2, shell 2,
+  kas-client 1, notification-settings 1,
+  notification-list 1, product-label 1, bottom-nav 1,
+  qris-client 1.
+- **Token ready** (FASE A, usage 0): `text-2xs` = 10px/15px,
+  `text-1xs` = 11px/15px nang `tailwind.config.ts`.
+  Standard scale: xs 282, sm 157, 2xl 44, lg 12, xl 7,
+  base 5, 3xl 1.
+- **Inkonsistensi micro-label KPI card** (4 varian):
+  dominan `text-xs font-bold uppercase tracking-wide`
+  (~30 situs) vs `pengurus-dashboard:316/324` +
+  `pos-client:2267/2296/2319` (`text-[11px]`; pos-client
+  uga `tracking-wider`) vs `notification-bell:203` +
+  `notification-list-client:157` (`text-[10px]
+  font-semibold`) vs `sidebar:172` (domain sidebar;
+  `text-[10px] font-bold tracking-wider`). `ui.tsx:33
+  Badge` = 11px font-bold (vs KPI + header `text-xs
+  font-bold`). tracking/leading = CLEAN (0 arbitrary).
+  Weight: bold 214 / extrabold 83 / semibold 44 / medium 5.
+- **ACC Gus Fi (27 Sep, kabeh saranku ditampi)**:
+  - Q1: **Opsi A** - keep `text-2xs`/`text-1xs` + swap
+    mekanis (10px→2xs, 11px→1xs); Opsi B (retire →
+    text-xs) ditolak.
+  - Q2: include `ui.tsx:33 Badge`→`text-xs` (F2 = 10
+    situs: pengurus-dashboard 316/324, pos-client
+    2267/2296/2319, notification-bell 203,
+    notification-list 157, ui Badge :33).
+  - Q3: **4 commit terpisah** (F0 docs / F1 token /
+    F2 label / F3 docs+resync) - isolasi diff.
+  - Q4: `sidebar:172` **as-is** (documented exception:
+    domain compact nav sidebar).
+- **Out-of-scope FASE F (dicathet wae, durung ana
+  aksi)**: blok receipt inline (`pos-client:1957-2051`,
+  5 inline styles 14/13/11/10px + `globals.css:173` 9pt
+  thermal 58mm), `sidebar:172` (Q4), label field
+  login/pin (`text-xs font-semibold` - kandidat `.label`
+  CSS ngendi), header seksi `zakat-client` `text-sm
+  extrabold`, `member-client:527/535` (ora ana kelas
+  ukuran - inherit).
+- **Risk note (dicathet)**: `text-[10px]`/`text-[11px]`
+  mung ngowahi font-size (line-height = inherit);
+  `text-2xs`/`text-1xs` uga ngowahi line-height (15px) -
+  delta ≤1px nang titik kenceng (badge h-5, receipt
+  preview `pos-client:1833/1876`, bottom-nav `:88` +
+  `leading-none`) - bagean pixel-check (item 1/2/6/7/8).
+- **F0 (commit iki)**: catat audit + ACC (MEMORY +
+  TODO) + bersihke scratch lokal `_fasef-*.txt`
+  (`D:\Ngudi Susilo\`, di luar repo, konvensi
+  git-ignored lokal). Dual-push.
+- **F1 plan**: `refactor(ui)` token map 62 situs 17 file
+  (`text-[10px]`→`text-2xs`, `text-[11px]`→`text-1xs`;
+  mekanis - weight/tracking/leading/werna saka situs
+  tetep padha; blok receipt inline + print OUT-OF-
+  SCOPE). Verify: grep `text-\[\d+px\]` residual = 0 +
+  tsc 0 + build 0 + dual-push.
+- **F2 plan**: `refactor(ui)` `.card-label` (`@apply
+  text-xs font-bold uppercase tracking-wide text-slate-
+  500 dark:text-slate-400` nang globals.css) + unifikasi
+  10 situs (Q2). tsc + build + dual-push.
+- **F3 plan**: docs + resync kp-zip3 + pixel-check
+  list.
+- **Pixel-check list F1+F2 (Gus Fi, ing HP)**:
+  1. `/kasir` - receipt preview + mini-button Lunas/
+     10k...100k + hotkey hint.
+  2. `/kasir` - tab kategori + payment pills + KPI
+     badges (TogglePill badge 2xs extrabold; chip
+     emerald/amber 10px→2xs).
+  3. `/home` + dashboard pengurus - label kartu KPI
+     (unifikasi `.card-label`) + sub-line nilai (1xs).
+  4. `/laporan` - label KPI + sub-line "Periode
+     terpilih".
+  5. `/admin/notifikasi` - label meta panel bell (2xs).
+  6. Cetak kartu member / QR / label - konfirmasi
+     muat 58mm (blok print durung disentuh).
+  7. `/admin/produk` - chip sku mono (2xs) + garis
+     hint (1xs).
+  8. Bottom nav - label (2xs + `leading-none`).
+- **Catatan operasional**: local branch `main` isih
+  stale (behind 34; mung artifact lokal — remote main =
+  master = `013a182` padha; dual-push via `git push
+  origin master:main`; local `main` ora diurati).
+
 ### UX-4 FASE E: Card unification + FilterPill/TogglePill - SELESAI 27 Sep (E0-E4, dual-push master+main)
 - **Audit read-only (ora kode)**, laporan lengkap nang sesi AI 27 Sep:
   - Card: hero 5 site drifty (3x `shadow-md` vs 2x flat; aturan
