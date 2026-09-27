@@ -148,7 +148,7 @@ export default async function AdminDashboardPage() {
   return (
     <Shell user={user}>
       {/* Hero flat (design system: tanpa gradient/shadow — PHASE 1) */}
-      <div className="hero-bg mb-5 rounded-2xl p-5 text-white">
+      <div className="card-hero mb-5">
         <h1 className="text-2xl font-extrabold tracking-tight">
           Dashboard <span className="text-white/80">Admin</span>
         </h1>
@@ -166,7 +166,7 @@ export default async function AdminDashboardPage() {
             key={c.label}
             href={c.href}
             className={
-              'card fade-up p-4 transition hover:-translate-y-0.5 ' +
+              'card fade-up p-4 tile-hover ' +
               (c.warn ? 'border-amber-500/50' : '')
             }
           >

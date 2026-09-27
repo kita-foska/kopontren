@@ -201,7 +201,7 @@ export function MemberQrBadge({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl dark:bg-navy-900 dark:text-navy-50"
+        className="card-dialog w-full max-w-lg p-5 dark:bg-navy-900 dark:text-navy-50"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-baseline justify-between">

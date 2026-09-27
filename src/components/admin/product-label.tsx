@@ -106,7 +106,7 @@ export function ProductBarcodeLabel({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl"
+        className="card-dialog w-full max-w-xs p-5 text-center dark:bg-white"
         onClick={(e) => e.stopPropagation()}
       >
         <p className="text-xs font-bold uppercase tracking-wide text-slate-500">

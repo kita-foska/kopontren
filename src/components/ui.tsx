@@ -404,7 +404,7 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         onKeyDown={trapFocus}
-        className="card w-full max-w-lg rounded-b-none bg-white p-4 sm:rounded-xl dark:bg-navy-800"
+        className="card-dialog w-full max-w-lg rounded-b-none p-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">

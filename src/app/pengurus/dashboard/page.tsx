@@ -94,7 +94,7 @@ export default async function PengurusDashboardPage() {
 
   return (
     <Shell user={user}>
-      <div className="hero-bg mb-5 rounded-2xl p-5 text-white shadow-md">
+      <div className="card-hero mb-5">
         <h1 className="text-2xl font-extrabold tracking-tight">
           Dashboard <span className="text-white/80">Global</span>
         </h1>
@@ -112,7 +112,7 @@ export default async function PengurusDashboardPage() {
             key={c.label}
             href={c.href}
             className={
-              'card fade-up p-4 transition hover:-translate-y-0.5 hover:shadow-md ' +
+              'card fade-up p-4 tile-hover ' +
               (c.warn ? 'border-amber-500/50' : '')
             }
           >

@@ -1778,7 +1778,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               disabled={cart.length === 0}
               loading={busy}
               loadingLabel="Menyimpan Transaksi…"
-              className="font-bold shadow-md"
+              className="font-bold"
             >
               Bayar {rp(total)} (F4)
             </Button>
@@ -2107,7 +2107,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         }
       >
         <div className="text-center space-y-3 p-2">
-          <div className="mx-auto w-48 h-48 bg-white p-3 rounded-xl border border-slate-300 shadow flex flex-col items-center justify-center">
+          <div className="mx-auto w-48 h-48 bg-white p-3 rounded-xl border border-slate-300 shadow-sm flex flex-col items-center justify-center">
             {/* Mock QRIS code SVG for Kopontren */}
             <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
               <rect width="100" height="100" fill="white" />

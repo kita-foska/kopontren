@@ -154,7 +154,7 @@ export function NotificationBell() {
           <div
             id="notif-panel"
             ref={panelRef}
-            className="fixed z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-navy-600 dark:bg-navy-800"
+            className="fixed z-50 overflow-hidden card-pop"
             style={
               pos
                 ? {

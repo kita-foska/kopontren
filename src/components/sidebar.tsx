@@ -184,7 +184,7 @@ export function Sidebar({
                         className={
                           'block rounded-lg px-3 py-2 text-sm font-bold transition ' +
                           (active
-                            ? 'bg-accent-500 text-white shadow'
+                            ? 'bg-accent-500 text-white shadow-sm'
                             : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700')
                         }
                       >
