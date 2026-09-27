@@ -90,12 +90,12 @@ export function SalesBarChart({
       </div>
       <div className="mt-1.5 flex gap-[2px]">
         {bars.map((b, i) => (
-          <div key={b.day} className="flex-1 text-center text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+          <div key={b.day} className="flex-1 text-center text-1xs font-semibold text-slate-600 dark:text-slate-400">
             {i % step === 0 ? wibShort(b.day) : ''}
           </div>
         ))}
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-1xs font-semibold text-slate-500 dark:text-slate-400">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-accent-500" /> Normal
         </span>
@@ -162,14 +162,14 @@ export function HourBarChart({ hours }: { hours: HourPoint[] }) {
           {hours.map((p) => (
             <div
               key={p.h}
-              className="flex-1 text-center text-[10px] font-semibold text-slate-600 dark:text-slate-400"
+              className="flex-1 text-center text-2xs font-semibold text-slate-600 dark:text-slate-400"
             >
               {p.h % 3 === 0 ? p2(p.h) : ''}
             </div>
           ))}
         </div>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-1xs font-semibold text-slate-500 dark:text-slate-400">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-accent-500" /> Transaksi
         </span>

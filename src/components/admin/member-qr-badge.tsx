@@ -221,14 +221,14 @@ export function MemberQrBadge({
         <div className="mt-3 overflow-hidden rounded-xl border-2 border-slate-900 bg-white">
           <div className="flex items-center justify-between bg-wine-700 px-4 py-2.5">
             <div>
-              <p className="text-[11px] font-extrabold tracking-widest text-white">
+              <p className="text-1xs font-extrabold tracking-widest text-white">
                 KOPONTREN AL ITTIHAD
               </p>
-              <p className="text-[10px] text-rose-100">KARTU ANGGOTA MEMBER</p>
+              <p className="text-2xs text-rose-100">KARTU ANGGOTA MEMBER</p>
             </div>
             {tier !== "" && (
               <span
-                className={`rounded-md px-2 py-0.5 text-[10px] font-extrabold tracking-wider ${
+                className={`rounded-md px-2 py-0.5 text-2xs font-extrabold tracking-wider ${
                   tier === "gold"
                     ? "bg-amber-400 text-amber-950"
                     : "bg-slate-300 text-slate-800"
@@ -243,11 +243,11 @@ export function MemberQrBadge({
               <p className="truncate text-lg font-bold text-slate-900">{member.name}</p>
               <p className="text-xs text-slate-500">{member.phone || "—"}</p>
               {member.created_at && (
-                <p className="text-[11px] text-slate-500">
+                <p className="text-1xs text-slate-500">
                   Terdaftar {fmtDateTime(member.created_at)}
                 </p>
               )}
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-1xs text-slate-500">
                 <span>
                   Poin <b className="text-slate-900">{member.points}</b>
                 </span>
@@ -266,18 +266,18 @@ export function MemberQrBadge({
                 className="h-24 w-24 shrink-0 rounded-md"
               />
             ) : (
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-md bg-slate-100 text-center text-[10px] text-slate-500">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-md bg-slate-100 text-center text-2xs text-slate-500">
                 {busy ? "Membuat QR…" : member.qr_code ? "Menggambar…" : "QR belum dibuat"}
               </div>
             )}
           </div>
-          <p className="border-t border-slate-200 px-4 py-2 text-[10px] text-slate-500">
+          <p className="border-t border-slate-200 px-4 py-2 text-2xs text-slate-500">
             Tunjukkan kartu ini saat berbelanja — poin &amp; cashback (uang kembali) diterapkan
             otomatis.
           </p>
         </div>
 
-        {hint && <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-400">{hint}</p>}
+        {hint && <p className="mt-2 text-1xs text-amber-700 dark:text-amber-400">{hint}</p>}
 
         <div className="mt-4 flex items-center gap-2">
           <Button

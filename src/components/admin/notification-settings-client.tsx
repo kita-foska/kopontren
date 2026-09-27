@@ -262,7 +262,7 @@ export function NotificationSettingsClient() {
 
 function Toggle({ on, onChange, label }: { on: boolean; onChange: () => void; label: string }) {
   return (
-    <label className="flex cursor-pointer items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+    <label className="flex cursor-pointer items-center gap-1.5 text-1xs font-semibold text-slate-500 dark:text-slate-400">
       <button
         type="button"
         onClick={onChange}

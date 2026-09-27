@@ -85,7 +85,7 @@ export function BottomNav({ role }: { role: Role }) {
               href={href}
               aria-current={active ? 'page' : undefined}
               className={
-                'flex min-w-16 flex-1 flex-col items-center gap-1 px-1 py-2.5 text-[10px] font-bold transition-colors ' +
+                'flex min-w-16 flex-1 flex-col items-center gap-1 px-1 py-2.5 text-2xs font-bold transition-colors ' +
                 (active
                   ? 'text-accent-600 dark:text-accent-300'
                   : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200')

@@ -207,14 +207,14 @@ export function LaporanClient({
           <p className="mt-1 text-xl font-extrabold text-slate-900 dark:text-slate-100">
             {filteredSales.length}
           </p>
-          <p className="text-[11px] text-slate-500">Periode terpilih</p>
+          <p className="text-1xs text-slate-500">Periode terpilih</p>
         </div>
         <div className="card p-3">
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Total Penjualan</p>
           <p className="mt-1 text-xl font-extrabold text-accent-500 dark:text-accent-300">
             {rp(grandTotal)}
           </p>
-          <p className="text-[11px] text-slate-500">Omset kotor</p>
+          <p className="text-1xs text-slate-500">Omset kotor</p>
         </div>
         <div className="card p-3 border-amber-500/30 bg-amber-500/5">
           <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
@@ -223,7 +223,7 @@ export function LaporanClient({
           <p className="mt-1 text-xl font-extrabold text-amber-700 dark:text-amber-400">
             {unreported.length}
           </p>
-          <p className="text-[11px] text-amber-700/70">{rp(unreportedTotal)}</p>
+          <p className="text-1xs text-amber-700/70">{rp(unreportedTotal)}</p>
         </div>
         <div className="card p-3 border-emerald-500/30 bg-emerald-500/5">
           <p className="text-xs font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
@@ -232,7 +232,7 @@ export function LaporanClient({
           <p className="mt-1 text-xl font-extrabold text-emerald-600 dark:text-emerald-400">
             {filteredSales.length - unreported.length}
           </p>
-          <p className="text-[11px] text-emerald-600/70">Tersinkronisasi</p>
+          <p className="text-1xs text-emerald-600/70">Tersinkronisasi</p>
         </div>
       </div>
 

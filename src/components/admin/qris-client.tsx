@@ -201,7 +201,7 @@ export function QrisClient() {
               </Button>
             </div>
             {payload && (
-              <pre className="max-h-24 overflow-auto rounded-lg bg-slate-100 p-2 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <pre className="max-h-24 overflow-auto rounded-lg bg-slate-100 p-2 text-2xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 {payload}
               </pre>
             )}

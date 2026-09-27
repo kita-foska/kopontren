@@ -63,7 +63,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                 <p className="truncate text-sm font-extrabold tracking-tight">
                   Kopontren AL ITTIHAD
                 </p>
-                <p className="truncate text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="truncate text-1xs text-slate-500 dark:text-slate-400">
                   Kasir &amp; Pembukuan
                 </p>
               </div>
@@ -79,7 +79,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
               <span
                 className={
                   // Pill role: admin = aksen; semua peran lain = slate.
-                  'rounded px-1.5 py-px text-[10px] font-bold text-white ' +
+                  'rounded px-1.5 py-px text-2xs font-bold text-white ' +
                   (user.role === 'admin' ? 'bg-accent-500' : 'bg-slate-400 dark:bg-slate-500')
                 }
               >

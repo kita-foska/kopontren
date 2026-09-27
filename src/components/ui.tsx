@@ -30,7 +30,7 @@ export function Badge({
   return (
     <span
       className={
-        'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ' + tones[tone]
+        'inline-flex items-center rounded-full px-2 py-0.5 text-1xs font-bold ' + tones[tone]
       }
     >
       {children}
@@ -1037,7 +1037,7 @@ export function TogglePill({
       {icon}
       {children && <span className="min-w-0 truncate">{children}</span>}
       {badge != null && (
-        <span className="ml-auto shrink-0 text-[10px] font-extrabold opacity-60">{badge}</span>
+        <span className="ml-auto shrink-0 text-2xs font-extrabold opacity-60">{badge}</span>
       )}
     </button>
   );

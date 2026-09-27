@@ -143,7 +143,7 @@ export function NotificationBell() {
       >
         <Bell className="h-5 w-5" />
         {count > 0 && (
-          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow">
+          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-2xs font-bold text-white shadow">
             {count > 99 ? '99+' : count}
           </span>
         )}
@@ -173,14 +173,14 @@ export function NotificationBell() {
                 <button type="button"
                   onClick={markAll}
                   disabled={busy}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-accent-600 hover:bg-accent-500/10 disabled:opacity-50 dark:text-accent-300"
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-1xs font-semibold text-accent-600 hover:bg-accent-500/10 disabled:opacity-50 dark:text-accent-300"
                 >
                   <CheckCheck className="h-3.5 w-3.5" /> Semua dibaca
                 </button>
               )}
               <a
                 href="/admin/notifications"
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700"
+                className="flex items-center gap-1 rounded-md px-2 py-1 text-1xs font-semibold text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700"
               >
                 Lihat
               </a>
@@ -200,7 +200,7 @@ export function NotificationBell() {
                     <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
                       {n.message}
                     </p>
-                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    <p className="mt-1 text-2xs font-semibold uppercase tracking-wide text-slate-500">
                       {time(n.created_at)}
                     </p>
                   </button>

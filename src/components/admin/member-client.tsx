@@ -412,7 +412,7 @@ export function MemberClient() {
               <p className="text-xs text-slate-500 dark:text-slate-400">{m.address || '—'}</p>
               <div className="mt-1 flex items-center justify-between gap-2">
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{rp(m.total_spent)}</span>
-                <span className="text-[11px] text-slate-600 dark:text-slate-400">
+                <span className="text-1xs text-slate-600 dark:text-slate-400">
                   Terdaftar {fmtDateTime(m.created_at)}
                 </span>
               </div>
@@ -573,7 +573,7 @@ export function MemberClient() {
                       <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         {pointReasonLabel(e.reason)}
                       </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="text-1xs text-slate-500 dark:text-slate-400">
                         {fmtDateTime(e.created_at)}
                         {e.sale_id ? ` · Tx #${e.sale_id}` : ''}
                       </p>

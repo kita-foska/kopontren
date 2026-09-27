@@ -1250,7 +1250,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   }
                 >
                   {inCart && (
-                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent-500 text-[10px] font-bold text-white shadow">
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent-500 text-2xs font-bold text-white shadow">
                       {inCart.qty}
                     </span>
                   )}
@@ -1259,7 +1259,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   </p>
                   <div className="mt-1 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                     <span>{p.category || 'Umum'}</span>
-                    {p.barcode && <span className="font-mono text-[10px]">#{p.barcode}</span>}
+                    {p.barcode && <span className="font-mono text-2xs">#{p.barcode}</span>}
                   </div>
                   <div className="mt-2.5 flex items-end justify-between">
                     <div className="flex items-baseline gap-1.5">
@@ -1269,7 +1269,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       {/* Grosir v1: produk ini punya tier — ada harga
                           lebih murah saat qty mencapai ambang. */}
                       {hasGrosirTier && (
-                        <span className="rounded bg-emerald-500/15 px-1 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+                        <span className="rounded bg-emerald-500/15 px-1 py-0.5 text-2xs font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
                           Grosir
                         </span>
                       )}
@@ -1303,7 +1303,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 onClick={() => setCheatOpen(true)}
                 title="Pintasan keyboard (?)"
                 aria-label="Pintasan keyboard"
-                className="grid h-5 w-5 place-items-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 hover:bg-slate-200 dark:bg-navy-700 dark:text-slate-300 dark:hover:bg-navy-600"
+                className="grid h-5 w-5 place-items-center rounded-full bg-slate-100 text-2xs font-bold text-slate-500 hover:bg-slate-200 dark:bg-navy-700 dark:text-slate-300 dark:hover:bg-navy-600"
               >
                 ?
               </button>
@@ -1342,11 +1342,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       {l.product.name}
                     </p>
                     {gPct > 0 ? (
-                      <span className="mt-0.5 inline-block rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+                      <span className="mt-0.5 inline-block rounded bg-emerald-500/15 px-1.5 py-0.5 text-2xs font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
                         Grosir −{gPct}%
                       </span>
                     ) : l.manual ? (
-                      <span className="mt-0.5 inline-block rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
+                      <span className="mt-0.5 inline-block rounded bg-amber-500/15 px-1.5 py-0.5 text-2xs font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
                         Harga manual
                       </span>
                     ) : null}
@@ -1393,7 +1393,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">
                       {rp(l.qty * l.price)}
                     </p>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    <p className="text-1xs text-slate-600 dark:text-slate-400">
                       @{rp(l.price)}/{l.product.unit}
                     </p>
                   </div>
@@ -1455,7 +1455,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 </Button>
               </div>
               {selectedMember && (
-                <div className="mt-1 space-y-0.5 rounded bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-300">
+                <div className="mt-1 space-y-0.5 rounded bg-emerald-500/10 px-2 py-1 text-1xs font-semibold text-emerald-600 dark:text-emerald-300">
                   <div className="flex items-center justify-between">
                     <span className="inline-flex items-center gap-1">
                       <Star className="h-3 w-3 shrink-0" />
@@ -1661,7 +1661,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       type="button"
                       onClick={() => setReceived(String(total))}
                       title="Fix 4: isi otomatis nominal total — lunas tanpa kembalian"
-                      className="rounded bg-slate-100 px-2 py-1 text-[11px] font-bold hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-200"
+                      className="rounded bg-slate-100 px-2 py-1 text-1xs font-bold hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-200"
                     >
                       Lunas
                     </button>
@@ -1670,7 +1670,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                         key={nom}
                         type="button"
                         onClick={() => setReceived(String(nom))}
-                        className="rounded bg-slate-100 px-2 py-1 text-[11px] font-bold hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-200"
+                        className="rounded bg-slate-100 px-2 py-1 text-1xs font-bold hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-200"
                       >
                         {nom >= 1000 ? nom / 1000 + 'k' : nom}
                       </button>
@@ -1747,7 +1747,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </div>
 
             {/* Petunjuk hotkey (desktop) */}
-            <p className="hidden text-[10px] font-medium text-slate-500 lg:block dark:text-slate-500">
+            <p className="hidden text-2xs font-medium text-slate-500 lg:block dark:text-slate-500">
               F1 Cari · F2 Pembeli · F3 Bayar · F4 Simpan · F5 Cetak · F6 Split · F7 Shift
               · 1–4 Metode · ? Semua
             </p>
@@ -1800,7 +1800,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 </Button>
               </div>
             </div>
-            <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            <label className="flex items-center gap-2 text-1xs font-semibold text-slate-500 dark:text-slate-400">
               <input
                 type="checkbox"
                 checked={autoPrint}
@@ -1827,10 +1827,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <div className="mx-auto max-w-sm rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 font-mono text-xs text-slate-800 dark:border-navy-600 dark:bg-navy-900 dark:text-slate-200">
               <div className="text-center">
                 <p className="text-base font-extrabold tracking-tight">KOPONTREN AL ITTIHAD</p>
-                <p className="text-[11px] text-slate-500">Kasir & Pembukuan Pondok Pesantren</p>
-                <p className="text-[10px] text-slate-500">================================</p>
+                <p className="text-1xs text-slate-500">Kasir & Pembukuan Pondok Pesantren</p>
+                <p className="text-2xs text-slate-500">================================</p>
               </div>
-              <div className="mt-2 space-y-0.5 text-[11px]">
+              <div className="mt-2 space-y-0.5 text-1xs">
                 <div className="flex justify-between">
                   <span>No. Transaksi</span>
                   <span className="font-bold">#{receipt.sale?.id}</span>
@@ -1865,7 +1865,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       <span>{it.product.name}</span>
                       <span>{rp(it.qty * it.price)}</span>
                     </div>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-2xs text-slate-500">
                       {it.qty} {it.product.unit} x {rp(it.price)}
                     </p>
                   </div>
@@ -1873,7 +1873,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               </div>
               <div className="my-2 border-t border-dashed border-slate-300 dark:border-navy-600"></div>
               {/* Totals */}
-              <div className="space-y-0.5 text-[11px]">
+              <div className="space-y-0.5 text-1xs">
                 {receipt.disc > 0 && (
                   <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                     <span>Diskon</span>
@@ -1954,7 +1954,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   </div>
                 )}
               </div>
-              <div className="mt-3 text-center text-[10px] text-slate-500">
+              <div className="mt-3 text-center text-2xs text-slate-500">
                 <p>Jazakumullah Khairan Katsiran</p>
                 <p>Barang yang sudah dibeli tidak dapat ditukar</p>
               </div>
@@ -2105,7 +2105,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <p className="text-xs text-slate-500">
               NMID: ID102003004050 · KOPONTREN AL ITTIHAD
             </p>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-1xs text-slate-500 mt-1">
               Dapat discan menggunakan BCA, Mandiri, BSI, GoPay, OVO, Dana, ShopeePay
             </p>
           </div>
@@ -2264,7 +2264,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       <Modal open={cheatOpen} title="Panduan Kasir" onClose={() => setCheatOpen(false)}>
         <div className="space-y-4">
           <section>
-            <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <h3 className="mb-1.5 text-1xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Cara transaksi
             </h3>
             <ol className="space-y-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
@@ -2293,7 +2293,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </ol>
           </section>
           <section>
-            <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <h3 className="mb-1.5 text-1xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Pintasan
             </h3>
             <div className="grid grid-cols-1 gap-1.5 text-xs sm:grid-cols-2">
@@ -2309,14 +2309,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-[10px] leading-relaxed text-slate-600 dark:text-slate-400">
+            <p className="mt-3 text-2xs leading-relaxed text-slate-600 dark:text-slate-400">
               Panah / + / − / Del hanya aktif di luar kolom ketik &amp; saat modal tertutup.
               Ctrl+H bisa ditahan browser tertentu (Chrome) — riwayat tetap bisa dibuka lewat
               menu Laporan &amp; Rekap.
             </p>
           </section>
           <section>
-            <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <h3 className="mb-1.5 text-1xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Jika ada masalah
             </h3>
             <ul className="space-y-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">

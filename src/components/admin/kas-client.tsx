@@ -161,7 +161,7 @@ export function KasClient() {
                     <Button
                       variant="link"
                       size="sm"
-                      className="ml-2 text-[10px] text-slate-500 underline hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400"
+                      className="ml-2 text-2xs text-slate-500 underline hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400"
                       onClick={() => removeEntry(r.id)}
                     >
                       hapus

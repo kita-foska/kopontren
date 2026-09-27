@@ -152,7 +152,7 @@ export function Sidebar({
             <p className="truncate text-sm font-extrabold tracking-tight text-slate-800 dark:text-slate-100">
               {name}
             </p>
-            <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            <p className="text-1xs font-semibold text-slate-500 dark:text-slate-400">
               {ROLE_LABEL[role] ?? role.toUpperCase()}
             </p>
           </div>
