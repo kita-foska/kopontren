@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { T } from "@/lib/tokens";
-import { Button, Toast, useConfirm, useToast } from "@/components/ui";
+import { Button, Modal, Toast, useConfirm, useToast } from "@/components/ui";
 import { rp, fmtDateTime } from "@/lib/format";
 
 export type MemberQrMember = {
@@ -196,29 +196,12 @@ export function MemberQrBadge({
   const tier = member.tier || "";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="card-dialog w-full max-w-lg p-5 dark:bg-navy-900 dark:text-navy-50"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-baseline justify-between">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-            Kartu Anggota Member
-          </p>
-          <button
-            type="button"
-            className="text-xs text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"
-            onClick={onClose}
-          >
-            ✕
-          </button>
-        </div>
-
+    <>
+      {/* FASE G1: overlay manual -> primitive Modal (ESC + focus-trap +
+          bottom-sheet mobile). */}
+      <Modal open title="Kartu Anggota Member" onClose={onClose}>
         {/* Pratinjau kartu landscape (sama dengan hasil cetak) */}
-        <div className="mt-3 overflow-hidden rounded-xl border-2 border-slate-900 bg-white">
+        <div className="overflow-hidden rounded-xl border-2 border-slate-900 bg-white">
           <div className="flex items-center justify-between bg-wine-700 px-4 py-2.5">
             <div>
               <p className="text-1xs font-extrabold tracking-widest text-white">
@@ -295,9 +278,9 @@ export function MemberQrBadge({
             Tutup
           </Button>
         </div>
-      </div>
+      </Modal>
       <Toast msg={toast} onClose={() => showToast('')} />
       {confirmHost}
-    </div>
+    </>
   );
 }

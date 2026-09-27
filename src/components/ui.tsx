@@ -330,18 +330,32 @@ export const ROLE_LABEL: Record<string, string> = {
   member: 'Member',
 };
 
+/** FASE G1: token lebar modal (sm=320 / md=512 default / lg=672). */
+const MODAL_WIDTH: Record<'sm' | 'md' | 'lg', string> = {
+  sm: 'max-w-xs',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+};
+
 export function Modal({
   open,
   title,
   onClose,
   children,
   footer,
+  size = 'md',
+  panelClassName,
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  /** FASE G1: sm=max-w-xs (320, label/simpel) · md=max-w-lg (512, default =
+      zero-delta untuk modal existing) · lg=max-w-2xl (672, form lebar). */
+  size?: 'sm' | 'md' | 'lg';
+  /** FASE G1: kelas tambahan untuk panel (mis. "dark:bg-white" pratinjau label). */
+  panelClassName?: string;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
@@ -404,7 +418,12 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         onKeyDown={trapFocus}
-        className="card-dialog w-full max-w-lg rounded-b-none p-4"
+        className={
+          'card-dialog w-full ' +
+          MODAL_WIDTH[size] +
+          ' rounded-b-none p-4' +
+          (panelClassName ? ' ' + panelClassName : '')
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">

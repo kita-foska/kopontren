@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { T } from "@/lib/tokens";
 import { rp } from "@/lib/format";
+import { Modal } from "@/components/ui";
 
 export type LabelProduct = {
   id: number;
@@ -101,18 +102,17 @@ export function ProductBarcodeLabel({
   const ready = Boolean(product.barcode) && dataUrl !== "";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="card-dialog w-full max-w-xs p-5 text-center dark:bg-white"
-        onClick={(e) => e.stopPropagation()}
+    <>
+      {/* FASE G1: overlay manual -> primitive Modal (ESC + focus-trap +
+          bottom-sheet mobile); pratinjau label tetap putih via panelClassName. */}
+      <Modal
+        open
+        size="sm"
+        title="Label Barcode Produk"
+        panelClassName="dark:bg-white text-center"
+        onClose={onClose}
       >
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-          Label Barcode Produk
-        </p>
-        <h3 className="mt-1 text-lg font-extrabold text-slate-900">{product.name}</h3>
+        <h3 className="text-lg font-extrabold text-slate-900">{product.name}</h3>
         <p className="text-xs text-slate-500">
           {product.barcode
             ? "Kode: " + product.barcode
@@ -162,7 +162,7 @@ export function ProductBarcodeLabel({
             Tutup
           </button>
         </div>
-      </div>
-    </div>
+      </Modal>
+    </>
   );
 }
