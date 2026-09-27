@@ -51,8 +51,8 @@ export function initials(name: string): string {
    iconOnly wajib aria-label, loading = spinner + aria-busy, active =
    aria-pressed (toggle/filter chip), focus-visible ring, type default
    'button' (aman form). Fase B.2–B.4: migrasi 208 <button> + 13 <a>
-   ad-hoc/`btn-*` → <Button>; B.4 menghapus 5 rules CSS .btn* dari
-   globals.css. */
+   ad-hoc/`btn-*` → <Button>; 5 rules CSS .btn* dihapus di D0 (FASE D;
+   catatan lama menuliskan B.4, padahal belum pernah terjadi). */
 export type ButtonVariant =
   | 'primary'
   | 'secondary'
@@ -86,7 +86,8 @@ const BTN_VARIANT: Record<ButtonVariant, string> = {
   // Netral terisi (bedanya dg ghost: ghost transparan).
   secondary:
     'border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-navy-600 dark:bg-navy-800 dark:text-slate-200 dark:hover:bg-navy-700',
-  // Transparan + border netral (padanan rules .btn-ghost saat ini).
+  // Transparan + border netral (padanan .btn-ghost legacy; rules CSS-nya
+  // sudah dihapus D0 FASE D).
   ghost:
     'border border-slate-300 bg-transparent text-slate-700 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-200 dark:hover:bg-navy-700',
   // Semantik risk = rose-600 (tone risk UX-4).
