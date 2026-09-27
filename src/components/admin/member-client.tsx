@@ -61,7 +61,7 @@ export function MemberClient() {
   const [qDeb, setQDeb] = useState('');
   const [form, setForm] = useState({ ...emptyForm });
   const [show, setShow] = useState(false);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [loadingMore, setLoadingMore] = useState(false);
   // Guard busy: cegah double-submit saat request dalam perjalanan.
@@ -208,7 +208,7 @@ export function MemberClient() {
         setShow(false);
         await load(qDeb);
       } else {
-        showToast(r.error || 'Gagal menyimpan');
+        showToast(r.error || 'Gagal menyimpan', 'error');
       }
     } finally {
       setBusy(false);
@@ -226,7 +226,7 @@ export function MemberClient() {
           showToast('Member dihapus');
           await load(qDeb);
         } else {
-          showToast(r.error || 'Gagal menghapus');
+          showToast(r.error || 'Gagal menghapus', 'error');
         }
       },
     });
@@ -625,7 +625,7 @@ export function MemberClient() {
       )}
 
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

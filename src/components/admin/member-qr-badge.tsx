@@ -42,7 +42,7 @@ export function MemberQrBadge({
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState("");
   const bootRef = useRef(false);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
 
   // Gambar QR dari token (data URL, tanpa dependensi runtime).
@@ -107,7 +107,7 @@ export function MemberQrBadge({
         }).catch(() => null);
         if (!res) {
           setBusy(false);
-          showToast("Gagal membarui QR (koneksi terputus)");
+          showToast("Gagal membarui QR (koneksi terputus)", "error");
           return;
         }
         const j = (await res.json().catch(() => null)) as QrPatchResp | null;
@@ -116,7 +116,7 @@ export function MemberQrBadge({
           onQrChanged?.(j.qr_code);
           showToast("QR diperbarui — kartu lama tidak berlaku lagi");
         } else {
-          showToast(j?.error || "Gagal membarui QR");
+          showToast(j?.error || "Gagal membarui QR", "error");
         }
         setBusy(false);
       },
@@ -127,7 +127,7 @@ export function MemberQrBadge({
     if (!dataUrl) return;
     const w = window.open("", "_blank", "width=880,height=560");
     if (!w) {
-      showToast("Popup diblokir browser — izinkan popup untuk mencetak.");
+      showToast("Popup diblokir browser — izinkan popup untuk mencetak.", "warning");
       return;
     }
     const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
@@ -279,7 +279,7 @@ export function MemberQrBadge({
           </Button>
         </div>
       </Modal>
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
       {confirmHost}
     </>
   );

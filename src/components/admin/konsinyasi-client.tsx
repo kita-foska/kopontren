@@ -67,7 +67,7 @@ export function KonsinyasiClient() {
     setTab
   );
   const [data, setData] = useState<Resp | null>(null);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [f, setF] = useState(EMPTY_FORM);
   const [acts, setActs] = useState<Record<number, { qty: number; pay: number }>>({});
@@ -129,7 +129,7 @@ export function KonsinyasiClient() {
       if (r.ok) {
         showToast(okMsg);
         load();
-      } else showToast(r.error || 'Gagal memproses');
+      } else showToast(r.error || 'Gagal memproses', 'error');
     } finally {
       setBusy(false);
     }
@@ -654,7 +654,7 @@ export function KonsinyasiClient() {
         </div>
       )}
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

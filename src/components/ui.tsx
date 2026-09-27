@@ -446,21 +446,42 @@ export function Modal({
   );
 }
 
-export function Toast({ msg, onClose }: { msg: string; onClose: () => void }) {
+export type ToastTone = 'info' | 'success' | 'error' | 'warning';
+
+const TOAST_TONE_CLASS: Record<ToastTone, string> = {
+  // info = kelas lama persis (zero-delta); tone lain warna solid (baca baik
+  // di light & dark mode karena teks putih di emerald/rose/amber).
+  info: 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900',
+  success: 'bg-emerald-600 text-white',
+  error: 'bg-rose-600 text-white',
+  warning: 'bg-amber-500 text-white',
+};
+
+export function Toast({
+  msg,
+  tone = 'info',
+  onClose,
+}: {
+  msg: string;
+  tone?: ToastTone;
+  onClose: () => void;
+}) {
   useEffect(() => {
     if (!msg) return;
-    const t = setTimeout(onClose, 4000);
+    const t = setTimeout(onClose, tone === 'error' ? 6000 : 4000);
     return () => clearTimeout(t);
-  }, [msg]);
+  }, [msg, tone]);
   // Live region harus PERSISTEN di DOM agar screen reader mengumumkan
   // perubahan pesan — saat kosong dirender sr-only, bukan di-unmount.
+  // tone error: role=alert + assertive (pengguna HARUS tahu, a11y).
   return (
     <div
-      role="status"
-      aria-live="polite"
+      role={tone === 'error' ? 'alert' : 'status'}
+      aria-live={tone === 'error' ? 'assertive' : 'polite'}
       className={
         msg
-          ? 'fixed bottom-4 left-1/2 z-50 w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg dark:bg-slate-100 dark:text-slate-900'
+          ? 'fixed bottom-4 left-1/2 z-50 w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ' +
+            TOAST_TONE_CLASS[tone]
           : 'sr-only'
       }
     >
@@ -469,9 +490,36 @@ export function Toast({ msg, onClose }: { msg: string; onClose: () => void }) {
   );
 }
 
-export function useToast(): [string, (m: string) => void, () => void] {
+/**
+ * useToast — tuple [msg, showToast, clearToast, tone].
+ * Backward-compatible: destructure 2 atau 3 elemen lama tetap valid
+ * (elemen ke-4 = tone terakhir, default 'info').
+ * showToast(msg, tone?) — tone opsional; tanpa arg = info (zero-delta).
+ */
+export function useToast(): [
+  string,
+  (m: string, tone?: ToastTone) => void,
+  () => void,
+  ToastTone,
+] {
   const [msg, setMsg] = useState('');
-  return [msg, setMsg, () => setMsg('')];
+  const [tone, setTone] = useState<ToastTone>('info');
+  // Identitas STABIL (useCallback, deps kosong — setMsg/setTone memang
+  // stabil): beberapa komponen meletakkan showToast di deps array
+  // useEffect; perilaku lama (elemen ke-2 = setMsg, selalu stabil)
+  // dipertahankan agar tidak ada re-run effect per-render.
+  const showToast = useCallback(
+    (m: string, t: ToastTone = 'info') => {
+      setMsg(m);
+      setTone(t);
+    },
+    []
+  );
+  const clearToast = useCallback(() => {
+    setMsg('');
+    setTone('info');
+  }, []);
+  return [msg, showToast, clearToast, tone];
 }
 
 /**

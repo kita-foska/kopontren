@@ -37,7 +37,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
   const [filter, setFilter] = useState<'open' | 'settled' | 'all'>('open');
   const [data, setData] = useState<PayableResp | null>(null);
   const [loading, setLoading] = useState(true);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [form, setForm] = useState({
     supplier_name: '',
@@ -74,7 +74,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
         showToast('Hutang tercatat');
         setForm({ supplier_name: '', supplier_phone: '', amount: 0, due_date: '', note: '' });
         load();
-      } else showToast(r.error || 'Gagal');
+      } else showToast(r.error || 'Gagal', 'error');
     } finally {
       setBusy(false);
     }
@@ -102,7 +102,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
         setPayFor(null);
         setPayAmt(0);
         load();
-      } else showToast(r.error || 'Gagal');
+      } else showToast(r.error || 'Gagal', 'error');
     } finally {
       setBusy(false);
     }
@@ -118,7 +118,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
         if (r.ok) {
           showToast('Hutang dihapus');
           load();
-        } else showToast(r.error || 'Gagal');
+        } else showToast(r.error || 'Gagal', 'error');
       },
     });
   }
@@ -354,7 +354,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
       </Modal>
 
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

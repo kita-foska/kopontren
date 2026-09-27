@@ -273,7 +273,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const receivedRef = useRef<HTMLInputElement>(null);
   const queueRef = useRef<QueuedSale[]>(offlineQueue);
   queueRef.current = offlineQueue;
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
 
   // Shift states
   const [currentShift, setCurrentShift] = useState<ShiftInfo | null>(null);
@@ -583,7 +583,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       setMemberForm({ name: '', phone: '', address: '' });
       await loadMembers();
       if (r.data?.id) setMemberId(String(r.data.id));
-    } else showToast(r.error || 'Gagal menambah member');
+    } else showToast(r.error || 'Gagal menambah member', 'error');
   }
 
   async function checkout() {
@@ -973,7 +973,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       setShiftLabel('');
       loadShift();
     } else {
-      showToast(r.error || 'Gagal membuka shift');
+      showToast(r.error || 'Gagal membuka shift', 'error');
     }
   }
 
@@ -988,7 +988,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       setCurrentShift(null);
       showToast('Shift berhasil ditutup & direkap');
     } else {
-      showToast(r.error || 'Gagal menutup shift');
+      showToast(r.error || 'Gagal menutup shift', 'error');
     }
   }
 
@@ -2370,7 +2370,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         </div>
       )}
 
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

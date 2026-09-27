@@ -55,7 +55,7 @@ export function PengurusDashboardClient() {
   const [data, setData] = useState<ReportPayload | null>(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState('');
-  const [toast, setToast, clearToast] = useToast();
+  const [toast, setToast, clearToast, toastTone] = useToast();
 
   const load = useCallback(async (n: number) => {
     setErr('');
@@ -144,7 +144,7 @@ export function PengurusDashboardClient() {
       XLSX.writeFile(wb, `kopontren-laporan-${data.days}h-${stamp()}.xlsx`);
       setToast('Excel terunduh');
     } catch {
-      setToast('Gagal membuat Excel - pakai Export CSV');
+      setToast('Gagal membuat Excel - pakai Export CSV', 'error');
     } finally {
       setBusy('');
     }
@@ -343,7 +343,7 @@ export function PengurusDashboardClient() {
         </div>
       </div>
 
-      <Toast msg={toast} onClose={clearToast} />
+      <Toast msg={toast} tone={toastTone} onClose={clearToast} />
     </div>
   );
 }

@@ -20,7 +20,7 @@ type QrisSettings = {
  * Encoder murni di src/lib/qris.ts (EMVCo/QRIS-BI, CRC16-CCITT).
  */
 export function QrisClient() {
-  const [toastMsg, showToast, closeToast] = useToast();
+  const [toastMsg, showToast, closeToast, toastTone] = useToast();
   const [s, setS] = useState<QrisSettings | null>(null);
   const [nmid, setNmid] = useState('');
   const [nmid2, setNmid2] = useState('');
@@ -34,7 +34,7 @@ export function QrisClient() {
 
   useEffect(() => {
     api<QrisSettings>('/api/settings').then((r) => {
-      if (!r.ok || !r.data) return showToast(r.error || 'Gagal memuat');
+      if (!r.ok || !r.data) return showToast(r.error || 'Gagal memuat', 'error');
       setS(r.data);
       setNmid(r.data.qris_nmid);
       setNmid2(r.data.qris_nmid2);
@@ -82,7 +82,7 @@ export function QrisClient() {
     });
     setSaving(false);
     if (!r.ok) {
-      showToast(r.error || 'Gagal menyimpan');
+      showToast(r.error || 'Gagal menyimpan', 'error');
       return;
     }
     setDirty(false);
@@ -95,7 +95,7 @@ export function QrisClient() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      showToast('Gagal menyalin payload');
+      showToast('Gagal menyalin payload', 'error');
     }
   }
 
@@ -208,7 +208,7 @@ export function QrisClient() {
           </div>
         )}
       </section>
-      <Toast msg={toastMsg} onClose={closeToast} />
+      <Toast msg={toastMsg} tone={toastTone} onClose={closeToast} />
     </div>
   );
 }

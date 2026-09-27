@@ -20,7 +20,7 @@ type Item = {
  * credentials; nomor tujuan dari settings toko, fallback share sheet).
  */
 export function LowStockClient({ items }: { items: Item[] }) {
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const [busy, setBusy] = useState(false);
 
   function waMessage(): string {
@@ -103,7 +103,7 @@ export function LowStockClient({ items }: { items: Item[] }) {
           ))}
         </ul>
       )}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

@@ -22,7 +22,7 @@ type KasResp = {
 export function KasClient() {
   const [data, setData] = useState<KasResp | null>(null);
   const [form, setForm] = useState({ type: 'income', label: '', amount: 0 });
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   // Guard busy: cegah double-submit saat request dalam perjalanan.
   const [busy, setBusy] = useState(false);
@@ -48,7 +48,7 @@ export function KasClient() {
         showToast('Jurnal kas manual tercatat');
         setForm({ type: form.type, label: '', amount: 0 });
         load();
-      } else showToast(r.error || 'Gagal');
+      } else showToast(r.error || 'Gagal', 'error');
     } finally {
       setBusy(false);
     }
@@ -250,7 +250,7 @@ export function KasClient() {
         )}
       </div>
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

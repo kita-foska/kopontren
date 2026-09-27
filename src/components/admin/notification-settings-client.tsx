@@ -28,7 +28,7 @@ function bufferToB64Url(buf: ArrayBuffer): string {
 }
 
 export function NotificationSettingsClient() {
-  const [toast, setToast, clearToast] = useToast();
+  const [toast, setToast, clearToast, toastTone] = useToast();
   const [items, setItems] = useState<Setting[]>([]);
   const [loading, setLoading] = useState(true);
   const [pushState, setPushState] = useState<'unknown' | 'granted' | 'denied' | 'unavailable'>('unknown');
@@ -255,7 +255,7 @@ export function NotificationSettingsClient() {
           <Save className="h-3.5 w-3.5" /> Muat ulang
         </button>
       </div>
-      {toast && <Toast msg={toast} onClose={clearToast} />}
+      {toast && <Toast msg={toast} tone={toastTone} onClose={clearToast} />}
     </div>
   );
 }

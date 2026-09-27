@@ -132,7 +132,7 @@ export function ZakatClient() {
     price_date: wibToday(),
     apply: true,
   });
-  const [toast, showToast, clearToast] = useToast();
+  const [toast, showToast, clearToast, toastTone] = useToast();
 
   const load = useCallback(async () => {
     const [s, c, h, g] = await Promise.all([
@@ -145,7 +145,7 @@ export function ZakatClient() {
     if (c.ok && c.data) setCalc(c.data);
     if (h.ok && h.data) setHistory(h.data.rows);
     if (g && g.ok && g.data) setGoldLog(g.data.rows);
-    if (!s.ok || !c.ok || !h.ok) showToast('Gagal memuat data zakat');
+    if (!s.ok || !c.ok || !h.ok) showToast('Gagal memuat data zakat', 'error');
   }, []);
 
   useEffect(() => {
@@ -185,7 +185,7 @@ export function ZakatClient() {
       showToast('Pengaturan zakat disimpan');
       load();
     } else {
-      showToast(r.error || 'Gagal menyimpan pengaturan');
+      showToast(r.error || 'Gagal menyimpan pengaturan', 'error');
     }
   }
 
@@ -209,7 +209,7 @@ export function ZakatClient() {
       );
       load();
     } else {
-      showToast(r.error || 'Gagal mencatat riwayat');
+      showToast(r.error || 'Gagal mencatat riwayat', 'error');
     }
   }
 
@@ -237,7 +237,7 @@ export function ZakatClient() {
       showToast(goldForm.apply ? 'Verifikasi dicatat + disinkronkan ke Pengaturan' : 'Verifikasi harga emas dicatat');
       load();
     } else {
-      showToast(r.error || 'Gagal mencatat verifikasi');
+      showToast(r.error || 'Gagal mencatat verifikasi', 'error');
     }
   }
 
@@ -245,7 +245,7 @@ export function ZakatClient() {
     try {
       const res = await fetchTimeout('/api/zakat/history?csv=1');
       if (!res.ok) {
-        showToast('Gagal mengekspor CSV');
+        showToast('Gagal mengekspor CSV', 'error');
         return;
       }
       const blob = await res.blob();
@@ -259,7 +259,7 @@ export function ZakatClient() {
       URL.revokeObjectURL(url);
       showToast('CSV riwayat zakat diunduh');
     } catch {
-      showToast('Gagal mengekspor CSV');
+      showToast('Gagal mengekspor CSV', 'error');
     }
   }
 
@@ -688,7 +688,7 @@ export function ZakatClient() {
         ) : null}
       </div>
 
-      {toast ? <Toast msg={toast} onClose={clearToast} /> : null}
+      {toast ? <Toast msg={toast} tone={toastTone} onClose={clearToast} /> : null}
     </div>
   );
 }

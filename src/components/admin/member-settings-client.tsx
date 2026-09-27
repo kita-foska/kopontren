@@ -71,13 +71,13 @@ const FIELDS: { key: string; label: string; hint: string; type: 'number' | 'togg
 export function MemberSettingsClient() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [busy, setBusy] = useState(false);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
 
   useEffect(() => {
     (async () => {
       const r = await api<{ settings: Settings }>('/api/member-settings');
       if (r.ok && r.data) setSettings(r.data.settings);
-      else showToast('Gagal memuat pengaturan');
+      else showToast('Gagal memuat pengaturan', 'error');
     })();
   }, []);
 
@@ -90,7 +90,7 @@ export function MemberSettingsClient() {
     });
     setBusy(false);
     if (r.ok) showToast('Pengaturan member disimpan');
-    else showToast(r.error || 'Gagal menyimpan');
+    else showToast(r.error || 'Gagal menyimpan', 'error');
   }
 
   if (!settings) return <p className="text-sm text-slate-500">Memuat…</p>;
@@ -133,7 +133,7 @@ export function MemberSettingsClient() {
           {busy ? 'Menyimpan…' : 'Simpan Pengaturan'}
         </Button>
       </div>
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

@@ -127,7 +127,7 @@ export function LaporanAdminClient() {
   // (kartu tidak menghancurkan tab utama), error tercatat di console.
   const [hourly, setHourly] = useState<HourPoint[] | null>(null);
   const [hourlyErr, setHourlyErr] = useState('');
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
 
   const load = useCallback(async () => {
     // apiRetry: load awal/refresh ringkasan (GET) tahan cold start;
@@ -171,7 +171,7 @@ export function LaporanAdminClient() {
     try {
       const r = await fetch('/api/reports/csv?from=' + encodeURIComponent(from));
       if (!r.ok) {
-        showToast('Gagal unduh CSV (HTTP ' + r.status + ')');
+        showToast('Gagal unduh CSV (HTTP ' + r.status + ')', 'error');
         return;
       }
       const blob = await r.blob();
@@ -184,7 +184,7 @@ export function LaporanAdminClient() {
       a.remove();
       setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
     } catch {
-      showToast('Gagal unduh CSV (jaringan)');
+      showToast('Gagal unduh CSV (jaringan)', 'error');
     }
   }
 
@@ -355,7 +355,7 @@ export function LaporanAdminClient() {
       ) : (
         <NeracaTab />
       )}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

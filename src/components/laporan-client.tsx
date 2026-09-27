@@ -39,7 +39,7 @@ export function LaporanClient({
   const [statusF, setStatusF] = useState('');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<number | null>(null);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [undoMsg, setUndoMsg] = useState('');
   const [undoIds, setUndoIds] = useState<number[]>([]);
@@ -125,7 +125,7 @@ export function LaporanClient({
           showToast('Transaksi #' + id + ' dihapus & stok dikembalikan');
           load();
         } else {
-          showToast(r.error || 'Gagal menghapus');
+          showToast(r.error || 'Gagal menghapus', 'error');
         }
       },
     });
@@ -179,7 +179,7 @@ export function LaporanClient({
     try {
       const r = await fetch('/api/reports/csv?from=' + fromDate);
       if (!r.ok) {
-        showToast('Gagal unduh CSV (HTTP ' + r.status + ')');
+        showToast('Gagal unduh CSV (HTTP ' + r.status + ')', 'error');
         return;
       }
       const blob = await r.blob();
@@ -192,7 +192,7 @@ export function LaporanClient({
       a.remove();
       setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
     } catch {
-      showToast('Gagal unduh CSV (jaringan)');
+      showToast('Gagal unduh CSV (jaringan)', 'error');
     }
   }
 
@@ -404,7 +404,7 @@ export function LaporanClient({
         </p>
       )}
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

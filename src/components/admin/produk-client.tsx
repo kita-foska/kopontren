@@ -47,7 +47,7 @@ export function ProdukClient() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ ...emptyForm });
   const [show, setShow] = useState(false);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [stockEdits, setStockEdits] = useState<Record<number, string>>({});
   const [q, setQ] = useState('');
@@ -160,7 +160,7 @@ export function ProdukClient() {
         setShow(false);
         load();
       } else {
-        showToast(r.error || 'Gagal menyimpan');
+        showToast(r.error || 'Gagal menyimpan', 'error');
       }
     } finally {
       setSaveBusy(false);
@@ -233,7 +233,7 @@ export function ProdukClient() {
           showToast(r.data?.message || 'Produk berhasil diproses');
           load();
         } else {
-          showToast(r.error || 'Gagal menghapus produk');
+          showToast(r.error || 'Gagal menghapus produk', 'error');
         }
       },
     });
@@ -279,7 +279,7 @@ export function ProdukClient() {
       setBulkCat('');
       load();
     } else {
-      showToast(r.error || 'Gagal operasi massal');
+      showToast(r.error || 'Gagal operasi massal', 'error');
     }
   }
   function exportCsv() {
@@ -792,7 +792,7 @@ export function ProdukClient() {
       </Modal>
       {label && <ProductBarcodeLabel product={label} onClose={() => setLabel(null)} />}
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

@@ -40,7 +40,7 @@ export function PenggunaClient() {
   const [ownPwBusy, setOwnPwBusy] = useState(false);
   const [ownPinBusy, setOwnPinBusy] = useState(false);
   const [resetPinBusy, setResetPinBusy] = useState(false);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,7 +75,7 @@ export function PenggunaClient() {
         showToast('Akun ' + form.username + ' dibuat');
         setForm({ username: '', display_name: '', role: 'kasir', password: '' });
         load();
-      } else showToast(r.error || 'Gagal membuat akun');
+      } else showToast(r.error || 'Gagal membuat akun', 'error');
     } finally {
       setCreateBusy(false);
     }
@@ -98,7 +98,7 @@ export function PenggunaClient() {
         setPwModal(null);
         setPw('');
         load();
-      } else showToast(r.error || 'Gagal');
+      } else showToast(r.error || 'Gagal', 'error');
     } finally {
       setResetPwBusy(false);
     }
@@ -139,7 +139,7 @@ export function PenggunaClient() {
         showToast('Password Anda diubah. Login berikutnya pakai yang baru.');
         setOwnPw({ old: '', next: '' });
         load();
-      } else showToast(r.error || 'Password lama salah');
+      } else showToast(r.error || 'Password lama salah', 'error');
     } finally {
       setOwnPwBusy(false);
     }
@@ -148,7 +148,7 @@ export function PenggunaClient() {
   async function resetPin() {
     if (resetPinBusy) return;
     if (!pinModal || pinNew.new.length < 4 || pinNew.new.length > 6 || pinNew.new !== pinNew.confirm) {
-      showToast('PIN baru 4-6 digit & konfirmasi harus sama');
+      showToast('PIN baru 4-6 digit & konfirmasi harus sama', 'error');
       return;
     }
     setResetPinBusy(true);
@@ -158,10 +158,10 @@ export function PenggunaClient() {
         body: JSON.stringify({ newPin: pinNew.new, confirm: pinNew.confirm, user_id: pinModal.id }),
       });
       if (r.ok) {
-        showToast('PIN ' + pinModal.username + ' direset');
+        showToast('PIN ' + pinModal.username + ' direset', 'error');
         setPinModal(null);
         setPinNew({ new: '', confirm: '' });
-      } else showToast(r.error || 'Gagal reset PIN');
+      } else showToast(r.error || 'Gagal reset PIN', 'error');
     } finally {
       setResetPinBusy(false);
     }
@@ -170,7 +170,7 @@ export function PenggunaClient() {
   async function changeOwnPin() {
     if (ownPinBusy) return;
     if (ownPin.next.length < 4 || ownPin.next.length > 6 || ownPin.next !== ownPin.confirm) {
-      showToast('PIN baru 4-6 digit & konfirmasi harus sama');
+      showToast('PIN baru 4-6 digit & konfirmasi harus sama', 'error');
       return;
     }
     setOwnPinBusy(true);
@@ -180,9 +180,9 @@ export function PenggunaClient() {
         body: JSON.stringify({ oldPin: ownPin.old, newPin: ownPin.next, confirm: ownPin.confirm }),
       });
       if (r.ok) {
-        showToast('PIN Anda diubah');
+        showToast('PIN Anda diubah', 'error');
         setOwnPin({ old: '', next: '', confirm: '' });
-      } else showToast(r.error || 'PIN lama salah');
+      } else showToast(r.error || 'PIN lama salah', 'error');
     } finally {
       setOwnPinBusy(false);
     }
@@ -201,7 +201,7 @@ export function PenggunaClient() {
     });
     setTimeoutBusy(false);
     if (r.ok) showToast('Session timeout disimpan (berlaku utk sesi berikutnya).');
-    else showToast(r.error || 'Gagal menyimpan');
+    else showToast(r.error || 'Gagal menyimpan', 'error');
   }
 
   if (loading && users.length === 0) return <PageSkeleton />;
@@ -473,7 +473,7 @@ export function PenggunaClient() {
           />
         </div>
       </Modal>
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

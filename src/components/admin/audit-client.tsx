@@ -57,7 +57,7 @@ export function AuditClient() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [canMore, setCanMore] = useState(false);
   const [viewLog, setViewLog] = useState<Log | null>(null);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
 
   const load = useCallback(async (offset = 0, append = false) => {
@@ -95,7 +95,7 @@ export function AuditClient() {
         if (r.ok) {
           showToast('Log lama dihapus');
           load();
-        } else showToast(r.error || 'Gagal');
+        } else showToast(r.error || 'Gagal', 'error');
       },
     });
   }
@@ -330,7 +330,7 @@ export function AuditClient() {
         </Modal>
       )}
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

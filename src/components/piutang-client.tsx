@@ -21,7 +21,7 @@ type DebtResp = { debts: Debt[]; summary: { open_total: number; open_count: numb
 export function PiutangClient({ admin }: { admin: boolean }) {
   const [filter, setFilter] = useState<'open' | 'settled' | 'all'>('open');
   const [data, setData] = useState<DebtResp | null>(null);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [form, setForm] = useState({
     customer_name: '',
@@ -56,7 +56,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
         showToast('Piutang tercatat');
         setForm({ customer_name: '', customer_phone: '', amount: 0, due_date: '', note: '' });
         load();
-      } else showToast(r.error || 'Gagal');
+      } else showToast(r.error || 'Gagal', 'error');
     } finally {
       setBusy(false);
     }
@@ -84,7 +84,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
         setPayFor(null);
         setPayAmt(0);
         load();
-      } else showToast(r.error || 'Gagal');
+      } else showToast(r.error || 'Gagal', 'error');
     } finally {
       setBusy(false);
     }
@@ -100,7 +100,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
         if (r.ok) {
           showToast('Piutang dihapus');
           load();
-        } else showToast(r.error || 'Gagal');
+        } else showToast(r.error || 'Gagal', 'error');
       },
     });
   }
@@ -322,7 +322,7 @@ export function PiutangClient({ admin }: { admin: boolean }) {
       </Modal>
 
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

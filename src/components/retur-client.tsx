@@ -38,7 +38,7 @@ type ReturResp = { returns: Retur[] };
 export function ReturClient() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [rets, setRet] = useState<Retur[]>([]);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const [saleId, setSaleId] = useState('');
   const [itemId, setItemId] = useState('');
   const [qty, setQty] = useState(1);
@@ -94,7 +94,7 @@ export function ReturClient() {
       setReason('');
       setRefund(true);
       load();
-    } else showToast(r.error || 'Gagal');
+    } else showToast(r.error || 'Gagal', 'error');
   }
 
   return (
@@ -218,7 +218,7 @@ export function ReturClient() {
         </div>
       </div>
 
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

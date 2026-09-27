@@ -34,7 +34,7 @@ type AuditResp = { logs: Log[]; tables: string[] };
 export function DataClient() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState('');
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [activeTab, setActiveTab] = useState<'backup' | 'audit'>('backup');
   // Keyboard nav tablist: ArrowRight/Left (wrap) + Home/End, aktivasi
@@ -98,7 +98,7 @@ export function DataClient() {
         } catch {
           /* respons non-JSON */
         }
-        showToast('Gagal unduh: ' + msg);
+        showToast('Gagal unduh: ' + msg, 'error');
         return;
       }
       const blob = await r.blob();
@@ -112,7 +112,7 @@ export function DataClient() {
       setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
       showToast('Unduhan dimulai: ' + filename);
     } catch {
-      showToast('Gagal unduh (jaringan)');
+      showToast('Gagal unduh (jaringan)', 'error');
     } finally {
       setBusy('');
     }
@@ -146,7 +146,7 @@ export function DataClient() {
         const r = await api('/api/backup', { method: 'POST', body: text });
         setBusy('');
         if (r.ok) showToast('Backup berhasil diimport');
-        else showToast(r.error || 'Import gagal');
+        else showToast(r.error || 'Import gagal', 'error');
       },
     });
   }
@@ -162,7 +162,7 @@ export function DataClient() {
         const r = await api('/api/backup/reset', { method: 'POST' });
         setBusy('');
         if (r.ok) showToast('Semua data operasional dihapus');
-        else showToast(r.error || 'Gagal menghapus');
+        else showToast(r.error || 'Gagal menghapus', 'error');
       },
     });
   }
@@ -350,7 +350,7 @@ export function DataClient() {
       )}
 
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

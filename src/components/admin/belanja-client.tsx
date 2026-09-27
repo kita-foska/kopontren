@@ -45,7 +45,7 @@ export function BelanjaClient() {
     setTab
   );
   const [data, setData] = useState<Resp | null>(null);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
 
   const load = useCallback(async () => {
     const r = await api<Resp>('/api/belanja');
@@ -73,7 +73,7 @@ export function BelanjaClient() {
         showToast('Stok masuk tercatat, HPP diperbarui');
         setP({ product_id: '', qty: 1, unit_cost: 0, supplier: '' });
         load();
-      } else showToast(r.error || 'Gagal');
+      } else showToast(r.error || 'Gagal', 'error');
     } finally {
       setBusy(null);
     }
@@ -92,7 +92,7 @@ export function BelanjaClient() {
         showToast('Pengeluaran tercatat');
         setE({ name: '', category: '', amount: 0 });
         load();
-      } else showToast(r.error || 'Gagal');
+      } else showToast(r.error || 'Gagal', 'error');
     } finally {
       setBusy(null);
     }
@@ -291,7 +291,7 @@ export function BelanjaClient() {
           </div>
         </>
       )}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }

@@ -23,7 +23,7 @@ type Resp = { shifts: Shift[]; open: Shift | null; open_all?: Shift[]; limit?: n
 
 export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
   const [data, setData] = useState<Resp | null>(null);
-  const [toast, showToast] = useToast();
+  const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [busy, setBusy] = useState('');
   const [loadingMore, setLoadingMore] = useState(false);
@@ -65,7 +65,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
         if (r.ok) {
           showToast('Shift #' + id + ' ditutup & direkap');
           load();
-        } else showToast(r.error || 'Gagal menutup shift');
+        } else showToast(r.error || 'Gagal menutup shift', 'error');
       },
     });
   }
@@ -80,7 +80,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
     if (r.ok) {
       showToast(on ? 'Shift #' + id + ' ditandai sudah setor kas' : 'Tanda setor dihapus');
       load();
-    } else showToast(r.error || 'Gagal menandai setor');
+    } else showToast(r.error || 'Gagal menandai setor', 'error');
   }
 
   if (!data) return <p className="text-sm text-slate-500">Memuat…</p>;
@@ -246,7 +246,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
         </div>
       )}
       {confirmHost}
-      <Toast msg={toast} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>
   );
 }
