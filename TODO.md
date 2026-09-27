@@ -896,7 +896,7 @@ F2 (pos tab, hover drift), T1 (pos segmented payment), T2/T3
       kategori + metode bayar (Campur amber) - `/admin/produk`
       toggle status - hero card flat - anomali
       `pos-client:1781` ilang.
-### FASE F (audit + ACC 27 Sep; F0 = commit iki)
+### FASE F (audit + ACC 27 Sep; SELESAI 27 Sep F0-F3, dual-push)
 - [x] Audit read-only: 62 situs arbitrary (`text-[10px]`
       26 + `text-[11px]` 36; 17 file; angka 67 stale) +
       token `2xs`/`1xs` wis ready (usage 0) +
@@ -907,18 +907,22 @@ F2 (pos tab, hover drift), T1 (pos segmented payment), T2/T3
       `text-xs` (F2 = 10 situs); Q3 4 commit terpisah
       (F0/F1/F2/F3); Q4 `sidebar:172` as-is
       (documented exception).
-- [x] F0: catat audit + ACC + bersihke scratch
-      `_fasef-*.txt`.
-- [ ] F1: token map `text-[10px]` → `text-2xs` +
-      `text-[11px]` → `text-1xs` (62 situs, 17 file;
-      mekanis; verify grep residual 0).
-- [ ] F2: `.card-label` + unifikasi micro-label KPI
-      (10 situs, include Badge).
-- [ ] F3: docs + pixel-check list + resync kp-zip3.
+- [x] F0 @ `d1f7574`: catat audit + ACC + bersihke
+      scratch `_fasef-*.txt`.
+- [x] F1 @ `2ff5091`: token map `text-[10px]` →
+      `text-2xs` + `text-[11px]` → `text-1xs` (61 owah,
+      17 file; mekanis; residual = 1 mung sidebar:172
+      Q4).
+- [x] F2 @ `ce7e0cd`: `.card-label` + unifikasi
+      micro-label KPI (10 situs, include Badge
+      `text-xs`; delta visual 11/10px→12px + dark
+      variant, ACC'd).
+- [x] F3 (commit iki): docs + pixel-check list final +
+      resync kp-zip3 `src/` (mirror + MD5).
 - [ ] Pixel-check F1+F2 (Gus Fi; 8 item nang
       MEMORY.md seksi FASE F).
-**Berikutnya: F1** (FASE F - token map 62 situs) - nunggu
-diff + ACC Gus.
+**Berikutnya (opsional): FASE G** - modal size + toast
+tone (usulan backlog UX; nunggu ACC Gus).
 
 
 ---
@@ -960,7 +964,7 @@ backup aman, offline tetap percaya diri.
 | ----- | ------------------------------------------------------------------- | ------ |
 | UX-2  | EmptyState CTA + Panduan Kasir                                      | ✅ selesai 26 Sep (@ `32d0538` + `e7130c3`) |
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
-| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); FASE F: audit + ACC 27 Sep (Q1-Q4, Opsi A; 4 commit F0-F3), F0 SELESAI, next F1 (token map 62 situs, 17 file) + F2 (.card-label 10 situs, include Badge) + F3 (docs + resync kp-zip3) |
+| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); FASE F SELESAI 27 Sep (F0 `d1f7574` + F1 `2ff5091` token map 61 situs + F2 `ce7e0cd` .card-label 10 situs + F3 docs+resync kp-zip3); sisa: pixel-check HP 8 item + FASE G opsional (modal size + toast tone) |
 | UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat | 📋 rancang |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |

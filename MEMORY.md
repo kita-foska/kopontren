@@ -1,7 +1,7 @@
 # MEMORY
 
 ## 2026-09-27
-### UX-4 FASE F: Typography scale cleanup - audit + ACC SELESAI 27 Sep (F0; F1-F3 nunggu ACC per-commit)
+### UX-4 FASE F: Typography scale cleanup - SELESAI 27 Sep (F0-F3, dual-push master+main; sisa: pixel-check HP)
 - **Audit read-only (27 Sep, F0)**: `text-[10px]` = 26 +
   `text-[11px]` = 36 = **62 situs, 17 file** (ora ana
   arbitrary px liyane; angka 67 saka rencana 26 Sep = stale,
@@ -53,33 +53,50 @@
   delta ≤1px nang titik kenceng (badge h-5, receipt
   preview `pos-client:1833/1876`, bottom-nav `:88` +
   `leading-none`) - bagean pixel-check (item 1/2/6/7/8).
-- **F0 (commit iki)**: catat audit + ACC (MEMORY +
+- **F0 SELESAI @ `d1f7574`**: catat audit + ACC (MEMORY +
   TODO) + bersihke scratch lokal `_fasef-*.txt`
   (`D:\Ngudi Susilo\`, di luar repo, konvensi
   git-ignored lokal). Dual-push.
-- **F1 plan**: `refactor(ui)` token map 62 situs 17 file
+- **F1 SELESAI @ `2ff5091`**: token map 61 owah 17 file
   (`text-[10px]`→`text-2xs`, `text-[11px]`→`text-1xs`;
   mekanis - weight/tracking/leading/werna saka situs
   tetep padha; blok receipt inline + print OUT-OF-
-  SCOPE). Verify: grep `text-\[\d+px\]` residual = 0 +
-  tsc 0 + build 0 + dual-push.
-- **F2 plan**: `refactor(ui)` `.card-label` (`@apply
+  SCOPE). 62 situs audit − 1 (sidebar:172 Q4 as-is) = 61.
+  Verify: residual `text-[10px]` = 1 (mung sidebar:172),
+  `text-[11px]` = 0; tsc EXIT 0 + build EXIT 0 (sw.js
+  revert) + dual-push master+main.
+- **F2 SELESAI @ `ce7e0cd`**: `.card-label` (`@apply
   text-xs font-bold uppercase tracking-wide text-slate-
-  500 dark:text-slate-400` nang globals.css) + unifikasi
-  10 situs (Q2). tsc + build + dual-push.
-- **F3 plan**: docs + resync kp-zip3 + pixel-check
-  list.
+  500 dark:text-slate-400` nang `@layer components`,
+  globals.css:93) + unifikasi 10 situs (Q2): pengurus-
+  dashboard:316/324, pos-client:2267/2296/2319,
+  notification-bell:203, notification-list:157,
+  Badge ui.tsx:33 `text-1xs`→`text-xs`. 6 file +13/−8.
+  Delta visual (ACC'd): KPI label 11px→12px + dark
+  variant; pos h3 tracking-wider→wide; bell/list meta
+  10px semibold→12px bold. Residual `tracking-wider` =
+  sidebar:172 (Q4) + member-qr-badge:231 (ora nang Q2
+  list = out-of-scope, ora disentuh). tsc EXIT 0 +
+  build EXIT 0 + dual-push master+main.
+- **F3 (commit iki)**: docs update (MEMORY + TODO, FASE
+  F F0-F3) + pixel-check list final (8 item, delta F2
+  dicathet) + resync kp-zip3 `src/` (mirror + MD5
+  verify). Dual-push.
 - **Pixel-check list F1+F2 (Gus Fi, ing HP)**:
   1. `/kasir` - receipt preview + mini-button Lunas/
      10k...100k + hotkey hint.
   2. `/kasir` - tab kategori + payment pills + KPI
      badges (TogglePill badge 2xs extrabold; chip
-     emerald/amber 10px→2xs).
+     emerald/amber 10px→2xs) + modal Panduan Kasir h3
+     `.card-label` 12px (delta F2).
   3. `/home` + dashboard pengurus - label kartu KPI
-     (unifikasi `.card-label`) + sub-line nilai (1xs).
+     `.card-label` 12px bold (delta F2: 11px→12px +
+     dark variant) + sub-line nilai (1xs).
   4. `/laporan` - label KPI + sub-line "Periode
      terpilih".
-  5. `/admin/notifikasi` - label meta panel bell (2xs).
+  5. `/admin/notifikasi` - label meta panel bell/list
+     `.card-label` 12px bold (delta F2: 10px semibold
+     →12px).
   6. Cetak kartu member / QR / label - konfirmasi
      muat 58mm (blok print durung disentuh).
   7. `/admin/produk` - chip sku mono (2xs) + garis
