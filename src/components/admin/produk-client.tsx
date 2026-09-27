@@ -47,7 +47,7 @@ export function ProdukClient() {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ ...emptyForm });
   const [show, setShow] = useState(false);
-  const [toast, showToast, , toastTone] = useToast();
+  const [toast, showToast, , toastTone, toastAction] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [stockEdits, setStockEdits] = useState<Record<number, string>>({});
   const [q, setQ] = useState('');
@@ -230,7 +230,19 @@ export function ProdukClient() {
           method: 'DELETE',
         });
         if (r.ok) {
-          showToast(r.data?.message || 'Produk berhasil diproses');
+          if (r.data?.archived) {
+            // Ber-riwayat → server soft-archive (baris aman); undo = aktifkan.
+            showToast('Produk dinonaktifkan — riwayat penjualan tetap aman', 'critical', {
+              label: 'Urungkan',
+              run: () =>
+                void api('/api/products/' + p.id, {
+                  method: 'PUT',
+                  body: JSON.stringify({ active: 1 }),
+                }),
+            });
+          } else {
+            showToast('Produk dihapus permanen');
+          }
           load();
         } else {
           showToast(r.error || 'Gagal menghapus produk', 'error');
@@ -264,16 +276,32 @@ export function ProdukClient() {
       return all ? new Set<number>() : new Set(ids);
     });
   }
-  async function bulk(action: 'stock' | 'category' | 'delete', extra?: Record<string, unknown>) {
-    if (selected.size === 0) return;
+  async function bulk(
+    action: 'stock' | 'category' | 'delete' | 'active',
+    extra?: Record<string, unknown>
+  ) {
+    // I-2: ids bisa datang dari `extra` (jalur undo memakai snapshot yang
+    // di-capture SEBELUM sukses menghapus men-`clear()`-kan `selected`).
+    const ids: number[] = extra?.ids != null ? (extra.ids as number[]) : [...selected];
+    if (ids.length === 0) return;
+    const idsSnap = ids;
     setBulkBusy(true);
     const r = await api<{ ok: boolean; affected?: number }>('/api/products/bulk', {
       method: 'POST',
-      body: JSON.stringify({ action, ids: [...selected], ...extra }),
+      body: JSON.stringify({ action, ids, ...extra }),
     });
     setBulkBusy(false);
     if (r.ok) {
-      showToast(r.data?.affected + ' produk diproses');
+      if (action === 'delete') {
+        // I-2: bulk hapus = soft-archive semua → undo = aktifkan kembali
+        // via endpoint yang sama (tier akses sama).
+        showToast(r.data?.affected + ' produk dinonaktifkan', 'critical', {
+          label: 'Urungkan',
+          run: () => void bulk('active', { value: '1', ids: idsSnap }),
+        });
+      } else {
+        showToast(r.data?.affected + ' produk diproses');
+      }
       setSelected(new Set());
       setBulkStock('');
       setBulkCat('');
@@ -792,7 +820,7 @@ export function ProdukClient() {
       </Modal>
       {label && <ProductBarcodeLabel product={label} onClose={() => setLabel(null)} />}
       {confirmHost}
-      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} action={toastAction} onClose={() => showToast('')} />
     </div>
   );
 }

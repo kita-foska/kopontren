@@ -23,7 +23,7 @@ type Resp = { shifts: Shift[]; open: Shift | null; open_all?: Shift[]; limit?: n
 
 export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
   const [data, setData] = useState<Resp | null>(null);
-  const [toast, showToast, , toastTone] = useToast();
+  const [toast, showToast, , toastTone, toastAction] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [busy, setBusy] = useState('');
   const [loadingMore, setLoadingMore] = useState(false);
@@ -63,7 +63,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
         const r = await api<Resp>('/api/shifts', { method: 'PATCH', body: JSON.stringify({ id }) });
         setBusy('');
         if (r.ok) {
-          showToast('Shift #' + id + ' ditutup & direkap');
+          showToast('Shift #' + id + ' ditutup & direkap — rekap terkunci', 'critical');
           load();
         } else showToast(r.error || 'Gagal menutup shift', 'error');
       },
@@ -246,7 +246,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
         </div>
       )}
       {confirmHost}
-      <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
+      <Toast msg={toast} tone={toastTone} action={toastAction} onClose={() => showToast('')} />
     </div>
   );
 }

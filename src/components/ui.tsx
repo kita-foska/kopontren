@@ -446,7 +446,14 @@ export function Modal({
   );
 }
 
-export type ToastTone = 'info' | 'success' | 'error' | 'warning';
+export type ToastTone = 'info' | 'success' | 'error' | 'warning' | 'critical';
+
+/**
+ * UX-6 I-2: slot aksi di dalam toast (mis. "Urungkan") — primitif:
+ * tombol saja; logika undo/dampaknya milik situs pemanggil.
+ * Klik tombol = run() lalu toast ditutup (onClose).
+ */
+export type ToastAction = { label: string; run: () => void };
 
 const TOAST_TONE_CLASS: Record<ToastTone, string> = {
   // info = kelas lama persis (zero-delta); tone lain warna solid (baca baik
@@ -455,29 +462,38 @@ const TOAST_TONE_CLASS: Record<ToastTone, string> = {
   success: 'bg-emerald-600 text-white',
   error: 'bg-rose-600 text-white',
   warning: 'bg-amber-500 text-white',
+  critical: 'bg-rose-500 text-white',
 };
 
 export function Toast({
   msg,
   tone = 'info',
   onClose,
+  action,
 }: {
   msg: string;
   tone?: ToastTone;
   onClose: () => void;
+  /** null = tanpa aksi (state 5-tuple `useToast`) — aman, render-guard
+   *  pakai `action && msg`. */
+  action?: ToastAction | null;
 }) {
   useEffect(() => {
     if (!msg) return;
-    const t = setTimeout(onClose, tone === 'error' ? 6000 : 4000);
+    // UX-6 I-2: critical & warning = 90 dtk (waktu baca + kesempatan undo);
+    // close manual tetap tersedia (onClose dari host).
+    const ms =
+      tone === 'critical' || tone === 'warning' ? 90000 : tone === 'error' ? 6000 : 4000;
+    const t = setTimeout(onClose, ms);
     return () => clearTimeout(t);
   }, [msg, tone]);
   // Live region harus PERSISTEN di DOM agar screen reader mengumumkan
   // perubahan pesan — saat kosong dirender sr-only, bukan di-unmount.
-  // tone error: role=alert + assertive (pengguna HARUS tahu, a11y).
+  // tone error/critical: role=alert + assertive (pengguna HARUS tahu, a11y).
   return (
     <div
-      role={tone === 'error' ? 'alert' : 'status'}
-      aria-live={tone === 'error' ? 'assertive' : 'polite'}
+      role={tone === 'error' || tone === 'critical' ? 'alert' : 'status'}
+      aria-live={tone === 'error' || tone === 'critical' ? 'assertive' : 'polite'}
       className={
         msg
           ? 'fixed bottom-4 left-1/2 z-50 w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ' +
@@ -485,41 +501,59 @@ export function Toast({
           : 'sr-only'
       }
     >
-      {msg}
+      <span className="block">{msg}</span>
+      {action && msg && (
+        <button
+          type="button"
+          onClick={() => {
+            action.run();
+            onClose();
+          }}
+          className="mt-2 rounded-lg bg-white/20 px-2.5 py-1 text-xs font-bold text-white hover:bg-white/30"
+        >
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }
 
 /**
- * useToast — tuple [msg, showToast, clearToast, tone].
- * Backward-compatible: destructure 2 atau 3 elemen lama tetap valid
- * (elemen ke-4 = tone terakhir, default 'info').
- * showToast(msg, tone?) — tone opsional; tanpa arg = info (zero-delta).
+ * useToast — tuple [msg, showToast, clearToast, tone, action].
+ * Backward-compatible: destructure 2–4 elemen lama tetap valid
+ * (elemen ke-4 = tone terakhir, default 'info'; elemen ke-5 = aksi
+ * terakhir atau null).
+ * showToast(msg, tone?, action?) — tone/aksi opsional; tanpa arg = info
+ * tanpa aksi (zero-delta). UX-6 I-2.
  */
 export function useToast(): [
   string,
-  (m: string, tone?: ToastTone) => void,
+  (m: string, tone?: ToastTone, action?: ToastAction) => void,
   () => void,
   ToastTone,
+  ToastAction | null,
 ] {
   const [msg, setMsg] = useState('');
   const [tone, setTone] = useState<ToastTone>('info');
+  const [action, setAction] = useState<ToastAction | null>(null);
   // Identitas STABIL (useCallback, deps kosong — setMsg/setTone memang
   // stabil): beberapa komponen meletakkan showToast di deps array
   // useEffect; perilaku lama (elemen ke-2 = setMsg, selalu stabil)
   // dipertahankan agar tidak ada re-run effect per-render.
   const showToast = useCallback(
-    (m: string, t: ToastTone = 'info') => {
+    (m: string, t: ToastTone = 'info', a?: ToastAction) => {
       setMsg(m);
       setTone(t);
+      setAction(a ?? null);
     },
     []
   );
   const clearToast = useCallback(() => {
     setMsg('');
     setTone('info');
+    setAction(null);
   }, []);
-  return [msg, showToast, clearToast, tone];
+  return [msg, showToast, clearToast, tone, action];
 }
 
 /**

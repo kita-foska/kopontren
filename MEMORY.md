@@ -124,7 +124,7 @@
   "Transaksi Saya" empty — admin preview = CTA POS, member murni
   = tanpa CTA.
 - **I-5 (DONE, 27 Sep — commit I-5 = 5 file (3 src + MEMORY +
-  TODO); hash I-5 dicatat di report + di-backfill docs I-2)**:
+  TODO); hash I-5 = `99c973c`, di-backfill saat commit I-2)**:
   `ErrorState` primitive baru di ui.tsx (insert setelah `Empty`):
   `{text, onRetry?, tech?}` — kartu rose + tombol "Muat ulang"
   (ghost) + `<details>` "Detail teknis" berisi `<pre>`
@@ -143,6 +143,32 @@
   /api/neraca — <err>`; `/admin/konsinyasi`: `GET
   /api/konsinyasi — <err>` (tombol "Coba lagi" ad-hoc hilang
   → ErrorState seragam).
+- **I-2 (DONE, 27 Sep — commit I-2 = 6 file (4 src + MEMORY +
+  TODO); backfill: hash I-5 = `99c973c`)**: tone `critical`
+  ditambahkan ke `ToastTone` (ui.tsx): bg-rose-500, role=alert +
+  assertive; auto-dismiss critical & warning = 90 dtk (error tetap
+  6 dtk, tone lain 4 dtk). Slot `ToastAction {label, run}` =
+  tombol di dalam toast (klik = run() lalu tutup). `useToast` kini
+  5-tuple — backward-compat: destructure 2–4 elemen lama tetap
+  valid, jadi host lain tak perlu diubah; hanya host produk/shift/
+  zakat yang += prop `action`. 4 titik contoh: (1) produk-client
+  delete ber-riwayat = soft-archive → critical + "Urungkan"
+  (PUT `active=1`); (2) bulk delete → critical + "Urungkan" —
+  refinement ACC: `ids` di-capture sebagai snapshot SEBELUM sukses
+  clear `selected`; `bulk()` kini terima `extra.ids` + union
+  action += `'active'` (endpoint sama, tier akses sama); (3)
+  shift-client tutup shift → critical tanpa undo ("rekap
+  terkunci"); (4) zakat logGold `apply=true` → warning 90 dtk +
+  pesan bahasa-plain "koreksi dengan entri baru, log lama tidak
+  dihapus" (deviasi kecil dari draft "(OOS undo)" — jargon,
+  diganti bahasa manusia). OOS tercatat: undo zakat (log
+  append-only → keputusan pengurus) + sound toast (SKIP V1).
+  tsc + build EXIT 0.
+  **Pixel-check Gus (4 item)**: hapus produk ber-riwayat →
+  toast rose + tombol "Urungkan" (klik = reaktifkan, tabel
+  refresh); bulk hapus 2+ → "Urungkan" (semua diaktifkan lagi);
+  tutup shift → toast rose 90 dtk tanpa tombol; verifikasi harga
+  emas dengan "Sinkronkan ke Pengaturan" → toast amber 90 dtk.
 
 ### UX-5 H4: Breadcrumb visual (nested /admin/* /pengurus/*) — SELESAI 27 Sep
 - Implementasi (commit H4, 27 Sep, dual-push master+main):

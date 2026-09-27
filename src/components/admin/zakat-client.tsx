@@ -132,7 +132,7 @@ export function ZakatClient() {
     price_date: wibToday(),
     apply: true,
   });
-  const [toast, showToast, clearToast, toastTone] = useToast();
+  const [toast, showToast, clearToast, toastTone, toastAction] = useToast();
 
   const load = useCallback(async () => {
     const [s, c, h, g] = await Promise.all([
@@ -234,7 +234,12 @@ export function ZakatClient() {
     });
     setBusy(false);
     if (r.ok) {
-      showToast(goldForm.apply ? 'Verifikasi dicatat + disinkronkan ke Pengaturan' : 'Verifikasi harga emas dicatat');
+      showToast(
+        goldForm.apply
+          ? 'Verifikasi dicatat + disinkronkan ke Pengaturan (harga emas global berubah — koreksi dengan entri baru, log lama tidak dihapus)'
+          : 'Verifikasi harga emas dicatat',
+        goldForm.apply ? 'warning' : 'info'
+      );
       load();
     } else {
       showToast(r.error || 'Gagal mencatat verifikasi', 'error');
@@ -721,7 +726,7 @@ export function ZakatClient() {
         ) : null}
       </div>
 
-      {toast ? <Toast msg={toast} tone={toastTone} onClose={clearToast} /> : null}
+      {toast ? <Toast msg={toast} tone={toastTone} action={toastAction} onClose={clearToast} /> : null}
     </div>
   );
 }
