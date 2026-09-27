@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react';
-import type { Role } from '@/lib/auth';
+import type { Feature, Role } from '@/lib/auth';
+import { FEATURE_MATRIX, normRole } from '@/lib/features';
 import { Avatar, Button, ROLE_LABEL } from './ui';
 
 // Prefetch selektif: menu utama + halaman admin yang paling sering dibuka.
@@ -28,48 +29,94 @@ const PREFETCH_PATHS = new Set([
 type NavItem = { href: string; label: string };
 type NavGroup = { title: string; items: NavItem[] };
 
-const ADMIN_GROUPS: NavGroup[] = [
+/**
+ * UX-5 H1: SATU sumber menu (pengganti array role-specific lama).
+ * `level` = visibilitas item — MIRROR guard halaman (sumber kebenaran
+ * tetap FEATURE_MATRIX + guard; menu ini hanya display):
+ *  · `Feature`  → matriks akses (admin selalu lolos, = `canAccess`)
+ *  · `'ops'`    → isManager (guard Konsinyasi/Kas/QRIS = `isManager`)
+ *  · `'admin'`  → admin-only (guard pengaturan-member/notifications/
+ *                  pengguna/data/migrate = `role === 'admin'`)
+ * `roleLabel` = label khusus role (sisa kegunaan label per-role lama).
+ */
+type MenuLevel = Feature | 'ops' | 'admin';
+
+interface MenuDef {
+  href: string;
+  label: string;
+  level: MenuLevel;
+  roleLabel?: Partial<Record<Role, string>>;
+}
+
+function levelOk(role: Role, lv: MenuLevel): boolean {
+  if (role === 'admin') return true; // mirror canAccess: admin selalu lolos
+  if (lv === 'ops') return role === 'manajer'; // mirror isManager
+  if (lv === 'admin') return false; // mirror guard admin-only
+  return FEATURE_MATRIX[lv].includes(role);
+}
+
+const MENU_ITEMS: MenuDef[] = [
+  { href: '/', label: 'Ringkasan', level: 'personal' },
+  { href: '/admin/dashboard', label: 'Dashboard', level: 'laporan' },
+  { href: '/pengurus/dashboard', label: 'Dashboard Global', level: 'laporan' },
+  { href: '/kasir', label: 'Kasir', level: 'pos' },
+  { href: '/laporan', label: 'Laporan & Rekap', level: 'laporan' },
+  { href: '/admin/produk', label: 'Produk', roleLabel: { gudang: 'Produk & Stok (Opname)' }, level: 'stock' },
+  { href: '/admin/belanja', label: 'Belanja', level: 'supplier' },
+  { href: '/admin/konsinyasi', label: 'Konsinyasi', level: 'ops' },
+  { href: '/admin/shift', label: 'Shift & Kasir', level: 'shift' },
+  { href: '/retur', label: 'Retur', level: 'pos' },
+  { href: '/admin/kas', label: 'Kas', level: 'ops' },
+  { href: '/admin/qris', label: 'QRIS', level: 'ops' },
+  { href: '/piutang', label: 'Poin & Piutang', level: 'piutang' },
+  { href: '/admin/hutang', label: 'Hutang', roleLabel: { pembelian: 'Hutang Supplier' }, level: 'supplier' },
+  { href: '/admin/zakat', label: 'Zakat', level: 'zakat' },
+  { href: '/admin/pengaturan-member', label: 'Keuntungan Member', level: 'admin' },
+  { href: '/admin/member', label: 'Member', level: 'member' },
+  { href: '/admin/laporan', label: 'Laporan Pengurus', level: 'laporan' },
+  { href: '/admin/notifications', label: 'Notifikasi', level: 'admin' }, // H5: buka untuk pengurus (read-only)
+  { href: '/admin/audit', label: 'Audit', level: 'audit' },
+  { href: '/admin/pengguna', label: 'Pengguna', level: 'admin' },
+  { href: '/admin/data', label: 'Data & Backup', level: 'admin' },
+  { href: '/admin/migrate', label: 'Import CSV', level: 'admin' },
+];
+
+/** 4 grup (Q1 27 Sep: Loyalty fold ke OPERASIONAL — 4 grup, bukan 5). */
+const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
+  { title: 'Utama', hrefs: ['/', '/admin/dashboard', '/pengurus/dashboard'] },
   {
-    title: 'Utama',
-    items: [
-      { href: '/admin/dashboard', label: 'Dashboard' },
-      { href: '/pengurus/dashboard', label: 'Dashboard Global' },
-      { href: '/', label: 'Ringkasan' },
-      { href: '/kasir', label: 'Kasir' },
-      { href: '/laporan', label: 'Laporan & Rekap' },
+    title: 'Operasional',
+    hrefs: [
+      '/kasir',
+      '/admin/produk',
+      '/admin/belanja',
+      '/admin/konsinyasi',
+      '/admin/shift',
+      '/retur',
+      '/admin/member',
+      '/admin/pengaturan-member',
     ],
   },
   {
-    title: 'Admin',
-    items: [
-      { href: '/admin/produk', label: 'Produk' },
-      { href: '/admin/belanja', label: 'Belanja' },
-      { href: '/admin/konsinyasi', label: 'Konsinyasi' },
-      { href: '/piutang', label: 'Piutang' },
-      { href: '/admin/hutang', label: 'Hutang' },
-      { href: '/retur', label: 'Retur' },
-      { href: '/admin/kas', label: 'Kas' },
-      { href: '/admin/qris', label: 'QRIS' },
-      { href: '/admin/shift', label: 'Shift & Kasir' },
-      { href: '/admin/zakat', label: 'Zakat' },
-    ],
-  },
-  {
-    title: 'Loyalty',
-    items: [
-      { href: '/admin/pengaturan-member', label: 'Keuntungan Member' },
-      { href: '/admin/member', label: 'Member' },
+    title: 'Keuangan',
+    hrefs: [
+      '/admin/kas',
+      '/admin/qris',
+      '/piutang',
+      '/admin/hutang',
+      '/admin/zakat',
+      '/laporan',
     ],
   },
   {
     title: 'Sistem',
-    items: [
-      { href: '/admin/notifications', label: 'Notifikasi' },
-      { href: '/admin/audit', label: 'Audit' },
-      { href: '/admin/laporan', label: 'Laporan Pengurus' },
-      { href: '/admin/pengguna', label: 'Pengguna' },
-      { href: '/admin/data', label: 'Data & Backup' },
-      { href: '/admin/migrate', label: 'Import CSV' },
+    hrefs: [
+      '/admin/laporan',
+      '/admin/notifications',
+      '/admin/audit',
+      '/admin/pengguna',
+      '/admin/data',
+      '/admin/migrate',
     ],
   },
 ];
@@ -241,66 +288,21 @@ export function Sidebar({
  * Guard API & halaman tetap berlaku; menu ini hanya display.
  */
 function groupsFor(role: Role): NavGroup[] {
-  if (role === 'admin') return ADMIN_GROUPS;
-  if (role === 'manajer') {
-    // Manajer = operasional + laporan + produk/member (tanpa menu Sistem).
-    return ADMIN_GROUPS.filter((g) => g.title !== 'Sistem');
-  }
-  if (role === 'pengurus') {
-    // Pengurus = pengawas: laporan + audit + zakat (read-only).
-    return [
-      {
-        title: 'Laporan & Pengawasan',
-        items: [
-          { href: '/laporan', label: 'Laporan & Rekap' },
-          { href: '/admin/laporan', label: 'Laporan Pengurus' },
-          { href: '/pengurus/dashboard', label: 'Dashboard Global' },
-          { href: '/admin/zakat', label: 'Zakat' },
-          { href: '/admin/audit', label: 'Audit' },
-        ],
-      },
-      { title: 'Utama', items: [{ href: '/', label: 'Ringkasan' }] },
-    ];
-  }
-  if (role === 'kasir') {
-    return [
-      {
-        title: 'Utama',
-        items: [
-          { href: '/', label: 'Ringkasan' },
-          { href: '/kasir', label: 'Kasir' },
-          { href: '/admin/shift', label: 'Shift & Kasir' },
-          { href: '/piutang', label: 'Piutang' },
-          { href: '/retur', label: 'Retur' },
-        ],
-      },
-    ];
-  }
-  if (role === 'gudang') {
-    return [
-      {
-        title: 'Gudang',
-        items: [
-          { href: '/', label: 'Ringkasan' },
-          { href: '/admin/produk', label: 'Produk & Stok (Opname)' },
-        ],
-      },
-    ];
-  }
-  if (role === 'pembelian') {
-    return [
-      {
-        title: 'Pembelian',
-        items: [
-          { href: '/', label: 'Ringkasan' },
-          { href: '/admin/belanja', label: 'Belanja' },
-          { href: '/admin/hutang', label: 'Hutang Supplier' },
-        ],
-      },
-    ];
-  }
-  // member (default): dashboard pribadi saja.
-  return [{ title: 'Pribadi', items: [{ href: '/', label: 'Ringkasan' }] }];
+  const r = normRole(role); // 'owner' → 'admin' (sama dgn guard halaman)
+  const byHref = new Map(MENU_ITEMS.map((m) => [m.href, m]));
+  const groups: NavGroup[] = ADMIN_GROUP_DEFS.map((g) => ({
+    title: g.title,
+    items: g.hrefs
+      .map((href) => byHref.get(href))
+      .filter((m): m is MenuDef => Boolean(m) && levelOk(r, m!.level))
+      .map((m) => ({
+        href: m.href,
+        label: m.roleLabel?.[r] ?? m.label,
+      })),
+  })).filter((g) => g.items.length > 0);
+  // member: dashboard pribadi saja (label grp "Pribadi", perilaku lama).
+  if (r === 'member') return [{ title: 'Pribadi', items: [{ href: '/', label: 'Ringkasan' }] }];
+  return groups;
 }
 
 /**
