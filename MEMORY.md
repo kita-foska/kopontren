@@ -98,6 +98,51 @@
   low-stock dibuat KONDISIONAL, pola H3) ·
   `/admin/notifications/settings` = `isAdmin` (admin saja →
   CTA notif list juga kondisional, prop `canManageNotif`).
+- **I-4 (DONE `6222bc70`, dual-push master+main, 27 Sep)**:
+  6 file src + MEMORY + TODO (+123/−15): CTA kondisional di 5
+  empty — low-stock → `/admin/produk` (prop `canManageStock` =
+  `canAccess(user,'stock')`, di-pass dari admin/dashboard/page.tsx);
+  notification-list → `/admin/notifications/settings` (prop
+  `canManageNotif` = `isAdmin`, dari admin/notifications/page.tsx);
+  zakat ×2 → CTA in-page `ctaOnClick` scroll ke anchor baru
+  `#zakat-aksi` / `#zakat-gold` (tanpa rute anyar); "Transaksi
+  Saya" member → CTA POS kondisional (pola `showPosCta`, match
+  "Riwayat Poin & Reward"). 0 endpoint anyar, 0 fetch anyar.
+  tsc + build EXIT 0 (53/53 rute).
+  **Catatan commit**: commit pertama `38538af` punya subject korup
+  (BOM + `++` di depan, akibat `Out-File -Encoding utf8` PS) →
+  di-amend pre-push → `6222bc70` (verified: byte subject
+  `f,e,a,t,(`; master = main = `6222bc70`). Pelajaran wajib:
+  file commit message ditulis `[IO.File]::WriteAllLines(path,
+  $lines, [Text.UTF8Encoding]::new($false))` + byte-verify
+  subject (`git cat-file commit HEAD`) sebelum push.
+  **Pixel-check Gus (4 item)**: `/admin/dashboard` low-stock
+  empty — kasir (widget, tanpa CTA) vs admin (CTA "Kelola
+  Produk"); `/admin/notifications` empty — admin +CTA "Ubah
+  Pengaturan Notifikasi" vs pengurus tanpa; `/admin/zakat` — 2
+  empty state scroll halus ke form (bukan navigate); `/member`
+  "Transaksi Saya" empty — admin preview = CTA POS, member murni
+  = tanpa CTA.
+- **I-5 (DONE, 27 Sep — commit I-5 = 5 file (3 src + MEMORY +
+  TODO); hash I-5 dicatat di report + di-backfill docs I-2)**:
+  `ErrorState` primitive baru di ui.tsx (insert setelah `Empty`):
+  `{text, onRetry?, tech?}` — kartu rose + tombol "Muat ulang"
+  (ghost) + `<details>` "Detail teknis" berisi `<pre>`
+  `text-1xs` (perbaikan ACC: `text-[11px]` → `text-1xs`,
+  token F1). Dipakai di 3 blok: laporan-admin LaporanTab
+  (`GET /api/keuangan`) + NeracaTab (`GET /api/neraca`; tombol
+  header "Muat ulang" A3 TETAP, tidak disentuh) + konsinyasi
+  `loadErr` (pola manual "Coba lagi" diseragamkan;
+  `onRetry={load}` sah karena `load()` sudah clear err di
+  awal; import `Button` tetap — 12 use di file).
+  0 endpoint/fetch anyar. tsc + build EXIT 0.
+  **Pixel-check Gus (3 item)**: paksa gagal load (putus
+  network / API error) → `/admin/laporan` tab Laba-Rugi:
+  kartu rose + "Muat ulang" + collapsible "Detail teknis"
+  (isi `GET /api/keuangan — <err>`); tab Neraca: `GET
+  /api/neraca — <err>`; `/admin/konsinyasi`: `GET
+  /api/konsinyasi — <err>` (tombol "Coba lagi" ad-hoc hilang
+  → ErrorState seragam).
 
 ### UX-5 H4: Breadcrumb visual (nested /admin/* /pengurus/*) — SELESAI 27 Sep
 - Implementasi (commit H4, 27 Sep, dual-push master+main):

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, apiRetry, Button, PageSkeleton, TermTip, Toast, useToast } from '@/components/ui';
+import { api, apiRetry, Button, ErrorState, PageSkeleton, TermTip, Toast, useToast } from '@/components/ui';
 import { rp, startOfDayJakarta, todayWibStr } from '@/lib/format';
 import { HourBarChart, type HourPoint } from '../charts';
 import { buildLabaRugiWa, shareRekap } from '@/lib/rekap';
@@ -458,7 +458,11 @@ export function LabaRugiTab() {
       {loading && !data ? (
         <p className="text-sm text-slate-500">Memuat…</p>
       ) : err && !data ? (
-        <div className="card p-4 text-sm text-rose-600 dark:text-rose-400">{err}</div>
+        <ErrorState
+          text={err}
+          onRetry={load}
+          tech={'GET /api/keuangan — ' + err}
+        />
       ) : data ? (
         <div className="grid gap-3 md:grid-cols-2">
           <div className="card p-4">
@@ -598,7 +602,11 @@ export function NeracaTab() {
       {loading && !data ? (
         <p className="text-sm text-slate-500">Memuat…</p>
       ) : err && !data ? (
-        <div className="card p-4 text-sm text-rose-600 dark:text-rose-400">{err}</div>
+        <ErrorState
+          text={err}
+          onRetry={load}
+          tech={'GET /api/neraca — ' + err}
+        />
       ) : data ? (
         <div className="grid gap-3 md:grid-cols-2">
           <div className="card p-4">

@@ -659,6 +659,41 @@ export function Empty({
 }
 
 /**
+ * UX-6 I-5: primitive error state — pesan manusia (dari helper, jangan
+ * raw) + tombol "Muat ulang" (opsional) + detail teknis collapsible
+ * (<details>) utk support/debug: endpoint + pesan, tersembunyi default.
+ * F1: <pre> pakai text-1xs (perbaikan ACC — bukan text-[11px]).
+ */
+export function ErrorState({
+  text,
+  onRetry,
+  tech,
+}: {
+  text: string;
+  onRetry?: () => void;
+  tech?: string;
+}) {
+  return (
+    <div className="card p-4">
+      <p className="text-sm font-medium text-rose-600 dark:text-rose-400">{text}</p>
+      {onRetry && (
+        <Button variant="ghost" className="mt-2" onClick={onRetry}>
+          Muat ulang
+        </Button>
+      )}
+      {tech && (
+        <details className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          <summary className="cursor-pointer select-none font-medium">Detail teknis</summary>
+          <pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded bg-slate-100 p-2 text-1xs leading-relaxed text-slate-600 dark:bg-slate-900/60 dark:text-slate-300">
+            {tech}
+          </pre>
+        </details>
+      )}
+    </div>
+  );
+}
+
+/**
  * Badge status terpadu (design system): mapping status -> tone + label
  * baku, supaya semua halaman menampilkan status dengan warna yang sama.
  * Status tak dikenal: tone gray, label = nilai mentah (aman).

@@ -5,6 +5,7 @@ import {
   api,
   Badge,
   Button,
+  ErrorState,
   StatusBadge,
   TermTip,
   Toast,
@@ -233,19 +234,11 @@ export function KonsinyasiClient() {
   if (!data) {
     if (loadErr)
       return (
-        <div className="text-sm text-slate-500">
-          <p>{loadErr}</p>
-          <Button
-            variant="ghost"
-            className="mt-2"
-            onClick={() => {
-              setLoadErr('');
-              load();
-            }}
-          >
-            Coba lagi
-          </Button>
-        </div>
+        <ErrorState
+          text={loadErr}
+          onRetry={load}
+          tech={'GET /api/konsinyasi — ' + loadErr}
+        />
       );
     return <p className="text-sm text-slate-500">Memuat…</p>;
   }
