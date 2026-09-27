@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { SalesBarChart, type DailyPoint } from '@/components/charts';
-import { Button, PageSkeleton, Toast, api, apiRetry, useToast } from '@/components/ui';
+import { Button, PageSkeleton, Table, Td, Th, Trow, Toast, api, apiRetry, useToast } from '@/components/ui';
 import { fmtDate, rp } from '@/lib/format';
 import { shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
@@ -263,29 +263,29 @@ export function PengurusDashboardClient() {
           {data.top.length === 0 ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada penjualan.</p>
           ) : (
-            <table className="w-full">
+            <Table>
               <thead>
                 <tr className="border-b border-slate-100 dark:border-navy-700">
-                  <th className="th">Produk</th>
-                  <th className="th text-right">Qty</th>
-                  <th className="th text-right">Omzet</th>
+                  <Th>Produk</Th>
+                  <Th className="text-right">Qty</Th>
+                  <Th className="text-right">Omzet</Th>
                 </tr>
               </thead>
               <tbody>
                 {data.top.map((t, i) => (
-                  <tr key={t.name} className="table-row">
-                    <td className="td">
+                  <Trow key={t.name}>
+                    <Td>
                       <span className="mr-1.5 text-slate-500">{i + 1}.</span>
                       {t.name}
-                    </td>
-                    <td className="td text-right font-semibold">{t.qty}</td>
-                    <td className="td text-right font-bold text-accent-500 dark:text-accent-300">
+                    </Td>
+                    <Td className="text-right font-semibold">{t.qty}</Td>
+                    <Td className="text-right font-bold text-accent-500 dark:text-accent-300">
                       {rp(t.revenue)}
-                    </td>
-                  </tr>
+                    </Td>
+                  </Trow>
                 ))}
               </tbody>
-            </table>
+            </Table>
           )}
         </div>
 

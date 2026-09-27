@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageSkeleton, Empty, api, Button, StatusBadge, Modal, TermTip, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Table, Td, TEmpty, Trow, Th, Empty, api, Button, StatusBadge, Modal, TermTip, Toast, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 import { parseWholesaleJson } from '@/lib/wholesale';
@@ -456,10 +456,10 @@ export function ProdukClient() {
 
       {/* Product Table (desktop ≥sm) */}
       <div className="card hidden overflow-x-auto sm:block">
-        <table className="w-full min-w-[44rem]">
+        <Table minW="min-w-[44rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
-              <th className="th w-8">
+              <Th className="w-8">
                 <input
                   type="checkbox"
                   className="h-4 w-4 accent-accent-500"
@@ -467,21 +467,21 @@ export function ProdukClient() {
                   checked={filtered.length > 0 && filtered.every((p) => selected.has(p.id))}
                   onChange={selectAllFiltered}
                 />
-              </th>
-              <th className="th">Produk & Barcode</th>
-              <th className="th">Harga Jual</th>
-              <th className="th">
+              </Th>
+              <Th>Produk & Barcode</Th>
+              <Th>Harga Jual</Th>
+              <Th>
                 <TermTip
                   term="HPP / Beli"
                   tip="Harga Pokok Penjualan = biaya modal membeli produk per satuan. Digunakan untuk hitung margin, laba kotor, dan dasar zakat (mode HPP konservatif)."
                 >
                   HPP / Beli
                 </TermTip>
-              </th>
-              <th className="th">Margin</th>
-              <th className="th">Stok</th>
-              <th className="th">Status</th>
-              <th className="th text-right">Aksi</th>
+              </Th>
+              <Th>Margin</Th>
+              <Th>Stok</Th>
+              <Th>Status</Th>
+              <Th className="text-right">Aksi</Th>
             </tr>
           </thead>
           <tbody>
@@ -489,16 +489,16 @@ export function ProdukClient() {
               const margin = p.base_price - p.cost_price;
               const marginPct = p.cost_price > 0 ? Math.round((margin / p.cost_price) * 100) : 0;
               return (
-                <tr key={p.id} className="table-row hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
-                  <td className="td">
+                <Trow key={p.id} hover>
+                  <Td>
                     <input
                       type="checkbox"
                       className="h-4 w-4 accent-accent-500"
                       checked={selected.has(p.id)}
                       onChange={() => toggleSel(p.id)}
                     />
-                  </td>
-                  <td className="td">
+                  </Td>
+                  <Td>
                     <p className="font-bold text-slate-900 dark:text-slate-100">{p.name}</p>
                     <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                       <span>{p.category || 'Tanpa kategori'}</span>
@@ -513,15 +513,15 @@ export function ProdukClient() {
                         </>
                       )}
                     </div>
-                  </td>
-                  <td className="td font-bold text-slate-900 dark:text-slate-100">{rp(p.base_price)}</td>
-                  <td className="td text-slate-500 dark:text-slate-400">{rp(p.cost_price)}</td>
-                  <td className="td">
+                  </Td>
+                  <Td className="font-bold text-slate-900 dark:text-slate-100">{rp(p.base_price)}</Td>
+                  <Td className="text-slate-500 dark:text-slate-400">{rp(p.cost_price)}</Td>
+                  <Td>
                     <span className={'text-xs font-semibold ' + (margin > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500')}>
                       +{rp(margin)} ({marginPct}%)
                     </span>
-                  </td>
-                  <td className="td">
+                  </Td>
+                  <Td>
                     <div className="flex items-center gap-1.5">
                       <input
                         className="input w-20 px-2 py-1 text-center font-bold"
@@ -546,8 +546,8 @@ export function ProdukClient() {
                         <StatusBadge status="aman" />
                       )}
                     </div>
-                  </td>
-                  <td className="td">
+                  </Td>
+                  <Td>
                     <button type="button"
                       onClick={() => toggleActive(p)}
                       disabled={toggleBusy}
@@ -560,8 +560,8 @@ export function ProdukClient() {
                     >
                       {p.active ? 'Aktif' : 'Nonaktif'}
                     </button>
-                  </td>
-                  <td className="td text-right">
+                  </Td>
+                  <Td className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Button
                         variant="link"
@@ -585,25 +585,23 @@ export function ProdukClient() {
                         Hapus
                       </Button>
                     </div>
-                  </td>
-                </tr>
+                  </Td>
+                </Trow>
               );
             })}
             {filtered.length === 0 && (
-              <tr>
-                <td className="td" colSpan={8}>
-                  <Empty
-                    compact
-                    text={q || cat ? 'Tidak ada produk yang cocok dengan pencarian.' : 'Belum ada produk.'}
-                    {...(!q && !cat
-                      ? { ctaLabel: 'Tambah produk', ctaOnClick: () => openEdit() }
-                      : {})}
-                  />
-                </td>
-              </tr>
+              <TEmpty colSpan={8}>
+                <Empty
+                  compact
+                  text={q || cat ? 'Tidak ada produk yang cocok dengan pencarian.' : 'Belum ada produk.'}
+                  {...(!q && !cat
+                    ? { ctaLabel: 'Tambah produk', ctaOnClick: () => openEdit() }
+                    : {})}
+                />
+              </TEmpty>
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Mobile: kartu produk (<sm) — data sama dengan tabel; toggle status,

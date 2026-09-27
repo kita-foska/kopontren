@@ -5,6 +5,11 @@ import {
   api,
   Button,
   Badge,
+  Table,
+  Td,
+  TEmpty,
+  Trow,
+  Th,
   Toast,
   useConfirm,
   useToast,
@@ -288,26 +293,26 @@ export function DataClient() {
           </div>
 
           <div className="card overflow-x-auto">
-            <table className="w-full min-w-[40rem]">
+            <Table minW="min-w-[40rem]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-navy-700">
-                  <th className="th">Waktu</th>
-                  <th className="th">Pengguna</th>
-                  <th className="th">Aksi</th>
-                  <th className="th">Entitas / ID</th>
-                  <th className="th">Perubahan Detail</th>
+                  <Th>Waktu</Th>
+                  <Th>Pengguna</Th>
+                  <Th>Aksi</Th>
+                  <Th>Entitas / ID</Th>
+                  <Th>Perubahan Detail</Th>
                 </tr>
               </thead>
               <tbody>
                 {logs.map((l) => (
-                  <tr key={l.id} className="table-row hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
-                    <td className="td whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
+                  <Trow key={l.id} hover>
+                    <Td className="whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
                       {fmtDateTime(l.created_at)}
-                    </td>
-                    <td className="td font-bold text-slate-800 dark:text-slate-200">
+                    </Td>
+                    <Td className="font-bold text-slate-800 dark:text-slate-200">
                       {l.username || 'Sistem'}
-                    </td>
-                    <td className="td">
+                    </Td>
+                    <Td>
                       <Badge
                         tone={
                           l.action.includes('delete') || l.action.includes('reset')
@@ -319,24 +324,20 @@ export function DataClient() {
                       >
                         {l.action}
                       </Badge>
-                    </td>
-                    <td className="td text-xs font-mono text-slate-600 dark:text-slate-300">
+                    </Td>
+                    <Td className="text-xs font-mono text-slate-600 dark:text-slate-300">
                       {l.table_name} {l.record_id != null ? '#' + l.record_id : ''}
-                    </td>
-                    <td className="td max-w-xs truncate text-xs text-slate-500 dark:text-slate-400">
+                    </Td>
+                    <Td className="max-w-xs truncate text-xs text-slate-500 dark:text-slate-400">
                       {l.new_value || l.old_value || '—'}
-                    </td>
-                  </tr>
+                    </Td>
+                  </Trow>
                 ))}
                 {logs.length === 0 && (
-                  <tr>
-                    <td className="td py-8 text-center text-sm text-slate-500" colSpan={5}>
-                      Belum ada riwayat aktivitas yang tercatat.
-                    </td>
-                  </tr>
+                  <TEmpty colSpan={5}>Belum ada riwayat aktivitas yang tercatat.</TEmpty>
                 )}
               </tbody>
-            </table>
+            </Table>
           </div>
           {canMore && (
             <div className="p-1 text-center">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PageSkeleton, Empty, api, apiRetry, Badge, Button, Toast, useConfirm, useToast } from '@/components/ui';
+import { PageSkeleton, Table, Td, Trow, Empty, api, apiRetry, Badge, Button, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime, startOfDayJakarta } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit, payMethodLabel } from '@/lib/pay-methods';
@@ -350,19 +350,19 @@ export function LaporanClient({
                 id={`lap-detail-${s.id}`}
                 className="mt-3 border-t border-slate-200 pt-3 dark:border-navy-700"
               >
-                <table className="w-full text-xs">
+                <Table className="text-xs">
                   <tbody>
                     {s.items.map((it, i) => (
-                      <tr key={i} className="table-row">
-                        <td className="td font-medium">{it.product_name}</td>
-                        <td className="td text-right text-slate-500">
+                      <Trow key={i}>
+                        <Td className="font-medium">{it.product_name}</Td>
+                        <Td className="text-right text-slate-500">
                           {it.qty} {it.unit} × {rp(it.unit_price)}
-                        </td>
-                        <td className="td text-right font-bold">{rp(it.subtotal)}</td>
-                      </tr>
+                        </Td>
+                        <Td className="text-right font-bold">{rp(it.subtotal)}</Td>
+                      </Trow>
                     ))}
                   </tbody>
-                </table>
+                </Table>
                 <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                   Kasir: {s.kasir_name || 'Kasir'} · Transaksi #{s.id}
                 </p>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, Badge, Button, Empty, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { Table, Td, Th, TEmpty, Trow, api, Badge, Button, Empty, Modal, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { isPointUnit, pointReasonLabel, type PointEntry } from '@/lib/points';
 import { MemberQrBadge } from './member-qr-badge';
@@ -300,46 +300,46 @@ export function MemberClient() {
       <div className="card overflow-hidden">
         <div ref={listRef} onScroll={onScroll} className="max-h-[640px] overflow-auto">
         <div className="hidden sm:block">
-        <table className="w-full min-w-[36rem]">
+        <Table minW="min-w-[36rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
-              <th className="th">Nama & Kontak</th>
-              <th className="th">Alamat / Asrama</th>
-              <th className="th">Poin Loyalitas</th>
-              <th className="th">Total Belanja</th>
-              <th className="th">Terdaftar Sejak</th>
-              <th className="th text-right">Aksi</th>
+              <Th>Nama & Kontak</Th>
+              <Th>Alamat / Asrama</Th>
+              <Th>Poin Loyalitas</Th>
+              <Th>Total Belanja</Th>
+              <Th>Terdaftar Sejak</Th>
+              <Th className="text-right">Aksi</Th>
             </tr>
           </thead>
           <tbody>
             {padTop > 0 && (
-              <tr aria-hidden="true" style={{ height: padTop }}>
-                <td colSpan={6} />
-              </tr>
+              <Trow aria-hidden style={{ height: padTop }}>
+                <Td colSpan={6} />
+              </Trow>
             )}
             {shown.map((m) => (
-              <tr key={m.id} className="table-row hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
-                <td className="td">
+              <Trow key={m.id} hover>
+                <Td>
                   <p className="font-bold text-slate-900 dark:text-slate-100">{m.name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {m.phone || 'Tanpa no. HP'}
                   </p>
-                </td>
-                <td className="td text-slate-600 dark:text-slate-300">
+                </Td>
+                <Td className="text-slate-600 dark:text-slate-300">
                   {m.address || '—'}
-                </td>
-                <td className="td">
+                </Td>
+                <Td>
                   <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}>
                     ★ {m.points} poin
                   </Badge>
-                </td>
-                <td className="td font-bold text-slate-800 dark:text-slate-200">
+                </Td>
+                <Td className="font-bold text-slate-800 dark:text-slate-200">
                   {rp(m.total_spent)}
-                </td>
-                <td className="td text-xs text-slate-500 dark:text-slate-400">
+                </Td>
+                <Td className="text-xs text-slate-500 dark:text-slate-400">
                   {fmtDateTime(m.created_at)}
-                </td>
-                <td className="td text-right">
+                </Td>
+                <Td className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Button variant="link" size="sm" onClick={() => openEdit(m)}>
                       Ubah
@@ -372,30 +372,28 @@ export function MemberClient() {
                       Hapus
                     </Button>
                   </div>
-                </td>
-              </tr>
+                </Td>
+              </Trow>
             ))}
             {padBottom > 0 && (
-              <tr aria-hidden="true" style={{ height: padBottom }}>
-                <td colSpan={6} />
-              </tr>
+              <Trow aria-hidden style={{ height: padBottom }}>
+                <Td colSpan={6} />
+              </Trow>
             )}
             {members.length === 0 && (
-              <tr>
-                <td className="td" colSpan={6}>
-                  <Empty
-                    compact
-                    icon={<Users className="h-6 w-6" />}
-                    text={qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
-                    {...(!qDeb
-                      ? { ctaLabel: 'Tambah member', ctaOnClick: () => openEdit() }
-                      : {})}
-                  />
-                </td>
-              </tr>
+              <TEmpty colSpan={6}>
+                <Empty
+                  compact
+                  icon={<Users className="h-6 w-6" />}
+                  text={qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
+                  {...(!qDeb
+                    ? { ctaLabel: 'Tambah member', ctaOnClick: () => openEdit() }
+                    : {})}
+                />
+              </TEmpty>
             )}
           </tbody>
-        </table>
+        </Table>
         </div>
 
         {/* Mobile: kartu member (<sm) — data sama (jendela virtual) dengan tabel.

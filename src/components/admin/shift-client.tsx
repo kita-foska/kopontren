@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Button, Toast, useConfirm, useToast } from '@/components/ui';
+import { Table, Td, Th, TEmpty, Trow, api, Badge, Button, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { payMethodLabel } from '@/lib/pay-methods';
 
@@ -124,39 +124,39 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
       ))}
 
       <div className="card hidden overflow-x-auto sm:block">
-        <table className="w-full min-w-[40rem]">
+        <Table minW="min-w-[40rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
-              <th className="th">Shift</th>
-              <th className="th">Kasir</th>
-              <th className="th">Periode</th>
-              <th className="th text-right">Transaksi</th>
-              <th className="th text-right">Total</th>
-              <th className="th">Metode</th>
-              <th className="th">Setor</th>
+              <Th>Shift</Th>
+              <Th>Kasir</Th>
+              <Th>Periode</Th>
+              <Th className="text-right">Transaksi</Th>
+              <Th className="text-right">Total</Th>
+              <Th>Metode</Th>
+              <Th>Setor</Th>
             </tr>
           </thead>
           <tbody>
             {all.map((s) => (
-              <tr key={s.id} className="table-row">
-                <td className="td">
+              <Trow key={s.id}>
+                <Td>
                   #{s.id}
                   {s.label ? <span className="text-xs text-slate-500"> · {s.label}</span> : null}
-                </td>
-                <td className="td text-sm">{s.kasir_name || '-'}</td>
-                <td className="td text-xs text-slate-500 dark:text-slate-400">
+                </Td>
+                <Td className="text-sm">{s.kasir_name || '-'}</Td>
+                <Td className="text-xs text-slate-500 dark:text-slate-400">
                   {fmtDateTime(s.start_time)}
                   {s.end_time ? ' → ' + fmtDateTime(s.end_time) : ''}
-                </td>
-                <td className="td text-right">{s.sales_count}</td>
-                <td className="td text-right font-bold">{rp(s.sales_total)}</td>
-                <td className="td text-xs text-slate-500 dark:text-slate-400">
+                </Td>
+                <Td className="text-right">{s.sales_count}</Td>
+                <Td className="text-right font-bold">{rp(s.sales_total)}</Td>
+                <Td className="text-xs text-slate-500 dark:text-slate-400">
                   {Object.entries(s.by_method || {})
                     .filter(([, v]) => (v as number) > 0)
                     .map(([k, v]) => payMethodLabel(k) + ' ' + rp(v as number))
                     .join(' · ') || '-'}
-                </td>
-                <td className="td">
+                </Td>
+                <Td>
                   {isAdmin ? (
                     <label className="flex items-center gap-1 text-xs">
                       <input
@@ -170,23 +170,21 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
                   ) : (
                     <Badge tone={s.setor ? 'green' : 'gray'}>{s.setor ? 'Sudah setor' : 'Belum setor'}</Badge>
                   )}
-                </td>
-              </tr>
+                </Td>
+              </Trow>
             ))}
             {all.length === 0 && openList.length === 0 && (
-              <tr>
-                <td className="td py-6 text-center text-sm text-slate-500" colSpan={7}>
-                  Belum ada shift yang ditutup.
-                  <div className="mt-2">
-                    <Button variant="ghost" as="a" size="sm" href="/kasir">
-                      Buka di Kasir
-                    </Button>
-                  </div>
-                </td>
-              </tr>
+              <TEmpty colSpan={7}>
+                Belum ada shift yang ditutup.
+                <div className="mt-2">
+                  <Button variant="ghost" as="a" size="sm" href="/kasir">
+                    Buka di Kasir
+                  </Button>
+                </div>
+              </TEmpty>
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Mobile: kartu rekap shift (<sm) — data sama dengan tabel. */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, api, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { Button, Modal, Table, Td, Th, TEmpty, Trow, Toast, api, useConfirm, useToast } from '@/components/ui';
 import { fmtDateTime } from '@/lib/format';
 
 type Log = {
@@ -176,23 +176,23 @@ export function AuditClient() {
       </div>
 
       <div className="card hidden overflow-x-auto sm:block">
-        <table className="w-full min-w-[44rem]">
+        <Table minW="min-w-[44rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
-              <th className="th">Waktu</th>
-              <th className="th">Pengguna</th>
-              <th className="th">Aksi</th>
-              <th className="th">Tabel</th>
-              <th className="th">Perubahan</th>
+              <Th>Waktu</Th>
+              <Th>Pengguna</Th>
+              <Th>Aksi</Th>
+              <Th>Tabel</Th>
+              <Th>Perubahan</Th>
             </tr>
           </thead>
           <tbody>
             {logs.map((l) => (
-              <tr key={l.id} className="table-row">
-                <td className="td text-xs text-slate-500 dark:text-slate-400">
+              <Trow key={l.id}>
+                <Td className="text-xs text-slate-500 dark:text-slate-400">
                   {fmtDateTime(l.created_at)}
-                </td>
-                <td className="td">
+                </Td>
+                <Td>
                   <span
                     className="block text-sm font-bold"
                     title={
@@ -207,13 +207,13 @@ export function AuditClient() {
                     ({l.username}
                     {l.user_role ? ', ' + l.user_role : ''})
                   </span>
-                </td>
-                <td className="td text-xs font-semibold text-accent-500 dark:text-accent-300">
+                </Td>
+                <Td className="text-xs font-semibold text-accent-500 dark:text-accent-300">
                   {l.action}
                   {l.record_id ? ' #' + l.record_id : ''}
-                </td>
-                <td className="td text-xs text-slate-500 dark:text-slate-400">{l.table_name}</td>
-                <td className="td max-w-xs text-xs text-slate-500 dark:text-slate-400">
+                </Td>
+                <Td className="text-xs text-slate-500 dark:text-slate-400">{l.table_name}</Td>
+                <Td className="max-w-xs text-xs text-slate-500 dark:text-slate-400">
                   {l.old_value || l.new_value ? (
                     <button
                       type="button"
@@ -234,18 +234,14 @@ export function AuditClient() {
                   ) : (
                     <span className="text-slate-600 dark:text-slate-400">—</span>
                   )}
-                </td>
-              </tr>
+                </Td>
+              </Trow>
             ))}
             {logs.length === 0 && (
-              <tr>
-                <td className="td py-6 text-center text-sm text-slate-500" colSpan={5}>
-                  Tidak ada log yang cocok dengan filter.
-                </td>
-              </tr>
+              <TEmpty colSpan={5}>Tidak ada log yang cocok dengan filter.</TEmpty>
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Mobile: kartu log audit (<sm) — data sama dengan tabel; tombol detail
