@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { canAccess, currentUser, roleHome } from '@/lib/auth';
 import { db } from '@/db';
-import { rp, startOfDayJakarta } from '@/lib/format';
+import { kpiDelta, rp, startOfDayJakarta, type KpiDelta } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { LowStockClient } from '@/components/admin/low-stock-client';
-import { Button } from '@/components/ui';
+import { Button, TermTip } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,12 +106,58 @@ export default async function AdminDashboardPage() {
     return { ...p, avg_daily: avg, days_left: daysLeft };
   });
 
-  const cards = [
+  // I-3 UX-6: delta konteks KPI — nilai periode vs periode sebelumnya
+  // ("▲ 12% · vs kemarin"), dihitung di server; TermTip menjelaskan pakan.
+  const salesY = (
+    (await d
+      .prepare(
+        `SELECT COUNT(*) c, COALESCE(SUM(total),0) t FROM sales
+         WHERE created_at >= ? AND created_at < ?`
+      )
+      .get(startOfDayJakarta(-1), today)) as { c: number; t: number }
+  );
+  const cashPrev7 = (
+    (await d
+      .prepare(
+        `SELECT
+         (SELECT COALESCE(SUM(total),0) FROM sales WHERE created_at >= ? AND created_at < ?)
+         + (SELECT COALESCE(SUM(amount),0) FROM cash_entries WHERE type='income' AND created_at >= ? AND created_at < ?) AS inn,
+         (SELECT COALESCE(SUM(qty*unit_cost),0) FROM purchases WHERE created_at >= ? AND created_at < ?)
+         + (SELECT COALESCE(SUM(amount),0) FROM expenses WHERE created_at >= ? AND created_at < ?)
+         + (SELECT COALESCE(SUM(amount),0) FROM cash_entries WHERE type='expense' AND created_at >= ? AND created_at < ?) AS out`
+      )
+      .get(d14, d7, d14, d7, d14, d7, d14, d7, d14, d7)) as { inn: number; out: number }
+  );
+  type DashCard = {
+    label: string;
+    value: string;
+    sub: string;
+    href: string;
+    warn?: boolean;
+    delta?: KpiDelta & { tip: string };
+  };
+  const TIP_SALES =
+    'Perbandingan: penjualan hari ini vs kemarin (WIB 00:00–23:59). ' +
+    'Persentase dihitung dari total penjualan tercatat — retur & void ' +
+    'sudah mengurangi jumlah. "baru" = kemarin tidak ada penjualan; ' +
+    '"stabil" = perubahan < 0,5%.';
+  const TIP_CASH =
+    'Arus kas = masuk (penjualan + kas masuk manual) − keluar ' +
+    '(pembelian supplier + pengeluaran + kas keluar manual). ' +
+    'Perbandingan: 7 hari terakhir vs 7 hari sebelumnya (WIB).';
+  const deltaSales = kpiDelta(salesToday.t, salesY.t, 'vs kemarin');
+  const deltaCash = kpiDelta(
+    cash7.inn - cash7.out,
+    cashPrev7.inn - cashPrev7.out,
+    'vs 7 hari sebelumnya'
+  );
+  const cards: DashCard[] = [
     {
       label: 'Penjualan Hari Ini',
       value: rp(salesToday.t),
       sub: salesToday.c + ' transaksi · laba ' + rp(salesToday.t - cogsToday),
       href: '/admin/laporan',
+      delta: deltaSales ? { ...deltaSales, tip: TIP_SALES } : undefined,
     },
     {
       label: 'Belum Direkap',
@@ -125,6 +171,7 @@ export default async function AdminDashboardPage() {
       value: rp(cash7.inn - cash7.out),
       sub: 'masuk ' + rp(cash7.inn) + ' / keluar ' + rp(cash7.out),
       href: '/admin/kas',
+      delta: deltaCash ? { ...deltaCash, tip: TIP_CASH } : undefined,
     },
     {
       label: 'Member Aktif',
@@ -178,6 +225,20 @@ export default async function AdminDashboardPage() {
               {c.value}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">{c.sub}</p>
+            {c.delta && (
+              <p
+                className={
+                  'mt-0.5 text-xs font-semibold tabular-nums ' +
+                  (c.delta.tone === 'down'
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : c.delta.tone === 'flat'
+                      ? 'text-slate-500 dark:text-slate-400'
+                      : 'text-emerald-600 dark:text-emerald-400')
+                }
+              >
+                <TermTip tip={c.delta.tip}>{c.delta.text}</TermTip>
+              </p>
+            )}
           </Link>
         ))}
       </div>

@@ -1,3 +1,28 @@
+/**
+ * I-3 UX-6 (FASE I): delta konteks KPI dashboard — level dasar
+ * "Explain This Number": bandingkan nilai periode dgn periode
+ * sebelumnya; hasil dirender sebagai "▲ 12% · vs kemarin" + TermTip
+ * penjelasan pakan di sisi halaman.
+ * `label` = teks komparasi (mis. 'vs kemarin', 'vs 30 hari sebelumnya').
+ * Return null = tak ada yang layak ditampilkan (keduanya 0).
+ * Tone: 'new' = periode sebelumnya kosong (0) & sekarang ada aktivitas;
+ * 'flat' = perubahan < 0,5% (dibulatkan jadi 0).
+ */
+export type KpiDelta = {
+  text: string;
+  tone: 'up' | 'down' | 'flat' | 'new';
+};
+
+export function kpiDelta(cur: number, prev: number, label: string): KpiDelta | null {
+  if (cur === 0 && prev === 0) return null;
+  if (prev === 0) return { text: '▲ baru · ' + label, tone: 'new' };
+  const pct = Math.round(((cur - prev) / prev) * 100);
+  if (pct === 0) return { text: '≈ stabil · ' + label, tone: 'flat' };
+  return pct > 0
+    ? { text: '▲ ' + pct + '% · ' + label, tone: 'up' }
+    : { text: '▼ ' + Math.abs(pct) + '% · ' + label, tone: 'down' };
+}
+
 export function rp(n: number | null | undefined): string {
   const v = Number(n ?? 0);
   return 'Rp ' + v.toLocaleString('id-ID');
