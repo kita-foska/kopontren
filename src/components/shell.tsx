@@ -8,6 +8,7 @@ import { BottomNav } from './bottom-nav';
 import { SessionWatcher } from './session-watcher';
 import { NotificationBell } from './notification-bell';
 import { Avatar, ROLE_LABEL } from './ui';
+import { Breadcrumb } from './breadcrumb';
 import { fetchTimeout } from '@/lib/fetch-util';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
@@ -16,6 +17,9 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
   // Bottom nav (mobile) tampil di semua halaman Shell kecuali /kasir —
   // POS punya sticky bottom bar sendiri (jangan sampai jadi dua bar).
   const showBottomNav = pathname !== '/kasir';
+  // UX-5 H4: breadcrumb visual mung rute nested /admin/* /pengurus/*.
+  const showBreadcrumb =
+    pathname.startsWith('/admin/') || pathname.startsWith('/pengurus/');
 
   // Ganti tema: sinkron state class 'dark' + cookie (logika sama persis
   // dengan ThemeToggle lama agar preferensi tema tidak hilang).
@@ -95,6 +99,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
           'mx-auto max-w-6xl px-4 py-5 ' + (showBottomNav ? 'pb-28 md:pb-16' : 'pb-16')
         }
       >
+        {showBreadcrumb && <Breadcrumb path={pathname} />}
         {children}
       </main>
       {showBottomNav && <BottomNav role={user.role} />}

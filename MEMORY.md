@@ -1,6 +1,31 @@
 # MEMORY
 
 ## 2026-09-27
+### UX-5 H4: Breadcrumb visual (nested /admin/* /pengurus/*) — SELESAI 27 Sep
+- Implementasi (commit H4, 27 Sep, dual-push master+main):
+  komponen pure `src/components/breadcrumb.tsx` + 3 hunk di
+  `src/components/shell.tsx` (import + flag `showBreadcrumb` +
+  render di top `<main>`). **0 edit halaman** — rute nested =
+  18 `/admin/*` + 1 `/pengurus/dashboard` ikut otomatis.
+- Desain visual-only (tanpa logika): "Kopontren" = link tunggal
+  ke `/`; item tengah inert (tanpa href — /admin/ & /pengurus/
+  tak punya index page); item terakhir `aria-current="page"`
+  (bold). Separator `/`. Kamus label terpusat `LABELS` (gaya
+  H2) + fallback kapital: QRIS, Data & Backup, Pengaturan
+  Member; 3 level `/admin/notifications/settings` = "Kopontren
+  / Admin / Notifikasi / Pengaturan". Deep-link SPA = milik H5.
+- **Gap H2 ditemukan saat audit H4**: guard-fail
+  `pengurus/dashboard` masih `redirect('/')` (file ke-11;
+  batch H2 = 10 file). Fix = commit terpisah (H2 fix):
+  import `roleHome` + `redirect(roleHome(user.role))`.
+  Total I-5 selesai = **11 file** (kasir, laporan, piutang,
+  retur, pengurus/dashboard, admin/{audit,dashboard,hutang,
+  pengaturan-member,shift,zakat}).
+- `tsc --noEmit` EXIT 0. **Pixel-check Gus Fi (BELUM)**:
+  1 hal. `/admin/*` (mis. `/admin/produk`) di light + dark +
+  mobile (wrap): breadcrumb tampil "Kopontren / Admin /
+  Produk"; link "Kopontren" kerja; item terakhir bold.
+
 ### MULTI-ROLE: ditunda ke UX-5.5/UX-6 (keputusan Gus Fi, 27 Sep)
 - **Pertanyaan Gus Fi (27 Sep)**: account multi-role (siji akun duwe
   role langkung saka siji, mis. admin + member + kasir + pengurus).
