@@ -1,6 +1,46 @@
 # MEMORY
 
 ## 2026-09-27
+### UX-4 FASE E: audit Card + FilterPill/TogglePill - audit SELESAI 27 Sep (E1-E4 nunggu ACC)
+- **Audit read-only (ora kode)**, laporan lengkap nang sesi AI 27 Sep:
+  - Card: hero 5 site drifty (3x `shadow-md` vs 2x flat; aturan
+    `.hero-bg` = flat tanpa shadow); modal/panel 3 radius x 3
+    shadow (Modal `card`+`rounded-xl`, QR/label `rounded-2xl
+    shadow-xl`, bell/tooltip `rounded-xl shadow-lg`); tile hover
+    drifty (admin `hover:-translate-y-0.5` vs pengurus
+    +`hover:shadow-md`); stray `shadow` mentah (`sidebar.tsx:187`,
+    print `pos-client:2110`); anomali `pos-client:1781`
+    `font-bold shadow-md` (shadow neng teks - pixel-check Gus).
+  - Pill: label lama `sub-sm` (audit 26 Sep) ora ana nang tree -
+    chip saiki raw button. Kandidat: F1 `laporan-client:248-259`
+    (chip periode rounded-full); F2 `pos-client:1213-1241` (tab
+    kategori, hover micro-drift vs F1); T1 `pos-client:1561-1599`
+    (segmented payment + "Campur" amber); T2 `produk-client:551-562`
+    (toggle status soft-tint emerald/slate); T3 `produk-client:623-632`
+    (toggle satuyune nang mobile - `<Button variant="ghost"
+    active>`; 2 bahasa visual kanggo satusemanti).
+  - `Button` wis ada `active` + `aria-pressed` (ui.tsx) -> pill
+    gampang dipasang; 79 raw-button exception tetep (blok sumber
+    pill = 5).
+- **Proposal (dhuwurena)**: Opsi A - kelas CSS + 2 primitive, ora
+  `<Card>` React (container statis): `globals.css` += `.card-hero`
+  (flat), `.card-dialog` (`rounded-2xl shadow-xl`), `.card-pop`
+  (`rounded-xl shadow-lg`), `.tile-hover`; `ui.tsx` += `<FilterPill>`
+  (unifikasi F1+F2) + `<TogglePill>` (mode `tinted`=T2 /
+  `segmented`=T1, accent `amber`, ikon + badge opsional).
+- **Commit plan**: E0 (docs+koreksi kp, commit iki) -> E1
+  (primitif add-only) -> E2 (migrasi card, ~8 file, delta visual)
+  -> E3 (migrasi pill, 3 file, delta visual) -> E4 (docs +
+  dual-push + sinkron kp-zip3); maks 7 commit manawa E2/E3 split.
+- **Tunggu ACC Gus (Q1-Q5)**: Q1 hero flat (3x shadow-md ilang)?
+  Q2 dialog = rounded-2xl+shadow-xl, popover = rounded-xl+shadow-lg?
+  Q3 T3 mobile -> tinted selaras T2? Q4 `pos-client:1781` shadow
+  teks dihapus? Q5 deprecate `C:\Users\baiti\Desktop\kp` clone
+  (rekomendasi piyambak: iyo)?
+- **Koreksi kp (S5)**: section "Aturan kerja repo" wis di-update
+  (3 entitas; kp-zip3 = kanonik). E0 mung docs -> ora ana
+  sinkron kp.
+
 ### UX-4 FASE D: tabel primitives + cleanup CSS legacy — SELESAI 27 Sep (4 commit, dual-push master+main)
 - **D0 `4dd28c2`**: chore(css) — hapus 5 rules `.btn` yatim
   (`.btn`/`.btn-primary`/`.btn-ghost`/`.btn-danger`/`.btn-amber`)
@@ -106,12 +146,21 @@
 - Catatan: push S3 ikut mem-push `a16e058` (revisi laporan 26 Sep)
   yang tadinya baru local D.
 
-### Aturan kerja repo (S5, 26 Sep)
+### Aturan kerja repo (S5, 26 Sep - koreksi FASE E0, 27 Sep)
 - **Hanya `D:\Ngudi Susilo\kopontren-app` utk write + commit (primary).**
-- `C:\Users\baiti\Desktop\kp` = reference (hanya baca). Pasca-push dari
-  D, bila perlu kp: `git fetch origin && git reset --hard origin/master`
-  (untracked scratch di kp dihapus manual dulu).
-- kp di-resync ke head origin setiap selesai push.
+- 3 entitas "kp" (koreksi 27 Sep):
+  1. `D:\Ngudi Susilo\kp-zip3` = **snapshot file reference resmi**
+     (plain file, BUKAN git clone; tanpa MEMORY.md/TODO.md).
+     Resync = salin file dr D (`Copy-Item -Recurse src` + file
+     terkait), verifikasi hash per file. Terakhir sinkron: pasca
+     D2b `5ac6080` (27 Sep, 5 file hash-verify).
+  2. `C:\Users\baiti\Desktop\kp` = git clone lama (stale @ `9a20a1b`
+     D2a, 2 commit behind per 27 Sep). Bila perlu: `git fetch
+     origin && git reset --hard origin/master` (untracked scratch
+     dibersihkan manual dulu). Rekomendasi: DEPREKASI utk sinkron
+     rutin (kp-zip3 = kanonik); keputusan final = Q5 FASE E.
+  3. `D:\Ngudi Susilo\kp-zip` = snapshot legas (layout lama,
+     tanpa `src/app`) - DEPREKASI, jangan dipakai lagi.
 
 ### UX-2: EmptyState CTA + PanduanKasir (26 Sep)
 - **Acuan goal document (Gus Fi, 3 file, 95 usulan, 8 fase UX-2 s.d.

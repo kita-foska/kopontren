@@ -854,6 +854,32 @@ Phase B tetep disengka (chip sub-sm dll). **Berikutnya: FASE E**
   L833/L906 (masih merujuk CSS legacy `.th`/`.td` sing wis
   dihapus).
 
+**UPDATE 27 Sep (FASE E):** audit Card + FilterPill/TogglePill
+SELESAI (read-only, ora kode; laporan lengkap nang sesi AI 27
+Sep). Temuan ringkas: hero 5 site drifty shadow; modal/panel 3
+radius x 3 shadow; tile hover drifty; stray `shadow` + anomali
+`pos-client:1781` (pixel-check); kandidat pill F1 (laporan),
+F2 (pos tab, hover drift), T1 (pos segmented payment), T2/T3
+(produk toggle desktop vs mobile). Proposal: `.card-hero` /
+`.card-dialog` / `.card-pop` / `.tile-hover` (globals.css) +
+`<FilterPill>` / `<TogglePill>` (ui.tsx).
+- [x] E0: docs commit - koreksi S5 kp note (3 entitas, kp-zip3 =
+      kanonik) + catat audit FASE E nang MEMORY/TODO (commit iki)
+- [ ] E1: primitif add-only (globals.css + ui.tsx) - nunggu ACC
+- [ ] E2: migrasi card (home, dashboard admin/pengurus,
+      notifications x2, member-qr-badge, product-label, sidebar)
+      - delta visual, nunggu ACC + pixel-check
+- [ ] E3: migrasi pill (laporan-client, pos-client, produk-client)
+      - delta visual, nunggu ACC + pixel-check
+- [ ] E4: docs + dual-push + sinkron kp-zip3
+- [ ] ACC Gus Q1-Q5: (1) hero flat? (2) standarisasi panel
+      dialog/popover? (3) T3 selaras tinted? (4) hapus shadow
+      `pos-client:1781`? (5) deprecate C: clone?
+- [ ] Housekeeping: 17 file untracked nang repo root (scratch
+      `_* .js`, `o1-o4/t1-t3.txt`, `buildout.txt`, `mem-qris.txt`,
+      `uix1.txt`, 2 CSV stok 09/23) - putusekhe Gus: ilangke
+      utawa tambahke .gitignore.
+
 
 ---
 
@@ -869,8 +895,9 @@ Phase B tetep disengka (chip sub-sm dll). **Berikutnya: FASE E**
 > D1 @ 0637ee7 · D2a @ 9a20a1b · D2b @ 5ac6080 + hapus CSS legacy
 > `.th`/`.td`/`.table-row`; sisa: pixel-check real device Gus Fi —
 > 4 halaman admin durung visual diverifikasi; 79 raw button Phase B
-> tetep disengka); next FASE E: Card unification +
-> FilterPill/TogglePill.** Laporan lengkap: `PROGRESS-2026-09.md`.
+> tetep disengka); FASE E: audit Card + FilterPill/TogglePill
+> SELESAI 27 Sep (E0 docs), E1-E4 nunggu ACC Q1-Q5.
+> Laporan lengkap: `PROGRESS-2026-09.md`.
 
 ## Arah utama (visi user)
 
@@ -885,7 +912,7 @@ backup aman, offline tetap percaya diri.
 | ----- | ------------------------------------------------------------------- | ------ |
 | UX-2  | EmptyState CTA + Panduan Kasir                                      | ✅ selesai 26 Sep (@ `32d0538` + `e7130c3`) |
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
-| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–D SELESAI 27 Sep; next FASE E: Card unification + FilterPill/TogglePill) | ✅ A–D selesai 27 Sep: A @ `5698b74` · B Button @ `592b230` · C @ `3a59c9a` · D tabel @ `0637ee7`+`9a20a1b`+`5ac6080`; sisa: pixel-check real device (4 hal. admin) + FASE E rancang |
+| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–D SELESAI 27 Sep; next FASE E: Card unification + FilterPill/TogglePill) | ✅ A–D selesai 27 Sep: A @ `5698b74` · B Button @ `592b230` · C @ `3a59c9a` · D tabel @ `0637ee7`+`9a20a1b`+`5ac6080`; sisa: pixel-check real device (4 hal. admin); FASE E: audit selesai 27 Sep (E0 docs), E1-E4 nunggu ACC Q1-Q5 |
 | UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat | 📋 rancang |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
