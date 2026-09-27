@@ -154,7 +154,7 @@ export function NotificationListClient() {
                     <p className="text-sm font-bold">{n.title}</p>
                   </div>
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{n.message}</p>
-                  <p className="mt-1 text-2xs font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="mt-1 card-label">
                     {fmtTime(n.created_at)}
                   </p>
                 </div>

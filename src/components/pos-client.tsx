@@ -2264,7 +2264,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       <Modal open={cheatOpen} title="Panduan Kasir" onClose={() => setCheatOpen(false)}>
         <div className="space-y-4">
           <section>
-            <h3 className="mb-1.5 text-1xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <h3 className="mb-1.5 card-label">
               Cara transaksi
             </h3>
             <ol className="space-y-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
@@ -2293,7 +2293,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </ol>
           </section>
           <section>
-            <h3 className="mb-1.5 text-1xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <h3 className="mb-1.5 card-label">
               Pintasan
             </h3>
             <div className="grid grid-cols-1 gap-1.5 text-xs sm:grid-cols-2">
@@ -2316,7 +2316,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </p>
           </section>
           <section>
-            <h3 className="mb-1.5 text-1xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <h3 className="mb-1.5 card-label">
               Jika ada masalah
             </h3>
             <ul className="space-y-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">

@@ -90,6 +90,11 @@ body {
   .label {
     @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400;
   }
+  .card-label {
+    /* FASE F2: unifikasi micro-label KPI (4 varian -> varian dominan):
+       text-xs font-bold uppercase tracking-wide + warna slate. */
+    @apply text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400;
+  }
   /* ===== Modernisasi UI: hero FLAT (tanpa gradient) + micro-animasi 0.2s ===== */
   .hero-bg {
     /* Solid flat token accent-500 (var --accent di :root) —
