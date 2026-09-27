@@ -968,6 +968,41 @@ F2 (pos tab, hover drift), T1 (pos segmented payment), T2/T3
       wizard · I-3 route hierarchy · G2-full ternary ·
       notif entity-focus `?focus=<id>` (butuh kolom meta
       `notifications` + produk-client).
+      (angka I-x di baris ini = temuan audit FASE H, BUKAN
+      nomor commit FASE I di bawah — namespace beda).
+
+**FASE I (UX-6 Attention System)** — ACC Gus Fi, 27 Sep
+(urutan: I-3→I-4→I-5→I-2→I-6→I-8; **I-7 DITUNDA**; per commit:
+diff → ACC → tsc (+build utk kode) → dual-push master+main):
+- [x] I-1: docs audit 8 kategori (A–H) + rencana per commit —
+      DONE 27 Sep @ commit I-1 (MEMORY.md § UX-6 FASE I;
+      koreksi: target edit = `ui.tsx` monolit, bukan ui/*).
+- [ ] I-3: delta konteks KPI — admin: hari ini vs kemarin;
+      pengurus: 30h vs 30h-sebelumnya (compute server) +
+      TermTip pakan delta; 4–5 kartu.
+- [ ] I-4: CTA di 5 Empty tanpa CTA — low-stock →
+      /admin/produk; notification-list → settings
+      (**admin-only**; pengurus = tanpa CTA, pola kondisional
+      H3); zakat x2 → form zakat; member dashboard → POS
+      (kondisional).
+- [ ] I-5: primitive `ErrorState` (pesan + tombol "Muat ulang"
+      + `<details>` teknis) — terapkan 2 blok err laporan-admin
+      (L461/L601) + seragamkan pola retry konsinyasi.
+- [ ] I-2: toast tone `critical` (auto-dismiss 90 dtk,
+      manual-close; **sound = SKIP V1**) + slot undo
+      `showToast(msg, tone, action?)` + 4 titik contoh.
+- [ ] I-6: `useConfirm` + `risk:1..5` (L1-2 tombol biasa;
+      L3-4 tombol merah + ringkasan dampak; L5 + input nama
+      entitas) — 3 contoh: hapus transaksi L3, purge audit L4,
+      resetAll data L5.
+- [ ] I-8: kartu "Apa yang berubah" di /admin/dashboard +
+      /pengurus/dashboard (5 `/api/audit` terakhir + KPI mover;
+      CTA → Audit).
+- [ ] I-7: **DITUNDA (ACC 27 Sep)** — void transaksi dgn
+      alasan struktural (picker alasan + catatan bebas).
+      Alasan: butuh penentuan pengurus (daftar alasan sah) +
+      risiko alur bisnis. Dikerjakan sbg **fase UX-6.5 /
+      tersendiri** setelah daftar alasan di-ACC.
 
 
 ---
@@ -1012,7 +1047,7 @@ backup aman, offline tetap percaya diri.
 | UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); FASE F SELESAI 27 Sep (F0 `d1f7574` + F1 `2ff5091` token map 61 situs + F2 `ce7e0cd` .card-label 10 situs + F3 docs+resync kp-zip3); sisa: pixel-check HP 8 item; FASE G1+G2 SELESAI 27 Sep (G1 `99a3b20` Modal size + G2 `0ffb072` Toast tone 54 tag); G3 = docs + resync kp-zip3; G4 = pixel-check 5 item; G2-full = ternary `pos-client:714/892/901` |
 | UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat (audit + ACC Q1-Q4 27 Sep; plan H0-H6: MEMORY.md § UX-5 FASE H) | ✅ SELESAI H0–H6 27 Sep: H1 `c41ddfd` · H3 `b5b4927` · H2 (+fix `faf4849`) · H4 `33ce3f4` · H5 `a0b9f79` · H6 (commit H6); sisa = pixel-check H4+H5 (list: MEMORY § UX-5 H4/H5) + P3/P4 tashih |
 | UX-5.5 | **Multi-role (M1)** — siji akun multi-role; target kalila wadi kabutuhan nyata (keputusan 27 Sep: ditunda, liha Kelompok M; trigger = Gus Fi ngramesake kabutuhan) | 📋 ditunda |
-| UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
+| UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 🚀 FASE I ACC 27 Sep: I-1 done · I-3/I-4/I-5/I-2/I-6/I-8 planned · **I-7 ditunda** (daftar alasan = pengurus) — liha § FASE I di atas |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
 | UX-8  | **Operational Safety**: audit trail komunikatif, backup rasa aman, freeze/immutable, health center, reconciliation | 📋 rancang |
 

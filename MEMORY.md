@@ -1,6 +1,76 @@
 # MEMORY
 
 ## 2026-09-27
+### UX-6 (FASE I): audit sistem komunikasi + rencana commit — I-1 SELESAI 27 Sep
+- **Perintah (ACC Gus Fi, 27 Sep)**: audit read-only UX-6
+  (Attention System) + rencana implementasi. Eksekusi
+  **I-1, I-3, I-4, I-5, I-2, I-6, I-8**; **I-7 (void alasan
+  struktural) = DITUNDA** (butuh penentuan pengurus: daftar
+  alasan sah + risiko alur bisnis → fase UX-6.5 setelah ACC).
+  Prioritas: I-3→I-4→I-5→I-2→I-6→I-8. Aturan sesi: per commit
+  diff → ACC → `tsc --noEmit` (+ build utk commit kode) →
+  dual-push master+main; sw.js TIDAK PERNAH di-commit; D:
+  target tulis, `kp-zip3` = read-only.
+- **Koreksi konteks penting (audit)**: file `ui/toasts.tsx` /
+  `ui/confirm.tsx` / `ui/index.ts` **TIDAK PERNAH ada** (disk +
+  `git log --all -- src/components/ui/` kosong) — target edit
+  UX-6 = **`src/components/ui.tsx` monolit (1.112 baris)**:
+  Toast `L449+`, `useConfirm` `L525+`, `Empty`/`PageSkeleton`/
+  Table. Commit H5 `a0b9f79` real = 7 file (bukan 4 + ui/*).
+- **Hasil audit 8 kategori** (verified read-only 27 Sep; detail
+  commit-per-commit di TODO.md § FASE I):
+  - A Attention: 20 jenis notif / 3 prioritas (`notify.ts`
+    L41-68); bell 30 dtk + badge 99+ + deep-link SPA (H5) +
+    view pengurus read-only; **gap: tone `critical` (toast
+    hanya info/success/error/warning), digest 0, DND 0**.
+  - B Empty: 20 situs (16 file): **15 CTA, 5 tanpa CTA** → I-4:
+    `low-stock` L84, `notification-list` L141, `zakat` L637+L652,
+    member dashboard L153 ("Belum ada transaksi").
+  - C Loading: `PageSkeleton` standar; **3 situs "Memuat…"
+    polos** = `laporan-admin` L459 (laba-rugi), L599 (neraca),
+    L312 (jam sibuk).
+  - D Error: pesan manusia di helper fetch OK; retry button
+    hanya `konsinyasi` L234-246; err blocks `laporan-admin`
+    L461/L601 = teks-only; **collapsible detail teknis 0**.
+  - E Success: toast sukses aktif; **undo 0** (ikon `Undo2`
+    hanya utk menu Retur, bukan fitur undo).
+  - F Confirm: `window.confirm` = 0 (sisa doc-comment);
+    `useConfirm` 11 file / 14 titik; **risk level 0;
+    reason struktural utk void 0**.
+  - G Help: `TermTip` 23 titik (UX-3); **Explain-This-Number 0;
+    Help Center central 0**.
+  - H Dashboard: admin = 6 KPI + LowStock (prediksi hari habis)
+    + WA deep-link; pengurus = 5 KPI 30h + chart 7/30/365 +
+    export CSV/XLSX/PDF/WA; **delta konteks 0; "what changed"/
+    aktivitas feed 0** (data feed tersedia: `/api/audit`).
+    Catatan: komentar halaman pengurus "deteksi anomali" TIDAK
+    ada di client (hanya `SalesBarChart`) — anomali bukan
+    fitur, jangan di-klaim.
+- **Refinements ACC (implementasi commit kode)**: I-2 = critical
+  auto-dismiss 90 dtk + manual-close, **sound = SKIP (V1)**,
+  undo = `showToast(msg, tone, action?)` (4 titik contoh
+  dikonfirmasi saat implementasi); I-3 = delta server-side
+  (admin: hari ini vs kemarin; pengurus: 30h vs 30h-sebelumnya)
+  + TermTip pakan delta, 4–5 kartu; I-4 CTA: low-stock →
+  `/admin/produk`, notification-list → settings (**admin-only**;
+  pengurus = tanpa CTA, pola kondisional H3), zakat x2 → form
+  zakat, member dashboard → POS (kondisional); I-5 = primitive
+  `ErrorState` (pesan + "Muat ulang" + `<details>` teknis) di
+  2 blok `laporan-admin` + seragamkan pola konsinyasi; I-6 =
+  `useConfirm` + `risk:1..5` (L1-2 tombol biasa, L3-4 merah +
+  ringkasan dampak, L5 + input nama entitas) — 3 contoh:
+  hapus transaksi L3, purge audit L4, resetAll data L5; I-8 =
+  kartu 2–3 baris di 2 dashboard (5 `/api/audit` terakhir +
+  KPI mover, CTA → Audit).
+- **Out of scope FASE I** (jangan balik tanpa keputusan baru):
+  DND global · digest harian (dicukupi report P2/P3 harian/
+  mingguan/bulanan) · Help Center central · multi-role M1
+  (tetap backlog UX-5.5/UX-6, trigger = kebutuhan nyata).
+- **I-1 (commit ini)**: dokumen audit + rencana (MEMORY +
+  TODO § FASE I, termasuk status DITUNDA I-7). 0 kode.
+  Langkah berikutnya = **I-3** (diff → ACC → tsc + build →
+  dual-push).
+
 ### UX-5 H4: Breadcrumb visual (nested /admin/* /pengurus/*) — SELESAI 27 Sep
 - Implementasi (commit H4, 27 Sep, dual-push master+main):
   komponen pure `src/components/breadcrumb.tsx` + 3 hunk di
