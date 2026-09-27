@@ -1,6 +1,63 @@
 # MEMORY
 
 ## 2026-09-27
+### UX-4 FASE G: Modal size + Toast tones - G1+G2 SELESAI 27 Sep
+- **G1 @ `99a3b20` (dual-push master+main, 3 file)**: `Modal`
+  entuk prop `size?: 'sm'|'md'|'lg'` (default `'md'` = kelas
+  lawas persis → zero-delta). Token `MODAL_WIDTH`: sm=`max-w-xs`
+  (320), md=`max-w-lg` (512, default), lg=`max-w-2xl` (672).
+  Migrasi 2 dialog manual: `member-qr-badge` (default `md` —
+  layar QR + meta) + `product-label` (`sm` — 1 kolom label).
+  tsc EXIT 0, build EXIT 0 (53/53).
+- **G2 @ `0ffb072` (dual-push, 23 file +156/−108)**: toast
+  semantik. `ToastTone = 'info'|'success'|'error'|'warning'`
+  (ui.tsx) + `TOAST_TONE_CLASS` (info = kelas lawas persis
+  zero-delta; success emerald-600, error rose-600 +
+  `role="alert"` + `aria-live="assertive"` + auto-close 6s,
+  warning amber-500). `Toast` entuk prop `tone` (default `'info'`).
+  `useToast` saiki return 4-tuple `[msg, showToast, clearToast,
+  tone]` — backward-compatible (destructure 2/3 elemen lawas
+  tetep valid). 22 file consumer ketambah `tone={toastTone}` +
+  54 call ketag: **53 'error'** (mangga 22 file; LEFT=0) +
+  **1 'warning'** (member-qr-badge: popup diblokir browser).
+  Verifikasi: tsc EXIT 0 + build EXIT 0 (53/53) +
+  `git status` = 23 M persis (sw.js untracked/gitignored —
+  ora ngrusak git).
+- **PITFALL KANGGO SESSION KENGSI (kritis)**: `member-qr-badge`
+  duwe `useEffect` deps `[member, onQrChanged, showToast]` —
+  elemen #2 lawas = `setMsg` (identitas stabil). Implentasi
+  `showToast`/`clearToast` anyar WAJIB **`useCallback`** (deps
+  kosong) sanalika efek ora re-run saben render (risk infinite
+  fetch loop). Identitas stabil dipunyatakne kaya lawas.
+- **Backlog G2-full (disingkirne, ora dipikuli G2-min)**:
+  `pos-client:714/892/901` = ternary campuran
+  success/error (`r.ok ? d.message : 'Transaksi gagal'` etc.)
+  — ditinggal `'info'`; butuh keputusan per kasus (mangkase
+  ngrusak UX-5).
+- **G3 (commit iki, dual-push)**: docs (MEMORY + TODO) + resync
+  `kp-zip3` (kp ← D: full-mirror `src/` + `README.md`;
+  `TODO.md`/`MEMORY.md` out-of-scope konvensi — kp snapshot
+  tanpa docs; `belanja-db.ts`/`backup.ts` = ora ana nang 2
+  sisi = konsisten).
+  **Pitfall resync**: `Copy-Item -Recurse src` = 7 file ing
+  folder `api/**/[id]/` ora kecopy (kurung siku = wildcard
+  regex PS, gagal diam-diam) — bener: `Copy-Item -LiteralPath`
+  per folder `[id]`. MD5 final: 0 differ.
+- **G4 = pixel-check Gus Fi (5 item)**:
+  1-3. 3 modals: **Panduan Kasir** (UX-2, ora owah G1/G2 —
+     kontrol), **QR member** (`md` default), **label produk**
+     (`sm`).
+  4. Toast `'error'` (contone: kas save gagal →
+     `bg-rose-600`, auto-close 6s).
+  5. Toast default `'info'` (kelas lawas persis →
+     zero-delta visual; kontrol positif).
+- **Aturane git (pencatetan FASE G)**: repo = **1 remote
+  tunggal `origin`** (github.com/kita-foska/kopontren,
+  dikonfirmasi 27 Sep) — dual-push = `git push origin master`
+  + `git push origin master:main`. `public/sw.js` =
+  untracked/gitignored (stempel build lokal; JANGAN
+  di-commit — sesuai aturan § Cleanup).
+
 ### UX-4 FASE F: Typography scale cleanup - SELESAI 27 Sep (F0-F3, dual-push master+main; sisa: pixel-check HP)
 - **Audit read-only (27 Sep, F0)**: `text-[10px]` = 26 +
   `text-[11px]` = 36 = **62 situs, 17 file** (ora ana
@@ -310,7 +367,7 @@
      (plain file, BUKAN git clone; tanpa MEMORY.md/TODO.md).
      Resync = salin file dr D (`Copy-Item -Recurse src` + file
      terkait), verifikasi hash per file. Terakhir sinkron: pasca
-     E4 (pasca `4572b3f`, 27 Sep, full-mirror `src/` +
+     G3 FASE G (pasca `0ffb072`, 27 Sep, full-mirror `src/` +
      hash-verify MD5 per file 0 differ).
   2. `C:\Users\baiti\Desktop\kp` = git clone lama (stale @
      `9a20a1b` D2a) - **DEPRECATED (keputusan final Q5, 27 Sep)**:

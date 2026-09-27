@@ -921,8 +921,25 @@ F2 (pos tab, hover drift), T1 (pos segmented payment), T2/T3
       resync kp-zip3 `src/` (mirror + MD5).
 - [ ] Pixel-check F1+F2 (Gus Fi; 8 item nang
       MEMORY.md seksi FASE F).
-**Berikutnya (opsional): FASE G** - modal size + toast
-tone (usulan backlog UX; nunggu ACC Gus).
+**FASE G (modal size + toast tone)** — ACC Gus, 27 Sep:
+- [x] G1 (`99a3b20`): `Modal` prop `size` sm/md/lg (default `md`
+      zero-delta) + migrasi 2 dialog manual (`member-qr-badge`,
+      `product-label`). Dual-push.
+- [x] G2 (`0ffb072`): `Toast` tone `info/success/error/warning`
+      (info = kelas lawas persis); 22 file consumer + 54 call
+      ketag (53 `'error'` + 1 `'warning'`). `useToast` 4-tuple,
+      `showToast`/`clearToast` = `useCallback` (pitfall
+      `member-qr-badge` useEffect — detail MEMORY.md § FASE G).
+      Dual-push.
+- [x] G3 (commit iki): docs (MEMORY + TODO) + resync `kp-zip3`
+      (full-mirror `src/` + `README.md`, MD5 0 differ).
+- [ ] G4: pixel-check 5 item (Gus Fi — 3 modals: Panduan Kasir,
+      QR member `md`, label produk `sm`; 2 toasts: 1 error
+      `rose-600` + 1 default `info`). Daftar ing MEMORY.md §
+      FASE G.
+- [ ] G2-full backlog (mangkase UX-5): ternary campuran
+      success/error `pos-client:714/892/901` — ditinggal
+      `'info'`, butuh keputusan per kasus.
 
 
 ---
@@ -964,7 +981,7 @@ backup aman, offline tetap percaya diri.
 | ----- | ------------------------------------------------------------------- | ------ |
 | UX-2  | EmptyState CTA + Panduan Kasir                                      | ✅ selesai 26 Sep (@ `32d0538` + `e7130c3`) |
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
-| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); FASE F SELESAI 27 Sep (F0 `d1f7574` + F1 `2ff5091` token map 61 situs + F2 `ce7e0cd` .card-label 10 situs + F3 docs+resync kp-zip3); sisa: pixel-check HP 8 item + FASE G opsional (modal size + toast tone) |
+| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); FASE F SELESAI 27 Sep (F0 `d1f7574` + F1 `2ff5091` token map 61 situs + F2 `ce7e0cd` .card-label 10 situs + F3 docs+resync kp-zip3); sisa: pixel-check HP 8 item; FASE G1+G2 SELESAI 27 Sep (G1 `99a3b20` Modal size + G2 `0ffb072` Toast tone 54 tag); G3 = docs + resync kp-zip3; G4 = pixel-check 5 item; G2-full = ternary `pos-client:714/892/901` |
 | UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat | 📋 rancang |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
