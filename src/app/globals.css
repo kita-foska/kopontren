@@ -57,6 +57,29 @@ body {
        shadow-sm — nilai identik dengan versi lama, hanya referensi token). */
     @apply rounded-card border border-slate-200 bg-white shadow-card dark:border-navy-700 dark:bg-navy-800;
   }
+  /* ===== UX-4 FASE E (E1): kelas kartu seragam — additive, migrasi E2
+     memakai kelas ini (drift shadow/radius antar-halaman ditutup). ===== */
+  .card-hero {
+    /* hero FLAT (aturan .hero-bg: tanpa gradient/shadow) — menggantikan
+       kombinasi ad-hoc `hero-bg rounded-2xl p-5 text-white [shadow-md]`. */
+    @apply rounded-card p-5 text-white;
+    background: var(--accent);
+  }
+  .card-dialog {
+    /* dialog/modal (Modal, QR badge, product label): radius token 16px
+       + shadow-xl. */
+    @apply rounded-card bg-white shadow-xl dark:bg-navy-800;
+  }
+  .card-pop {
+    /* popover/panel sementara (bell, dropdown): radius 12px + border +
+       shadow-lg (beda kelas dg dialog agar elevasi popovers konsisten). */
+    @apply rounded-xl border border-slate-200 bg-white shadow-lg dark:border-navy-700 dark:bg-navy-800;
+  }
+  .tile-hover {
+    /* tile dashboard: lift + shadow on hover (menyamakan drift hover
+       admin vs pengurus dashboard). */
+    @apply transition hover:-translate-y-0.5 hover:shadow-md;
+  }
   .input {
     @apply w-full rounded-field border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-500/30 dark:border-navy-600 dark:bg-navy-900 dark:text-slate-100;
     min-height: 44px; /* target sentuh a11y (standar 44px) */

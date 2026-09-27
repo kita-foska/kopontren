@@ -955,3 +955,91 @@ export function TEmpty({
   );
 }
 
+/* ── UX-4 FASE E (E1): primitive pill — FilterPill + TogglePill
+   Chip/toggle seragam (additive; migrasi E3 memakai komponen ini):
+   - FilterPill: chip rounded-full utk filter/tab (periode laporan,
+     kategori POS). Inactive = border + hover bg (versi lengkap,
+     termasuk dark:hover — menstandarkan micro-drift tab POS).
+   - TogglePill: 2 mode — 'tinted' (toggle status produk: soft-tint
+     emerald/slate, rounded-full) + 'segmented' (metode pembayaran
+     POS: rounded-lg + ikon + badge nomor; accent = 'accent'|'amber').
+   a11y: type default 'button' + aria-pressed; atribut button lainnya
+   disebarkan (role/aria-selected utk tablist POS, title, disabled). */
+
+type PillHTMLProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'type'>;
+
+/** Chip filter/segmen (rounded-full). `active` = terpilih: fill accent
+ *  (+ border senada utk tinggi stabil) + shadow-sm + aria-pressed. */
+export function FilterPill({
+  active,
+  children,
+  className,
+  ...rest
+}: PillHTMLProps & {
+  active: boolean;
+  children?: React.ReactNode;
+}) {
+  const cls = [
+    'shrink-0 rounded-full px-3 py-1 text-xs font-bold transition',
+    active
+      ? 'border border-accent-500 bg-accent-500 text-white shadow-sm'
+      : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800',
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return (
+    <button type="button" aria-pressed={active} {...rest} className={cls}>
+      {children}
+    </button>
+  );
+}
+
+/** Toggle segmen/status. `mode` 'tinted' = chip status (Aktif/Nonaktif
+ *  produk, rounded-full soft-tint); `mode` 'segmented' = tombol segmen
+ *  (metode bayar POS, rounded-lg + ikon + badge nomor opsional).
+ *  `accent` = warna fill saat aktif (segmented; 'amber' utk "Campur"). */
+export function TogglePill({
+  active,
+  mode = 'segmented',
+  accent = 'accent',
+  icon,
+  badge,
+  children,
+  className,
+  ...rest
+}: PillHTMLProps & {
+  active: boolean;
+  mode?: 'tinted' | 'segmented';
+  accent?: 'accent' | 'amber';
+  /** Ikon depan (lucide; kelas sizing oleh pemanggil, mis. h-3.5 w-3.5). */
+  icon?: React.ReactNode;
+  /** Badge kecil di kanan (segmented; mis. nomor hotkey 1-4). */
+  badge?: React.ReactNode;
+}) {
+  const base =
+    mode === 'tinted'
+      ? 'rounded-full px-2.5 py-0.5 text-xs font-bold transition'
+      : 'flex items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-bold transition';
+  const state =
+    mode === 'tinted'
+      ? active
+        ? 'bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400'
+        : 'bg-slate-500/15 text-slate-500 hover:bg-slate-500/25'
+      : active
+        ? accent === 'amber'
+          ? 'bg-amber-500 text-white shadow-sm'
+          : 'bg-accent-500 text-white shadow-sm'
+        : 'border border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-navy-600 dark:text-slate-300 dark:hover:bg-navy-800';
+  const cls = [base, state, className ?? ''].filter(Boolean).join(' ');
+  return (
+    <button type="button" aria-pressed={active} {...rest} className={cls}>
+      {icon}
+      {children && <span className="min-w-0 truncate">{children}</span>}
+      {badge != null && (
+        <span className="ml-auto shrink-0 text-[10px] font-extrabold opacity-60">{badge}</span>
+      )}
+    </button>
+  );
+}
+
