@@ -21,6 +21,27 @@
   Total I-5 selesai = **11 file** (kasir, laporan, piutang,
   retur, pengurus/dashboard, admin/{audit,dashboard,hutang,
   pengaturan-member,shift,zakat}).
+
+### UX-5 H5: Notif deep-link SPA + bell pengurus (view admin|pengurus) — SELESAI 27 Sep
+- Implementasi (commit `a0b9f79`, 27 Sep, dual-push master+main;
+  7 file): `auth.ts` +`isNotifViewer` (admin|pengurus);
+  `shell.tsx` L93 bell admin|pengurus; `notification-bell.tsx`
+  `onItem` = `router.push` (SPA, tanpa reload) + link eksternal
+  `window.open('_blank')`; guard `/api/notifications` (list/count/
+  read) + halaman `/admin/notifications` saka `isAdmin` →
+  `isNotifViewer`, guard-fail = `roleHome(user.role)` (pola H2);
+  copy hero "(admin & pengurus)".
+- **Keputusan Q3 = opsi (a)**: VIEW = admin + pengurus
+  (read-only); PENERIMA notifikasi tetep **admin-only**
+  (`notify.ts` `getAdminUserIds` unchanged) → bell pengurus =
+  count 0. Follow-up "pengurus sebagai penerima" (prefensi +
+  opt-in push) = backlog UX-6+. Settings + send + cron tetep
+  admin-only.
+- Pixel-check (Gus Fi, 6 item): (1) login **pengurus** → bell
+  keliatan (count 0); (2) `/admin/notifications` bukak
+  (read-only); (3) settings tetep guarded; (4) login **kasir** →
+  `/admin/notifications` = redirect `roleHome`; (5) link internal
+  = SPA (ora reload); (6) link eksternal = new tab (bila ana).
 - `tsc --noEmit` EXIT 0. **Pixel-check Gus Fi (BELUM)**:
   1 hal. `/admin/*` (mis. `/admin/produk`) di light + dark +
   mobile (wrap): breadcrumb tampil "Kopontren / Admin /
@@ -120,6 +141,11 @@
   bell pengurus **wajib** ngemong guard `/api/notifications`
   (GET/count) + `/admin/notifications` saka `isAdmin` →
   admin|pengurus (view read-only).
+- **H5 — SELESAI 27 Sep @ `a0b9f79`** (Q3 opsi (a)): viewer =
+  admin + pengurus (read-only); penerima notifikasi tetep
+  admin-only (`getAdminUserIds` unchanged → bell pengurus = 0);
+  detail + pixel-check 6 item = § UX-5 H5; follow-up "pengurus
+  sebagai penerima" (prefensi + opt-in push) = backlog UX-6+.
 - **Plan commit (ACC'd)**: H0 docs (iki) → H1 regroup +
   item-level filter + fix I-10 → H3 member personal dashboard
   (filtered: poin/status/QR + transaksi saya; read-only; CTA QR
