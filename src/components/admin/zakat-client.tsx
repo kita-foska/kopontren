@@ -383,7 +383,10 @@ export function ZakatClient() {
       </div>
 
       {/* Aksi */}
-      <div className="card flex flex-wrap items-center gap-2 p-4 print:hidden">
+      <div
+        id="zakat-aksi"
+        className="card flex flex-wrap items-center gap-2 p-4 print:hidden"
+      >
         <Button variant="primary" onClick={() => load()} disabled={busy}>
           Hitung Ulang
         </Button>
@@ -540,7 +543,10 @@ export function ZakatClient() {
           tak dihapus (jejak audit).
         </p>
         {c?.is_admin ? (
-          <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div
+            id="zakat-gold"
+            className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3"
+          >
             <div>
               <label className="label">Karat</label>
               <input
@@ -634,7 +640,18 @@ export function ZakatClient() {
             </Table>
           </div>
         ) : goldLog ? (
-          <Empty text="Belum ada log verifikasi harga emas." />
+          // I-4 UX-6: empty state CTA "Catat Verifikasi" scroll ke form
+          // harga emas di atas (admin-only; form ini hanya render is_admin).
+          <Empty
+            text="Belum ada log verifikasi harga emas."
+            ctaLabel="Catat Verifikasi"
+            ctaVariant="ghost"
+            ctaOnClick={() =>
+              document
+                .getElementById('zakat-gold')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+          />
         ) : null}
       </div>
 
@@ -649,7 +666,23 @@ export function ZakatClient() {
           </p>
         </div>
         {history && history.length === 0 ? (
-          <Empty text="Belum ada riwayat zakat. Gunakan tombol “Simpan ke Riwayat”." />
+          // I-4 UX-6: empty state CTA "Simpan ke Riwayat" — scroll ke kartu
+          // Aksi (formulir pencatatan: media pembayaran + catatan + tombol
+          // Simpan ke Riwayat). CTA hanya bila perhitungan sudah termuat
+          // (tombol tsb disabled tanpa calc).
+          <Empty
+            text="Belum ada riwayat zakat."
+            ctaLabel={c ? 'Simpan ke Riwayat' : undefined}
+            ctaVariant="ghost"
+            ctaOnClick={
+              c
+                ? () =>
+                    document
+                      .getElementById('zakat-aksi')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                : undefined
+            }
+          />
         ) : history && history.length > 0 ? (
           <div className="overflow-x-auto">
             <Table>

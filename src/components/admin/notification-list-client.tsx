@@ -61,7 +61,19 @@ function fmtTime(iso: string) {
   });
 }
 
-export function NotificationListClient() {
+/**
+ * Pusat notifikasi in-app (/admin/notifications): feed 50 terakhir,
+ * filter semua/belum-dibaca, tandai dibaca (satu & semua).
+ * I-4 UX-6: empty state CTA "Ubah Pengaturan Notifikasi" ->
+ * /admin/notifications/settings — hanya role 'admin' (rute di-guard
+ * isAdmin); pengurus view-only tidak diberi CTA (pola H3: tanpa akses
+ * ke target = tanpa CTA, bukan link mati).
+ */
+export function NotificationListClient({
+  canManageNotif = false,
+}: {
+  canManageNotif?: boolean;
+}) {
   const [items, setItems] = useState<Notif[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [loading, setLoading] = useState(true);
@@ -138,7 +150,15 @@ export function NotificationListClient() {
         {loading ? (
           <p className="px-4 py-8 text-center text-sm text-slate-500">Memuat…</p>
         ) : items.length === 0 ? (
-          <Empty text={filter === 'unread' ? 'Tidak ada notifikasi belum dibaca' : 'Belum ada notifikasi'} />
+          <Empty
+            text={
+              filter === 'unread'
+                ? 'Tidak ada notifikasi belum dibaca'
+                : 'Belum ada notifikasi'
+            }
+            ctaLabel={canManageNotif ? 'Ubah Pengaturan Notifikasi' : undefined}
+            ctaHref={canManageNotif ? '/admin/notifications/settings' : undefined}
+          />
         ) : (
           <ul className="divide-y divide-slate-100 dark:divide-navy-700">
             {items.map((n) => (

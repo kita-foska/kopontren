@@ -264,7 +264,7 @@ export default async function AdminDashboardPage() {
             </Button>
           </div>
         </div>
-        <LowStockClient items={stockForecast} />
+        <LowStockClient items={stockForecast} canManageStock={canAccess(user, 'stock')} />
       </div>
     </Shell>
   );

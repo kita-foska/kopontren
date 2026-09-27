@@ -150,7 +150,15 @@ export function MemberDashboardClient({
       <div className="card fade-up p-4">
         <h2 className="mb-2 font-bold">Transaksi Saya</h2>
         {sales.length === 0 ? (
-          <Empty compact text="Belum ada transaksi atas nama Anda." />
+          // I-4 UX-6: empty state CTA POS kondisional (pola H3: showPosCta
+          // hanya bila role punya akses /kasir — member murni tanpa CTA,
+          // bukan link mati). Mirip CTA "Riwayat Poin & Reward" di atas.
+          <Empty
+            compact
+            text="Belum ada transaksi atas nama Anda."
+            ctaLabel={showPosCta ? 'Mulai Belanja (POS)' : undefined}
+            ctaHref={showPosCta ? '/kasir' : undefined}
+          />
         ) : (
           <ul className="divide-y divide-slate-100 dark:divide-slate-800">
             {sales.map((s) => (

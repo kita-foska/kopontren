@@ -1,7 +1,7 @@
 # MEMORY
 
 ## 2026-09-27
-### UX-6 (FASE I): audit sistem komunikasi + rencana commit — I-1 SELESAI 27 Sep
+### UX-6 (FASE I): audit sistem komunikasi + rencana commit — I-1 & I-3 SELESAI 27 Sep
 - **Perintah (ACC Gus Fi, 27 Sep)**: audit read-only UX-6
   (Attention System) + rencana implementasi. Eksekusi
   **I-1, I-3, I-4, I-5, I-2, I-6, I-8**; **I-7 (void alasan
@@ -70,6 +70,34 @@
   TODO § FASE I, termasuk status DITUNDA I-7). 0 kode.
   Langkah berikutnya = **I-3** (diff → ACC → tsc + build →
   dual-push).
+- **I-3 (DONE `e484cbb`, dual-push master+main, 27 Sep)**:
+  `kpiDelta(cur, prev, label)` di `lib/format.ts` + delta
+  server-side 2 dashboard (admin: 2 kartu "Penjualan Hari Ini"
+  vs kemarin + "Arus Kas 7 Hari" vs 7d-sebelumnya; pengurus:
+  3 kartu 30h vs 30h-sebelumnya + "Member Aktif" absolut
+  "▲ N baru"). Tone emerald/rose/slate; TermTip pakan delta.
+  tsc + build EXIT 0.
+  **Pixel-check Gus (halaman tak bisa dirender di env ini):**
+  - `/admin/dashboard` light/dark/mobile — baris delta 2 kartu;
+    TermTip via ikon `?` (hover/tap).
+  - `/pengurus/dashboard` light/dark/mobile — sama, 3 kartu.
+  - Edge case: periode sebelumnya kosong → "▲ baru"; tak
+    berubah (<0.5%) → "≈ stabil"; 0 vs 0 → baris delta tidak
+    render.
+- **Koreksi audit I-4 (27 Sep, saat re-audit pre-edit)**:
+  target I-4 di path aktual — `notification-list-client.tsx`
+  (`src/components/admin/`, dipakai 1 rute `/admin/notifications`
+  view admin+pengurus); zakat ×2 = `zakat-client.tsx` di
+  `/admin/zakat` (empty log verifikasi emas + empty riwayat,
+  **bukan** form "Belum diisi" — form hanya state "Memuat…"
+  saat load); member dashboard "Transaksi Saya" =
+  `personal-dashboard-client.tsx` (sudah ada pola CTA
+  kondisional `showPosCta` di "Riwayat Poin & Reward").
+  Guard target diverifikasi: `/admin/produk` = `canAccess('stock')`
+  (admin/manajer/gudang; pengurus & kasir tak termasuk → CTA
+  low-stock dibuat KONDISIONAL, pola H3) ·
+  `/admin/notifications/settings` = `isAdmin` (admin saja →
+  CTA notif list juga kondisional, prop `canManageNotif`).
 
 ### UX-5 H4: Breadcrumb visual (nested /admin/* /pengurus/*) — SELESAI 27 Sep
 - Implementasi (commit H4, 27 Sep, dual-push master+main):

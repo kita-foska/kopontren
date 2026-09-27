@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { currentUser, isNotifViewer, roleHome } from '@/lib/auth';
+import { currentUser, isAdmin, isNotifViewer, roleHome } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import { NotificationListClient } from '@/components/admin/notification-list-client';
 
@@ -24,7 +24,7 @@ export default async function AdminNotificationsPage() {
           Pusat notifikasi dalam aplikasi &amp; push (admin &amp; pengurus)
         </p>
       </div>
-      <NotificationListClient />
+      <NotificationListClient canManageNotif={isAdmin(user)} />
     </Shell>
   );
 }

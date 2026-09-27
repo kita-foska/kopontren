@@ -18,8 +18,18 @@ type Item = {
  * Widget stok menipis: estimasi sisa hari (prediksi dari penjualan 14 hari
  * terakhir) + tombol kirim alert ke WhatsApp (deep-link wa.me — tanpa API
  * credentials; nomor tujuan dari settings toko, fallback share sheet).
+ * I-4 UX-6: empty state CTA "Kelola Produk" -> /admin/produk — hanya bila
+ * role punya akses tier 'stock' (admin/manajer/gudang); pengurus/kasir
+ * tak dapat akses tsb (redirect = dead-end) sehingga CTA disembunyikan
+ * (pola H3: CTA kondisional, bukan link mati).
  */
-export function LowStockClient({ items }: { items: Item[] }) {
+export function LowStockClient({
+  items,
+  canManageStock = false,
+}: {
+  items: Item[];
+  canManageStock?: boolean;
+}) {
   const [toast, showToast, , toastTone] = useToast();
   const [busy, setBusy] = useState(false);
 
@@ -81,7 +91,11 @@ export function LowStockClient({ items }: { items: Item[] }) {
         )}
       </div>
       {items.length === 0 ? (
-        <Empty text="Semua stok aman (≥ 10). Tidak ada alert." />
+        <Empty
+          text="Semua stok aman (≥ 10). Tidak ada alert."
+          ctaLabel={canManageStock ? 'Kelola Produk' : undefined}
+          ctaHref={canManageStock ? '/admin/produk' : undefined}
+        />
       ) : (
         <ul className="max-h-56 space-y-1.5 overflow-y-auto pr-1">
           {items.map((p) => (
