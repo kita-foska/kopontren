@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Button, PageSkeleton, Empty, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
+import { Button, PageSkeleton, Empty, Table, Td, Th, TEmpty, Trow, api, Badge, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { Trash2 } from 'lucide-react';
 
@@ -141,19 +141,19 @@ export function KasClient() {
       </div>
 
       <div className="card hidden overflow-x-auto sm:block">
-        <table className="w-full min-w-[36rem]">
+        <Table minW="min-w-[36rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
-              <th className="th">Jenis</th>
-              <th className="th">Uraian</th>
-              <th className="th">Waktu</th>
-              <th className="th text-right">Nominal</th>
+              <Th>Jenis</Th>
+              <Th>Uraian</Th>
+              <Th>Waktu</Th>
+              <Th className="text-right">Nominal</Th>
             </tr>
           </thead>
           <tbody>
             {data.rows.map((r) => (
-              <tr key={r.kind + r.id} className="table-row">
-                <td className="td">
+              <Trow key={r.kind + r.id}>
+                <Td>
                   <Badge tone={kindBadge[r.kind]?.tone || 'gray'}>
                     {kindBadge[r.kind]?.label || r.kind}
                   </Badge>
@@ -167,39 +167,37 @@ export function KasClient() {
                       hapus
                     </Button>
                   )}
-                </td>
-                <td className="td text-sm">{r.label}</td>
-                <td className="td text-xs text-slate-500 dark:text-slate-400">
+                </Td>
+                <Td className="text-sm">{r.label}</Td>
+                <Td className="text-xs text-slate-500 dark:text-slate-400">
                   {fmtDateTime(r.created_at)}
-                </td>
-                <td
+                </Td>
+                <Td
                   className={
-                    'td text-right font-bold ' +
+                    'text-right font-bold ' +
                     (r.sign > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')
                   }
                 >
                   {r.sign > 0 ? '+' : '−'} {rp(r.amount)}
-                </td>
-              </tr>
+                </Td>
+              </Trow>
             ))}
             {data.rows.length === 0 && (
-              <tr>
-                <td className="td" colSpan={4}>
-                  <Empty
-                    compact
-                    text="Belum ada gerakan kas."
-                    ctaLabel="Catat jurnal kas"
-                    ctaOnClick={() =>
-                      document
-                        .getElementById('kas-form')
-                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  />
-                </td>
-              </tr>
+              <TEmpty colSpan={4}>
+                <Empty
+                  compact
+                  text="Belum ada gerakan kas."
+                  ctaLabel="Catat jurnal kas"
+                  ctaOnClick={() =>
+                    document
+                      .getElementById('kas-form')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }
+                />
+              </TEmpty>
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       {/* Mobile: kartu jurnal kas (<sm) — data sama dengan tabel; tombol hapus

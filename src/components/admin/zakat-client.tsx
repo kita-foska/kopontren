@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Button, Empty, TermTip, Toast, useToast } from '@/components/ui';
+import { api, Badge, Button, Empty, Table, Td, Th, Trow, TermTip, Toast, useToast } from '@/components/ui';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { fmtDate, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
@@ -597,40 +597,41 @@ export function ZakatClient() {
         ) : null}
         {goldLog && goldLog.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <Table>
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500 dark:border-navy-800">
-                  <th className="py-2 pr-3">Tgl. Harga</th>
-                  <th className="py-2 pr-3">Karat</th>
-                  <th className="py-2 pr-3 text-right">Rp/gram</th>
-                  <th className="py-2 pr-3">Sumber</th>
-                  <th className="py-2">Oleh</th>
+                  <Th>Tgl. Harga</Th>
+                  <Th>Karat</Th>
+                  <Th className="text-right">Rp/gram</Th>
+                  <Th>Sumber</Th>
+                  <Th>Oleh</Th>
                 </tr>
               </thead>
               <tbody>
                 {goldLog.slice(0, 20).map((r, i) => (
-                  <tr
+                  <Trow
                     key={r.id}
-                    className={`border-b border-slate-100 last:border-0 dark:border-navy-800 ${
+                    border="bottom"
+                    className={`last:border-0 ${
                       i === 0 ? 'bg-emerald-50/60 dark:bg-emerald-900/10' : ''
                     }`}
                   >
-                    <td className="py-2 pr-3">
+                    <Td>
                       {fmtDate(r.price_date)}
                       {i === 0 ? (
                         <Badge tone="green"> terkini</Badge>
                       ) : null}
-                    </td>
-                    <td className="py-2 pr-3">{r.karat}</td>
-                    <td className="py-2 pr-3 text-right font-bold">{rp(r.price_per_gram)}</td>
-                    <td className="py-2 pr-3 text-slate-500 dark:text-slate-400">
+                    </Td>
+                    <Td>{r.karat}</Td>
+                    <Td className="text-right font-bold">{rp(r.price_per_gram)}</Td>
+                    <Td className="text-slate-500 dark:text-slate-400">
                       {r.source || '—'}
-                    </td>
-                    <td className="py-2 text-slate-500 dark:text-slate-400">{r.decided_by}</td>
-                  </tr>
+                    </Td>
+                    <Td className="text-slate-500 dark:text-slate-400">{r.decided_by}</Td>
+                  </Trow>
                 ))}
               </tbody>
-            </table>
+            </Table>
           </div>
         ) : goldLog ? (
           <Empty text="Belum ada log verifikasi harga emas." />
@@ -651,41 +652,38 @@ export function ZakatClient() {
           <Empty text="Belum ada riwayat zakat. Gunakan tombol “Simpan ke Riwayat”." />
         ) : history && history.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <Table>
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500 dark:border-navy-800">
-                  <th className="py-2 pr-3">Tanggal</th>
-                  <th className="py-2 pr-3">Status</th>
-                  <th className="py-2 pr-3">Pembayaran</th>
-                  <th className="py-2 pr-3 text-right">Harta Dagang</th>
-                  <th className="py-2 pr-3 text-right">Nishab</th>
-                  <th className="py-2 pr-3 text-right">Zakat</th>
-                  <th className="py-2">Catatan</th>
+                  <Th>Tanggal</Th>
+                  <Th>Status</Th>
+                  <Th>Pembayaran</Th>
+                  <Th className="text-right">Harta Dagang</Th>
+                  <Th className="text-right">Nishab</Th>
+                  <Th className="text-right">Zakat</Th>
+                  <Th>Catatan</Th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((r) => (
-                  <tr
-                    key={r.id}
-                    className="border-b border-slate-100 last:border-0 dark:border-navy-800"
-                  >
-                    <td className="py-2 pr-3">{fmtDate(r.paid_at)}</td>
-                    <td className="py-2 pr-3">
+                  <Trow key={r.id} border="bottom" className="last:border-0">
+                    <Td>{fmtDate(r.paid_at)}</Td>
+                    <Td>
                       {r.status === 'wajib' ? (
                         <Badge tone="green">Wajib</Badge>
                       ) : (
                         <Badge tone="amber">Belum</Badge>
                       )}
-                    </td>
-                    <td className="py-2 pr-3">{PAYMENT_LABELS[r.payment_type] ?? r.payment_type}</td>
-                    <td className="py-2 pr-3 text-right">{rp(r.total_assets)}</td>
-                    <td className="py-2 pr-3 text-right">{rp(r.nishab)}</td>
-                    <td className="py-2 pr-3 text-right font-bold">{rp(r.zakat_amount)}</td>
-                    <td className="py-2 text-slate-500 dark:text-slate-400">{r.note || '—'}</td>
-                  </tr>
+                    </Td>
+                    <Td>{PAYMENT_LABELS[r.payment_type] ?? r.payment_type}</Td>
+                    <Td className="text-right">{rp(r.total_assets)}</Td>
+                    <Td className="text-right">{rp(r.nishab)}</Td>
+                    <Td className="text-right font-bold">{rp(r.zakat_amount)}</Td>
+                    <Td className="text-slate-500 dark:text-slate-400">{r.note || '—'}</Td>
+                  </Trow>
                 ))}
               </tbody>
-            </table>
+            </Table>
           </div>
         ) : null}
       </div>

@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { parseImport, importWarnings, type ImportRow, type RowError } from '@/lib/product-import';
 import { fetchTimeout } from '@/lib/fetch-util';
-import { Button } from '@/components/ui';
+import { Button, Table, Td, Th, Trow } from '@/components/ui';
 
 
 type BatchResult = {
@@ -190,32 +190,32 @@ export function MigrateClient() {
           </div>
           {rows.length > 0 && (
             <div className="max-h-72 overflow-auto rounded-lg border border-slate-200 dark:border-navy-600">
-              <table className="w-full text-left text-sm">
-                <thead className="sticky top-0 bg-slate-100 text-xs uppercase text-slate-500 dark:bg-navy-800 dark:text-slate-400">
+              <Table stickyHead className="text-left text-sm">
+                <thead className="text-xs uppercase text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th className="px-3 py-2">Baris</th>
-                    <th className="px-3 py-2">Nama</th>
-                    <th className="px-3 py-2">Kategori</th>
-                    <th className="px-3 py-2">HSL</th>
-                    <th className="px-3 py-2">HPP</th>
-                    <th className="px-3 py-2">Stok</th>
-                    <th className="px-3 py-2">Barcode</th>
+                    <Th>Baris</Th>
+                    <Th>Nama</Th>
+                    <Th>Kategori</Th>
+                    <Th>HSL</Th>
+                    <Th>HPP</Th>
+                    <Th>Stok</Th>
+                    <Th>Barcode</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.slice(0, 200).map((r) => (
-                    <tr key={`${r.line}-${r.barcode}`} className="border-t border-slate-100 dark:border-navy-700">
-                      <td className="px-3 py-1.5 text-slate-500">{r.line}</td>
-                      <td className="px-3 py-1.5">{r.name}</td>
-                      <td className="px-3 py-1.5">{r.category || '-'}</td>
-                      <td className="px-3 py-1.5">{rp(r.base_price)}</td>
-                      <td className="px-3 py-1.5">{rp(r.cost_price)}</td>
-                      <td className="px-3 py-1.5">{r.stock}</td>
-                      <td className="px-3 py-1.5">{r.barcode || '-'}</td>
-                    </tr>
+                    <Trow key={`${r.line}-${r.barcode}`}>
+                      <Td className="text-slate-500">{r.line}</Td>
+                      <Td>{r.name}</Td>
+                      <Td>{r.category || '-'}</Td>
+                      <Td>{rp(r.base_price)}</Td>
+                      <Td>{rp(r.cost_price)}</Td>
+                      <Td>{r.stock}</Td>
+                      <Td>{r.barcode || '-'}</Td>
+                    </Trow>
                   ))}
                 </tbody>
-              </table>
+              </Table>
               {rows.length > 200 && (
                 <p className="px-3 py-2 text-xs text-slate-500">
                   + {rows.length - 200} baris lain tidak ditampilkan.
@@ -227,22 +227,22 @@ export function MigrateClient() {
             <div className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-600 dark:text-rose-300">
               <p className="font-bold">{rowErrors.length} baris dilewati:</p>
               <div className="mt-1 max-h-48 overflow-y-auto">
-                <table className="w-full">
+                <Table>
                   <thead>
                     <tr className="text-left text-slate-500 dark:text-slate-400">
-                      <th className="pr-3 font-bold">Baris</th>
-                      <th className="font-bold">Alasan</th>
+                      <Th>Baris</Th>
+                      <Th>Alasan</Th>
                     </tr>
                   </thead>
                   <tbody>
                     {rowErrors.slice(0, 20).map((e, i) => (
-                      <tr key={i} className="border-t border-rose-500/10">
-                        <td className="pr-3 align-top font-mono">{e.line}</td>
-                        <td className="align-top">{stripBaris(e.message)}</td>
-                      </tr>
+                      <Trow key={i} border="none" className="border-t border-rose-500/10">
+                        <Td className="align-top font-mono">{e.line}</Td>
+                        <Td className="align-top">{stripBaris(e.message)}</Td>
+                      </Trow>
                     ))}
                   </tbody>
-                </table>
+                </Table>
               </div>
               {rowErrors.length > 20 && <p className="mt-1">… dan {rowErrors.length - 20} lagi</p>}
             </div>
@@ -330,22 +330,22 @@ export function MigrateClient() {
             <div className="mt-2 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-600 dark:text-rose-300">
               <p className="font-bold">{summary.failed.length} baris gagal di database:</p>
               <div className="mt-1 max-h-48 overflow-y-auto">
-                <table className="w-full">
+                <Table>
                   <thead>
                     <tr className="text-left text-slate-500 dark:text-slate-400">
-                      <th className="pr-3 font-bold">Baris</th>
-                      <th className="font-bold">Alasan</th>
+                      <Th>Baris</Th>
+                      <Th>Alasan</Th>
                     </tr>
                   </thead>
                   <tbody>
                     {summary.failed.map((e, i) => (
-                      <tr key={i} className="border-t border-rose-500/10">
-                        <td className="pr-3 align-top font-mono">{e.line}</td>
-                        <td className="align-top">{stripBaris(e.message)}</td>
-                      </tr>
+                      <Trow key={i} border="none" className="border-t border-rose-500/10">
+                        <Td className="align-top font-mono">{e.line}</Td>
+                        <Td className="align-top">{stripBaris(e.message)}</Td>
+                      </Trow>
                     ))}
                   </tbody>
-                </table>
+                </Table>
               </div>
             </div>
           )}

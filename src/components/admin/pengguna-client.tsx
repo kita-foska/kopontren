@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, api, Badge, Button, Modal, Toast, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Button, Modal, Table, Td, Th, TEmpty, Trow, Toast, useToast } from '@/components/ui';
 import { fmtDate } from '@/lib/format';
 
 type User = {
@@ -339,40 +339,40 @@ export function PenggunaClient() {
         </div>
       </div>
       <div className="card mt-4 overflow-x-auto">
-        <table className="w-full min-w-[36rem]">
+        <Table minW="min-w-[36rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
-              <th className="th">User</th>
-              <th className="th">Peran</th>
-              <th className="th">Status</th>
-              <th className="th">Dibuat</th>
-              <th className="th text-right">Aksi</th>
+              <Th>User</Th>
+              <Th>Peran</Th>
+              <Th>Status</Th>
+              <Th>Dibuat</Th>
+              <Th className="text-right">Aksi</Th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="table-row">
-                <td className="td">
+              <Trow key={u.id}>
+                <Td>
                   <p className="font-bold">{u.username}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{u.display_name || '—'}</p>
-                </td>
-                <td className="td">
+                </Td>
+                <Td>
                   <Badge tone={u.role === 'kasir' ? 'gray' : 'blue'}>
                     {u.role.toUpperCase()}
                   </Badge>
-                </td>
-                <td className="td">
+                </Td>
+                <Td>
                   <div className="flex items-center gap-1.5">
                     <Badge tone={u.active ? 'green' : 'red'}>
                       {u.active ? 'AKTIF' : 'NONAKTIF'}
                     </Badge>
                     {u.pw_default === 1 && <Badge tone="amber">PW DEFAULT</Badge>}
                   </div>
-                </td>
-                <td className="td text-xs text-slate-500 dark:text-slate-400">
+                </Td>
+                <Td className="text-xs text-slate-500 dark:text-slate-400">
                   {fmtDate(u.created_at)}
-                </td>
-                <td className="td text-right text-xs">
+                </Td>
+                <Td className="text-right text-xs">
                   <button type="button"
                     onClick={() => {
                       setPwModal(u);
@@ -400,18 +400,16 @@ export function PenggunaClient() {
                       {u.active ? 'Nonaktifkan' : 'Aktifkan'}
                     </button>
                   )}
-                </td>
-              </tr>
+                </Td>
+              </Trow>
             ))}
             {users.length === 0 && (
-              <tr>
-                <td className="td py-8 text-center text-sm text-slate-500 dark:text-slate-400" colSpan={5}>
-                  Belum ada pengguna.
-                </td>
-              </tr>
+              <TEmpty colSpan={5} className="py-8">
+                Belum ada pengguna.
+              </TEmpty>
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
 
       <Modal
