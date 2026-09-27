@@ -940,6 +940,31 @@ F2 (pos tab, hover drift), T1 (pos segmented payment), T2/T3
 - [ ] G2-full backlog (mangkase UX-5): ternary campuran
       success/error `pos-client:714/892/901` — ditinggal
       `'info'`, butuh keputusan per kasus.
+**FASE H (UX-5 Information Architecture)** — ACC Gus Fi, 27 Sep:
+- [x] H0 (commit iki): audit read-only 10 temuan (I-1..I-10) +
+      ACC Q1-Q4 (Loyalty→OPERASIONAL; home `/`; bell +pengurus
+      read-only; I-6/I-7 defer UX-6+) + plan commit. Detail:
+      MEMORY.md § UX-5 FASE H.
+- [ ] H1: sidebar regroup 4 group (UTAMA/OPERASIONAL/KEUANGAN/
+      SISTEM) + item-level filter (`Feature | 'ops' | 'admin'`,
+      mirror guard) + fix I-1/I-2 + copy stale I-10.
+- [ ] H3: member personal dashboard (filtered read-only:
+      poin/status/QR + "transaksi saya"; CTA QR badge; fix I-4).
+- [ ] H2: role-aware redirect (unauthorized → role home; ora
+      redirect anyar saka `/`; fix I-5).
+- [ ] H4: breadcrumb komponen (mung nested `/admin/*`
+      `/pengurus/*`; visual only; fix I-8).
+- [ ] H5: notif deep-link SPA (router ganti `location.href`;
+      V1 link statik — `/admin/produk` ORA support `?focus=`;
+      entity-focus = backlog) + bell pengurus (guard
+      `/api/notifications` + `/admin/notifications`
+      `isAdmin` → admin|pengurus; fix I-9).
+- [ ] H6: docs + resync `kp-zip3` + pixel-check list (drawer 4
+      role + breadcrumb + member dashboard).
+- [ ] Backlog UX-6+: I-6 shift-day screen · I-7 onboarding
+      wizard · I-3 route hierarchy · G2-full ternary ·
+      notif entity-focus `?focus=<id>` (butuh kolom meta
+      `notifications` + produk-client).
 
 
 ---
@@ -982,7 +1007,7 @@ backup aman, offline tetap percaya diri.
 | UX-2  | EmptyState CTA + Panduan Kasir                                      | ✅ selesai 26 Sep (@ `32d0538` + `e7130c3`) |
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
 | UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); FASE F SELESAI 27 Sep (F0 `d1f7574` + F1 `2ff5091` token map 61 situs + F2 `ce7e0cd` .card-label 10 situs + F3 docs+resync kp-zip3); sisa: pixel-check HP 8 item; FASE G1+G2 SELESAI 27 Sep (G1 `99a3b20` Modal size + G2 `0ffb072` Toast tone 54 tag); G3 = docs + resync kp-zip3; G4 = pixel-check 5 item; G2-full = ternary `pos-client:714/892/901` |
-| UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat | 📋 rancang |
+| UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat (audit + ACC Q1-Q4 27 Sep; plan H0-H6: MEMORY.md § UX-5 FASE H) | 🚧 audit ✅ — mulai H1 |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
 | UX-8  | **Operational Safety**: audit trail komunikatif, backup rasa aman, freeze/immutable, health center, reconciliation | 📋 rancang |

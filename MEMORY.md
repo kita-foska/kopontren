@@ -1,6 +1,74 @@
 # MEMORY
 
 ## 2026-09-27
+### UX-5 FASE H: Information Architecture — AUDIT SELESAI 27 Sep (H0 docs; ACC Q1-Q4; plan H0-H6)
+- **Audit read-only (27 Sep, sesusih FASE G)** — scope: sidebar,
+  role-based UX, dashboard per role, alur kritis, mobile nav,
+  breadcrumb + deep-link. Sumber: `sidebar.tsx` (groupsFor L243-304;
+  ADMIN_GROUPS L31-75; PREFETCH L14-26), `bottom-nav.tsx` (NAV L41-68),
+  `auth.ts` (FEATURE_MATRIX L64-76; canAccess L79), `shell.tsx`
+  (L18 bottomnav-exclude /kasir; L89 bell admin-only),
+  `notify.ts` (NOTIFY_TYPES L41-68: 20 jenis + prioritas + link
+  statik), `notification-bell.tsx` (L123 `window.location.href`),
+  guard per halaman (zakat/kas/qris/konsinyasi = isManager atau
+  canAccess; pengaturan-member/pengguna/data/migrate = admin-only;
+  notifications = isAdmin).
+- **10 temuan (I-1..I-10)**: I-1 menu manajer "Keuntungan Member" →
+  `/admin/pengaturan-member` admin-only = dead-end; I-2 filter
+  group-level kasar (group "Sistem" ngusir item legal `/admin/laporan`
+  dr manajer); I-3 hierarchy route adhoc (top-level `/` `/kasir`
+  `/laporan` `/piutang` `/retur` vs nested `/admin/*` `/pengurus/*`);
+  I-4 member ndeleng ringkasan toko purno (matriks: member =
+  dashboard pribadi read-only); I-5 ora ana role-home (redirect
+  unauthorized selalune → `/`); I-6 alur shift kasir sakabèh 3 layar
+  (ora ana shift-day screen); I-7 ora ana onboarding wizard first-run
+  (mung banner `pw_default` ing `/` L80-97); I-8 breadcrumb = 0 situs;
+  I-9 notif deep-link statik per jenis + full reload + bell mung
+  admin; I-10 copy stale `/` L286-290 "baris atas di desktop"
+  (ora ana top-row — navigasi = hamburger drawer + bottom nav).
+- **ACC Gus Fi Q1-Q4 (27 Sep)**: Q1 Loyalty **fold → OPERASIONAL**
+  (4 group: UTAMA/OPERASIONAL/KEUANGAN/SISTEM); Q2 home `/`
+  tetep kanggo kabeh role (ora redirect role home; dashboard =
+  drill-down, ora home); Q3 bell **+ pengurus read-only**
+  (ORA kasir — shift alerts wis ana ing POS UI); Q4 shift-day
+  screen (I-6) + onboarding wizard (I-7) **defer → UX-6+** (backlog).
+- **H1 — mapping item→level (verifikasi 27 Sep)**: saben item menu
+  entuk level `Feature | 'ops' | 'admin'`: `Feature` → `canAccess`;
+  `'ops'` → `isManager` (mirror guard Konsinyasi/Kas/QRIS — ora ana
+  Feature key 'ops' ing FEATURE_MATRIX, sengaja: menu level mung
+  display, guard tetep isManager); `'admin'` → mirror guard
+  admin-only (pengaturan-member, notifications, pengguna, data,
+  migrate). Mapping: UTAMA = Dashboard(laporan), Dashboard
+  Global(laporan), Ringkasan(personal); OPERASIONAL = Kasir(pos),
+  Produk(stock), Belanja(supplier), Konsinyasi(ops), Shift(shift),
+  Retur(pos), Member(member), Keuntungan Member(admin);
+  KEUANGAN = Kas(ops), QRIS(ops), Piutang(piutang), Hutang(supplier),
+  Zakat(zakat), Laporan & Rekap(laporan); SISTEM = Laporan
+  Pengurus(laporan), Notifikasi(admin→H5), Audit(audit),
+  Pengguna(admin), Data & Backup(admin), Import CSV(admin).
+  Dampak: I-1/I-2 sirna (filter item-level, sumber siji = guard);
+  label role-specific ("Produk & Stok (Opname)", "Hutang Supplier")
+  → label global siji (nuansa UX = tau Gus Fi).
+- **H5 — verifikasi 27 Sep**: `/admin/produk` **ORA** support
+  `?focus=` (produk-client: search client-side `q`, ora ngguyu
+  searchParams) + tabel `notifications` ora ana kolom
+  entity-id/meta (schema: user_id,type,title,message,link,read,
+  created_at) → **V1 = link statik + navigasi SPA** (router,
+  ganti `location.href`); entity-focus `?focus=<id>` = backlog
+  follow-up (butuh schema + produk-client). Side-requirement Q3:
+  bell pengurus **wajib** ngemong guard `/api/notifications`
+  (GET/count) + `/admin/notifications` saka `isAdmin` →
+  admin|pengurus (view read-only).
+- **Plan commit (ACC'd)**: H0 docs (iki) → H1 regroup +
+  item-level filter + fix I-10 → H3 member personal dashboard
+  (filtered: poin/status/QR + transaksi saya; read-only; CTA QR
+  badge) → H2 role-aware redirect (ora ana redirect anyar saka `/`)
+  → H4 breadcrumb (mung nested `/admin/*` `/pengurus/*`, visual
+  only) → H5 deep-link SPA + bell pengurus (+ guard notif) →
+  H6 docs + resync `kp-zip3` + pixel-check list. Total 6 commit
+  + H0. Oka scope: I-3 route hierarchy, I-6, I-7, G2-full
+  ternary `pos-client:714/892/901`, entity-focus = mangkase UX-6+.
+
 ### UX-4 FASE G: Modal size + Toast tones - G1+G2 SELESAI 27 Sep
 - **G1 @ `99a3b20` (dual-push master+main, 3 file)**: `Modal`
   entuk prop `size?: 'sm'|'md'|'lg'` (default `'md'` = kelas
