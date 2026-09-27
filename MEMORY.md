@@ -1,7 +1,7 @@
 # MEMORY
 
 ## 2026-09-27
-### UX-4 FASE E: audit Card + FilterPill/TogglePill - audit SELESAI 27 Sep (E1-E4 nunggu ACC)
+### UX-4 FASE E: Card unification + FilterPill/TogglePill - SELESAI 27 Sep (E0-E4, dual-push master+main)
 - **Audit read-only (ora kode)**, laporan lengkap nang sesi AI 27 Sep:
   - Card: hero 5 site drifty (3x `shadow-md` vs 2x flat; aturan
     `.hero-bg` = flat tanpa shadow); modal/panel 3 radius x 3
@@ -32,11 +32,62 @@
   (primitif add-only) -> E2 (migrasi card, ~8 file, delta visual)
   -> E3 (migrasi pill, 3 file, delta visual) -> E4 (docs +
   dual-push + sinkron kp-zip3); maks 7 commit manawa E2/E3 split.
-- **Tunggu ACC Gus (Q1-Q5)**: Q1 hero flat (3x shadow-md ilang)?
-  Q2 dialog = rounded-2xl+shadow-xl, popover = rounded-xl+shadow-lg?
-  Q3 T3 mobile -> tinted selaras T2? Q4 `pos-client:1781` shadow
-  teks dihapus? Q5 deprecate `C:\Users\baiti\Desktop\kp` clone
-  (rekomendasi piyambak: iyo)?
+- **ACC Gus Q1-Q5 (27 Sep, kabeh IYO)**: Q1 hero flat (3x
+  `shadow-md` ilang); Q2 dialog = `rounded-2xl shadow-xl`,
+  popover = `rounded-xl shadow-lg`; Q3 T3 mobile -> tinted
+  selaras T2 (parity desktop+mobile); Q4 `pos-client:1781`
+  shadow teks dihapus; Q5 deprecate clone
+  `C:\Users\baiti\Desktop\kp` (kanonik = `D:\Ngudi Susilo\kp-zip3`).
+- **E1 `05c65aa`** (feat/ui, add-only): `globals.css` +=
+  `.card-hero` (flat) / `.card-dialog` / `.card-pop` /
+  `.tile-hover` + token shadow; `ui.tsx` += `<FilterPill>`
+  (F1+F2) + `<TogglePill>` (mode `tinted`/`segmented`, accent
+  `amber`, ikon + badge opsional; auto `type="button"` +
+  `aria-pressed`, passthrough spread role/aria/title/disabled).
+- **E2 `06cbe8b`** (refactor/ui, 11 file, delta visual): hero 5
+  site flat via `.card-hero`; modal/panel via `.card-dialog` /
+  `.card-pop` (Modal, QR/label, bell/tooltip); tile hover
+  standar `.tile-hover`; stray `shadow` (`sidebar.tsx:187` +
+  print `pos-client:2110`) distandarkan; anomali
+  `pos-client:1781` `font-bold shadow-md` DIHAPUS (Q4).
+  tsc EXIT 0, `next build` EXIT 0 (53/53 rute).
+- **E3 `4572b3f`** (refactor/ui, 3 file +30/-59, delta visual):
+  F1 `laporan-client` - 4 chip periode -> `FilterPill`; F2
+  `pos-client` - tab kategori (Semua + N) -> `FilterPill`
+  (`role="tab"`/`aria-selected` spread; drift hover distandarkan
+  `hover:bg-slate-100 dark:hover:bg-navy-800` = normalisasi E1,
+  BUKAN regression); T1 `pos-client` - 3 metode bayar ->
+  `TogglePill` segmented (ikon + badge 1-3), "Campur" ->
+  `TogglePill` accent=amber badge 4; T2/T3 `produk-client` -
+  toggle status Aktif/Nonaktif desktop + mobile -> `TogglePill`
+  tinted (Q3: 2 bahasa visual jadi satune; `!!p.active` ngarep
+  prop boolean). tsc EXIT 0, build EXIT 0.
+- **E4 (commit iki)**: docs (MEMORY/TODO) + sinkron kp-zip3
+  (mirror `src/`: copy semua file, hapus 3 file yatim
+  `navpills.tsx`/`themetoggle.tsx`/`logout.tsx`, hash-verify
+  MD5 per file 0 differ) + dual-push. Q5 FINAL:
+  `C:\Users\baiti\Desktop\kp` = DEPRECATED (stale, reference-only);
+  `D:\Ngudi Susilo\kp-zip3` = KANONIK (resync rutin, non-git).
+- **Housekeeping decision (27 Sep)**: 2 CSV stok 09/23
+  (`stok-export-20260923.csv` + `stok-import-admin-20260923.csv`)
+  = RETAIN (material item 4 upload CSV; salah satune tracked);
+  scratch `_*.txt/_*.ps1` = git-ignored lokal (tetep nang D,
+  ora ke-push); `.cline/` = data lokal Cline (untracked; wengi
+  di-gitignore).
+- **Pixel-check list (Gus Fi, pasca E2+E3)**:
+  1. `/home` + dashboard admin/pengurus - hero card flat (ora
+     shadow), tile hover standar.
+  2. Modal QR/label + popover bell/tooltip - radius/shadow
+     standar `card-dialog`/`card-pop`.
+  3. F1 `/laporan` - 4 chip periode (Hari ini/7 hari/30
+     hari/Semua): state active + inactive.
+  4. F2 `/kasir` - tab kategori (Semua + N): active/inactive +
+     hover `bg-slate-100`.
+  5. T1 `/kasir` - metode bayar tunai/transfer/QRIS segmented
+     (ikon + badge 1-3); "Campur" amber badge 4.
+  6. T2/T3 `/admin/produk` - toggle Aktif/Nonaktif desktop +
+     mobile (tinted, parity Q3).
+  7. `pos-client:1781` - anomali shadow teks wis ilang (Q4).
 - **Koreksi kp (S5)**: section "Aturan kerja repo" wis di-update
   (3 entitas; kp-zip3 = kanonik). E0 mung docs -> ora ana
   sinkron kp.
@@ -153,12 +204,14 @@
      (plain file, BUKAN git clone; tanpa MEMORY.md/TODO.md).
      Resync = salin file dr D (`Copy-Item -Recurse src` + file
      terkait), verifikasi hash per file. Terakhir sinkron: pasca
-     D2b `5ac6080` (27 Sep, 5 file hash-verify).
-  2. `C:\Users\baiti\Desktop\kp` = git clone lama (stale @ `9a20a1b`
-     D2a, 2 commit behind per 27 Sep). Bila perlu: `git fetch
+     E4 (pasca `4572b3f`, 27 Sep, full-mirror `src/` +
+     hash-verify MD5 per file 0 differ).
+  2. `C:\Users\baiti\Desktop\kp` = git clone lama (stale @
+     `9a20a1b` D2a) - **DEPRECATED (keputusan final Q5, 27 Sep)**:
+     reference-only, JANGAN sinkron rutin; kanonik =
+     `D:\Ngudi Susilo\kp-zip3`. Manawa perlu sekali: `git fetch
      origin && git reset --hard origin/master` (untracked scratch
-     dibersihkan manual dulu). Rekomendasi: DEPREKASI utk sinkron
-     rutin (kp-zip3 = kanonik); keputusan final = Q5 FASE E.
+     dibersihkan manual dhisik).
   3. `D:\Ngudi Susilo\kp-zip` = snapshot legas (layout lama,
      tanpa `src/app`) - DEPREKASI, jangan dipakai lagi.
 

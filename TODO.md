@@ -863,22 +863,41 @@ F2 (pos tab, hover drift), T1 (pos segmented payment), T2/T3
 (produk toggle desktop vs mobile). Proposal: `.card-hero` /
 `.card-dialog` / `.card-pop` / `.tile-hover` (globals.css) +
 `<FilterPill>` / `<TogglePill>` (ui.tsx).
-- [x] E0: docs commit - koreksi S5 kp note (3 entitas, kp-zip3 =
-      kanonik) + catat audit FASE E nang MEMORY/TODO (commit iki)
-- [ ] E1: primitif add-only (globals.css + ui.tsx) - nunggu ACC
-- [ ] E2: migrasi card (home, dashboard admin/pengurus,
-      notifications x2, member-qr-badge, product-label, sidebar)
-      - delta visual, nunggu ACC + pixel-check
-- [ ] E3: migrasi pill (laporan-client, pos-client, produk-client)
-      - delta visual, nunggu ACC + pixel-check
-- [ ] E4: docs + dual-push + sinkron kp-zip3
-- [ ] ACC Gus Q1-Q5: (1) hero flat? (2) standarisasi panel
-      dialog/popover? (3) T3 selaras tinted? (4) hapus shadow
-      `pos-client:1781`? (5) deprecate C: clone?
-- [ ] Housekeeping: 17 file untracked nang repo root (scratch
-      `_* .js`, `o1-o4/t1-t3.txt`, `buildout.txt`, `mem-qris.txt`,
-      `uix1.txt`, 2 CSV stok 09/23) - putusekhe Gus: ilangke
-      utawa tambahke .gitignore.
+- [x] E0 `15054d8`: docs - koreksi S5 kp note (3 entitas,
+      kp-zip3 = kanonik) + catat audit FASE E nang MEMORY/TODO.
+- [x] E1 `05c65aa`: primitif add-only (globals.css + ui.tsx):
+      `.card-hero`/`.card-dialog`/`.card-pop`/`.tile-hover` +
+      `<FilterPill>`/`<TogglePill>`.
+- [x] E2 `06cbe8b`: migrasi card 11 file (home, dashboard
+      admin/pengurus, notifications x2, member-qr-badge,
+      product-label, sidebar) - delta visual (Q1 hero flat, Q4
+      shadow `pos-client:1781` ilang). tsc+build EXIT 0,
+      dual-push master+main.
+- [x] E3 `4572b3f`: migrasi pill 3 file (laporan-client F1,
+      pos-client F2+T1, produk-client T2/T3) - delta visual;
+      Q3 parity desktop+mobile; normalisasi hover tab kategori
+      `bg-slate-100` (standar E1). tsc+build EXIT 0,
+      dual-push master+main.
+- [x] E4 (commit iki): docs (MEMORY/TODO) + sinkron kp-zip3
+      (mirror `src/`: copy semua, hapus 3 yatim
+      `navpills.tsx`/`themetoggle.tsx`/`logout.tsx`,
+      hash-verify MD5 0 differ) + dual-push.
+- [x] ACC Gus Q1-Q5 (27 Sep, kabeh IYO): (1) hero flat
+      (2) standarisasi panel dialog/popover (3) T3 selaras
+      tinted (4) hapus shadow `pos-client:1781` (5) deprecate
+      `C:\Users\baiti\Desktop\kp` (kanonik = `kp-zip3`).
+- [x] Housekeeping (putus Gus 27 Sep): 2 CSV stok 09/23 =
+      RETAIN (material item 4 upload CSV); scratch
+      `_*.txt/_*.ps1` = git-ignored lokal (tetep nang D, ora
+      ke-push); `.cline/` = data lokal Cline (wengi
+      di-gitignore).
+- [ ] Pixel-check E2+E3 (Gus Fi; daftar lengkap nang MEMORY.md
+      seksi FASE E): `/laporan` chip periode - `/kasir` tab
+      kategori + metode bayar (Campur amber) - `/admin/produk`
+      toggle status - hero card flat - anomali
+      `pos-client:1781` ilang.
+**Berikutnya: FASE F** (Typography scale cleanup) - nunggu
+audit + ACC Gus.
 
 
 ---
@@ -889,14 +908,17 @@ F2 (pos tab, hover drift), T1 (pos segmented payment), T2/T3
 > daftar fitur yang akan langsung di-coding.** Tidak ada kode baru
 > sebelum ACC. Semua item di bawah masih **backlog usulan**; prioritas
 > & fase baru jadi rencana kerja. Status engineering terkini:
-> **UPDATE 27 Sep: UX-2 + UX-3 SELESAI; UX-4 FASE A–D SELESAI 27 Sep
-> (design tokens @ 5698b74; Button primitive @ 592b230; migrasi
-> <Button> ke 30 file + hapus CSS legacy @ 3a59c9a; FASE D tabel:
-> D1 @ 0637ee7 · D2a @ 9a20a1b · D2b @ 5ac6080 + hapus CSS legacy
-> `.th`/`.td`/`.table-row`; sisa: pixel-check real device Gus Fi —
-> 4 halaman admin durung visual diverifikasi; 79 raw button Phase B
-> tetep disengka); FASE E: audit Card + FilterPill/TogglePill
-> SELESAI 27 Sep (E0 docs), E1-E4 nunggu ACC Q1-Q5.
+> **UPDATE 27 Sep: UX-2 + UX-3 SELESAI; UX-4 FASE A–E SELESAI
+> 27 Sep (design tokens @ 5698b74; Button primitive @ 592b230;
+> migrasi <Button> ke 30 file + hapus CSS legacy @ 3a59c9a;
+> FASE D tabel: D1 @ 0637ee7 · D2a @ 9a20a1b · D2b @ 5ac6080
+> + hapus CSS legacy `.th`/`.td`/`.table-row`; FASE E
+> card+pill: E1 @ 05c65aa · E2 @ 06cbe8b (11 file) · E3 @
+> 4572b3f (3 file) · E4 = docs + resync kp-zip3; ACC Q1-Q5
+> kabeh IYO; sisa: pixel-check real device Gus Fi — 4 halaman
+> admin (FASE D) + halaman E2/E3 (dashboard, laporan, kasir,
+> produk); 79 raw button Phase B tetep disengka); NEXT:
+> FASE F (Typography scale cleanup) — nunggu audit + ACC.
 > Laporan lengkap: `PROGRESS-2026-09.md`.
 
 ## Arah utama (visi user)
@@ -912,7 +934,7 @@ backup aman, offline tetap percaya diri.
 | ----- | ------------------------------------------------------------------- | ------ |
 | UX-2  | EmptyState CTA + Panduan Kasir                                      | ✅ selesai 26 Sep (@ `32d0538` + `e7130c3`) |
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
-| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–D SELESAI 27 Sep; next FASE E: Card unification + FilterPill/TogglePill) | ✅ A–D selesai 27 Sep: A @ `5698b74` · B Button @ `592b230` · C @ `3a59c9a` · D tabel @ `0637ee7`+`9a20a1b`+`5ac6080`; sisa: pixel-check real device (4 hal. admin); FASE E: audit selesai 27 Sep (E0 docs), E1-E4 nunggu ACC Q1-Q5 |
+| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); NEXT FASE F (typography scale) |
 | UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat | 📋 rancang |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
