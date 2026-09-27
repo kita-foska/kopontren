@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 import { Button } from '@/components/ui';
+import { roleHome } from '@/lib/features';
 
 
 export default function LoginPage() {
@@ -35,7 +36,9 @@ export default function LoginPage() {
         sessionStorage.setItem('__kop_pw', password);
         window.location.replace('/login/pin/setup');
       } else {
-        window.location.replace('/');
+        // H2: redirect role-aware — /api/auth/login membalas user.role;
+        // roleHome menormalkan (member -> /member; role internal -> /).
+        window.location.replace(roleHome(data.user?.role));
       }
     } catch (e) {
       setErr(isAbort(e) ? 'Waktu koneksi habis. Silakan coba lagi.' : 'Terjadi kesalahan jaringan.');

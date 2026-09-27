@@ -1,6 +1,42 @@
 # MEMORY
 
 ## 2026-09-27
+### MULTI-ROLE: ditunda ke UX-5.5/UX-6 (keputusan Gus Fi, 27 Sep)
+- **Pertanyaan Gus Fi (27 Sep)**: account multi-role (siji akun duwe
+  role langkung saka siji, mis. admin + member + kasir + pengurus).
+  **Keputusan: ora diimplementasi saiki** — model saat ini
+  single-role (`users.role`); multi-role = backlog **M1** (TODO.md
+  Kelompok M), target fase **UX-5.5 utawa UX-6**, tanpa kode saksaiki.
+- **Alasan**: scope gedhe (DB `users.roles` array + migrasi skema
+  v18; pemilihan role ing login; menu adaptif; audit "acting as
+  which role"); model single-role saiki aman lan kasil; durung ana
+  user sing ngbutuhke.
+- **Rancangan M1 (besik diimplementasi)**: **primary role + access
+  tambahan** — primary role mrenteki menu utama; access tambahan liwat
+  "mode switch"/dedicated link; audit log ngemot "acting as primary
+  role"; session nggolongi role context. **Langkung aman ketimbang
+  "union sagedhah role"** (menu campur + audit bingung). Estimasi
+  ~4–5 commit: (1) skema v18 `users.roles` + migrasi idempoten;
+  (2) auth/session role context; (3) pilih role login + menu adaptif;
+  (4) audit "acting as"; (5) docs + resync kp-zip3.
+  **Trigger**: nalika Gus Fi ngramesake kabutuhan nyata (contone
+  siji wong sing sekaligus pengurus + member).
+- **Pandhuan interim**: wong sing butuh peran pirang-pirang = akun
+  pirang-pirang (HP/email beda); **jangan share akun** (audit trail
+  per-akun tetep resik); admin bisa ndeleng card member dhewe ing
+  `/member` (H3) menawa dipasangke.
+- **H2 scope final (27 Sep)**: redirect role-aware **tanpa redirect anyar
+  saka `/`** (ngguyu Q2: home `/` tetep kanggo kabeh role, dashboard =
+  drill-down): post-login + reauth PIN + setup PIN -> `roleHome(role)`
+  (member -> `/member`; role internal -> `/`); guard-fail 10 sub-halaman
+  (`kasir/laporan/piutang/retur/admin/{audit,dashboard,hutang,
+  pengaturan-member,shift,zakat}`) `redirect('/')` ->
+  `redirect(roleHome(user.role))` (ngguyu I-5); root `/` tanpa
+  redirect (draft awal ngemu redirect member ing root — kabale,
+  ora selaras catetan plan). Peta terpusat: `HOME_BY_ROLE` +
+  `roleHome()` ing `src/lib/features.ts` (re-export `@/lib/auth`).
+
+
 ### UX-5 FASE H: Information Architecture — AUDIT SELESAI 27 Sep (H0 docs; ACC Q1-Q4; plan H0-H6)
 - **Audit read-only (27 Sep, sesusih FASE G)** — scope: sidebar,
   role-based UX, dashboard per role, alur kritis, mobile nav,

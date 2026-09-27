@@ -1007,7 +1007,8 @@ backup aman, offline tetap percaya diri.
 | UX-2  | EmptyState CTA + Panduan Kasir                                      | ✅ selesai 26 Sep (@ `32d0538` + `e7130c3`) |
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
 | UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); FASE F SELESAI 27 Sep (F0 `d1f7574` + F1 `2ff5091` token map 61 situs + F2 `ce7e0cd` .card-label 10 situs + F3 docs+resync kp-zip3); sisa: pixel-check HP 8 item; FASE G1+G2 SELESAI 27 Sep (G1 `99a3b20` Modal size + G2 `0ffb072` Toast tone 54 tag); G3 = docs + resync kp-zip3; G4 = pixel-check 5 item; G2-full = ternary `pos-client:714/892/901` |
-| UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat (audit + ACC Q1-Q4 27 Sep; plan H0-H6: MEMORY.md § UX-5 FASE H) | 🚧 audit ✅ — mulai H1 |
+| UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat (audit + ACC Q1-Q4 27 Sep; plan H0-H6: MEMORY.md § UX-5 FASE H) | 🚧 H1 ✅ `c41ddfd` · H3 ✅ `b5b4927` · H2 pengerjaan |
+| UX-5.5 | **Multi-role (M1)** — siji akun multi-role; target kalila wadi kabutuhan nyata (keputusan 27 Sep: ditunda, liha Kelompok M; trigger = Gus Fi ngramesake kabutuhan) | 📋 ditunda |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
 | UX-8  | **Operational Safety**: audit trail komunikatif, backup rasa aman, freeze/immutable, health center, reconciliation | 📋 rancang |
@@ -1129,6 +1130,31 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
 - [ ] Q46 Top produk / top kasir / top transaksi — ranking berguna.
 - [ ] Q47 Trend sederhana — grafik tidak berlebihan, tetap komunikatif.
 - [ ] Q48 "Klik angka → detail" — semua dashboard bisa di-drill-down.
+
+
+
+### Kelompok M — Identitas & multi-role (M1, ditunda → UX-5.5/UX-6)
+
+- [ ] M1 Multi-role support — siji akun duwe role pirang-pirang
+      (`users.roles` array, skema v18, gina `users.role`).
+      **Rancangan (rekomendasi)**: *primary role + access tambahan* —
+      primary role nrentahi menu utama; access tambahan lewat "mode
+      switch"/dedicated link; audit log "acting as primary role";
+      session nggolongi role context. **Langkung aman ketimbang
+      "union sagedhah role"** (menu campur + audit bingung).
+      **Pertimbangan keamanan**: saiki (sebelum M1) siji peran = siji
+      akun, jangan share akun; audit trail per-akun resik; role
+      context eksplisit ing session + audit; akses akun multi-role
+      = union sagedhah role akun kasebut (ora nglewati iku). Estimasi ~4–5 commit:
+      (1) skema v18 `users.roles` + migrasi idempoten; (2)
+      auth/session role context; (3) pilih role ing login + menu
+      adaptif; (4) audit "acting as"; (5) docs + resync kp-zip3.
+      **Trigger: nalika Gus Fi ngramesake kabutuhan nyata**
+      (contone: siji wong sing sekaligus pengurus + member).
+      **Interim saiki**: akun pirang-pirang (jangan share akun);
+      admin bisa ndeleng card member dhewe ing `/member` (H3)
+      menawa dipasangke.
+
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi — bukan sembarangan popup.

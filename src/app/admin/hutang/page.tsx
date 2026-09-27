@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { canAccess, currentUser } from '@/lib/auth';
+import { canAccess, currentUser, roleHome } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 import { PageSkeleton } from '@/components/ui';
@@ -17,7 +17,8 @@ export default async function HutangPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
   // Tier: supplier (admin, manajer, pembelian) — layout /admin kini hanya cek login.
-  if (!canAccess(user, 'supplier')) redirect('/');
+  // H2: guard-fail -> role-aware (member -> /member; role internal -> /).
+  if (!canAccess(user, 'supplier')) redirect(roleHome(user.role));
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">

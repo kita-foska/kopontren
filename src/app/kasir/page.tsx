@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { canAccess, currentUser, isManager } from '@/lib/auth';
+import { canAccess, currentUser, isManager, roleHome } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import { PosLazy } from '@/components/pos-lazy';
 
@@ -9,7 +9,8 @@ export default async function KasirPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
   // Tier: POS (admin, manajer, kasir).
-  if (!canAccess(user, 'pos')) redirect('/');
+  // H2: guard-fail -> role-aware (member -> /member; role internal -> /).
+  if (!canAccess(user, 'pos')) redirect(roleHome(user.role));
   return (
     <Shell user={user}>
       <h1 className="mb-4 text-2xl font-extrabold tracking-tight">

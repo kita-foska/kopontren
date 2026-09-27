@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { canAccess, currentUser } from '@/lib/auth';
+import { canAccess, currentUser, roleHome } from '@/lib/auth';
 import { db } from '@/db';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import { Shell } from '@/components/shell';
@@ -17,7 +17,8 @@ export const dynamic = 'force-dynamic';
 export default async function AdminDashboardPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
-  if (!canAccess(user, 'laporan')) redirect('/');
+  // H2: guard-fail -> role-aware (member -> /member; role internal -> /).
+  if (!canAccess(user, 'laporan')) redirect(roleHome(user.role));
   const d = await db();
   const today = startOfDayJakarta(0);
   const d7 = startOfDayJakarta(-6);

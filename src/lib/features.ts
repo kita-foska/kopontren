@@ -87,3 +87,26 @@ export function canAccess(user: AppUser | null | undefined, feature: Feature): b
 export function isManager(user: AppUser | null | undefined): boolean {
   return user != null && (user.role === 'admin' || user.role === 'manajer');
 }
+
+// ── H2: beranda per role ──────────────────────────────────────────────
+/**
+ * Beranda per role. Semua role internal (admin/manajer/pengurus/kasir/
+ * gudang/pembelian) -> root '/' (dashboard operasional); member ->
+ * '/member' (dashboard pribadi, H3). Peta terpusat di sini agar mudah
+ * disesuaikan ke depan (mis. pengurus -> '/laporan') tanpa mengubah
+ * halaman. normRole() menormalkan nilai tak dikenal ke 'kasir' (home
+ * '/'), jadi roleHome() TIDAK PERNAH mengembalikan undefined.
+ */
+export const HOME_BY_ROLE: Readonly<Record<Role, string>> = {
+  admin: '/',
+  manajer: '/',
+  pengurus: '/',
+  kasir: '/',
+  gudang: '/',
+  pembelian: '/',
+  member: '/member',
+};
+
+export function roleHome(role: unknown): string {
+  return HOME_BY_ROLE[normRole(role)];
+}

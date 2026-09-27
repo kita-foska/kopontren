@@ -7,7 +7,7 @@ import { normRole } from './features';
 // pindah ke modul pure `./features` (tanpa dependensi server) agar bisa
 // diimpor komponen client (sidebar). Re-export: import lawas dr
 // '@/lib/auth' tetap jalan.
-export { ROLES, FEATURE_MATRIX, normRole, canAccess, isManager } from './features';
+export { ROLES, FEATURE_MATRIX, normRole, canAccess, isManager, HOME_BY_ROLE, roleHome } from './features';
 export type { Role, Feature } from './features';
 import type { Role } from './features';
 

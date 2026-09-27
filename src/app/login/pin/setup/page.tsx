@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { PinDots, PinPad } from '@/components/pin-pad';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 import { Button } from '@/components/ui';
+import { roleHome } from '@/lib/features';
 
 
 /**
@@ -24,6 +25,8 @@ export default function PinSetupPage() {
   const [checkFailed, setCheckFailed] = useState(false);
   const done = useRef(false);
   const pwRef = useRef('');
+  // H2: role sesi (dari /api/auth/session saat mount) utk beranda per role.
+  const roleRef = useRef<unknown>(null);
 
   useEffect(() => {
     pwRef.current = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('__kop_pw') || '' : '';
@@ -34,6 +37,7 @@ export default function PinSetupPage() {
         // POST ditolak server bila sesi memang hilang, sama seperti catch).
         const res = await fetchTimeout('/api/auth/session', { cache: 'no-store' });
         const s = await res.json();
+        roleRef.current = s.user?.role;
         if (s.status === 'active' || s.status === 'timeout') setReady(true);
         else {
           // Status tak dikenal: jangan nyangkut di "Memeriksa sesi…" —
@@ -66,7 +70,8 @@ export default function PinSetupPage() {
         if (d.ok) {
           if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('__kop_pw');
           done.current = true;
-          router.replace('/');
+          // H2: beranda per role (member -> /member; role lain -> /).
+          router.replace(roleHome(roleRef.current));
         } else {
           setErr(d.error || 'Gagal menyimpan PIN.');
           setValue('');

@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 import { PinDots, PinPad } from '@/components/pin-pad';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 import { Button } from '@/components/ui';
+import { roleHome } from '@/lib/features';
 
 
-type PUser = { username: string; display_name: string };
+type PUser = { username: string; display_name: string; role?: string };
 type Session = {
   status: 'none' | 'timeout' | 'active';
   user?: PUser;
@@ -39,7 +40,8 @@ export default function PinReauthPage() {
       const s: Session = await res.json();
       if (s.status === 'active') {
         done.current = true;
-        router.replace('/');
+        // H2: redirect role-aware (/api/auth/session membalas user.role).
+        router.replace(roleHome(s.user?.role));
         return;
       }
       if (s.status === 'timeout') {
@@ -74,7 +76,8 @@ export default function PinReauthPage() {
       const data = await res.json();
       if (res.ok && data.ok) {
         done.current = true;
-        router.replace('/');
+        // H2: beranda per role — /api/auth/pin/verify membalas user.role.
+        router.replace(roleHome(data.user?.role));
         return;
       }
       if (data.session_destroyed || data.needLogin) {

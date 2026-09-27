@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { currentUser } from '@/lib/auth';
+import { currentUser, roleHome } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 import { PageSkeleton } from '@/components/ui';
@@ -17,7 +17,8 @@ export const dynamic = 'force-dynamic';
 export default async function PengaturanMemberPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
-  if (user.role !== 'admin') redirect('/');
+  // H2: guard-fail -> role-aware (member -> /member; role internal -> /).
+  if (user.role !== 'admin') redirect(roleHome(user.role));
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">

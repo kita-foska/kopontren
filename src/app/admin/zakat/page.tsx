@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { canAccess, currentUser } from '@/lib/auth';
+import { canAccess, currentUser, roleHome } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 import { PageSkeleton } from '@/components/ui';
@@ -17,7 +17,8 @@ export default async function ZakatPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
   // Tier: zakat (admin, manajer, pengurus). Simpan pengaturan & riwayat tetap admin.
-  if (!canAccess(user, 'zakat')) redirect('/');
+  // H2: guard-fail -> role-aware (member -> /member; role internal -> /).
+  if (!canAccess(user, 'zakat')) redirect(roleHome(user.role));
   return (
     <Shell user={user}>
       {/* .print-area: opt-in "cetak halaman penuh" di @media print
