@@ -825,9 +825,14 @@ konsistensi.
   `.hero-bg`)** — SELESAI 26 Sep, commit berikut.
   Detail: MEMORY.md seksi "UX-3" di bawah 2026-09-26.
   **Berikutnya: UX-4** (merujuk goal document 8 fase).
-**UPDATE 26 Sep:** FASE A (design tokens) SELESAI @ `5698b74`
-(9 file, +143/−47; tsc exit 0, build 53/53 rute). Berikut:
-FASE B — Button primitive (ngunggu ACC Gus).
+**UPDATE 27 Sep:** FASE A (design tokens) SELESAI @ `5698b74`
+(9 file, +143/−47; tsc exit 0, build 53/53 rute); FASE B (Button
+primitive B.1 @ `592b230` + keputusan C2/C3) dan FASE C (migrasi
+`<Button>` ke 30 file + hapus CSS legacy `btn-*`/`.field`/`.card-field`,
+@ `3a59c9a`, +561/−583; tsc exit 0, build EXIT 0) **SELESAI**,
+dual-push master+main.
+**Berikutnya:** pixel-check real device oleh Gus Fi (tombol kini
+global min-height 44px; breakage → follow-up commit); UX-5.
 
 
 ---
@@ -838,8 +843,10 @@ FASE B — Button primitive (ngunggu ACC Gus).
 > daftar fitur yang akan langsung di-coding.** Tidak ada kode baru
 > sebelum ACC. Semua item di bawah masih **backlog usulan**; prioritas
 > & fase baru jadi rencana kerja. Status engineering terkini:
-> **UPDATE 26 Sep: UX-2 + UX-3 SELESAI; UX-4 FASE A SELESAI @ 5698b74 (design tokens)
-> FASE B (Button primitive) ngunggu ACC.** Laporan lengkap: `PROGRESS-2026-09.md`.
+> **UPDATE 27 Sep: UX-2 + UX-3 SELESAI; UX-4 SELESAI 27 Sep (FASE A
+> design tokens @ 5698b74; Button primitive @ 592b230; migrasi
+> <Button> ke 30 file + hapus CSS legacy @ 3a59c9a; sisa: pixel-check
+> real device Gus Fi).** Laporan lengkap: `PROGRESS-2026-09.md`.
 
 ## Arah utama (visi user)
 
@@ -852,9 +859,9 @@ backup aman, offline tetap percaya diri.
 
 | Fase  | Isi                                                                 | Status |
 | ----- | ------------------------------------------------------------------- | ------ |
-| UX-2  | EmptyState CTA + Panduan Kasir                                      | 🔄 berjalan (komit 1 EmptyState sdh, komit 2 PanduanKasir nunggu) |
-| UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ⏳ belum mulai |
-| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A SELESAI @ 5698b74) | 📋 FASE A SELESAI @ 5698b74; FASE B rancang, nunggu ACC |
+| UX-2  | EmptyState CTA + Panduan Kasir                                      | ✅ selesai 26 Sep (@ `32d0538` + `e7130c3`) |
+| UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
+| UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A SELESAI @ 5698b74) | ✅ selesai 27 Sep: FASE A @ `5698b74` · Button @ `592b230` · migrasi + hapus CSS legacy @ `3a59c9a`; sisa: pixel-check real device |
 | UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat | 📋 rancang |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 📋 rancang |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |

@@ -1,6 +1,26 @@
 # MEMORY
 
 ## 2026-09-27
+### UX-4 FASE C: migrasi Button + hapus CSS legacy — SELESAI 27 Sep (commit 3a59c9a, dual-push master+main)
+- 30 file (+561/−583): ~120 tombol raw `.btn/*` digantikan komponen
+  `<Button>` (FASE B.1 @ `592b230`: 5 varian primary/outline/ghost/
+  danger/link × 3 ukuran sm 36 / md 44 / lg 52 px + link override
+  teks via `className` aman). Aturan legacy dihapus dr `globals.css`:
+  `.btn`, `.btn-primary/-secondary/-ghost/-danger/-success/-sm`,
+  `.btn-xs`, `.field`, `.card-field`, `.card-field-error`. Error state
+  diseragamkan `text-red` → `text-rose` (token `risk`=rose; 22 file).
+- Exception disengka (keputusan FASE B2/C2/C3 di atas): chip sub-sm
+  ("Maks" `pos-client`, toggle `px-2.5 py-0.5` tabel `produk-client`)
+  + tombol fill emerald "Riwayat" kartu mobile `member-client` TETAP
+  raw button — override `bg-*` kalah deterministik (slate/rose menang)
+  + override min-height via `className` rapuh (Tailwind CSS order).
+- Verifikasi: `tsc --noEmit` EXIT 0; grep `btn-*`/`.field`/`.card-field`
+  = 0 referensi fungsional (karena aturan CSS-nya sendiri sudah
+  dihapus, jadi tak bisa hidup diam-diam); `next build` EXIT 0;
+  `public/sw.js` skip-worktree tak terganggu.
+- **Pixel-check real device: GUS FI pasca-push** — tombol kini global
+  min-height 44px + werna varian; bila ada breakage → follow-up commit.
+
 ### UX-4 FASE B2 (C2): keputusan chip sub-sm — "Maks" (27 Sep)
 - Chip sub-sm (mis. "Maks" di `pos-client`, toggle status `px-2.5 py-0.5`
   di tabel `produk-client`) **disengaja dipertahankan sebagai raw
