@@ -301,7 +301,17 @@ function groupsFor(role: Role): NavGroup[] {
       })),
   })).filter((g) => g.items.length > 0);
   // member: dashboard pribadi saja (label grp "Pribadi", perilaku lama).
-  if (r === 'member') return [{ title: 'Pribadi', items: [{ href: '/', label: 'Ringkasan' }] }];
+  // UX-5 H3: + item "Kartu Saya" -> /member (dashboard pribadi read-only, fix I-4).
+  if (r === 'member')
+    return [
+      {
+        title: 'Pribadi',
+        items: [
+          { href: '/', label: 'Ringkasan' },
+          { href: '/member', label: 'Kartu Saya' },
+        ],
+      },
+    ];
   return groups;
 }
 
