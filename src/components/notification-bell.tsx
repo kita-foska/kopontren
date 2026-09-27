@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, CheckCheck } from 'lucide-react';
 import { api } from '@/components/ui';
+import { useRouter } from 'next/navigation';
 
 type Notif = {
   id: number;
@@ -28,6 +29,7 @@ type PanelPos = { top: number; left: number; width: number; maxHeight: number };
  * maupun meluber keluar layar di HP — selalu pas di bawah tombol lonceng.
  */
 export function NotificationBell() {
+  const router = useRouter();
   const [count, setCount] = useState(0);
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notif[]>([]);
@@ -120,7 +122,10 @@ export function NotificationBell() {
   const onItem = async (n: Notif) => {
     await markRead([n.id]);
     setOpen(false);
-    if (n.link) window.location.href = n.link;
+    if (n.link) {
+      if (/^https?:\/\//.test(n.link)) window.open(n.link, '_blank'); // eksternal (kirim manual)
+      else router.push(n.link); // H5: deep-link SPA (tanpa reload penuh)
+    }
   };
 
   const time = (iso: string) =>

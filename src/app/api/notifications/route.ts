@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { currentUser, isNotifViewer } from '@/lib/auth';
 import { cached } from '@/lib/ref-cache';
 import { pruneOldNotifications } from '@/lib/notify';
 
@@ -12,7 +12,7 @@ import { pruneOldNotifications } from '@/lib/notify';
 export async function GET(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
+  if (!isNotifViewer(user)) return NextResponse.json({ error: 'Hanya admin/pengurus' }, { status: 403 });
   const url = new URL(req.url);
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit')) || 50));
   const unreadOnly = url.searchParams.get('unread') === '1';

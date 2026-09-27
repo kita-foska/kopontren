@@ -42,6 +42,11 @@ export function isAdmin(user: AppUser | null | undefined): boolean {
   return user != null && user.role === 'admin';
 }
 
+/** H5: viewer pusat notifikasi (list/count/read) — pengurus = view read-only. */
+export function isNotifViewer(user: AppUser | null | undefined): boolean {
+  return user != null && (user.role === 'admin' || user.role === 'pengurus');
+}
+
 export const SESSION_COOKIE = 'kopontren_session';
 /**
  * Cookie pendamping (TIDAK httpOnly, terbaca middleware edge + klien) yang

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { currentUser, isNotifViewer } from '@/lib/auth';
 import { invalidate } from '@/lib/ref-cache';
 
 /**
@@ -10,7 +10,7 @@ import { invalidate } from '@/lib/ref-cache';
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
+  if (!isNotifViewer(user)) return NextResponse.json({ error: 'Hanya admin/pengurus' }, { status: 403 });
   const b = (await req.json().catch(() => ({}))) as { ids?: number[]; all?: boolean };
   const d = await db();
   if (b.all) {

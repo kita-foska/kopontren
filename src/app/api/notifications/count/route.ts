@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { currentUser, isNotifViewer } from '@/lib/auth';
 
 /** GET /api/notifications/count — jumlah notifikasi belum dibaca (admin). */
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
+  if (!isNotifViewer(user)) return NextResponse.json({ error: 'Hanya admin/pengurus' }, { status: 403 });
   const d = await db();
   const row = (await d
     .prepare('SELECT COUNT(*) c FROM notifications WHERE user_id = ? AND read = 0')

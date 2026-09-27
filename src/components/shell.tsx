@@ -90,7 +90,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                 {ROLE_LABEL[user.role] ?? user.role.toUpperCase()}
               </span>
             </div>
-            {user.role === 'admin' && <NotificationBell />}
+            {(user.role === 'admin' || user.role === 'pengurus') && <NotificationBell />}
           </div>
         </div>
       </header>
