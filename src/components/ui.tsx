@@ -828,3 +828,130 @@ export async function apiRetry<T = unknown>(
 ): Promise<{ ok: boolean; data: T; error?: string }> {
   return apiCall(url, init, (u, i) => fetchRetry(u, i));
 }
+
+/* ── UX-4 FASE D (D1): primitive Tabel — Table/Th/Td/Trow/TEmpty ──
+   Kelas legacy .th/.td/.table-row (globals.css) dibake di sini sebagai
+   Tailwind agar rules CSS-nya bisa dihapus setelah migrasi D2a/D2b.
+   `Table` hanya render <table> — wrapper div (card/overflow/hidden sm:block)
+   & mobile-card sm:hidden tetap milik pemanggil (sudah Tailwind murni).
+   Trow menyebarkan atribut tr mentah (key, aria-hidden, style) → spacer
+   row sticky-scroll (member-client) tetap bisa. Varian border:
+   'top' (default, slate-100/navy-700), 'bottom' (slate-100/navy-800,
+   utk zakat), 'none' (warna border custom via className, mis. panel
+   rose migrate). */
+
+const TH_CLS =
+  'px-3 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400';
+const TD_CLS = 'px-3 py-2.5 text-sm';
+const TROW_BORDER: Record<'top' | 'bottom' | 'none', string> = {
+  top: 'border-t border-slate-100 dark:border-navy-700',
+  bottom: 'border-b border-slate-100 dark:border-navy-800',
+  none: '',
+};
+
+/** Tabel dasar: `w-full` + minW (utilitas lebar, mis. 'min-w-[36rem]')
+ *  + stickyHead utk tabel import (migrate-client). */
+export function Table({
+  minW,
+  stickyHead,
+  className,
+  children,
+}: {
+  minW?: string;
+  stickyHead?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const cls = [
+    'w-full',
+    minW ?? '',
+    stickyHead
+      ? '[&_thead]:sticky [&_thead]:top-0 [&_thead]:bg-slate-100 dark:[&_thead]:bg-navy-800'
+      : '',
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return <table className={cls}>{children}</table>;
+}
+
+/** Sel header — padanan rule .th. className merge (mis. 'text-right', 'w-8'). */
+export function Th({
+  className,
+  children,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+}) {
+  return <th className={[TH_CLS, className ?? ''].filter(Boolean).join(' ')}>{children}</th>;
+}
+
+/** Sel isi — padanan rule .td. colSpan utk sel gabungan. */
+export function Td({
+  className,
+  colSpan,
+  children,
+}: {
+  className?: string;
+  colSpan?: number;
+  children?: React.ReactNode;
+}) {
+  return (
+    <td colSpan={colSpan} className={[TD_CLS, className ?? ''].filter(Boolean).join(' ')}>
+      {children}
+    </td>
+  );
+}
+
+/** Baris isi — padanan rule .table-row; hover utk tabel interaktif;
+ *  border utk varian arah/warna. Sisa atribut tr (aria-hidden, style,
+ *  dll) disebarkan ke <tr>. */
+export function Trow({
+  hover,
+  border = 'top',
+  className,
+  children,
+  ...rest
+}: {
+  hover?: boolean;
+  border?: 'top' | 'bottom' | 'none';
+  className?: string;
+  children?: React.ReactNode;
+} & React.HTMLAttributes<HTMLTableRowElement>) {
+  const cls = [
+    TROW_BORDER[border],
+    hover ? 'hover:bg-slate-50/50 dark:hover:bg-navy-800/50' : '',
+    className ?? '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return (
+    <tr {...rest} className={cls}>
+      {children}
+    </tr>
+  );
+}
+
+/** Baris kondisi-kosong: colSpan penuh + teks tengah. Children bebas
+ *  (teks polos maupun <Empty compact/> dari produk-client). */
+export function TEmpty({
+  colSpan,
+  className,
+  children,
+}: {
+  colSpan: number;
+  className?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <tr>
+      <td
+        colSpan={colSpan}
+        className={'py-6 text-center text-sm text-slate-500 dark:text-slate-400 ' + (className ?? '')}
+      >
+        {children}
+      </td>
+    </tr>
+  );
+}
+
