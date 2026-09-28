@@ -1,14 +1,14 @@
 'use client';
 
-import type { AppUser } from '@/lib/auth';
-import { useState } from 'react';
+import type { AppUser, Role } from '@/lib/auth';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { HamburgerNav } from './sidebar';
 import { BottomNav } from './bottom-nav';
 import { SessionWatcher } from './session-watcher';
 import { NotificationBell } from './notification-bell';
-import { Avatar, ROLE_LABEL } from './ui';
+import { Avatar, ROLE_LABEL, api } from './ui';
 import { Breadcrumb } from './breadcrumb';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { useHotkeys } from '@/lib/useHotkeys';
@@ -76,6 +76,45 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
     router.push('/login');
   }
 
+  // M1-4: role switcher — POST /api/auth/switch-role, lalu router.refresh()
+  // (server re-render menu sesuai role baru; tak ada state menu di client).
+  const [switchOpen, setSwitchOpen] = useState(false);
+  const [switchBusy, setSwitchBusy] = useState(false);
+  const pillRef = useRef<HTMLDivElement>(null);
+  async function switchRole(role: Role) {
+    if (switchBusy) return;
+    setSwitchBusy(true);
+    try {
+      const r = await api<{ ok: boolean; role: Role }>('/api/auth/switch-role', {
+        method: 'POST',
+        body: JSON.stringify({ role }),
+      });
+      if (r.ok) {
+        setSwitchOpen(false);
+        router.refresh();
+      }
+      // Gagal (401 idle dth. SessionWatcher) -> dropdown tetap buka.
+    } finally {
+      setSwitchBusy(false);
+    }
+  }
+  // Tutup dropdown role: klik di luar pill / Escape.
+  useEffect(() => {
+    if (!switchOpen) return;
+    function onDown(e: MouseEvent) {
+      if (pillRef.current && !pillRef.current.contains(e.target as Node)) setSwitchOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setSwitchOpen(false);
+    }
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [switchOpen]);
+
   return (
     <div className="min-h-screen">
       {/* UX-8C: skip-link (a11y): tersembunyi sampai di-focus via Tab —
@@ -92,6 +131,8 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
             <HamburgerNav
               name={user.display_name || user.username}
               role={user.role}
+              roles={user.roles}
+              onSwitchRole={switchRole}
               onToggleTheme={toggleTheme}
               onLogout={handleLogout}
             />
@@ -147,21 +188,72 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                 </kbd>
               </button>
             )}
-            {/* Identitas user selalu tampil (termasuk mobile): avatar + nama (sm+) + pill role. */}
-            <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 py-1 pl-1 pr-1.5 dark:border-navy-600 sm:px-2">
+            {/* Identitas user selalu tampil (termasuk mobile): avatar + nama (sm+) + pill role.
+                M1-4: bila user punya >1 role, pill jadi dropdown switcher (Decision #5:
+                1 chip, jangan numpuk N chip). Pilih -> switch-role -> router.refresh(). */}
+            <div
+              ref={pillRef}
+              className="relative flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 py-1 pl-1 pr-1.5 dark:border-navy-600 sm:px-2"
+            >
               <Avatar name={user.display_name || user.username} size="sm" />
               <span className="hidden min-w-0 max-w-[5rem] truncate text-xs font-semibold text-slate-700 lg:inline dark:text-slate-200">
                 {user.display_name || user.username}
               </span>
-              <span
-                className={
-                  // Pill role: admin = aksen; semua peran lain = slate.
-                  'shrink-0 rounded px-1.5 py-px text-2xs font-bold text-white ' +
-                  (user.role === 'admin' ? 'bg-accent-500' : 'bg-slate-400 dark:bg-slate-500')
-                }
-              >
-                {ROLE_LABEL[user.role] ?? user.role.toUpperCase()}
-              </span>
+              {user.roles.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setSwitchOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={switchOpen}
+                  className={
+                    // Pill role: admin = aksen; semua peran lain = slate.
+                    'shrink-0 rounded px-1.5 py-px text-2xs font-bold text-white ' +
+                    (user.role === 'admin' ? 'bg-accent-500' : 'bg-slate-400 dark:bg-slate-500')
+                  }
+                >
+                  {(ROLE_LABEL[user.role] ?? user.role.toUpperCase()) + ' \u25be'}
+                </button>
+              ) : (
+                <span
+                  className={
+                    // Pill role: admin = aksen; semua peran lain = slate.
+                    'shrink-0 rounded px-1.5 py-px text-2xs font-bold text-white ' +
+                    (user.role === 'admin' ? 'bg-accent-500' : 'bg-slate-400 dark:bg-slate-500')
+                  }
+                >
+                  {ROLE_LABEL[user.role] ?? user.role.toUpperCase()}
+                </span>
+              )}
+              {user.roles.length > 1 && switchOpen && (
+                <div
+                  role="menu"
+                  aria-label="Ganti peran"
+                  className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-navy-600 dark:bg-navy-800"
+                >
+                  <p className="px-3 pb-1 pt-1.5 text-2xs font-bold uppercase tracking-wider text-slate-400">
+                    Ganti peran
+                  </p>
+                  {user.roles.map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={r === user.role}
+                      disabled={switchBusy}
+                      onClick={() => switchRole(r)}
+                      className={
+                        'flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-semibold transition disabled:opacity-50 ' +
+                        (r === user.role
+                          ? 'text-accent-500'
+                          : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-navy-700')
+                      }
+                    >
+                      <span>{ROLE_LABEL[r] ?? r.toUpperCase()}</span>
+                      {r === user.role && <span className="text-[10px] font-bold">aktif</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             {(user.role === 'admin' || user.role === 'pengurus') && <NotificationBell />}
           </div>

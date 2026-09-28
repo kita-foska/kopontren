@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { PageSkeleton, api, Badge, Button, Modal, Table, Td, Th, TEmpty, Trow, Toast, useToast } from '@/components/ui';
+import { PageSkeleton, api, Badge, Button, Modal, ROLE_LABEL, Table, Td, Th, TEmpty, Trow, Toast, useToast } from '@/components/ui';
+import { ROLES } from '@/lib/features';
 import { fmtDate } from '@/lib/format';
 
 type User = {
@@ -9,6 +10,7 @@ type User = {
   username: string;
   display_name: string;
   role: string;
+  roles: string[];
   active: number;
   pw_default: number;
   created_at: string;
@@ -40,6 +42,11 @@ export function PenggunaClient() {
   const [ownPwBusy, setOwnPwBusy] = useState(false);
   const [ownPinBusy, setOwnPinBusy] = useState(false);
   const [resetPinBusy, setResetPinBusy] = useState(false);
+  // M1-4: modal edit peran (primary + role tambahan).
+  const [roleModal, setRoleModal] = useState<User | null>(null);
+  const [rolePrimary, setRolePrimary] = useState('kasir');
+  const [roleExtra, setRoleExtra] = useState<string[]>([]);
+  const [roleBusy, setRoleBusy] = useState(false);
   const [toast, showToast, , toastTone] = useToast();
 
   const load = useCallback(async () => {
@@ -204,6 +211,36 @@ export function PenggunaClient() {
     else showToast(r.error || 'Gagal menyimpan', 'error');
   }
 
+  // M1-4: edit peran (primary + tambahan) via PUT /api/users.
+  // Guard server: admin-only, primary sendiri tak bisa diubah, demote admin terakhir tak boleh.
+  function openRoleModal(u: User) {
+    setRoleModal(u);
+    setRolePrimary(u.role);
+    setRoleExtra((u.roles || []).filter((r) => r !== u.role));
+  }
+  async function saveRoles() {
+    if (roleBusy || !roleModal) return;
+    const isSelf = roleModal.id === self?.id;
+    if (isSelf && rolePrimary !== roleModal.role) {
+      showToast('Primary role sendiri tidak bisa diubah', 'error');
+      return;
+    }
+    setRoleBusy(true);
+    try {
+      const r = await api<{ ok: boolean }>('/api/users', {
+        method: 'PUT',
+        body: JSON.stringify({ id: roleModal.id, role: rolePrimary, roles: [rolePrimary, ...roleExtra] }),
+      });
+      if (r.ok) {
+        showToast('Peran ' + roleModal.username + ' diperbarui');
+        setRoleModal(null);
+        load();
+      } else showToast(r.error || 'Gagal memperbarui peran', 'error');
+    } finally {
+      setRoleBusy(false);
+    }
+  }
+
   if (loading && users.length === 0) return <PageSkeleton />;
 
   return (
@@ -357,9 +394,16 @@ export function PenggunaClient() {
                   <p className="text-xs text-slate-500 dark:text-slate-400">{u.display_name || '—'}</p>
                 </Td>
                 <Td>
-                  <Badge tone={u.role === 'kasir' ? 'gray' : 'blue'}>
-                    {u.role.toUpperCase()}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-1">
+                    <Badge tone={u.role === 'kasir' ? 'gray' : 'blue'}>
+                      {u.role.toUpperCase()}
+                    </Badge>
+                    {(u.roles || []).filter((x) => x !== u.role).map((x) => (
+                      <Badge key={x} tone="gray">
+                        {ROLE_LABEL[x] ?? x.toUpperCase()}
+                      </Badge>
+                    ))}
+                  </div>
                 </Td>
                 <Td>
                   <div className="flex items-center gap-1.5">
@@ -374,11 +418,17 @@ export function PenggunaClient() {
                 </Td>
                 <Td className="text-right text-xs">
                   <button type="button"
+                    onClick={() => openRoleModal(u)}
+                    className="font-bold text-accent-500 dark:text-accent-300"
+                  >
+                    Peran
+                  </button>
+                  <button type="button"
                     onClick={() => {
                       setPwModal(u);
                       setPw('');
                     }}
-                    className="font-bold text-accent-500 dark:text-accent-300"
+                    className="ml-2 font-bold text-accent-500 dark:text-accent-300"
                   >
                     Reset PW
                   </button>
@@ -472,6 +522,80 @@ export function PenggunaClient() {
             }
           />
         </div>
+      </Modal>
+      <Modal
+        open={!!roleModal}
+        title={'Peran: ' + (roleModal?.username || '')}
+        onClose={() => setRoleModal(null)}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setRoleModal(null)}>
+              Batal
+            </Button>
+            <Button variant="primary" disabled={roleBusy} onClick={saveRoles}>
+              {roleBusy ? 'Menyimpan…' : 'Simpan Peran'}
+            </Button>
+          </>
+        }
+      >
+        {roleModal && (
+          <div className="space-y-3">
+            <div>
+              <label className="mb-1 block text-xs font-bold text-slate-500 dark:text-slate-400">
+                Peran utama
+              </label>
+              <select
+                className="input"
+                value={rolePrimary}
+                disabled={roleModal.id === self?.id}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setRolePrimary(next);
+                  setRoleExtra((prev) => prev.filter((x) => x !== next));
+                }}
+              >
+                {ROLES.map((r) => (
+                  <option key={r} value={r}>
+                    {ROLE_LABEL[r] ?? r.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+              {roleModal.id === self?.id && (
+                <p className="mt-1 text-xs text-slate-400">
+                  Peran utama sendiri tidak bisa diubah.
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-bold text-slate-500 dark:text-slate-400">
+                Peran tambahan
+              </label>
+              <div className="grid grid-cols-2 gap-1">
+                {ROLES.filter((r) => r !== rolePrimary).map((r) => (
+                  <label
+                    key={r}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      className="accent-[#7A1835]"
+                      checked={roleExtra.includes(r)}
+                      onChange={(e) =>
+                        setRoleExtra((prev) =>
+                          e.target.checked ? [...prev, r] : prev.filter((x) => x !== r)
+                        )
+                      }
+                    />
+                    <span>{ROLE_LABEL[r] ?? r.toUpperCase()}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-slate-400">
+                Peran utama otomatis termasuk di dalam set peran.
+              </p>
+            </div>
+          </div>
+        )}
       </Modal>
       <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />
     </div>

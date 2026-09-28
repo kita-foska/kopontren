@@ -129,17 +129,23 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
 export function Sidebar({
   name,
   role,
+  roles,
   open,
   onClose,
   onToggleTheme,
   onLogout,
+  onSwitchRole,
 }: {
   name: string;
   role: Role;
+  /** M1-4: semua role user (dropdown switcher tampil bila >1). */
+  roles?: Role[];
   open: boolean;
   onClose: () => void;
   onToggleTheme: () => void;
   onLogout: () => void;
+  /** M1-4: dipanggil saat user memilih peran di drawer (mobile). */
+  onSwitchRole?: (r: Role) => void | Promise<void>;
 }) {
   const pathname = usePathname();
 
@@ -213,6 +219,37 @@ export function Sidebar({
             onClick={onClose}
           />
         </div>
+        {/* M1-4: switcher peran (versi hamburger) — tampil hanya bila user punya
+            >1 role; pilih -> onSwitchRole + drawer ditutup. */}
+        {roles && roles.length > 1 && onSwitchRole && (
+          <div className="shrink-0 border-b border-slate-200 px-3 pb-2 dark:border-navy-700">
+            <p className="px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              Ganti peran
+            </p>
+            <ul className="space-y-0.5">
+              {roles.map((r) => (
+                <li key={r}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void onSwitchRole(r);
+                      onClose();
+                    }}
+                    className={
+                      'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-bold transition ' +
+                      (r === role
+                        ? 'bg-accent-500 text-white shadow-sm'
+                        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700')
+                    }
+                  >
+                    <span>{ROLE_LABEL[r] ?? r.toUpperCase()}</span>
+                    {r === role && <span className="text-[10px] font-bold">aktif</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <nav className="flex-1 overflow-y-auto px-3 pb-6">
           {groups.map((g) => (
             <div key={g.title}>
@@ -322,13 +359,17 @@ function groupsFor(role: Role): NavGroup[] {
 export function HamburgerNav({
   name,
   role,
+  roles,
   onToggleTheme,
   onLogout,
+  onSwitchRole,
 }: {
   name: string;
   role: Role;
+  roles?: Role[];
   onToggleTheme: () => void;
   onLogout: () => void | Promise<void>;
+  onSwitchRole?: (r: Role) => void | Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -347,10 +388,12 @@ export function HamburgerNav({
       <Sidebar
         name={name}
         role={role}
+        roles={roles}
         open={open}
         onClose={() => setOpen(false)}
         onToggleTheme={onToggleTheme}
         onLogout={onLogout}
+        onSwitchRole={onSwitchRole}
       />
     </>
   );
