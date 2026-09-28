@@ -1207,6 +1207,13 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
 ### Kelompok M — Identitas & multi-role (M1: IN PROGRESS, ACC eksekusi 27 Sep)
 
 - [~] M1 Multi-role support — **IN PROGRESS (ACC eksekusi Gus Fi, 27 Sep)**
+      Status 27 Sep: M1-1 docs selesai (`2dea8a3`); M1-2 skema V19
+      selesai (`411f5b7`); M1-3-prep header shell selesai
+      (`cc45511`). Renomer: `cc45511` ditag M1-3-prep (bagian M1-4),
+      bukan M1-3. Plan: M1-3 = auth.ts + POST /api/auth/switch-role +
+      session active-role (next); M1-4 = UI switcher (dropdown) +
+      PUT /api/users edit role/roles; M1-5 = audit; M1-6 = test +
+      docs + release gate.
       — siji akun duwe role pirang-pirang (`users.roles` JSON, skema
       **V19**, `users.role` = primary). **Dokumen desain:
       `docs/m1-multirole.md`** (4 keputusan ACC + commit plan

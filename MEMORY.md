@@ -253,6 +253,12 @@
   `sessions.active_role`, migrasi **V19**. Dokumen:
   `docs/m1-multirole.md`. Commit plan: M1-1 docs → M1-2 skema V19 →
   M1-3 auth → M1-4 UI → M1-5 audit → M1-6 test + release gate.
+  **Renomer (ACC 27 Sep)**: commit `cc45511` ditag **M1-3-prep**
+  (header shell, bagian dari M1-4) — bukan M1-3. Maka: M1-3 = auth.ts +
+  POST /api/auth/switch-role + session active-role; M1-4 = UI switcher
+  (dropdown) + PUT /api/users edit role/roles; M1-5 = audit; M1-6 =
+  test + docs + release gate. Progres: M1-1 selesai (`2dea8a3`),
+  M1-2 selesai (`411f5b7`), M1-3-prep selesai (`cc45511`). Next: M1-3.
 
 - **H2 scope final (27 Sep)**: redirect role-aware **tanpa redirect anyar
   saka `/`** (ngguyu Q2: home `/` tetep kanggo kabeh role, dashboard =
