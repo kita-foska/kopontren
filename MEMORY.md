@@ -272,7 +272,8 @@
     `parseUserRoles` moved to pure module `lib/features.ts`
     (testable under Node, no server deps); `scripts/test-roles.ts`
     added (30 assertions: ROLES set, normRole, parseUserRoles,
-    release-gate gate); `package.json` += `"release-gate"` script.
+    release-gate gate); `package.json` += `"test:roles"` script
+    (release-gate = `npm run test:roles` hijau).
     **Pitfall Node 24 + Windows**: `process.exit()` di akhir
     test → libuv fastfail `UV_HANDLE_CLOSEREG` (exit 0xC0000409);
     fix = `process.exitCode` + keluar alamiah. tsc EXIT 0,
