@@ -57,8 +57,13 @@ export function KasClient() {
   function removeEntry(id: number) {
     ask({
       title: 'Hapus jurnal kas manual',
-      message: 'Hapus jurnal manual ini?',
+      message: 'Hapus jurnal manual ini? Tindakan tidak dapat dibatalkan.',
       confirmLabel: 'Hapus',
+      risk: 3,
+      impact: [
+        'Jurnal manual terhapus permanen dari jurnal kas.',
+        'Rekap harian berubah setelah dihapus.',
+      ],
       proceed: async () => {
         if (busy) return;
         setBusy(true);

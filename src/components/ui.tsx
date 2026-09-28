@@ -572,20 +572,59 @@ export function useToast(): [
  *   // render {host} di dekat <Toast/>
  */
 export function useConfirm() {
+  /**
+   * UX-6 I-6: param `risk` eksplisit menggantikan heuristic lama
+   * `confirmLabel==='Hapus'`:
+   *   L1 = tanpa modal (proceed langsung)
+   *   L2 = confirm biasa (default — 15 situs lama tak berubah)
+   *   L3 = tombol merah + ringkasan dampak (impact[])
+   *   L4 = L3 + input alasan (wajib; tombol disabled sampai diisi;
+   *        V1: alasan hanya gate sisi klien — BELUM dikirim ke server;
+   *        wire V2 = catatan MEMORY § UX-6 I-6)
+   *   L5 = L3 + ketik frasa konfirmasi persis (typeToConfirm)
+   */
+  type Risk = 1 | 2 | 3 | 4 | 5;
   type Req = {
     title: string;
     message: string;
     confirmLabel: string;
-    proceed: () => void | Promise<void>;
+    risk: Risk;
+    impact?: string[];
+    reasonPlaceholder?: string;
+    typeToConfirm?: string;
+    proceed: (info?: { reason?: string }) => void | Promise<void>;
   };
   const [req, setReq] = useState<Req | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reason, setReason] = useState('');
+  const [typed, setTyped] = useState('');
 
-  function ask(o: { title?: string; message: string; confirmLabel?: string; proceed: () => void | Promise<void> }) {
+  function ask(o: {
+    title?: string;
+    message: string;
+    confirmLabel?: string;
+    risk?: Risk;
+    impact?: string[];
+    reasonPlaceholder?: string;
+    typeToConfirm?: string;
+    proceed: (info?: { reason?: string }) => void | Promise<void>;
+  }) {
+    const risk = o.risk ?? 2;
+    if (risk === 1) {
+      // L1: aksi tanpa konfirmasi — proceed langsung.
+      void o.proceed();
+      return;
+    }
+    setReason('');
+    setTyped('');
     setReq({
       title: o.title ?? 'Konfirmasi',
       message: o.message,
       confirmLabel: o.confirmLabel ?? 'Lanjutkan',
+      risk,
+      impact: o.impact,
+      reasonPlaceholder: o.reasonPlaceholder,
+      typeToConfirm: o.typeToConfirm,
       proceed: o.proceed,
     });
   }
@@ -598,7 +637,9 @@ export function useConfirm() {
     if (!req || busy) return;
     setBusy(true);
     try {
-      await req.proceed();
+      // L4: alasan diteruskan ke proceed (V1: situs boleh mengabaikan;
+      // param alasan server-side = V2 — liha MEMORY § UX-6 I-6).
+      await req.proceed(req.risk === 4 ? { reason: reason.trim() } : undefined);
     } finally {
       setBusy(false);
       setReq(null);
@@ -616,8 +657,12 @@ export function useConfirm() {
             Batal
           </Button>
           <Button
-            variant={req.confirmLabel === 'Hapus' ? 'danger' : 'primary'}
+            variant={req.risk >= 3 ? 'danger' : 'primary'}
             loading={busy}
+            disabled={
+              (req.risk === 4 && reason.trim() === '') ||
+              (req.risk === 5 && typed !== req.typeToConfirm)
+            }
             onClick={onConfirm}
           >
             {busy ? 'Memproses…' : req.confirmLabel}
@@ -626,6 +671,38 @@ export function useConfirm() {
       }
     >
       <p className="whitespace-pre-line text-sm text-slate-600 dark:text-slate-300">{req.message}</p>
+      {req.risk >= 3 && req.impact && (
+        <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200">
+          <p className="mb-1 font-bold">Dampak:</p>
+          <ul className="list-disc pl-4">
+            {req.impact.map((i) => (
+              <li key={i}>{i}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {req.risk === 4 && (
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={2}
+          placeholder={req.reasonPlaceholder ?? 'Alasan tindakan ini (wajib)'}
+          className="mt-3 w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs dark:border-navy-500"
+        />
+      )}
+      {req.risk === 5 && (
+        <div className="mt-3">
+          <p className="mb-1 text-xs text-slate-600 dark:text-slate-300">
+            Ketik <b>{req.typeToConfirm}</b> persis untuk melanjutkan:
+          </p>
+          <input
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder={req.typeToConfirm}
+            className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs dark:border-navy-500"
+          />
+        </div>
+      )}
     </Modal>
   ) : null;
 

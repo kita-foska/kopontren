@@ -88,7 +88,13 @@ export function AuditClient() {
   function purge(days: number) {
     ask({
       title: 'Bersihkan log audit',
-      message: 'Hapus log audit lebih tua dari ' + days + ' hari?\nTindakan ini permanen.',
+      risk: 4,
+      message: 'Hapus log audit lebih tua dari ' + days + ' hari?',
+      impact: [
+        'Log audit berumur > ' + days + ' hari terhapus permanen.',
+        'Rekam jejak aktivitas pengguna periode itu ikut hilang.',
+      ],
+      reasonPlaceholder: 'Alasan, mis. "data hygiene — simpan 90 hari terakhir"',
       confirmLabel: 'Bersihkan',
       proceed: async () => {
         const r = await api('/api/audit?days=' + days, { method: 'DELETE' });

@@ -154,8 +154,15 @@ export function DataClient() {
   function resetAll() {
     ask({
       title: 'Reset seluruh data',
+      risk: 5,
       message:
-        'HAPUS SEMUA DATA operasi (produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal, konsinyasi, member, notifikasi)? Akun pengguna, audit log & pengaturan tetap ada.\nKonfirmasi terakhir: data HILANG PERMANEN (kecuali file backup). Tindakan ini TIDAK BISA DIBATALKAN!',
+        'Hapus semua data operasional: produk, penjualan, retur, piutang, hutang dagang, belanja, pengeluaran, jurnal, konsinyasi, member, notifikasi. Akun, audit log & pengaturan tetap ada.',
+      impact: [
+        'Semua riwayat penjualan & member hilang dari laporan.',
+        'Data hanya bisa pulih dari file backup.',
+        'Tindakan TIDAK BISA DIBATALKAN.',
+      ],
+      typeToConfirm: 'RESET SEMUA DATA',
       confirmLabel: 'Hapus Semua',
       proceed: async () => {
         setBusy('reset');

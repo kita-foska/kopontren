@@ -949,6 +949,28 @@
   lanjutan di TODO): rekap kasir `GET /` tanpa data (P1 fungsional)
   & label total belanja menipu di `belanja-client` — masih open.
 
+### UX-6 FASE I: I-6 useConfirm risk levels L1–L5 (27 Sep, commit I-6)
+- `useConfirm` ui.tsx kini menerima param `risk` (default 2):
+  L1 = tanpa modal (proceed langsung) · L2 = confirm biasa (15 situs
+  lama tak berubah, backward-compat) · L3 = tombol merah + box
+  "Dampak" (`impact[]`) · L4 = L3 + textarea alasan wajib (tombol
+  disabled sampai teks non-kosong setelah `trim()`; alasan
+  diteruskan ke `proceed(info?.reason)` — **V1: BELUM dikirim ke
+  server; wire V2 = tambah param `reason` di DELETE `/api/audit`
+  + rekam ke audit log**) · L5 = L3 + kolom `typeToConfirm`
+  (ketik frasa persis, case-sensitive).
+- Heuristic lama `variant={confirmLabel==='Hapus'?'danger':'primary'}`
+  **PENSION** → `variant={risk>=3?'danger':'primary'}` (label
+  'Hapus' lama di produk L224/L452 = soft-archive → primary aman).
+- 3 situs: `/admin/kas` `removeEntry` (L3 + impact[2]),
+  `/admin/audit` `purge` (L4 + alasan), `/admin/data` `resetAll`
+  (L5 + ketik `RESET SEMUA DATA`). OOS: migrasi L1 utk aksi
+  non-destruktif; `importJson` tetap L2.
+- Backfill hash: I-2 = `8d585f4` · I-5 = `99c973c` · I-6 = report.
+- Pixel-check Gus (3 item): (1) kas → box rose "Dampak" + tombol
+  merah; (2) audit → textarea alasan, tombol disabled sampai diisi;
+  (3) data → harus ketik `RESET SEMUA DATA` persis.
+
 ## 2026-09-25
 ### GROSIR v1: harga grosir per produk + integrasi POS (25 Sep)
 - **Scope (disetujui user): UI admin + API + POS + test.** Struk WA &
