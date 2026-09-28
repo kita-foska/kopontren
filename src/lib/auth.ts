@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { cookies } from 'next/headers';
 import { db, getSettings } from '@/db';
-import { normRole } from './features';
+import { normRole, ROLES } from './features';
 
 // UX-5 H1: Role/ROLES/Feature/FEATURE_MATRIX/normRole/canAccess/isManager
 // pindah ke modul pure `./features` (tanpa dependensi server) agar bisa
@@ -15,8 +15,13 @@ export type AppUser = {
   id: number;
   username: string;
   display_name: string;
+  /** M1: role efektif sesi ini (acting role). Default = primary_role. */
   role: Role;
-  /** Tier: admin = akses penuh; ops = admin + manajer. */
+  /** M1: role utama (kolom users.role). */
+  primary_role: Role;
+  /** M1: semua role user ini (users.roles; selalu memuat primary_role). */
+  roles: Role[];
+  /** Tier: admin = akses penuh; ops = admin + manajer. Dihitung dari role efektif. */
   manager: boolean;
   active: number;
   pw_default: number;
@@ -74,16 +79,32 @@ function sha256(value: string): string {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
-/** Create a session row for user; returns the raw token (store in cookie). */
-export async function createSession(userId: number): Promise<string> {
+/** Create a session row for user; returns the raw token (store in cookie).
+ *  M1: sessions.active_role = role efektif awal sesi. Default = primary
+ *  (keputusan M1: default role aktif hanya saat login = primary). Role
+ *  eksplisit yang tidak dimiliki user diturunkan ke primary. */
+export async function createSession(userId: number, initialRole?: Role): Promise<string> {
   const token = crypto.randomBytes(32).toString('hex');
   const now = Date.now();
   const nowIso = new Date(now).toISOString();
   const expires = new Date(now + COOKIE_MAX_AGE * 1000).toISOString();
   const d = await db();
+  // M1: tetapkan active_role eksplisit (backfill V19 hanya mengisi baris
+  // lama, bukan INSERT baru) — default = primary.
+  let activeRole: Role = 'kasir';
+  const u = (await d
+    .prepare('SELECT role, roles FROM users WHERE id = ?')
+    .get(userId)) as { role: string; roles: string | null } | undefined;
+  if (u) {
+    const primary = normRole(u.role);
+    const all = parseUserRoles(u.roles, primary);
+    activeRole = initialRole && all.includes(normRole(initialRole)) ? normRole(initialRole) : primary;
+  }
   await d
-    .prepare('INSERT INTO sessions (token_hash, user_id, expires_at, last_activity) VALUES (?, ?, ?, ?)')
-    .run(sha256(token), userId, expires, nowIso);
+    .prepare(
+      'INSERT INTO sessions (token_hash, user_id, expires_at, last_activity, active_role) VALUES (?, ?, ?, ?, ?)'
+    )
+    .run(sha256(token), userId, expires, nowIso, activeRole);
   sessionCache.delete(sha256(token));
   return token;
 }
@@ -135,12 +156,17 @@ export async function currentUser(): Promise<AppUser | null> {
   const d = await db();
   const row = (
     await d.prepare(
-      `SELECT u.id, u.username, u.display_name, u.role, u.active, u.pw_default, s.expires_at, s.last_activity
+      `SELECT u.id, u.username, u.display_name, u.role, u.roles, u.active, u.pw_default, s.active_role, s.expires_at, s.last_activity
        FROM sessions s JOIN users u ON u.id = s.user_id
        WHERE s.token_hash = ?`
     ).get(key)
   ) as
-    | (AppUser & { expires_at: string; last_activity: string | null })
+    | (AppUser & {
+        roles: string | null;
+        active_role: string | null;
+        expires_at: string;
+        last_activity: string | null;
+      })
     | undefined;
   if (!row || row.active !== 1 || row.expires_at < nowIso) {
     sessionCache.delete(key);
@@ -166,16 +192,18 @@ export async function currentUser(): Promise<AppUser | null> {
       .run(nowIso, key)
       .catch(() => undefined);
   }
-  const role = normRole(row.role);
-  const user: AppUser = {
-    id: row.id,
-    username: row.username,
-    display_name: row.display_name,
-    role,
-    manager: role === 'admin' || role === 'manajer',
-    active: row.active,
-    pw_default: row.pw_default,
-  };
+  const user = await buildUser(
+    {
+      id: row.id,
+      username: row.username,
+      display_name: row.display_name,
+      role: row.role,
+      roles: row.roles,
+      active: row.active,
+      pw_default: row.pw_default,
+    },
+    row.active_role
+  );
   // Eviksi sederhana: instance yang hidup lama tidak boleh menumpuk entri.
   if (sessionCache.size >= 500) sessionCache.clear();
   sessionCache.set(key, { user, at: Date.now() });
@@ -223,15 +251,47 @@ type UserRow = {
   role: string;
   active: number;
   pw_default: number;
+  /** M1: JSON array of roles (V19); NULL/[] legacy -> [primary]. */
+  roles?: string | null;
 };
 
-async function buildUser(row: UserRow): Promise<AppUser> {
-  const role = normRole(row.role);
+/** M1: parse users.roles (JSON) -> daftar Role valid + dedup; primary
+ *  selalu dipasukkan (safety: user tak pernah kehilangan primary). */
+export function parseUserRoles(raw: string | null | undefined, primary: Role): Role[] {
+  let arr: unknown = null;
+  if (raw) {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      arr = null;
+    }
+  }
+  const out: Role[] = [];
+  if (Array.isArray(arr)) {
+    for (const r of arr) {
+      const s = String(r);
+      if ((ROLES as readonly string[]).includes(s) && !out.includes(s as Role)) out.push(s as Role);
+    }
+  }
+  if (out.length === 0 || !out.includes(primary)) out.push(primary);
+  return out;
+}
+
+/** M1: susun AppUser. `activeRole` = sessions.active_role (NULL legacy ->
+ *  primary). Role efektif = activeRole bila termilik user, selain itu
+ *  primary. manager dihitung dari role efektif. */
+async function buildUser(row: UserRow, activeRole?: string | null): Promise<AppUser> {
+  const primary = normRole(row.role);
+  const roles = parseUserRoles(row.roles, primary);
+  const ar = activeRole ? normRole(activeRole) : primary;
+  const role = roles.includes(ar) ? ar : primary;
   return {
     id: row.id,
     username: row.username,
     display_name: row.display_name,
     role,
+    primary_role: primary,
+    roles,
     manager: role === 'admin' || role === 'manajer',
     active: row.active,
     pw_default: row.pw_default,
@@ -258,12 +318,16 @@ export async function checkSession(): Promise<SessionStatus> {
   const row = (
     await d
       .prepare(
-        `SELECT u.id, u.username, u.display_name, u.role, u.active, u.pw_default, s.expires_at, s.last_activity
+        `SELECT u.id, u.username, u.display_name, u.role, u.roles, u.active, u.pw_default, s.active_role, s.expires_at, s.last_activity
          FROM sessions s JOIN users u ON u.id = s.user_id
          WHERE s.token_hash = ?`
       )
       .get(key)
-  ) as (UserRow & { expires_at: string; last_activity: string | null }) | undefined;
+  ) as (UserRow & {
+    active_role: string | null;
+    expires_at: string;
+    last_activity: string | null;
+  }) | undefined;
   if (!row || row.active !== 1 || row.expires_at < new Date().toISOString()) {
     return { status: 'none' };
   }
@@ -277,11 +341,11 @@ export async function checkSession(): Promise<SessionStatus> {
   }
   const timeout = await getSessionTimeoutSec();
   if (now - lastTs > timeout * 1000) {
-    return { status: 'timeout', user: await buildUser(row) };
+    return { status: 'timeout', user: await buildUser(row, row.active_role) };
   }
   return {
     status: 'active',
-    user: await buildUser(row),
+    user: await buildUser(row, row.active_role),
     pinConfigured: await pinConfigured(row.id),
     secondsLeft: Math.max(0, Math.floor((lastTs + timeout * 1000 - now) / 1000)),
     sessionTimeout: timeout,
@@ -296,14 +360,14 @@ export async function findSessionUser(): Promise<AppUser | null> {
   const row = (
     await d
       .prepare(
-        `SELECT u.id, u.username, u.display_name, u.role, u.active, u.pw_default
+        `SELECT u.id, u.username, u.display_name, u.role, u.roles, u.active, u.pw_default, s.active_role
          FROM sessions s JOIN users u ON u.id = s.user_id
          WHERE s.token_hash = ?`
       )
       .get(sha256(token))
-  ) as UserRow | undefined;
+  ) as (UserRow & { active_role: string | null }) | undefined;
   if (!row || row.active !== 1) return null;
-  return buildUser(row);
+  return buildUser(row, row.active_role);
 }
 
 /** Refresh last_activity (dipanggil tiap aktivitas/request); invalidasi cache. */
@@ -319,6 +383,42 @@ export async function touchSession(): Promise<{ ok: boolean; exp?: { value: stri
   sessionCache.delete(key);
   const exp = await expCookieOptions();
   return { ok: true, exp };
+}
+
+// ── M1 multi-role: mode switch ─────────────────────────────────────────
+/**
+ * M1: ganti role efektif sesi ini (mode switch ke role tambahan).
+ * - `target` HARUS termilik user (users.roles); selain itu -> error.
+ * - Update sessions.active_role + invalidasi sessionCache (TTL 30 dtk) —
+ *   tanpa invalidasi, role lama bisa tersaji hingga TTL habis.
+ * - Tidak mengubah users.role (primary tetap primary).
+ */
+export async function switchRole(target: Role): Promise<{ ok: boolean; error?: string; user?: AppUser }> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: 'Sesi tidak ditemukan. Silakan login.' };
+  const key = sha256(token);
+  const d = await db();
+  const row = (
+    await d
+      .prepare(
+        `SELECT u.id, u.username, u.display_name, u.role, u.roles, u.active, u.pw_default, s.active_role
+         FROM sessions s JOIN users u ON u.id = s.user_id
+         WHERE s.token_hash = ?`
+      )
+      .get(key)
+  ) as (UserRow & { active_role: string | null }) | undefined;
+  if (!row || row.active !== 1) return { ok: false, error: 'Sesi tidak valid. Silakan login.' };
+  const primary = normRole(row.role);
+  const all = parseUserRoles(row.roles, primary);
+  const n = normRole(target);
+  if (!all.includes(n)) {
+    return { ok: false, error: 'Role tidak dimiliki akun ini.' };
+  }
+  if (row.active_role !== n) {
+    await d.prepare('UPDATE sessions SET active_role = ? WHERE token_hash = ?').run(n, key);
+  }
+  sessionCache.delete(key); // invalidasi: cache role lama tak boleh tersaji
+  return { ok: true, user: await buildUser(row, n) };
 }
 
 // ── PIN ──

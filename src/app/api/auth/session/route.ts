@@ -8,6 +8,8 @@ function pub(u: AppUser) {
     username: u.username,
     display_name: u.display_name,
     role: u.role,
+    primary_role: u.primary_role,
+    roles: u.roles,
   };
 }
 

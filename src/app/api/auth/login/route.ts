@@ -8,6 +8,8 @@ import {
   hashPassword,
   pinConfigured,
   expCookieOptions,
+  normRole,
+  parseUserRoles,
 } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { clientIp } from '@/lib/client-ip';
@@ -76,6 +78,7 @@ export async function POST(req: Request) {
         username: string;
         display_name: string;
         role: string;
+        roles: string | null;
         active: number;
         salt: string;
         pass_hash: string;
@@ -109,6 +112,7 @@ export async function POST(req: Request) {
     entityId: null,
     req,
   });
+  const userRole = normRole(user.role);
   const res = NextResponse.json({
     ok: true,
     pin_configured: await pinConfigured(user.id),
@@ -116,7 +120,10 @@ export async function POST(req: Request) {
       id: user.id,
       username: user.username,
       display_name: user.display_name,
-      role: user.role,
+      role: userRole,
+      primary_role: userRole,
+      // M1: daftar role yang dimiliki; role aktif awal = primary (keputusan M1 #3).
+      roles: parseUserRoles(user.roles, userRole),
     },
   });
   res.cookies.set(SESSION_COOKIE, token, {

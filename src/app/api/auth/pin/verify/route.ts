@@ -13,6 +13,8 @@ import {
  * Verifikasi PIN setelah sesi idle timeout. Membaca sesi tanpa cek idle
  * (findSessionUser) agar user bisa re-auth. 3x salah -> sesi diakhiri
  * (auto-logout) + kunci PIN 5 menit; klien diminta login ulang.
+ * M1: active_role sesi DIPERTAHANKAN — verify hanya refresh last_activity;
+ * findSessionUser membaca s.active_role, tidak pernah reset ke primary.
  */
 export async function POST(req: Request) {
   const b = (await req.json().catch(() => ({}))) as { pin?: string };
@@ -39,6 +41,8 @@ export async function POST(req: Request) {
         username: user.username,
         display_name: user.display_name,
         role: user.role,
+        primary_role: user.primary_role,
+        roles: user.roles,
       },
     });
     if (t.exp) {
