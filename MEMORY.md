@@ -216,7 +216,7 @@
   mobile (wrap): breadcrumb tampil "Kopontren / Admin /
   Produk"; link "Kopontren" kerja; item terakhir bold.
 
-### MULTI-ROLE M1: IN PROGRESS (ACC eksekusi Gus Fi, 27 Sep; riwayat keputusan di bawah)
+### MULTI-ROLE M1: SUBSTANTIAL SELESAI (ACC eksekusi Gus Fi, 27 Sep; M1-1..M1-4 + M1-6 done; M1-5 = verify; riwayat keputusan di bawah)
 - **Pertanyaan Gus Fi (27 Sep)**: account multi-role (siji akun duwe
   role langkung saka siji, mis. admin + member + kasir + pengurus).
   **Keputusan: ora diimplementasi saiki** — model saat ini
@@ -259,7 +259,27 @@
   (dropdown) + PUT /api/users edit role/roles; M1-5 = audit; M1-6 =
   test + docs + release gate. Progres: M1-1 selesai (`2dea8a3`),
   M1-2 selesai (`411f5b7`), M1-3-prep selesai (`cc45511`),
-  M1-3 selesai (`b3b4f34`). Next: M1-4.
+  M1-3 selesai (`b3b4f34`), M1-4 selesai (`0908155`),
+  M1-6 selesai (`9a5f73c`).
+  - **M1-4 `0908155` (4 file, +368/−28, 27 Sep)**: UI role
+    switcher (dropdown shell/sidebar) + `pengguna-client`
+    multi-role editor + `api/users/route.ts`: GET now includes
+    `role` + `roles`; PUT validates explicit — unknown role →
+    400 "Role tidak valid." (BUKAN diam-diam 'kasir' / silent
+    demote); guard self primary role; guard last admin demote;
+    audit `user:roles` with before/after.
+  - **M1-6 `9a5f73c` (4 file, +118/−24, 27 Sep)**:
+    `parseUserRoles` moved to pure module `lib/features.ts`
+    (testable under Node, no server deps); `scripts/test-roles.ts`
+    added (30 assertions: ROLES set, normRole, parseUserRoles,
+    release-gate gate); `package.json` += `"release-gate"` script.
+    **Pitfall Node 24 + Windows**: `process.exit()` di akhir
+    test → libuv fastfail `UV_HANDLE_CLOSEREG` (exit 0xC0000409);
+    fix = `process.exitCode` + keluar alamiah. tsc EXIT 0,
+    build EXIT 0, test-roles ALL_PASS.
+  - **M1-5 (audit)**: `auth:switch-role` + `user:roles` events
+    sudah ada — verify in release gate. Next: P0 Production
+    Certification.
 
 - **H2 scope final (27 Sep)**: redirect role-aware **tanpa redirect anyar
   saka `/`** (ngguyu Q2: home `/` tetep kanggo kabeh role, dashboard =

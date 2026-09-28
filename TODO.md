@@ -1204,16 +1204,19 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
 
 
 
-### Kelompok M — Identitas & multi-role (M1: IN PROGRESS, ACC eksekusi 27 Sep)
+### Kelompok M — Identitas & multi-role (M1: M1-1..M1-4 + M1-6 SELESAI 27 Sep; M1-5 = verify; ACC eksekusi 27 Sep)
 
-- [~] M1 Multi-role support — **IN PROGRESS (ACC eksekusi Gus Fi, 27 Sep)**
+- [~] M1 Multi-role support — **M1-1..M1-4 + M1-6 SELESAI 27 Sep (M1-5 = verify release-gate)**
       Status 27 Sep: M1-1 docs selesai (`2dea8a3`); M1-2 skema V19
       selesai (`411f5b7`); M1-3-prep header shell selesai
-      (`cc45511`); M1-3 auth+switch-role selesai (`b3b4f34`).
+      (`cc45511`); M1-3 auth+switch-role selesai (`b3b4f34`);
+      M1-4 UI switcher + PUT/GET /api/users role/roles selesai
+      (`0908155`); M1-6 test-roles (30) + release-gate selesai
+      (`9a5f73c`).
       Renomer: `cc45511` = M1-3-prep (bagian M1-4), bukan M1-3.
-      Plan: M1-3 - SELESAI; M1-4 = UI switcher (dropdown) +
-      PUT /api/users edit role/roles + GET include roles (next);
-      M1-5 = audit; M1-6 = test + docs + release gate.
+      Status: M1-1…M1-4 + M1-6 SELESAI; M1-5 = audit
+      (`auth:switch-role` + `user:roles` events sudah ada — verify
+      release-gate). Next: P0 Production Certification.
       — siji akun duwe role pirang-pirang (`users.roles` JSON, skema
       **V19**, `users.role` = primary). **Dokumen desain:
       `docs/m1-multirole.md`** (4 keputusan ACC + commit plan
