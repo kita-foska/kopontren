@@ -110,3 +110,34 @@ export const HOME_BY_ROLE: Readonly<Record<Role, string>> = {
 export function roleHome(role: unknown): string {
   return HOME_BY_ROLE[normRole(role)];
 }
+
+// ── M1: multi-role (pure) ──────────────────────────────────────────────
+/**
+ * M1: parse `users.roles` (JSON array) -> daftar Role valid + dedup.
+ * Nilai `primary` WAJIB sudah dinormalkan pemanggil (normRole) — helper ini
+ * murni string/JSON + ROLES lokal, sehingga bisa diuji di Node (M1-6
+ * scripts/test-roles.ts). Pindah dari auth.ts agar tidak menarik dependensi
+ * server (next/headers, @/db) ke modul pure.
+ * - raw NULL/kosong/JSON rusak/non-array -> [primary].
+ * - Entry tak dikenal di-drop; primary selalu dipasukkan (safety: user
+ *   tak pernah kehilangan primary role).
+ */
+export function parseUserRoles(raw: string | null | undefined, primary: Role): Role[] {
+  let arr: unknown = null;
+  if (raw) {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      arr = null;
+    }
+  }
+  const out: Role[] = [];
+  if (Array.isArray(arr)) {
+    for (const r of arr) {
+      const s = String(r);
+      if ((ROLES as readonly string[]).includes(s) && !out.includes(s as Role)) out.push(s as Role);
+    }
+  }
+  if (out.length === 0 || !out.includes(primary)) out.push(primary);
+  return out;
+}

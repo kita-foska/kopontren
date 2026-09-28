@@ -1,13 +1,16 @@
 import crypto from 'node:crypto';
 import { cookies } from 'next/headers';
 import { db, getSettings } from '@/db';
-import { normRole, ROLES } from './features';
+import { normRole, ROLES, parseUserRoles } from './features';
 
 // UX-5 H1: Role/ROLES/Feature/FEATURE_MATRIX/normRole/canAccess/isManager
 // pindah ke modul pure `./features` (tanpa dependensi server) agar bisa
 // diimpor komponen client (sidebar). Re-export: import lawas dr
 // '@/lib/auth' tetap jalan.
-export { ROLES, FEATURE_MATRIX, normRole, canAccess, isManager, HOME_BY_ROLE, roleHome } from './features';
+// M1-6: parseUserRoles kini di modul pure ./features (teruji scripts/
+// test-roles.ts di Node); re-export dipertahankan agar import lawas
+// dr '@/lib/auth' (mis. api/users/route.ts) tetap jalan.
+export { ROLES, FEATURE_MATRIX, normRole, canAccess, isManager, HOME_BY_ROLE, roleHome, parseUserRoles } from './features';
 export type { Role, Feature } from './features';
 import type { Role } from './features';
 
@@ -255,27 +258,8 @@ type UserRow = {
   roles?: string | null;
 };
 
-/** M1: parse users.roles (JSON) -> daftar Role valid + dedup; primary
- *  selalu dipasukkan (safety: user tak pernah kehilangan primary). */
-export function parseUserRoles(raw: string | null | undefined, primary: Role): Role[] {
-  let arr: unknown = null;
-  if (raw) {
-    try {
-      arr = JSON.parse(raw);
-    } catch {
-      arr = null;
-    }
-  }
-  const out: Role[] = [];
-  if (Array.isArray(arr)) {
-    for (const r of arr) {
-      const s = String(r);
-      if ((ROLES as readonly string[]).includes(s) && !out.includes(s as Role)) out.push(s as Role);
-    }
-  }
-  if (out.length === 0 || !out.includes(primary)) out.push(primary);
-  return out;
-}
+// M1-6: parseUserRoles pindah ke ./features (modul pure, teruji di Node) —
+// lihat import + re-export di atas file ini.
 
 /** M1: susun AppUser. `activeRole` = sessions.active_role (NULL legacy ->
  *  primary). Role efektif = activeRole bila termilik user, selain itu

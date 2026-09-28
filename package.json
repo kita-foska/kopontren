@@ -23,7 +23,8 @@
     "test:rekap": "node scripts/test-rekap.ts",
     "test:wholesale": "node scripts/test-wholesale.ts",
     "test:qris": "node scripts/test-qris.ts",
-    "test:fetch": "node scripts/test-fetch-util.ts"
+    "test:fetch": "node scripts/test-fetch-util.ts",
+    "test:roles": "node scripts/test-roles.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.0",
