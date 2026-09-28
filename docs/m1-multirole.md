@@ -14,6 +14,7 @@
 | 2 | Siapa yang boleh multi-role | **Semua user**, diassign oleh admin via halaman Pengguna. |
 | 3 | Default role aktif saat login | **Primary role** (`users.role`). "Last used" tidak dipersist (V1). |
 | 4 | Audit trail | `audit_log.user_role` (kolom existing) = snapshot **acting role** → zero perubahan di 20+ route. Event baru `auth:switch-role` merekam `{active_role: {before, after}, primary_role}` di fieldChanges/new_value. **Tidak menambah kolom baru** di `audit_log` (V1). |
+| 5 | Tampilan role di header | **Kompak: avatar + 1 chip role-aktif + switcher** (menu switcher di hamburger utk mobile / dropdown utk desktop). **JANGAN numpuk N chip role di baris header** — bikin sempak & tumpang tindih. Daftar semua role masuk switcher, bukan header. |
 
 ## 2. Skema (Option A — JSON, migrasi V19)
 

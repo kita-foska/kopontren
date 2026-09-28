@@ -140,7 +140,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                 onClick={() => setCheatOpen(true)}
                 aria-label="Pintasan keyboard (?)"
                 title="Pintasan keyboard (?)"
-                className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2 text-xs text-slate-500 dark:border-navy-600 dark:text-slate-400"
+                className="hidden h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2 text-xs text-slate-500 sm:flex dark:border-navy-600 dark:text-slate-400"
               >
                 <kbd className="rounded bg-slate-100 px-1 text-[10px] font-semibold text-slate-500 dark:bg-navy-800 dark:text-slate-400">
                   ?
@@ -148,15 +148,15 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
               </button>
             )}
             {/* Identitas user selalu tampil (termasuk mobile): avatar + nama (sm+) + pill role. */}
-            <div className="flex items-center gap-1.5 rounded-full border border-slate-200 py-1 pl-1 pr-2 dark:border-navy-600 sm:px-2.5">
+            <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 py-1 pl-1 pr-1.5 dark:border-navy-600 sm:px-2">
               <Avatar name={user.display_name || user.username} size="sm" />
-              <span className="hidden max-w-[6rem] truncate text-xs font-semibold text-slate-700 sm:inline dark:text-slate-200">
+              <span className="hidden min-w-0 max-w-[5rem] truncate text-xs font-semibold text-slate-700 lg:inline dark:text-slate-200">
                 {user.display_name || user.username}
               </span>
               <span
                 className={
                   // Pill role: admin = aksen; semua peran lain = slate.
-                  'rounded px-1.5 py-px text-2xs font-bold text-white ' +
+                  'shrink-0 rounded px-1.5 py-px text-2xs font-bold text-white ' +
                   (user.role === 'admin' ? 'bg-accent-500' : 'bg-slate-400 dark:bg-slate-500')
                 }
               >
