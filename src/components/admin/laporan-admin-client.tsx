@@ -322,7 +322,17 @@ export function LaporanAdminClient() {
         ) : hourlyErr ? (
           <p className="py-8 text-center text-sm text-slate-500">{hourlyErr}</p>
         ) : (
-          <p className="py-8 text-center text-sm text-slate-500">Memuat grafik jam sibuk…</p>
+          /* Skeleton (UX-8A): placeholder bar jam (24) menggantikan teks
+             "Memuat…" — stabil layout, sinyal visual grafik sedang dimuat. */
+          <div className="flex h-32 items-end gap-1 py-4" aria-busy="true" role="status">
+            {Array.from({ length: 24 }, (_, i) => (
+              <div
+                key={i}
+                className="flex-1 animate-pulse rounded-t bg-slate-300 dark:bg-navy-500"
+                style={{ height: 20 + ((i * 7) % 4) * 12 + '%' }}
+              />
+            ))}
+          </div>
         )}
       </div>
 
@@ -469,7 +479,7 @@ export function LabaRugiTab() {
       </div>
 
       {loading && !data ? (
-        <p className="text-sm text-slate-500">Memuat…</p>
+        <PageSkeleton />
       ) : err && !data ? (
         <ErrorState
           text={err}
@@ -613,7 +623,7 @@ export function NeracaTab() {
       </div>
 
       {loading && !data ? (
-        <p className="text-sm text-slate-500">Memuat…</p>
+        <PageSkeleton />
       ) : err && !data ? (
         <ErrorState
           text={err}
