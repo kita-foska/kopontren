@@ -5,6 +5,7 @@ import { PageSkeleton, Table, Td, TEmpty, Trow, Th, Empty, api, Button, StatusBa
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 import { parseWholesaleJson } from '@/lib/wholesale';
+import { readSavedView, writeSavedView, SAVEDVIEW_KEYS } from '@/lib/saved-view';
 import { Download } from 'lucide-react';
 
 type Product = {
@@ -50,8 +51,15 @@ export function ProdukClient() {
   const [toast, showToast, , toastTone, toastAction] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [stockEdits, setStockEdits] = useState<Record<number, string>>({});
-  const [q, setQ] = useState('');
-  const [cat, setCat] = useState('');
+  // UX-7E: pulihkan filter terdahulu dari saved view ('' = semua kategori).
+  // Lazy initializer: dibaca sekali saat mount; kategori basi tak bermasalah
+  // (hasilnya hanya tabel kosong, bisa di-clear dari UI).
+  const [q, setQ] = useState(
+    () => readSavedView<{ search?: string }>(SAVEDVIEW_KEYS.produk)?.search ?? ''
+  );
+  const [cat, setCat] = useState(
+    () => readSavedView<{ category?: string }>(SAVEDVIEW_KEYS.produk)?.category ?? ''
+  );
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   // Kelola massal: pilih baris -> stok/kategori/hapus massal via /api/products/bulk
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -78,6 +86,15 @@ export function ProdukClient() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // UX-7E: simpan filter kategori + cari (debounce 300ms) ke saved view.
+  useEffect(() => {
+    const t = setTimeout(
+      () => writeSavedView(SAVEDVIEW_KEYS.produk, { category: cat, search: q }),
+      300
+    );
+    return () => clearTimeout(t);
+  }, [cat, q]);
 
   const categories = useMemo(() => {
     const s = new Set<string>();

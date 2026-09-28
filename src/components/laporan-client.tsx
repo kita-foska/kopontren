@@ -5,6 +5,7 @@ import { PageSkeleton, Table, Td, Trow, Empty, api, apiRetry, Badge, Button, Fil
 import { rp, fmtDateTime, startOfDayJakarta } from '@/lib/format';
 import { buildRekapMsg, shareRekap, type RekapSale } from '@/lib/rekap';
 import { parsePaySplit, payMethodLabel } from '@/lib/pay-methods';
+import { readSavedView, writeSavedView, SAVEDVIEW_KEYS } from '@/lib/saved-view';
 import { ChevronDown, FileDown, FileText, Smartphone } from 'lucide-react';
 
 type Sale = {
@@ -35,7 +36,14 @@ export function LaporanClient({
   // Total baris dari server (COUNT /api/sales) — "N" utk notifikasi
   // "Menampilkan X dari N transaksi" (bukan jumlah baris yang sudah termuat).
   const [total, setTotal] = useState(0);
-  const [period, setPeriod] = useState(scope === 'today' ? 1 : 7);
+  // UX-7E: periode dipulihkan dari saved view (hanya scope 'all'; validasi
+  // ke set chip 1/7/30/0 — nilai tak dikenal jatuh ke default 7).
+  const [period, setPeriod] = useState(() => {
+    if (scope === 'today') return 1;
+    const saved = readSavedView<{ period?: string | number }>(SAVEDVIEW_KEYS.laporan)?.period;
+    const p = Number(saved);
+    return [1, 7, 30, 0].includes(p) ? p : 7;
+  });
   const [statusF, setStatusF] = useState('');
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<number | null>(null);
@@ -83,6 +91,16 @@ export function LaporanClient({
   useEffect(() => {
     load();
   }, [load]);
+
+  // UX-7E: simpan preferensi periode (debounce 300ms) ke saved view.
+  useEffect(() => {
+    if (scope === 'today') return;
+    const t = setTimeout(
+      () => writeSavedView(SAVEDVIEW_KEYS.laporan, { period: String(period) }),
+      300
+    );
+    return () => clearTimeout(t);
+  }, [period, scope]);
 
   const filteredSales = useMemo(() => {
     if (!q.trim()) return sales;

@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { canAccess, currentUser, isManager, roleHome } from '@/lib/auth';
+import type { Feature } from '@/lib/features';
 import { db } from '@/db';
 import { kpiDelta, rp, startOfDayJakarta, type KpiDelta } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { PengurusDashboardClient } from '@/components/pengurus-dashboard-client';
 import { ActivityFeed, type FeedItem, type KpiMover } from '@/components/activity-feed';
-import { TermTip } from '@/components/ui';
+import { Button, TermTip } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -169,6 +170,19 @@ export default async function PengurusDashboardPage() {
     },
   ];
 
+  // UX-7D: baris quick actions — mirror kartu "Aksi cepat" dashboard admin,
+  // tiap CTA di-guard per tier (FEATURE_MATRIX, src/lib/features.ts).
+  // Pengurus read-only: kas/piutang bukan miliknya, jadi CTA ke-5 =
+  // dashboard admin (tier 'laporan').
+  type QuickAction = { label: string; href: string; tier: Feature };
+  const quickActions: QuickAction[] = [
+    { label: 'Laporan', href: '/admin/laporan', tier: 'laporan' },
+    { label: 'Zakat', href: '/admin/zakat', tier: 'zakat' },
+    { label: 'Audit', href: '/admin/audit', tier: 'audit' },
+    { label: 'Ringkasan', href: '/', tier: 'personal' },
+    { label: 'Dashboard', href: '/admin/dashboard', tier: 'laporan' },
+  ];
+
   return (
     <Shell user={user}>
       <div className="card-hero mb-5">
@@ -216,6 +230,19 @@ export default async function PengurusDashboardPage() {
             )}
           </Link>
         ))}
+      </div>
+
+      <div className="card fade-up p-4">
+        <h2 className="mb-2 font-bold">Aksi cepat</h2>
+        <div className="flex flex-wrap gap-2">
+          {quickActions
+            .filter((qa) => canAccess(user, qa.tier))
+            .map((qa) => (
+              <Button key={qa.label} variant="ghost" as="a" href={qa.href}>
+                {qa.label}
+              </Button>
+            ))}
+        </div>
       </div>
 
       {feedOk && (

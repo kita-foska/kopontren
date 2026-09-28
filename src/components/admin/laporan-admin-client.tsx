@@ -7,6 +7,7 @@ import { HourBarChart, type HourPoint } from '../charts';
 import { buildLabaRugiWa, shareRekap } from '@/lib/rekap';
 import type { KeuanganPayload } from '@/lib/keuangan';
 import type { NeracaPayload } from '@/lib/neraca';
+import { readSavedView, writeSavedView, SAVEDVIEW_KEYS } from '@/lib/saved-view';
 import { ChevronDown, FileDown, MessageCircle } from 'lucide-react';
 
 type Summary = {
@@ -121,7 +122,13 @@ function PlRow({
 
 export function LaporanAdminClient() {
   const [tab, setTab] = useState<'ringkasan' | 'laba' | 'neraca'>('ringkasan');
-  const [period, setPeriod] = useState('30');
+  // UX-7E: periode dipulihkan dari saved view (validasi ke set chip
+  // 1/7/30/365 — nilai tak dikenal jatuh ke default 30).
+  const [period, setPeriod] = useState(() => {
+    const saved = readSavedView<{ period?: string | number }>(SAVEDVIEW_KEYS.laporan)?.period;
+    const p = String(saved ?? '');
+    return ['1', '7', '30', '365'].includes(p) ? p : '30';
+  });
   const [s, setS] = useState<Summary | null>(null);
   // Jam Sibuk: agregasi 24 jam WIB untuk preset yang dipilih; silent-fail
   // (kartu tidak menghancurkan tab utama), error tercatat di console.
@@ -163,6 +170,12 @@ export function LaporanAdminClient() {
     return () => {
       alive = false;
     };
+  }, [period]);
+
+  // UX-7E: simpan preferensi periode (debounce 300ms) ke saved view.
+  useEffect(() => {
+    const t = setTimeout(() => writeSavedView(SAVEDVIEW_KEYS.laporan, { period }), 300);
+    return () => clearTimeout(t);
   }, [period]);
 
   async function csv() {
