@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOP Pembelian — Kopontren Al Ittihad</title>
+<style>
+:root{--maroon:#7a1835;--wine:#7a1c1c;--bg:#faf5f6;--card:#fff;--line:#e9d5d8;--line2:#e2e8f0;--ink:#170a0e;--sub:#6b5a60;--ok:#059669;--bad:#e11d48;--warn:#f59e0b;--slate:#f1f5f9}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,'Segoe UI',sans-serif;line-height:1.55;font-size:15px}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+.hero{background:var(--maroon);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px}
+.hero h1{font-size:1.55rem;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;opacity:.75;font-size:.85rem}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.meta span{background:rgba(255,255,255,.14);border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:600}
+h2{font-size:1.15rem;margin:28px 0 10px;font-weight:800}
+h2 .n{display:inline-block;background:var(--maroon);color:#fff;border-radius:8px;width:26px;height:26px;line-height:26px;text-align:center;font-size:.85rem;margin-right:8px}
+h3{font-size:.95rem;margin:18px 0 8px;font-weight:800;color:var(--maroon)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(23,10,14,.05)}
+ul,ol{padding-left:20px;margin:8px 0}
+li{margin:6px 0}
+.note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:.85rem;margin:12px 0}
+.todo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.todo{grid-template-columns:1fr}}
+.todo .card.d{border-top:4px solid var(--ok)}
+.todo .card.k{border-top:4px solid var(--bad)}
+.todo h3{margin-top:0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;color:#64748b;padding:8px;border-bottom:2px solid var(--line2);font-weight:800}
+td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.ok{color:var(--ok);font-weight:700}
+.bad{color:var(--bad);font-weight:700}
+.tbl{border:1px solid var(--line2);border-radius:12px;overflow-x:auto;background:#fff}
+.tbl table{min-width:520px}
+.tag{display:inline-block;font-size:.6rem;font-weight:800;border-radius:6px;padding:2px 7px}
+.tag.g{background:#d1fae5;color:#065f46}.tag.a{background:#fef3c7;color:#92400e}.tag.r{background:#ffe4e6;color:#9f1239}.tag.b{background:#dbeafe;color:#1e40af}
+.inp{display:block;width:100%;min-height:44px;border:1px solid #cbd5e1;border-radius:10px;padding:8px 12px;font-size:.78rem;background:#fff}
+.inp::placeholder{color:#94a3b8}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.frow .fl{font-size:.62rem;font-weight:800;text-transform:uppercase;color:#64748b;letter-spacing:.04em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:10px;font-weight:700;font-size:.8rem;border:1px solid transparent;cursor:pointer;background:#f1f5f9}
+.btn.pri{background:var(--maroon);color:#fff}
+.btn.amber{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:.72rem}
+.kcard{border:1px solid var(--line2);border-radius:12px;padding:10px 12px;background:#fff;font-size:.78rem}
+.kcard .top{display:flex;justify-content:space-between;gap:8px}
+.chipm{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--maroon);color:#fff;border-radius:50%;font-size:.62rem;font-weight:800;flex:none}
+.anno{display:flex;gap:10px;margin:10px 0;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:10px 12px;font-size:.82rem}
+.anno .ch{flex:none;width:26px;height:26px;background:var(--warn);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+.legend{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;font-size:.8rem;margin-top:10px}
+.legend b{color:var(--ok)}
+@media print{
+body{background:#fff}
+.wrap{max-width:none;padding:0}
+.hero{border-radius:0}
+.anno{border-color:#94a3b8;background:#f8fafc}
+.card{box-shadow:none}
+@page{size:A4;margin:8mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1>SOP Pembelian — Kopontren Al Ittihad</h1>
+<p>Panduan peran <b>Pembelian</b>: membeli ke supplier, mencatat belanja (stok + HPP otomatis), mengelola hutang supplier, dan menerima titipan konsinyasi.</p>
+<div class="meta"><span>Peran: Pembelian</span><span>Halaman: Belanja · Hutang Supplier · Konsinyasi · Ringkasan</span><span>Angka di gambar = contoh (mock)</span></div>
+</div>
+
+<div class="note"><b>Cara baca:</b> lingkaran maroon ①–⑥ menunjuk elemen pada <b>gambar tiruan</b> di bagian bawah (bukan screenshot — digambar ulang dari aplikasi, warna maroon). Semua angka hanya <b>contoh</b>.</div>
+
+<h2><span class="n">1</span>Tujuan peran Pembelian</h2>
+<div class="card">
+<ul>
+<li><b>Toko tidak kehabisan</b> — belanja masuk tercatat segera, stok &amp; harga modal (HPP) langsung benar.</li>
+<li><b>Hutang supplier terkendali</b> — tahu siapa yang berutang, berapa sisa, kapan jatuh tempo; pembayaran tercatat otomatis sebagai kas keluar.</li>
+<li><b>Konsinyasi lancar</b> — barang titipan supplier/ahli masuk, terjual, dan pembagiannya (komisi) tepat; tidak ada sengketa.</li>
+</ul>
+<p style="margin-bottom:0">Pembelian bekerja berpasangan dengan Gudang: Anda catat belanjanya, Gudang mengecek fisik &amp; opname.</p>
+</div>
+
+<h2><span class="n">2</span>Alur kerja</h2>
+<div class="card">
+<ol>
+<li><b>Rencanakan belanja</b> — dari peringatan stok menipis (Dashboard/Ringkasan) dan daftar permintaan Gudang.</li>
+<li><b>Catat belanja</b> <span class="chipm">①</span> — pada halaman Belanja: pilih <b>Produk</b> → <b>Jumlah</b> → <b>HPP (Rp)</b> (harga beli per satuan) → <b>Supplier</b>. Efek otomatis: <b>stok bertambah</b>, HPP tercatat (dasar laba), kas keluar bila dibayar tunai.</li>
+<li><b>Catat pengeluaran umum</b> (listrik, air, bensin) di bagian <b>Pengeluaran</b> <span class="chipm">②</span>: Uraian ("Listrik, air, bensin…") + Kategori + Nominal.</li>
+<li><b>Bayar supplier</b> — di halaman Hutang Supplier, pilih supplier → ketik nominal → <b>catat pembayaran</b>; sisa hutang berkurang otomatis <span class="chipm">③</span>. Setiap pembayaran otomatis = kas keluar di menu Kas.</li>
+<li><b>Terima titipan</b> (konsinyasi) <span class="chipm">④</span> — form: pemilik, telp, barang, satuan, jumlah, harga sepakat, komisi (%). Baris konsinyasi aktif muncul sebagai kartu <span class="chipm">⑤</span>: terjual N dari M, sisa, komisi, tagihan.</li>
+<li><b>Bagi hasil</b> <span class="chipm">⑥</span> — saat terjual, isi nominal yang dibayarkan ke pemilik; komisi toko (upah) dihitung otomatis = pendapatan toko. Tutup titipan bila habis/dikembalikan.</li>
+</ol>
+</div>
+
+<h2><span class="n">3</span>Fitur yang tersedia untuk Pembelian</h2>
+<div class="card">
+<table>
+<tr><th>Fitur</th><th>Pakai untuk</th></tr>
+<tr><td><b>Belanja (Purchasing)</b></td><td>Catat pembelian → stok &amp; HPP otomatis; pengeluaran umum.</td></tr>
+<tr><td><b>Hutang Supplier</b></td><td>Daftar supplier ber-hutang + sisa; catat pembayaran; jatuh tempo.</td></tr>
+<tr><td><b>Konsinyasi</b></td><td>Terima titipan; catat penjualan titipan; bagi hasil (komisi); komisi khusus per pemilik.</td></tr>
+<tr><td><b>Ringkasan (/)</b></td><td>Aktivitas pribadi + peringatan stok menipis.</td></tr>
+</table>
+</div>
+
+<h2><span class="n">4</span>Do's &amp; Don'ts</h2>
+<div class="todo">
+<div class="card d"><h3 class="ok">✔ Do's</h3>
+<ul>
+<li>Catat belanja <b>secepat barang diterima</b> — bukan besok-besok.</li>
+<li>Tulis <b>HPP akurat</b> (harga beli riil, termasuk ongkir bila disepakati) — laba dihitung dari angka ini.</li>
+<li>Pantau <b>sisa hutang</b> tiap minggu; bayar sesuai jatuh tempo supaya hubungan supplier baik.</li>
+<li>Konsinyasi: <b>sepakati komisi di awal</b> (form komisi per pemilik); catat penjualan titipan secepatnya.</li>
+<li>Koordinasi opname dengan Gudang setelah barang masuk.</li>
+</ul></div>
+<div class="card k"><h3 class="bad">✘ Don'ts</h3>
+<ul>
+<li>Jangan beli <b>dengan jumlah spekulatif</b> — lihat dulu prediksi "habis dalam N hari".</li>
+<li>Jangan ubah HPP lama untuk "menyedikan" laba — koreksi hanya lewat catatan.</li>
+<li>Jangan bayar supplier <b>tanpa tercatat</b> di aplikasi (cash luar aplikasi = kas hilang jejaknya).</li>
+<li>Jangan mengubah <b>komisi titipan yang sudah berjalan</b> sepihak (aturan aplikasi: disepakati bersama).</li>
+<li>Jangan campur: pembayaran supplier = halaman Hutang, pengeluaran toko = Belanja (pengeluaran).</li>
+</ul></div>
+</div>
+
+<h2><span class="n">5</span>Troubleshooting</h2>
+<div class="card">
+<table>
+<tr><th>Gangguan</th><th>Sebab</th><th>Solusi</th></tr>
+<tr><td>Stok bertambah tapi produk salah</td><td>Belanja dipilih ke produk yang salah</td><td>Opname koreksi bersama Gudang; catat penyebabnya.</td></tr>
+<tr><td>Sisa hutang "numpuk"</td><td>Belanja belum dibayar berturut-turut</td><td>Lihat halaman Hutang: "Rp X dibayar dari Rp Y" — susun jadwal pembayaran.</td></tr>
+<tr><td>Pembayaran gagal dicatat</td><td>Nominal kosong / ≤ 0</td><td>Pesan "Nominal pembayaran wajib &gt; 0"; isi nominal, ulang.</td></tr>
+<tr><td>Bagi hasil konsinyasi bertengkar</td><td>Komisi tidak disepakati di awal</td><td>Pakai form <b>Komisi khusus pemilik</b> (simpan % per pemilik); titipan baru otomatis prefill.</td></tr>
+<tr><td>Split pembayaran titipan "belum lunas"</td><td>Nilai nominal per metode belum mencapai total</td><td>Lengkapi nominal sampai totalnya cocok (sama seperti split di POS).</td></tr>
+</table>
+</div>
+<h2><span class="n">6</span>Gambar tiruan: Belanja, Hutang Supplier, Konsinyasi</h2>
+
+<div class="repl" style="border:1px solid var(--line);background:#fff;margin:14px 0">
+<div style="background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569">/admin/belanja — catat pembelian &amp; pengeluaran <small>· contoh</small></div>
+<div style="padding:14px">
+<h4 style="margin:0 0 10px;font-weight:800">Belanja <span style="color:var(--maroon)">&amp; Pengeluaran</span></h4>
+<div class="card" style="border:1px solid var(--line2)">
+<h5 style="margin:0 0 4px;font-size:.85rem"><span class="chipm">①</span> Catat Belanja</h5>
+<div class="frow">
+<div><span class="fl">Produk</span><span class="inp">Aqua 600ml</span></div>
+<div><span class="fl">Jumlah</span><span class="inp">30</span></div>
+<div><span class="fl">HPP (Rp)</span><span class="inp">2.200</span></div>
+<div><span class="fl">Supplier</span><span class="inp">Toko Serba Ada</span></div>
+</div>
+<span class="btn pri sm">Simpan Belanja (stok +30, HPP tercatat)</span>
+</div>
+<div class="card" style="border:1px solid var(--line2);margin-top:10px">
+<h5 style="margin:0 0 4px;font-size:.85rem"><span class="chipm">②</span> Pengeluaran Umum</h5>
+<div class="frow">
+<div><span class="fl">Uraian</span><span class="inp">Listrik, air, bensin…</span></div>
+<div><span class="fl">Kategori</span><span class="inp">Umum</span></div>
+<div><span class="fl">Nominal (Rp)</span><span class="inp">150.000</span></div>
+</div>
+<span class="btn sm">Catat Pengeluaran</span>
+</div>
+</div></div>
+
+<div class="repl" style="border:1px solid var(--line);background:#fff;margin:14px 0">
+<div style="background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569">/admin/hutang — "Hutang Supplier" <small>· 2 supplier · contoh</small></div>
+<div style="padding:14px">
+<div class="tbl"><table>
+<tr><th>Supplier</th><th>Telp</th><th>Belanja</th><th>Dibayar</th><th>Sisa</th><th>Jatuh Tempo</th></tr>
+<tr><td><b>Toko Serba Ada</b></td><td>0812…56</td><td>Rp 1.200.000</td><td>Rp 800.000</td><td><b style="color:var(--bad)">Rp 400.000</b> <span class="tag r">belum lunas</span></td><td>30/09/2026</td></tr>
+<tr><td><b>Grosir Jaya</b></td><td>—</td><td>Rp 600.000</td><td>Rp 600.000</td><td>Rp 0 <span class="tag g">lunas</span></td><td>—</td></tr>
+</table></div>
+<div style="margin-top:10px;font-size:.75rem"><span class="chipm">③</span> Kolom input: <b>Supplier</b> + <b>Nominal</b> + (opsional: Telp, Jatuh tempo, Catatan) → tombol <b>"Catat Pembayaran"</b>. Pembayaran otomatis tercatat sebagai kas keluar di menu Kas.</div>
+</div></div>
+<div class="repl" style="border:1px solid var(--line);background:#fff;margin:14px 0">
+<div style="background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569">/admin/konsinyasi — titipan &amp; bagi hasil <small>· contoh</small></div>
+<div style="padding:14px">
+<div class="card" style="border:1px solid var(--line2)">
+<h5 style="margin:0 0 4px;font-size:.85rem"><span class="chipm">④</span> Terima Titipan (Form)</h5>
+<div class="frow">
+<div><span class="fl">Pemilik</span><span class="inp">H. Slamet</span></div>
+<div><span class="fl">Telp</span><span class="inp">0813…78</span></div>
+<div><span class="fl">Barang</span><span class="inp">Batik Kain 100cm</span></div>
+<div><span class="fl">Satuan</span><span class="inp">pcs</span></div>
+<div><span class="fl">Jumlah</span><span class="inp">10</span></div>
+<div><span class="fl">Harga Sepakat (Rp)</span><span class="inp">120.000</span></div>
+<div><span class="fl">Komisi Toko (%)</span><span class="inp">20</span></div>
+<div><span class="fl">Catatan</span><span class="inp">—</span></div>
+</div>
+<span class="btn pri sm">Simpan Titipan</span>
+<div style="font-size:.68rem;color:#64748b;margin-top:6px">Komisi (upah toko) disepakati bersama saat titipan — boleh beda per pemilik; 0 = tanpa komisi. Komisi dicatat otomatis saat barang terjual; bagian pemilik = harga − komisi. Barang yang tidak terjual &amp; dikembalikan tidak menghasilkan komisi.</div>
+</div>
+
+<div style="display:flex;gap:6px;margin:12px 0 8px">
+<span class="btn pri sm" style="min-height:34px">Aktif (2)</span>
+<span class="btn sm" style="min-height:34px">Selesai (5)</span>
+</div>
+
+<div class="kcard">
+<div class="top"><b><span class="chipm">⑤</span> H. Slamet — Batik Kain 100cm</b><span class="tag b">Komisi 20%</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:6px">
+<span>Diterima: <b>10 pcs</b></span>
+<span>Terjual: <b>6 / 10</b></span>
+<span>Sisa: <b>4 pcs</b></span>
+<span>Bagian pemilik: <b>Rp 576.000</b></span>
+<span>Komisi toko: <b>Rp 144.000</b></span>
+<span>Tagihan belum dibayar: <b style="color:var(--bad)">Rp 192.000</b></span>
+</div>
+<div style="display:flex;gap:6px;margin-top:8px">
+<span class="btn sm">Terjual +1</span>
+<span class="btn sm">Kembalikan</span>
+<span class="btn sm">Bayar Pemilik</span>
+<span class="btn amber sm">Tutup Titipan</span>
+</div>
+</div>
+
+<div class="kcard" style="margin-top:8px">
+<div class="top"><b>Ibu Rukiah — Kopi Gayo 250gr</b><span class="tag b">Komisi 15%</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:6px">
+<span>Diterima: <b>20</b></span><span>Terjual: <b>20 / 20</b></span><span style="color:#64748b">Selesai — bagian pemilik dibayar penuh</span>
+</div>
+</div>
+
+<div class="card" style="border:1px solid var(--line2);margin-top:10px">
+<h5 style="margin:0 0 4px;font-size:.85rem"><span class="chipm">⑥</span> Komisi khusus per pemilik (opsional)</h5>
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">
+<div><span class="fl">Nama pemilik</span><span class="inp" style="width:160px">H. Slamet</span></div>
+<div><span class="fl">Komisi (%)</span><span class="inp" style="width:90px">20</span></div>
+<span class="btn pri sm">Simpan</span>
+</div>
+<div style="font-size:.7rem;color:#64748b;margin-top:6px">Tersimpan: <b>H. Slamet — komisi 20%</b> · <b>Ibu Rukiah — komisi 15%</b> (hapus bila perlu). Titipan baru dari pemilik ini otomatis memakai % tersimpan.</div>
+</div>
+</div></div>
+
+<h3>Anotasi — "Ini tombol untuk apa, di sini Anda bisa apa"</h3>
+<div class="anno"><span class="ch">①</span><div><b>Form Catat Belanja</b> — ini tombol untuk menambah stok: pilih produk, jumlah, HPP, supplier → stok bertambah &amp; HPP tercatat otomatis. Di sini Anda bisa atur harga modal yang dipakai laporan laba.</div></div>
+<div class="anno"><span class="ch">②</span><div><b>Form Pengeluaran</b> — uang keluar yang bukan belanja supplier (listrik, air, bensin). Masuk kas keluar otomatis.</div></div>
+<div class="anno"><span class="ch">③</span><div><b>Catat Pembayaran Supplier</b> — bayar sebagian/semua hutang; sisa ter-update &amp; tercatat sebagai kas keluar di Kas.</div></div>
+<div class="anno"><span class="ch">④</span><div><b>Form Titipan</b> — terima barang konsinyasi; komisi % disepakati di sini (bisa juga lewat form per-pemilik di bawah).</div></div>
+<div class="anno"><span class="ch">⑤</span><div><b>Kartu Konsinyasi Aktif</b> — tombol "Terjual +1" mengurangi sisa &amp; menambah bagian pemilik/komisi; "Bayar Pemilik" catat nominal dibayarkan; "Tutup Titipan" selesaikan (sisa dikembalikan bila ada).</div></div>
+<div class="anno"><span class="ch">⑥</span><div><b>Komisi per pemilik</b> — simpan % standar per pemilik; titipan berikutnya otomatis prefill, tidak perlu nego ulang.</div></div>
+
+<div class="legend"><b>Keterangan warna:</b> merah = sisa/tagihan belum dibayar · kuning (amber) = tombol peringatan (tutup titipan) · hijau = lunas/selesai. Dokumen ini <b>siap cetak A4</b> (Ctrl+P).</div>
+</div>
+</body>
+</html>

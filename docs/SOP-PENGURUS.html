@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOP Pengurus — Kopontren Al Ittihad</title>
+<style>
+:root{--maroon:#7a1835;--wine:#7a1c1c;--bg:#faf5f6;--card:#fff;--line:#e9d5d8;--line2:#e2e8f0;--ink:#170a0e;--sub:#6b5a60;--ok:#059669;--bad:#e11d48;--warn:#f59e0b;--gold:#fbbf24;--slate:#f1f5f9}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,'Segoe UI',sans-serif;line-height:1.55;font-size:15px}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+.hero{background:var(--maroon);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px}
+.hero h1{font-size:1.55rem;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;opacity:.75;font-size:.85rem}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.meta span{background:rgba(255,255,255,.14);border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:600}
+h2{font-size:1.15rem;margin:28px 0 10px;font-weight:800}
+h2 .n{display:inline-block;background:var(--maroon);color:#fff;border-radius:8px;width:26px;height:26px;line-height:26px;text-align:center;font-size:.85rem;margin-right:8px}
+h3{font-size:.95rem;margin:18px 0 8px;font-weight:800;color:var(--maroon)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(23,10,14,.05)}
+ul,ol{padding-left:20px;margin:8px 0}
+li{margin:6px 0}
+.note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:.85rem;margin:12px 0}
+.todo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.todo{grid-template-columns:1fr}}
+.todo .card.d{border-top:4px solid var(--ok)}
+.todo .card.k{border-top:4px solid var(--bad)}
+.todo h3{margin-top:0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;color:#64748b;padding:8px;border-bottom:2px solid var(--line2);font-weight:800}
+td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.ok{color:var(--ok);font-weight:700}
+.bad{color:var(--bad);font-weight:700}
+.repl{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;margin:14px 0;box-shadow:0 2px 10px rgba(23,10,14,.07)}
+.repl-title{background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.repl-title small{font-weight:400;color:#94a3b8}
+.repl-body{padding:14px}
+.app{background:#fff;border:1px solid var(--line2);border-radius:14px;padding:14px;font-size:.85rem}
+.app h4{font-size:1.05rem;font-weight:800;margin:0 0 10px}
+.app h4 .m{color:var(--maroon)}
+.app h4 small{font-size:.72rem;font-weight:600;color:#64748b}
+.app .hero2{background:var(--maroon);color:#fff;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.app .hero2 b{font-size:1rem}
+.app .hero2 div{font-size:.7rem;opacity:.75}
+.kpig{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media (min-width:700px){.kpig{grid-template-columns:repeat(5,1fr)}}
+.kpi{border:1px solid var(--line2);border-radius:12px;padding:10px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.kpi .l{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
+.kpi .v{font-size:1.05rem;font-weight:800;color:var(--maroon);margin-top:2px}
+.kpi .s{font-size:.64rem;color:#94a3b8}
+.qa{display:flex;flex-wrap:wrap;gap:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:10px;font-weight:700;font-size:.8rem;border:1px solid transparent;cursor:pointer;background:#f1f5f9}
+.btn.pri{background:var(--maroon);color:#fff}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:.72rem}
+.pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.pill{white-space:nowrap;border:1px solid var(--line2);border-radius:999px;padding:5px 12px;font-size:.72rem;font-weight:700;background:#fff;color:#475569;min-height:34px}
+.pill.on{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+.chart{display:flex;align-items:flex-end;gap:5px;height:110px;border:1px solid var(--line2);border-radius:12px;padding:10px;background:#fff}
+.chart .bar{flex:1;background:var(--maroon);border-radius:4px 4px 0 0;opacity:.85;min-width:8px}
+.chipm{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--maroon);color:#fff;border-radius:50%;font-size:.62rem;font-weight:800;flex:none}
+.anno{display:flex;gap:10px;margin:10px 0;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:10px 12px;font-size:.82rem}
+.anno .ch{flex:none;width:26px;height:26px;background:var(--warn);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+.legend{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;font-size:.8rem;margin-top:10px}
+.legend b{color:var(--ok)}
+@media print{
+body{background:#fff}
+.wrap{max-width:none;padding:0}
+.hero{border-radius:0}
+.anno{border-color:#94a3b8;background:#f8fafc}
+.repl,.card{box-shadow:none}
+@page{size:A4;margin:8mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1>SOP Pengurus — Kopontren Al Ittihad</h1>
+<p>Panduan peran <b>Pengurus</b>: memantau kesehatan toko secara global, menyiapkan data untuk rapat, menghitung zakat, dan mengawasi audit.</p>
+<div class="meta"><span>Peran: Pengurus</span><span>Halaman: /pengurus/dashboard + /admin/laporan + /admin/zakat + /admin/audit</span><span>Angka di gambar = contoh (mock)</span></div>
+</div>
+
+<div class="note"><b>Cara baca:</b> lingkaran maroon ①–⑤ menunjuk elemen pada <b>gambar tiruan</b> di bagian bawah (digambar ulang persis dari aplikasi — bukan screenshot). Semua angka hanya <b>contoh</b>.</div>
+
+<h2><span class="n">1</span>Tujuan peran Pengurus</h2>
+<div class="card">
+<ul>
+<li><b>Tahu kondisi riil toko</b> kapan pun, tanpa harus menunggu admin: penjualan 30 hari, arus kas, member, stok menipis, jumlah cabang.</li>
+<li><b>Mempersiapkan rapat</b> — unduh grafik &amp; data (CSV/Excel/PDF) dan kirim rekap ke grup pengurus via WhatsApp.</li>
+<li><b>Zakat</b> — pantau akumulasi zakat, verifikasi harga emas &amp; nishab, catat pembayaran zakat (musyawarah bersama pengasuh).</li>
+<li><b>Menjaga transparansi</b> — cek log audit (siapa mengubah apa) dan pastikan keputusan tertuang dalam data.</li>
+</ul>
+<p style="margin-bottom:0">Pengurus <b>baca-utama</b>: tidak mengoperasikan POS atau mengubah stok. Perubahan operasional tetap lewat Admin/Manajer.</p>
+</div>
+
+<h2><span class="n">2</span>Alur kerja (per rapat / mingguan)</h2>
+<div class="card">
+<ol>
+<li>Buka <b>Dashboard Global</b> <span class="chipm">①</span> — pantau 5 KPI 30 hari: <i>Penjualan 30 Hari, Arus Kas 30 Hari, Member Aktif, Stok Menipis, Cabang Terdaftar</i> + panah naik/turun vs 30 hari sebelumnya.</li>
+<li>Gali detail lewat <b>Grafik &amp; Export</b> <span class="chipm">②</span>: pilih periode <b>7 hari / 30 hari / 1 tahun</b>, lalu <b>Export CSV</b> (untuk Excel) · <b>Export Excel</b> (file .xlsx) · <b>Cetak / PDF</b> — semua tombol di panel grafik. Ada juga tombol kirim <b>WhatsApp</b>.</li>
+<li>Cek <b>Laporan Pengurus</b> (Laba-Rugi &amp; Neraca) <span class="chipm">③</span> untuk dasar diskusi: laba bersih, kas, stok, piutang/hutang.</li>
+<li>Pantauan <b>Zakat</b> <span class="chipm">④</span> — lihat kartu akumulasi &amp; status (wajib/belum), verifikasi harga emas, dan catat pembayaran zakat (media: Tunai/Transfer/QRIS/Lainnya) ke Riwayat.</li>
+<li>Rutin: buka <b>Audit</b> <span class="chipm">⑤</span> bila ada pertanyaan "siapa yang mengubah?" — log mencatat operator, halaman, dan waktu.</li>
+</ol>
+</div>
+
+<h2><span class="n">3</span>Fitur yang tersedia untuk Pengurus</h2>
+<div class="card">
+<table>
+<tr><th>Fitur</th><th>Pakai untuk</th></tr>
+<tr><td><b>Dashboard Global (KPI 30 hari + delta)</b></td><td>Satu angka per kartu: penjualan, arus kas, member aktif, stok menipis, cabang; ada perbandingan vs 30 hari sebelumnya.</td></tr>
+<tr><td><b>Aksi cepat</b></td><td>Tombol lompat: Laporan · Zakat · Audit · Ringkasan · Dashboard (hanya yang boleh diakses pengurus yang tampil).</td></tr>
+<tr><td><b>Grafik 7/30/365 hari + anomali</b></td><td>Lihat tren penjualan per hari, top produk, metode bayar &amp; arus kas, rincian cabang.</td></tr>
+<tr><td><b>Export CSV / Excel / Cetak-PDF</b></td><td>Arsip rapat &amp; lanjut analisis di Excel.</td></tr>
+<tr><td><b>Laporan via WhatsApp</b></td><td>Kirim rekap periode ke nomor/grup pengurus (deep-link, tanpa API).</td></tr>
+<tr><td><b>Laba-Rugi &amp; Neraca</b></td><td>Dasar keputusan rapat: laba bersih, posisi kas &amp; stok.</td></tr>
+<tr><td><b>Zakat (akumulasi, nishab, riwayat)</b></td><td>Pantau kewajiban zakat perdagangan; catat pembayaran; log verifikasi harga emas (append-only).</td></tr>
+<tr><td><b>Audit log</b></td><td>Jejak perubahan harga/stok/pengguna — transparansi untuk rapat.</td></tr>
+<tr><td><b>Ringkasan pribadi (/)</b></td><td>Halaman tiap pengguna: aktivitas mereka + aktivitas terkait.</td></tr>
+</table>
+</div>
+<h2><span class="n">4</span>Do's &amp; Don'ts</h2>
+<div class="todo">
+<div class="card d"><h3 class="ok">✔ Do's — lakukan</h3>
+<ul>
+<li>Ambil <b>export sebelum rapat</b> (CSV/Excel) — data beku saat diunduh, mudah dibahas.</li>
+<li>Bandingkan <b>delta 30 hari</b> sebelum komentar naik/turun — jangan tebak dari ingatan.</li>
+<li>Zakat: <b>musyawarahkan</b> dengan pengasuh; catat pembayaran &amp; verifikasi harga emas di halaman Zakat (log tidak bisa dihapus = aman).</li>
+<li>Pakai <b>Audit</b> saat ada selisih atau pertanyaan — log mencatat siapa-apa-kapan.</li>
+<li>Kirim rekap lewat tombol <b>WhatsApp</b> — format sudah rapi, tidak perlu salin tempel.</li>
+</ul></div>
+<div class="card k"><h3 class="bad">✘ Don'ts — jangan</h3>
+<ul>
+<li>Jangan mengambil keputusan besar dari <b>angka mentah</b> tanpa konteks (lihat delta &amp; periode dulu).</li>
+<li>Jangan mengubah <b>peraturan zakat</b> (nishab, tarif, harga emas) sepihak — itu ranah pengasuh/pengurus bersama.</li>
+<li>Jangan <b>mengekspor lalu melupakan</b> file arsip rapat — simpan di drive pengurus.</li>
+<li>Jangan memakai peran Pengurus untuk <b>operasional toko</b> (POS &amp; stok memang tidak terbuka untuk peran ini — disengaja).</li>
+</ul></div>
+</div>
+
+<h2><span class="n">5</span>Troubleshooting</h2>
+<div class="card">
+<table>
+<tr><th>Gangguan</th><th>Sebab</th><th>Solusi</th></tr>
+<tr><td>Export Excel gagal ("Gagal membuat Excel")</td><td>Baris bermasalah / koneksi lambat</td><td>Pesan menyarankan "pakai Export CSV" — unduh CSV, buka di Excel.</td></tr>
+<tr><td>Kartu <b>Stok Menipis</b> kosong padahal toko ramai</td><td>Ambang = stok &lt; 10; produk memang stok besar</td><td>Normal — tidak ada yang kritis. Rincian ada di Dashboard Admin (prediksi hari).</td></tr>
+<tr><td>Delta KPI tidak tampil</td><td>30 hari sebelumnya kosong (toko baru)</td><td>Normal; delta muncul setelah ada dua periode data.</td></tr>
+<tr><td>Status zakat "belum" padahal merasa wajib</td><td>Haul belum lewat atau nishab belum tercapai</td><td>Periksa kartu Haul &amp; Akumulasi di halaman Zakat: sisa hari + akumulasi berjalan.</td></tr>
+<tr><td>Tombol Aksi cepat tidak lengkap</td><td>Menu terfilter otomatis sesuai wewenang peran</td><td>Normal. Jika harusnya ada, cek peran pengguna di halaman Pengguna.</td></tr>
+</table>
+</div>
+<h2><span class="n">6</span>Gambar tiruan: Dashboard Global Pengurus</h2>
+<p style="font-size:.85rem;color:var(--sub)">Meniru <code>/pengurus/dashboard</code>: hero maroon, 5 KPI, aksi cepat, grafik + export (angka semua <b>contoh</b>).</p>
+
+<div class="repl">
+<div class="repl-title"><span>/pengurus/dashboard — "Dashboard Global"</span><small>per 30 hari, contoh</small></div>
+<div class="repl-body"><div class="app">
+<div class="hero2"><b>Dashboard <span style="opacity:.8">Global</span></b><div>Selasa, 22 September 2026 · laporan keseluruhan Kopontren (rapat pengurus)</div></div>
+<div class="kpig">
+<div class="kpi"><span class="chipm">①</span><div class="l">Penjualan 30 Hari</div><div class="v">Rp 38,5 jt</div><div class="s">▲ +9% vs 30h sebelumnya</div></div>
+<div class="kpi"><div class="l">Arus Kas 30 Hari</div><div class="v">Rp 21,4 jt</div><div class="s">▲ masuk 27 jt − keluar 5,6 jt</div></div>
+<div class="kpi"><div class="l">Member Aktif</div><div class="v">126</div><div class="s">18 baru bulan ini</div></div>
+<div class="kpi"><div class="l">Stok Menipis</div><div class="v">4</div><div class="s">produk &lt; 10 (kuning = tangani)</div></div>
+<div class="kpi"><div class="l">Cabang Terdaftar</div><div class="v">2</div><div class="s">Pusat + Cabang 1</div></div>
+</div>
+<div class="card" style="border:1px solid var(--line2);margin:10px 0">
+<h5 style="margin:0 0 8px;font-size:.85rem"><span class="chipm">⑤</span> Aksi cepat</h5>
+<div class="qa">
+<span class="btn sm">Laporan</span>
+<span class="btn sm">Zakat</span>
+<span class="btn sm">Audit</span>
+<span class="btn sm">Ringkasan</span>
+<span class="btn sm">Dashboard</span>
+</div>
+</div>
+<div class="card" style="border:1px solid var(--line2);margin:0">
+<h5 style="margin:0 0 8px;font-size:.85rem"><span class="chipm">②</span> Grafik Penjualan 30 Hari <small style="font-weight:400;color:#94a3b8">(arahkan kursor ke batang utk detail hari)</small></h5>
+<div class="chart">
+<span class="bar" style="height:40%"></span><span class="bar" style="height:55%"></span><span class="bar" style="height:35%"></span><span class="bar" style="height:70%"></span><span class="bar" style="height:62%"></span><span class="bar" style="height:88%"></span><span class="bar" style="height:75%"></span><span class="bar" style="height:92%"></span><span class="bar" style="height:64%"></span><span class="bar" style="height:100%"></span>
+</div>
+<div class="pills" style="margin:10px 0">
+<span class="pill">7 hari</span><span class="pill on">30 hari</span><span class="pill">1 tahun</span>
+</div>
+<div class="qa">
+<span class="btn sm">Export CSV</span>
+<span class="btn sm">Export Excel</span>
+<span class="btn sm">Cetak / PDF</span>
+<span class="btn sm">Kirim WhatsApp</span>
+</div>
+<div style="font-size:.7rem;color:#64748b;margin-top:8px"><span class="chipm">③</span> Panel di bawah grafik: <b>Top Produk</b> · <b>Metode Bayar &amp; Arus Kas</b> · <b>Cabang</b> — otomatis mengikuti periode terpilih.</div>
+</div>
+<div class="card" style="border:1px solid var(--line2);margin:10px 0 0">
+<h5 style="margin:0 0 6px;font-size:.85rem"><span class="chipm">④</span> Zakat (ringkas) — Harta dagang <b>Rp 128.000.000</b> · Nishab <b>Rp 106.250.000</b> · Status: <span style="color:var(--ok);font-weight:800">WAJIB</span></h5>
+<div style="font-size:.75rem">Akumulasi haul berjalan: <b>Rp 1.450.000</b> (diakumulasi harian sejak haul). Riwayat: 3 catatan. Verifikasi harga emas: Rp 1.250.000/gr (19/09/2026).</div>
+</div>
+</div></div></div>
+<h3>Anotasi — "Ini tombol untuk apa, di sini Anda bisa apa"</h3>
+<div class="anno"><span class="ch">①</span><div><b>Kartu KPI 30 hari</b> — angka inti per kartu, panah naik/turun vs 30 hari sebelumnya. "Stok Menipis" = jumlah produk stoknya &lt; 10.</div></div>
+<div class="anno"><span class="ch">②</span><div><b>Grafik + tombol export</b> — pilih periode (7 hari / 30 hari / 1 tahun). <b>Export CSV</b> = untuk Excel manual; <b>Export Excel</b> = file .xlsx langsung (sheet "Harian"); <b>Cetak / PDF</b> = arsip; <b>WhatsApp</b> = kirim rekap ke nomor pengurus.</div></div>
+<div class="anno"><span class="ch">③</span><div><b>Panel detail otomatis</b> — Top Produk, Metode Bayar &amp; Arus Kas, dan rincian per Cabang selalu se-periode dengan grafik di atasnya.</div></div>
+<div class="anno"><span class="ch">④</span><div><b>Ringkasan zakat</b> — status WAJIB/Belum, harta dagang vs nishab, akumulasi haul (zakat berjalan harian), jumlah riwayat, dan harga emas terakhir. Detail lengkap + form pembayaran di halaman Zakat.</div></div>
+<div class="anno"><span class="ch">⑤</span><div><b>Aksi cepat &amp; Audit</b> — tombol "Audit" membuka log perubahan (operator, halaman, waktu). Pakai saat ada pertanyaan "siapa yang mengubah?".</div></div>
+
+<div class="legend"><b>Keterangan warna:</b> maroon = utama/brand · hijau = baik · kuning = perlu tindakan (stok menipis) · merah = memburuk. Dokumen ini <b>siap cetak A4</b> (Ctrl+P) untuk dibagikan di rak pengurus.</div>
+</div>
+</body>
+</html>

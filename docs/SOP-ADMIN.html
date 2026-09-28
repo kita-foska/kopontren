@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOP Admin — Kopontren Al Ittihad</title>
+<style>
+:root{--maroon:#7a1835;--wine:#7a1c1c;--bg:#faf5f6;--card:#fff;--line:#e9d5d8;--line2:#e2e8f0;--ink:#170a0e;--sub:#6b5a60;--ok:#059669;--bad:#e11d48;--warn:#f59e0b;--gold:#fbbf24;--slate:#f1f5f9}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,'Segoe UI',sans-serif;line-height:1.55;font-size:15px}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+.hero{background:var(--maroon);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px}
+.hero h1{font-size:1.55rem;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;opacity:.75;font-size:.85rem}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.meta span{background:rgba(255,255,255,.14);border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:600}
+h2{font-size:1.15rem;margin:28px 0 10px;font-weight:800}
+h2 .n{display:inline-block;background:var(--maroon);color:#fff;border-radius:8px;width:26px;height:26px;line-height:26px;text-align:center;font-size:.85rem;margin-right:8px}
+h3{font-size:.95rem;margin:18px 0 8px;font-weight:800;color:var(--maroon)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(23,10,14,.05)}
+ul,ol{padding-left:20px;margin:8px 0}
+li{margin:6px 0}
+.note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:.85rem;margin:12px 0}
+.todo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.todo{grid-template-columns:1fr}}
+.todo .card.d{border-top:4px solid var(--ok)}
+.todo .card.k{border-top:4px solid var(--bad)}
+.todo h3{margin-top:0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;color:#64748b;padding:8px;border-bottom:2px solid var(--line2);font-weight:800}
+td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.ok{color:var(--ok);font-weight:700}
+.bad{color:var(--bad);font-weight:700}
+.repl{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;margin:14px 0;box-shadow:0 2px 10px rgba(23,10,14,.07)}
+.repl-title{background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.repl-title small{font-weight:400;color:#94a3b8}
+.repl-body{padding:14px}
+.app{background:#fff;border:1px solid var(--line2);border-radius:14px;padding:14px;font-size:.85rem}
+.app h4{font-size:1.05rem;font-weight:800;margin:0 0 10px}
+.app h4 .m{color:var(--maroon)}
+.app h4 small{font-size:.72rem;font-weight:600;color:#64748b}
+.app .hero2{background:var(--maroon);color:#fff;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.app .hero2 b{font-size:1rem}
+.app .hero2 div{font-size:.7rem;opacity:.75}
+.kpig{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media (min-width:700px){.kpig{grid-template-columns:repeat(3,1fr)}}
+.kpi{border:1px solid var(--line2);border-radius:12px;padding:10px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.kpi .l{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
+.kpi .v{font-size:1.15rem;font-weight:800;color:var(--maroon);margin-top:2px}
+.kpi .s{font-size:.66rem;color:#94a3b8}
+.kpi .d{font-size:.66rem;font-weight:700}
+.kpi .up{color:var(--ok)}.kpi .dn{color:var(--bad)}
+.kpi.warn{border-color:#fcd34d}
+.qa{display:flex;flex-wrap:wrap;gap:6px}
+.inp{display:block;width:100%;min-height:44px;border:1px solid #cbd5e1;border-radius:10px;padding:8px 12px;font-size:.78rem;background:#fff}
+.inp::placeholder{color:#94a3b8}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:10px;font-weight:700;font-size:.8rem;border:1px solid transparent;cursor:pointer;background:#f1f5f9}
+.btn.pri{background:var(--maroon);color:#fff}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:.72rem}
+.pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.pill{white-space:nowrap;border:1px solid var(--line2);border-radius:999px;padding:5px 12px;font-size:.72rem;font-weight:700;background:#fff;color:#475569;min-height:34px}
+.pill.on{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.frow .fl{font-size:.62rem;font-weight:800;text-transform:uppercase;color:#64748b;letter-spacing:.04em}
+.tbl{border:1px solid var(--line2);border-radius:12px;overflow-x:auto;background:#fff}
+.tbl table{min-width:560px}
+.tag{display:inline-block;font-size:.6rem;font-weight:800;border-radius:6px;padding:2px 7px}
+.tag.g{background:#d1fae5;color:#065f46}.tag.a{background:#fef3c7;color:#92400e}.tag.r{background:#ffe4e6;color:#9f1239}.tag.b{background:#dbeafe;color:#1e40af}
+.chipm{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--maroon);color:#fff;border-radius:50%;font-size:.62rem;font-weight:800;flex:none}
+.anno{display:flex;gap:10px;margin:10px 0;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:10px 12px;font-size:.82rem}
+.anno .ch{flex:none;width:26px;height:26px;background:var(--warn);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+.legend{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;font-size:.8rem;margin-top:10px}
+.legend b{color:var(--ok)}
+.report{border:1px solid var(--line2);border-radius:12px;background:#fff;padding:12px}
+.report .rrow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line2);font-size:.8rem}
+.report .rrow.tot{border-bottom:none;font-weight:800}
+.report .rrow.tot .v{color:var(--ok)}
+.tabs{display:flex;gap:6px;margin:0 0 10px}
+.tab{border:1px solid var(--line2);border-radius:10px;padding:7px 14px;font-size:.75rem;font-weight:700;background:#fff;min-height:44px}
+.tab.on{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+@media print{
+body{background:#fff}
+.wrap{max-width:none;padding:0}
+.hero{border-radius:0}
+.anno{border-color:#94a3b8;background:#f8fafc}
+.repl,.card{box-shadow:none}
+@page{size:A4;margin:8mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1>SOP Admin — Kopontren Al Ittihad</h1>
+<p>Panduan peran <b>Admin</b>: mengelola produk &amp; stok, member, laporan, jurnal kas, pengguna, dan backup data.</p>
+<div class="meta"><span>Peran: Admin</span><span>Prioritas 2</span><span>Halaman: /admin/* + /kasir + /laporan</span><span>Angka di gambar = contoh (mock)</span></div>
+</div>
+
+<div class="note"><b>Cara baca:</b> lingkaran maroon ①–⑩ menunjuk elemen pada <b>gambar tiruan</b> di bagian bawah (bukan screenshot — digambar ulang persis dari aplikasi, warna maroon, kartu, tombol). Kotak kuning "Anotasi" menjelaskan tiap elemen. Semua angka hanya <b>contoh</b>.</div>
+
+<h2><span class="n">1</span>Tujuan peran Admin</h2>
+<div class="card">
+<ul>
+<li><b>Menjaga "dapur" data</b> — produk, harga, dan stok selalu benar, karena seluruh POS &amp; laporan bergantung padanya.</li>
+<li><b>Memantau kesehatan toko</b> setiap hari lewat Dashboard: penjualan, kas, stok menipis, hutang/piutang.</li>
+<li><b>Melayani member</b> — daftarkan santri baru, perbarui data, cetak kartu QR.</li>
+<li><b>Memastikan laporan &amp; arsip aman</b> — rekap tutup shift, jurnal kas, unduh CSV, dan <b>backup rutin</b>.</li>
+<li><b>Keamanan akses</b> — kelola pengguna (siapa boleh apa), pantau audit, aktifkan notifikasi stok via WhatsApp.</li>
+</ul>
+<p style="margin-bottom:0">Admin = pengelola harian. Keputusan besar (zakat, perubahan kebijakan) tetap dibahas dengan pengurus.</p>
+</div>
+
+<h2><span class="n">2</span>Alur kerja (harian → mingguan)</h2>
+<div class="card">
+<p style="margin-top:0"><b>Harian (±15–30 menit):</b></p>
+<ol>
+<li>Buka <b>Dashboard Admin</b> <span class="chipm">⓵</span> — lihat 6 kartu KPI: <i>Penjualan Hari Ini, Belum Direkap, Arus Kas 7 Hari, Member Aktif, Piutang Buka, Hutang Supplier Buka</i>. Perhatian khusus kartu kuning (peringatan).</li>
+<li>Cek panel <b>Prediksi Stok</b> <span class="chipm">⓶</span> — barang yang stoknya akan habis dalam N hari.</li>
+<li>Layani rekap kasir: pastikan transaksi <b>Belum Direkap</b> = 0 (tutup shift berjalan).</li>
+<li>Catat <b>jurnal kas manual</b> bila ada uang masuk/keluar di luar POS (mis. dana kas umum) — halaman Kas.</li>
+</ol>
+<p><b>Mingguan / sesuai kebutuhan:</b></p>
+<ol start="5">
+<li><b>Stok masuk</b> — catat belanja ke supplier (Belanja) → stok otomatis bertambah, hutang supplier tercatat (Hutang).</li>
+<li><b>Kelola Produk</b> <span class="chipm">⓷</span> — tambah/ubah produk: nama, kategori, harga jual, harga modal, stok, satuan, barcode. Layout: tabel di kiri, form di kanan.</li>
+<li><b>Member</b> — tambah santri, perbarui poin/saldo reward, cetak kartu QR.</li>
+<li><b>Laporan Pengurus</b> <span class="chipm">⓸</span> — Laba-Rugi &amp; Neraca per periode; unduh CSV untuk arsip rapat.</li>
+<li><b>Users &amp; Backup</b> — cek log Audit; unduh backup (Data &amp; Backup) minimal mingguan dan simpan 2 tempat.</li>
+</ol>
+</div>
+
+<h2><span class="n">3</span>Fitur yang tersedia untuk Admin</h2>
+<div class="card">
+<table>
+<tr><th>Fitur</th><th>Pakai untuk</th></tr>
+<tr><td><b>Dashboard + KPI + feed aktivitas</b></td><td>Ringkasan harian: penjualan, kas, stok menipis (prediksi hari), piutang/hutang, pergerakan siapa-apa.</td></tr>
+<tr><td><b>POS lengkap</b> (seperti kasir, + ubah harga item)</td><td>Menjual sekaligus; admin boleh mengubah harga per item di keranjang.</td></tr>
+<tr><td><b>Produk &amp; Stok</b></td><td>Tambah/ubah/hapus produk, atur kategori, barcode, harga grosir (tier), stok.</td></tr>
+<tr><td><b>Belanja (purchasing)</b></td><td>Catat beli ke supplier → stok + hutang otomatis. Cocok untuk Gudang/Pembelian yang diawasi admin.</td></tr>
+<tr><td><b>Hutang &amp; Piutang</b></td><td>Lunasi/terima pembayaran supplier &amp; pelanggan; sisa otomatis ter-update.</td></tr>
+<tr><td><b>Kas (jurnal)</b></td><td>Uang masuk/keluar di luar POS; saldo kas tercatat selalu bisa dilihat.</td></tr>
+<tr><td><b>Member &amp; kartu QR</b></td><td>Daftar member, tier (Silver/Gold otomatis dari total belanja), poin, cashback, cetak kartu.</td></tr>
+<tr><td><b>Laporan: Laba-Rugi &amp; Neraca</b></td><td>Periode harian/bulanan; unduh CSV; basis rapat pengurus.</td></tr>
+<tr><td><b>Pengguna, Audit, Notifikasi</b></td><td>Atur akses per peran; lihat log "siapa mengubah apa"; notifikasi stok via WhatsApp.</td></tr>
+<tr><td><b>Data &amp; Backup</b></td><td>Unduh backup DB (dan migrasi antar versi) — keselamatan terakhir data.</td></tr>
+</table>
+</div>
+<h2><span class="n">4</span>Do's &amp; Don'ts</h2>
+<div class="todo">
+<div class="card d"><h3 class="ok">✔ Do's — lakukan</h3>
+<ul>
+<li>Baca Dashboard <b>setiap pagi</b>; tangani kartu kuning (stok menipis, rekap tertunda).</li>
+<li>Catat belanja <b>segera</b> saat barang masuk — stok &amp; hutang otomatis benar.</li>
+<li>Verifikasi stok fisik <b>acak mingguan</b> (stock opname), selaraskan dengan aplikasi.</li>
+<li>Backup <b>minimal mingguan</b>, simpan 2 tempat (flashdisk + email/Drive pengurus).</li>
+<li>Pakai log <b>Audit</b> untuk cek perubahan mencurigakan (harga, stok, pengguna).</li>
+<li>Member baru: daftarkan <b>sebelum</b> belanja pertama agar poin langsung jalan.</li>
+</ul></div>
+<div class="card k"><h3 class="bad">✘ Don'ts — jangan</h3>
+<ul>
+<li>Jangan <b>hapus produk yang pernah terjual</b> (riwayat rusak) — nonaktifkan saja.</li>
+<li>Jangan ubah <b>harga/stok massal tanpa catatan</b> — catat alasannya di jurnal.</li>
+<li>Jangan <b>membagi PIN</b> antar pengguna; satu akun = satu orang.</li>
+<li>Jangan abai kartu <b>"Belum Direkap"</b> yang membesar — artinya kasir belum tutup shift.</li>
+<li>Jangan <b>menjalankan migrasi</b> tanpa backup baru (halaman Migrasi berisiko — hanya saat instruksi versi).</li>
+<li>Jangan hapus <b>backup lama</b> sebelum versi terbaru terbukti stabil.</li>
+</ul></div>
+</div>
+
+<h2><span class="n">5</span>Troubleshooting</h2>
+<div class="card">
+<table>
+<tr><th>Gangguan</th><th>Sebab</th><th>Solusi</th></tr>
+<tr><td>Saldo kas "aneh" (terlalu besar/kecil)</td><td>Pencatatan jurnal tak lengkap / uang awal shift salah</td><td>Uraikan lewat halaman Kas: saldo = penjualan + jurnal masuk − belanja − pengeluaran − jurnal keluar.</td></tr>
+<tr><td>Stok aplikasimu lebih kecil dari fisik</td><td>Ada retur yang belum dicatat / stock opname beda</td><td>Lakukan stok opname, koreksi lewat halaman Produk (stok), catat alasannya.</td></tr>
+<tr><td>Kartu kuning <b>"Prediksi stok habis dalam N hari"</b> tidak jalan</td><td>Belum ada riwayat penjualan 14 hari / produk baru</td><td>Normal untuk produk baru; buat belanja berdasarkan pengalaman.</td></tr>
+<tr><td>Pengguna lain tidak melihat menu Admin</td><td>Role-nya bukan admin/manajer</td><td>Ubah peran lewat halaman Pengguna (peran: admin, manajer, pengurus, kasir, gudang, pembelian, member).</td></tr>
+<tr><td>Notifikasi WhatsApp stok tidak masuk</td><td>URL notifikasi belum diatur / nomor salah</td><td>Halaman Notifikasi → Settings: cek deep-link WhatsApp &amp; ambang batas stok.</td></tr>
+<tr><td>Backup tidak bisa diunduh</td><td>Server mode read-only / masalah koneksi</td><td>Coba lagi; jika tetap gagal, unduh lewat halaman Data &amp; Backup (ada tombol unduh + info versi DB).</td></tr>
+</table>
+</div>
+<h2><span class="n">6</span>Gambar tiruan: Dashboard Admin, Produk, Laporan</h2>
+<p style="font-size:.85rem;color:var(--sub)">Tiga replika halaman utama Admin: <b>(a)</b> Dashboard, <b>(b)</b> Produk, <b>(c)</b> Laporan Pengurus.</p>
+
+<div class="repl">
+<div class="repl-title"><span>(a) /admin/dashboard — "Dashboard Admin"</span><small>hari ini, contoh</small></div>
+<div class="repl-body"><div class="app">
+<div class="hero2"><b>Dashboard <span style="opacity:.8">Admin</span></b><div>Selasa, 22 September 2026 · ringkasan operasional Kopontren</div></div>
+<div class="kpig">
+<div class="kpi"><span class="chipm">⓵</span> <div class="l">Penjualan Hari Ini</div><div class="v">Rp 1.240.000</div><div class="s">38 transaksi</div><div class="d up">▲ +12% vs kemarin</div></div>
+<div class="kpi"><div class="l">Belum Direkap</div><div class="v">2</div><div class="s">Rp 86.000 menunggu rekap</div><div class="d dn">▼ rekap tertunda</div></div>
+<div class="kpi"><div class="l">Arus Kas 7 Hari</div><div class="v">Rp 2.150.000</div><div class="s">masuk 3,4 jt − keluar 1,3 jt</div><div class="d up">▲ sehat</div></div>
+<div class="kpi"><div class="l">Member Aktif</div><div class="v">126</div><div class="s">41 Silver · 12 Gold</div></div>
+<div class="kpi warn"><div class="l">Piutang Buka</div><div class="v">Rp 150.000</div><div class="s">3 pelanggan</div></div>
+<div class="kpi warn"><div class="l">Hutang Supplier Buka</div><div class="v">Rp 420.000</div><div class="s">2 supplier</div></div>
+</div>
+<div class="card" style="border:1px solid var(--line2);margin:10px 0">
+<h5 style="margin:0 0 8px;font-size:.85rem">Aksi cepat</h5>
+<div class="qa">
+<span class="btn pri sm"><span class="chipm">⓵</span> + Jual (POS)</span>
+<span class="btn sm">Kelola Produk</span>
+<span class="btn sm">Laporan Pengurus</span>
+<span class="btn sm">Pengguna</span>
+<span class="btn sm">Data &amp; Backup</span>
+</div>
+</div>
+<div class="card" style="border:1px solid #fcd34d;margin:0">
+<h5 style="margin:0 0 6px;font-size:.85rem"><span class="chipm">⓶</span> Prediksi stok menipis</h5>
+<div style="font-size:.75rem"><b>Aqua 600ml</b> — sisa 24, rata-rata 9/hari → <span class="tag a">± 3 hari lagi habis</span></div>
+<div style="font-size:.75rem"><b>Indomie Goreng</b> — sisa 40, rata-rata 11/hari → <span class="tag g">± 3 hari</span> <span class="tag a">belanja disarankan</span></div>
+</div>
+<div class="card" style="margin:10px 0 0;border:1px solid var(--line2)">
+<h5 style="margin:0 0 6px;font-size:.85rem">Aktivitas terbaru</h5>
+<div style="font-size:.72rem;color:#64748b">14:22 · Budi (Kasir) — penjualan Rp 14.000 (Tunai) · 14:10 · Admin — stok Aqua +30 · 13:55 · Admin — jurnal keluar Rp 200.000 "beli karung"</div>
+</div>
+</div></div></div>
+<div class="repl">
+<div class="repl-title"><span>(b) /admin/produk — tabel produk + form tambah/ubah</span><small>contoh</small></div>
+<div class="repl-body"><div class="app">
+<h4>Produk <span class="m">&amp; Stok</span> <small>· kelola katalog dan stok</small></h4>
+<div class="tbl"><table>
+<tr><th>Nama</th><th>Kategori</th><th>Jual</th><th>Modal</th><th>Stok</th><th>Status</th></tr>
+<tr><td><b>Aqua 600ml</b></td><td>Minuman</td><td>Rp 3.000</td><td>Rp 2.200</td><td>24 bot <span class="tag a">menipis</span></td><td><span class="tag g">Aktif</span></td></tr>
+<tr><td><b>Indomie Goreng</b></td><td>Sembako</td><td>Rp 3.500</td><td>Rp 2.800</td><td>40 bks</td><td><span class="tag g">Aktif</span></td></tr>
+<tr><td><b>Sabun Mandi</b></td><td>Lainnya</td><td>Rp 4.000</td><td>Rp 3.000</td><td>3 pcs <span class="tag r">habis segera</span></td><td><span class="tag g">Aktif</span></td></tr>
+<tr><td><b>Teh Pucuk 500ml</b></td><td>Minuman</td><td>Rp 4.500</td><td>Rp 3.500</td><td>18 bot <span class="tag b">Grosir</span></td><td><span class="tag g">Aktif</span></td></tr>
+</table></div>
+<span style="font-size:.75rem"><b>Baris tabel</b>: tap baris = isinya dimuat ke form "Tambah / Ubah Produk" di bawahnya. Tag warna: <span class="tag g">Aktif</span> normal · <span class="tag a">menipis</span> stok &lt; 5 · <span class="tag r">habis segera</span> tinggal sedikit · <span class="tag b">Grosir</span> ada tier harga borongan.</span>
+
+<div class="card" style="border:1px solid var(--line2);margin:10px 0 0">
+<h5 style="margin:0 0 6px;font-size:.85rem"><span class="chipm">⓷</span> Tambah / Ubah Produk</h5>
+<div class="frow">
+<div><span class="fl">Nama</span><span class="inp">Aqua 600ml</span></div>
+<div><span class="fl">Kategori</span><span class="inp">Minuman</span></div>
+<div><span class="fl">Harga Jual (Rp)</span><span class="inp">3.000</span></div>
+<div><span class="fl">Harga Modal (Rp)</span><span class="inp">2.200</span></div>
+<div><span class="fl">Stok</span><span class="inp">24</span></div>
+<div><span class="fl">Satuan</span><span class="inp">bot</span></div>
+<div><span class="fl">Barcode</span><span class="inp">8991001</span></div>
+<div><span class="fl">Grosir (opsional)</span><span class="inp">mis. 24+ @ −10%</span></div>
+</div>
+<div style="display:flex;gap:8px"><span class="btn pri sm">Simpan Produk</span><span class="btn sm">Batal</span></div>
+</div>
+</div></div></div>
+<div class="repl">
+<div class="repl-title"><span>(c) /laporan — "Laporan &amp; Rekap" (admin melihat versi /admin/laporan "Laporan Pengurus")</span><small>periode 30 hari, contoh</small></div>
+<div class="repl-body"><div class="app">
+<h4>Laporan <span class="m">&amp; Rekap</span> <small>· rekapitulasi penjualan, laba kotor, kas, unduhan CSV</small></h4>
+<div class="pills">
+<span class="pill">Hari Ini (1)</span><span class="pill">7 Hari</span><span class="pill on">30 Hari</span><span class="pill">Semua</span>
+</div>
+<div class="tabs">
+<span class="tab on"><span class="chipm">⓸</span> Laba-Rugi</span>
+<span class="tab">Neraca</span>
+<span class="tab">Jurnal Kas</span>
+</div>
+<div class="report">
+<div class="rrow"><span>Penjualan (30 hari)</span><span>Rp 38.500.000</span></div>
+<div class="rrow"><span>(−) Harga Pokok Penjualan (HPP)</span><span>Rp 27.950.000</span></div>
+<div class="rrow"><span><b>Laba Kotor</b></span><span><b>Rp 10.550.000</b> <span style="font-size:.66rem;color:#94a3b8">(27,4%)</span></span></div>
+<div class="rrow"><span>(−) Pengeluaran operasional</span><span>Rp 1.200.000</span></div>
+<div class="rrow tot"><span>Laba Bersih</span><span class="v">Rp 9.350.000</span></div>
+</div>
+<div class="report" style="margin-top:8px">
+<div class="rrow" style="border-bottom:2px solid var(--maroon);font-weight:800"><span>NERACA (ringkas)</span><span></span></div>
+<div class="rrow"><span>Aset: Kas + Stok + Piutang</span><span>Rp 14.800.000</span></div>
+<div class="rrow"><span>Kewajiban: Hutang supplier</span><span>Rp 420.000</span></div>
+<div class="rrow"><span>Ekuitas (Modal + Laba ditahan)</span><span>Rp 14.380.000</span></div>
+</div>
+<div style="display:flex;gap:8px;margin-top:10px">
+<span class="btn sm">⬇ Unduh CSV (arsip rapat)</span>
+<span class="btn sm">🖨 Cetak / PDF</span>
+</div>
+</div></div></div>
+
+<h3>Anotasi — "Ini tombol untuk apa, di sini Anda bisa apa"</h3>
+<div class="anno"><span class="ch">⓵</span><div><b>Kartu KPI Dashboard</b> — angka inti hari ini; ada panah naik/turun vs periode sebelumnya. Kartu kuning = perlu tindakan (rekap tertunda, hutang besar).</div></div>
+<div class="anno"><span class="ch">⓶</span><div><b>Prediksi stok menipis</b> — aplikasi hitung sendiri dari penjualan 14 hari: "stok habis dalam N hari". Di sini Anda tahu <i>kapan</i> harus belanja.</div></div>
+<div class="anno"><span class="ch">⓷</span><div><b>Form Tambah/Ubah Produk</b> — isian wajib: nama, harga jual, stok, satuan. Harga modal = dasar hitung laba. Grosir opsional (mis. 24+ dapat −10%). Simpan → langsung bisa dijual di POS.</div></div>
+<div class="anno"><span class="ch">⓸</span><div><b>Tab Laba-Rugi / Neraca</b> — Laba-Rugi: omzet − HPP − pengeluaran = laba bersih. Neraca: aset vs kewajiban + ekuitas (harus seimbang). Ganti periode lewat pil di atas.</div></div>
+
+<div class="legend"><b>Keterangan warna:</b> maroon = utama/brand · hijau = baik/aktif · kuning = peringatan (stok menipis, rekap tertunda) · merah = masalah (habis, defisit). Halaman ini sudah <b>siap cetak A4</b> — tekan Ctrl+P untuk salinan fisik.</div>
+</div>
+</body>
+</html>

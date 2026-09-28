@@ -51,3 +51,8 @@ scripts/zz-*
 .audit-*.txt
 .build-*.txt
 .tsc-*.txt
+
+# scratch sesi agent (iN_*) + data tooling lokal
+i[0-9]_*.txt
+i[0-9]_*.cmd
+.cline/

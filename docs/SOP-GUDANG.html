@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOP Gudang — Kopontren Al Ittihad</title>
+<style>
+:root{--maroon:#7a1835;--wine:#7a1c1c;--bg:#faf5f6;--card:#fff;--line:#e9d5d8;--line2:#e2e8f0;--ink:#170a0e;--sub:#6b5a60;--ok:#059669;--bad:#e11d48;--warn:#f59e0b;--slate:#f1f5f9}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,'Segoe UI',sans-serif;line-height:1.55;font-size:15px}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+.hero{background:var(--maroon);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px}
+.hero h1{font-size:1.55rem;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;opacity:.75;font-size:.85rem}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.meta span{background:rgba(255,255,255,.14);border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:600}
+h2{font-size:1.15rem;margin:28px 0 10px;font-weight:800}
+h2 .n{display:inline-block;background:var(--maroon);color:#fff;border-radius:8px;width:26px;height:26px;line-height:26px;text-align:center;font-size:.85rem;margin-right:8px}
+h3{font-size:.95rem;margin:18px 0 8px;font-weight:800;color:var(--maroon)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(23,10,14,.05)}
+ul,ol{padding-left:20px;margin:8px 0}
+li{margin:6px 0}
+.note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:.85rem;margin:12px 0}
+.todo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.todo{grid-template-columns:1fr}}
+.todo .card.d{border-top:4px solid var(--ok)}
+.todo .card.k{border-top:4px solid var(--bad)}
+.todo h3{margin-top:0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;color:#64748b;padding:8px;border-bottom:2px solid var(--line2);font-weight:800}
+td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.ok{color:var(--ok);font-weight:700}
+.bad{color:var(--bad);font-weight:700}
+.tbl{border:1px solid var(--line2);border-radius:12px;overflow-x:auto;background:#fff}
+.tbl table{min-width:560px}
+.tag{display:inline-block;font-size:.6rem;font-weight:800;border-radius:6px;padding:2px 7px}
+.tag.g{background:#d1fae5;color:#065f46}.tag.a{background:#fef3c7;color:#92400e}.tag.r{background:#ffe4e6;color:#9f1239}
+.inp{display:block;width:100%;min-height:44px;border:1px solid #cbd5e1;border-radius:10px;padding:8px 12px;font-size:.78rem;background:#fff}
+.inp::placeholder{color:#94a3b8}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.frow .fl{font-size:.62rem;font-weight:800;text-transform:uppercase;color:#64748b;letter-spacing:.04em}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:10px;font-weight:700;font-size:.8rem;border:1px solid transparent;cursor:pointer;background:#f1f5f9}
+.btn.pri{background:var(--maroon);color:#fff}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:.72rem}
+.chipm{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--maroon);color:#fff;border-radius:50%;font-size:.62rem;font-weight:800;flex:none}
+.anno{display:flex;gap:10px;margin:10px 0;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:10px 12px;font-size:.82rem}
+.anno .ch{flex:none;width:26px;height:26px;background:var(--warn);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+.legend{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;font-size:.8rem;margin-top:10px}
+.legend b{color:var(--ok)}
+@media print{
+body{background:#fff}
+.wrap{max-width:none;padding:0}
+.hero{border-radius:0}
+.anno{border-color:#94a3b8;background:#f8fafc}
+.card{box-shadow:none}
+@page{size:A4;margin:8mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1>SOP Gudang — Kopontren Al Ittihad</h1>
+<p>Panduan peran <b>Gudang</b>: menjaga stok akurat lewat stok masuk/keluar (opname) dan memantau stok menipis.</p>
+<div class="meta"><span>Peran: Gudang</span><span>Halaman: Produk &amp; Stok (Opname) + Ringkasan</span><span>Angka di gambar = contoh (mock)</span></div>
+</div>
+
+<div class="note"><b>Cara baca:</b> lingkaran maroon ①–④ menunjuk elemen pada <b>gambar tiruan</b> di bagian bawah (bukan screenshot — digambar ulang dari aplikasi, warna maroon). Semua angka hanya <b>contoh</b>.</div>
+
+<h2><span class="n">1</span>Tujuan peran Gudang</h2>
+<div class="card">
+<ul>
+<li><b>Stok aplikasi = stok fisik</b> — setiap kali barang masuk/keluar/hasil opname, angka di aplikasi diperbarui agar POS &amp; laporan akurat.</li>
+<li><b>Tidak ada produk "ghost"</b> — stok yang salah menyebabkan kasir menjual barang yang tidak ada, atau kas tercatat minus.</li>
+<li><b>Stok menipis terdeteksi dini</b> — aplikasi memprediksi "habis dalam N hari"; Gudang memberi tahu Pembelian/Manajer sebelum kehabisan.</li>
+</ul>
+<p style="margin-bottom:0">Gudang <b>bukan</b> pembeli (supplier &amp; hutang milik peran Pembelian) dan <b>bukan</b> kasir. Fokusnya: <i>opname &amp; akurasi stok</i>.</p>
+</div>
+
+<h2><span class="n">2</span>Alur kerja harian</h2>
+<div class="card">
+<ol>
+<li><b>Saat barang datang dari Pembelian</b> — hitung fisik, cocokkan jenis &amp; jumlah, lalu <b>stok masuk</b>: pada halaman Produk &amp; Stok, pilih produk → ubah angka stok menjadi jumlah riil (opname) <span class="chipm">①</span>. Catatan: stok sudah bertambah otomatis dari pencatatan Belanja (Pembelian) — opname dipakai untuk koreksi selisih.</li>
+<li><b>Stok keluar</b> (rusak, terpakai internal, hilang) — kurangi angka stok lewat opname, tulis alasannya di catatan (bila tersedia).</li>
+<li><b>Pantau Ringkasan</b> — kartu <b>"N stok menipis"</b> (stok &lt; 5) di beranda; bila muncul, langsung beritahu Pembelian/Manajer <span class="chipm">②</span>.</li>
+<li><b>Opname berkala</b> (mingguan) — hitung fisik acak/semua, koreksi angka aplikasi, arsipkan hasilnya.</li>
+</ol>
+</div>
+
+<h2><span class="n">3</span>Fitur yang tersedia untuk Gudang</h2>
+<div class="card">
+<table>
+<tr><th>Fitur</th><th>Pakai untuk</th></tr>
+<tr><td><b>Halaman Produk &amp; Stok (Opname)</b></td><td>Melihat seluruh produk + stok; mengubah angka stok (masuk/keluar/opname). Tambah/ubah harga &amp; nama = wewenang Admin/Manajer.</td></tr>
+<tr><td><b>Ringkasan (/)</b></td><td>Dashboard pribadi: aktivitas sendiri + kartu "stok menipis" (produk &lt; 5).</td></tr>
+<tr><td><b>Cari produk</b></td><td>Filter tabel produk per nama/kategori untuk mempercepat opname.</td></tr>
+</table>
+</div>
+
+<h2><span class="n">4</span>Do's &amp; Don'ts</h2>
+<div class="todo">
+<div class="card d"><h3 class="ok">✔ Do's</h3>
+<ul>
+<li>Opname <b>setelah</b> semua transaksi selesai (akhir hari) supaya selisih jelas.</li>
+<li>Catat <b>alasan</b> tiap selisih (rusak, hilang, salah input) supaya mudah dilacak.</li>
+<li>Laporkan stok menipis ke Pembelian <b>segera</b> melihat kartu kuning.</li>
+<li>Verifikasi fisik: hitung ulang 2× untuk produk yang selisihnya besar.</li>
+</ul></div>
+<div class="card k"><h3 class="bad">✘ Don'ts</h3>
+<ul>
+<li>Jangan "tebak" stok — angka harus dari hitungan fisik.</li>
+<li>Jangan ubah stok di tengah transaksi ramai (stok kurang = kasir macet).</li>
+<li>Jangan tambah/hapus produk atau ganti harga — wewenang Admin/Manajer.</li>
+<li>Jangan koreksi stok tanpa memberi tahu Pembelian (terkait belanja &amp; hutang).</li>
+</ul></div>
+</div>
+
+<h2><span class="n">5</span>Troubleshooting</h2>
+<div class="card">
+<table>
+<tr><th>Gangguan</th><th>Sebab</th><th>Solusi</th></tr>
+<tr><td>Kasir mau jual tapi stok "habis"</td><td>Stok aplikasi belum sinkron dengan fisik</td><td>Lakukan opname produk tsb; koreksi angkanya.</td></tr>
+<tr><td>Stok membesar tiba-tiba</td><td>Belanja dicatat 2×, atau opname keliru</td><td>Cek log Aktivitas/audit; koreksi lewat opname.</td></tr>
+<tr><td>Tombol ubah produk tidak bisa</td><td>Peran Gudang hanya opname (stok), bukan edit produk</td><td>Minta Admin/Manajer ubah harga/nama; Anda cukup perbaiki stok.</td></tr>
+<tr><td>Kartu "stok menipis" tidak muncul padahal tinggal sedikit</td><td>Ambangnya = stok &lt; 5</td><td>Manajer/Admin melihat prediksi di Dashboard; usulkan naikkan ambang bila perlu.</td></tr>
+</table>
+</div>
+<h2><span class="n">6</span>Gambar tiruan: Produk &amp; Stok (Opname) + Ringkasan</h2>
+
+<div class="repl" style="border:1px solid var(--line);background:#fff;margin:14px 0">
+<div style="background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569">/admin/produk — untuk peran Gudang labelnya <b>"Produk &amp; Stok (Opname)"</b> <small>· contoh</small></div>
+<div style="padding:14px;font-size:.85rem">
+<h4 style="margin:0 0 10px;font-weight:800">Produk <span style="color:var(--maroon)">&amp; Stok</span> <small style="font-size:.72rem;color:#64748b;font-weight:600">· opname: sesuaikan angka stok dengan fisik</small></h4>
+<div class="tbl"><table>
+<tr><th>Nama</th><th>Kategori</th><th>Stok</th><th>Status</th><th>Aksi</th></tr>
+<tr><td><b>Aqua 600ml</b></td><td>Minuman</td><td>24 bot</td><td><span class="tag g">Aktif</span></td><td><span class="chipm">①</span> Ubah Stok</td></tr>
+<tr><td><b>Sabun Mandi</b></td><td>Lainnya</td><td>3 pcs <span class="tag a">menipis</span></td><td><span class="tag g">Aktif</span></td><td>Ubah Stok</td></tr>
+<tr><td><b>Minyak Goreng 1L</b></td><td>Sembako</td><td>0 pcs <span class="tag r">habis</span></td><td><span class="tag g">Aktif</span></td><td>Ubah Stok</td></tr>
+<tr><td><b>Sabun Cuci 1kg</b></td><td>Sembako</td><td>60 pcs</td><td><span class="tag a">nonaktifkan bila tidak dijual</span></td><td>—</td></tr>
+</table></div>
+
+<div class="card" style="border:1px solid var(--line2);margin-top:10px">
+<h5 style="margin:0 0 6px;font-size:.85rem"><span class="chipm">③</span> Opname — koreksi stok (contoh)</h5>
+<div class="frow">
+<div><span class="fl">Produk</span><span class="inp">Aqua 600ml</span></div>
+<div><span class="fl">Stok sekarang</span><span class="inp">24 bot</span></div>
+<div><span class="fl">Stok hasil hitung</span><span class="inp">21 bot</span></div>
+<div><span class="fl">Catatan</span><span class="inp">3 rusak (kemasan)</span></div>
+</div>
+<div style="display:flex;gap:8px"><span class="btn pri sm">Simpan Opname</span><span class="btn sm">Batal</span></div>
+</div>
+</div></div>
+
+<div class="repl" style="border:1px solid var(--line);background:#fff;margin:14px 0">
+<div style="background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569">/ (Ringkasan) — kartu peringatan stok <small>· contoh</small></div>
+<div style="padding:14px">
+<div style="border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:12px;font-size:.8rem">
+<b style="color:#92400e">⚠ 3 stok menipis</b> (stok &lt; 5) <span class="chipm">②</span>
+<div style="margin-top:6px">
+<span style="display:block"><b>Sabun Mandi</b> — 3 pcs</span>
+<span style="display:block"><b>Mie Instan Cup</b> — 4 pcs</span>
+<span style="display:block"><b>Gula Pasir 2kg</b> — 2 pcs</span>
+</div>
+<div style="font-size:.7rem;color:#92400e;margin-top:6px">Laporkan ke Pembelian agar belanja minggu ini mencakup produk ini.</div>
+</div>
+</div></div>
+
+<h3>Anotasi — "Ini tombol untuk apa, di sini Anda bisa apa"</h3>
+<div class="anno"><span class="ch">①</span><div><b>"Ubah Stok"</b> — satu-satunya tombol yang boleh dipakai peran Gudang: sesuaikan angka stok aplikasi dengan hasil hitung fisik. Simpan = tercatat di log Aktivitas.</div></div>
+<div class="anno"><span class="ch">②</span><div><b>Kartu "N stok menipis"</b> di Ringkasan — peringatan otomatis (stok &lt; 5). Di sini Anda tahu barang apa yang harus segera diinformasikan ke Pembelian.</div></div>
+<div class="anno"><span class="ch">③</span><div><b>Form opname</b> — tulis angka hasil hitung + alasan (rusak/hilang). Selisih otomatis tercatat; koreksi besar jangan lupa di-follow ke Pembelian.</div></div>
+
+<div class="legend"><b>Keterangan warna:</b> kuning = menipis (stok &lt; 5) · merah = habis (stok 0) · hijau = normal. Dokumen ini <b>siap cetak A4</b> (Ctrl+P) — cetak 1 lembar tempel di rak gudang.</div>
+</div>
+</body>
+</html>
