@@ -1,6 +1,7 @@
 'use client';
 
 import type { AppUser } from '@/lib/auth';
+import { useState } from 'react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { HamburgerNav } from './sidebar';
@@ -10,6 +11,8 @@ import { NotificationBell } from './notification-bell';
 import { Avatar, ROLE_LABEL } from './ui';
 import { Breadcrumb } from './breadcrumb';
 import { fetchTimeout } from '@/lib/fetch-util';
+import { useHotkeys } from '@/lib/useHotkeys';
+import { CommandPalette } from '@/components/command-palette';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   const router = useRouter();
@@ -20,6 +23,16 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
   // UX-5 H4: breadcrumb visual mung rute nested /admin/* /pengurus/*.
   const showBreadcrumb =
     pathname.startsWith('/admin/') || pathname.startsWith('/pengurus/');
+
+  // UX-7B: Command Palette global — Ctrl/Cmd+K toggle, Escape tutup.
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useHotkeys(
+    {
+      'ctrl+k': () => setPaletteOpen((v) => !v),
+      escape: () => setPaletteOpen(false),
+    },
+    false
+  );
 
   // Ganti tema: sinkron state class 'dark' + cookie (logika sama persis
   // dengan ThemeToggle lama agar preferensi tema tidak hilang).
@@ -74,6 +87,22 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
             </a>
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2">
+            {/* UX-7B: pemicu Command Palette (discovery; Ctrl+K tetap jalan). */}
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              aria-label="Buka komando & pencarian (Ctrl K)"
+              title="Pencarian & komando (Ctrl K)"
+              className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2 text-xs text-slate-500 dark:border-navy-600 dark:text-slate-400"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <kbd className="hidden rounded bg-slate-100 px-1 text-[10px] font-semibold text-slate-500 md:inline dark:bg-navy-800 dark:text-slate-400">
+                Ctrl K
+              </kbd>
+            </button>
             {/* Identitas user selalu tampil (termasuk mobile): avatar + nama (sm+) + pill role. */}
             <div className="flex items-center gap-1.5 rounded-full border border-slate-200 py-1 pl-1 pr-2 dark:border-navy-600 sm:px-2.5">
               <Avatar name={user.display_name || user.username} size="sm" />
@@ -104,6 +133,12 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
       </main>
       {showBottomNav && <BottomNav role={user.role} />}
       <SessionWatcher />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        user={user}
+        onToggleTheme={toggleTheme}
+      />
     </div>
   );
 }

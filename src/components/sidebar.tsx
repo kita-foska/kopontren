@@ -48,14 +48,14 @@ interface MenuDef {
   roleLabel?: Partial<Record<Role, string>>;
 }
 
-function levelOk(role: Role, lv: MenuLevel): boolean {
+export function levelOk(role: Role, lv: MenuLevel): boolean {
   if (role === 'admin') return true; // mirror canAccess: admin selalu lolos
   if (lv === 'ops') return role === 'manajer'; // mirror isManager
   if (lv === 'admin') return false; // mirror guard admin-only
   return FEATURE_MATRIX[lv].includes(role);
 }
 
-const MENU_ITEMS: MenuDef[] = [
+export const MENU_ITEMS: MenuDef[] = [
   { href: '/', label: 'Ringkasan', level: 'personal' },
   { href: '/admin/dashboard', label: 'Dashboard', level: 'laporan' },
   { href: '/pengurus/dashboard', label: 'Dashboard Global', level: 'laporan' },
