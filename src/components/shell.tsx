@@ -78,6 +78,14 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
 
   return (
     <div className="min-h-screen">
+      {/* UX-8C: skip-link (a11y): tersembunyi sampai di-focus via Tab —
+          user keyboard melompat langsung dari navigasi ke konten utama. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[70] focus:rounded-lg focus:bg-accent-500 focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-white focus:shadow-lg"
+      >
+        Lewati navigasi
+      </a>
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-navy-700 dark:bg-navy-900/90">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -160,6 +168,8 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
         </div>
       </header>
       <main
+        id="main-content"
+        tabIndex={-1}
         className={
           'mx-auto max-w-6xl px-4 py-5 ' + (showBottomNav ? 'pb-28 md:pb-16' : 'pb-16')
         }
