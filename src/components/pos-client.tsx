@@ -664,6 +664,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       return;
     }
     if (r.data.deduped) showToast('Transaksi sudah tersinkron sebelumnya (tanpa duplikat).');
+    // UX-8D (keputusan 8): penjualan sengaja TIDAK di-gate shift — kasir tetap
+    // bisa melayani walau lupa buka shift; tapi beri peringatan non-blocking
+    // bahwa transaksi ini tidak masuk rekap shift (bisa dicatat manual nanti).
+    if (currentShift === null)
+      showToast('Transaksi berhasil, tetapi shift belum dibuka - transaksi ini tidak masuk rekap shift.');
     const saved = r.data.sale;
     if (saved) {
       setReceipt({
