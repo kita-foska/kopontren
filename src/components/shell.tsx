@@ -13,6 +13,7 @@ import { Breadcrumb } from './breadcrumb';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { useHotkeys } from '@/lib/useHotkeys';
 import { CommandPalette } from '@/components/command-palette';
+import { KeyCheatsheet } from '@/components/key-cheatsheet';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   const router = useRouter();
@@ -26,12 +27,32 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
 
   // UX-7B: Command Palette global — Ctrl/Cmd+K toggle, Escape tutup.
   const [paletteOpen, setPaletteOpen] = useState(false);
+  // UX-7C: Cheatsheet pintasan global — ? toggle (di luar /kasir: di sana POS
+  // punya "Panduan Kasir" sendiri via ? lokal, jangan dua panel sekaligus).
+  const [cheatOpen, setCheatOpen] = useState(false);
   useHotkeys(
     {
       'ctrl+k': () => setPaletteOpen((v) => !v),
       escape: () => setPaletteOpen(false),
+      '?': (e) => {
+        if (pathname === '/kasir') return; // hotkey ? milik Panduan Kasir POS
+        // '?' yang diketik di kolom input (input/textarea/select) tidak
+        // boleh membuka panel — pola guard sama dengan pos-client (inTextTarget).
+        const t = e.target as HTMLElement | null;
+        if (
+          t &&
+          (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)
+        ) {
+          return;
+        }
+        e.preventDefault();
+        setCheatOpen((v) => !v);
+      },
     },
-    false
+    // UX-7C: listener WAJIB aktif — argumen `false` lama (7B) membuat Ctrl+K
+    // tak terdaftar sama sekali (shell hanya ter-render utk user login,
+    // jadi selalu aman diaktifkan).
+    true
   );
 
   // Ganti tema: sinkron state class 'dark' + cookie (logika sama persis
@@ -103,6 +124,21 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                 Ctrl K
               </kbd>
             </button>
+            {/* UX-7C: pemicu cheatsheet pintasan (discovery; ? tetap jalan).
+                Disembunyikan di /kasir — di sana ? milik "Panduan Kasir" POS. */}
+            {pathname !== '/kasir' && (
+              <button
+                type="button"
+                onClick={() => setCheatOpen(true)}
+                aria-label="Pintasan keyboard (?)"
+                title="Pintasan keyboard (?)"
+                className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2 text-xs text-slate-500 dark:border-navy-600 dark:text-slate-400"
+              >
+                <kbd className="rounded bg-slate-100 px-1 text-[10px] font-semibold text-slate-500 dark:bg-navy-800 dark:text-slate-400">
+                  ?
+                </kbd>
+              </button>
+            )}
             {/* Identitas user selalu tampil (termasuk mobile): avatar + nama (sm+) + pill role. */}
             <div className="flex items-center gap-1.5 rounded-full border border-slate-200 py-1 pl-1 pr-2 dark:border-navy-600 sm:px-2.5">
               <Avatar name={user.display_name || user.username} size="sm" />
@@ -139,6 +175,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
         user={user}
         onToggleTheme={toggleTheme}
       />
+      <KeyCheatsheet open={cheatOpen} onClose={() => setCheatOpen(false)} user={user} />
     </div>
   );
 }
