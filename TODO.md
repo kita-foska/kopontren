@@ -1079,7 +1079,7 @@ backup aman, offline tetap percaya diri.
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
 | UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); FASE F SELESAI 27 Sep (F0 `d1f7574` + F1 `2ff5091` token map 61 situs + F2 `ce7e0cd` .card-label 10 situs + F3 docs+resync kp-zip3); sisa: pixel-check HP 8 item; FASE G1+G2 SELESAI 27 Sep (G1 `99a3b20` Modal size + G2 `0ffb072` Toast tone 54 tag); G3 = docs + resync kp-zip3; G4 = pixel-check 5 item; G2-full = ternary `pos-client:714/892/901` |
 | UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat (audit + ACC Q1-Q4 27 Sep; plan H0-H6: MEMORY.md § UX-5 FASE H) | ✅ SELESAI H0–H6 27 Sep: H1 `c41ddfd` · H3 `b5b4927` · H2 (+fix `faf4849`) · H4 `33ce3f4` · H5 `a0b9f79` · H6 (commit H6); sisa = pixel-check H4+H5 (list: MEMORY § UX-5 H4/H5) + P3/P4 tashih |
-| UX-5.5 | **Multi-role (M1)** — siji akun multi-role; target kalila wadi kabutuhan nyata (keputusan 27 Sep: ditunda, liha Kelompok M; trigger = Gus Fi ngramesake kabutuhan) | 📋 ditunda |
+| UX-5.5 | **Multi-role (M1)** — siji akun multi-role; **ACC eksekusi 27 Sep (sadurunge P0 Production Certification)** — doc `docs/m1-multirole.md`, liha Kelompok M | ▶ in progress (commit plan M1-1…M1-6) |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 🚀 FASE I ACC 27 Sep: I-1 done · I-3 done (`e484cbb`) · I-4 done (`6222bc70`) · I-5 done (`99c973c`) · I-2 done (`8d585f4`) · I-6 done (`4de83fd`) · I-8 done (commit I-8, hash backfill docs) · **I-7 ditunda** (daftar alasan = pengurus) — liha § FASE I di atas |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
 | UX-8  | **Operational Safety**: audit trail komunikatif, backup rasa aman, freeze/immutable, health center, reconciliation | 📋 rancang |
@@ -1204,10 +1204,13 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
 
 
 
-### Kelompok M — Identitas & multi-role (M1, ditunda → UX-5.5/UX-6)
+### Kelompok M — Identitas & multi-role (M1: IN PROGRESS, ACC eksekusi 27 Sep)
 
-- [ ] M1 Multi-role support — siji akun duwe role pirang-pirang
-      (`users.roles` array, skema v18, gina `users.role`).
+- [~] M1 Multi-role support — **IN PROGRESS (ACC eksekusi Gus Fi, 27 Sep)**
+      — siji akun duwe role pirang-pirang (`users.roles` JSON, skema
+      **V19**, `users.role` = primary). **Dokumen desain:
+      `docs/m1-multirole.md`** (4 keputusan ACC + commit plan
+      M1-1…M1-6). Riwayat:
       **Rancangan (rekomendasi)**: *primary role + access tambahan* —
       primary role nrentahi menu utama; access tambahan lewat "mode
       switch"/dedicated link; audit log "acting as primary role";

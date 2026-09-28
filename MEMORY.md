@@ -216,7 +216,7 @@
   mobile (wrap): breadcrumb tampil "Kopontren / Admin /
   Produk"; link "Kopontren" kerja; item terakhir bold.
 
-### MULTI-ROLE: ditunda ke UX-5.5/UX-6 (keputusan Gus Fi, 27 Sep)
+### MULTI-ROLE M1: IN PROGRESS (ACC eksekusi Gus Fi, 27 Sep; riwayat keputusan di bawah)
 - **Pertanyaan Gus Fi (27 Sep)**: account multi-role (siji akun duwe
   role langkung saka siji, mis. admin + member + kasir + pengurus).
   **Keputusan: ora diimplementasi saiki** — model saat ini
@@ -240,6 +240,20 @@
   pirang-pirang (HP/email beda); **jangan share akun** (audit trail
   per-akun tetep resik); admin bisa ndeleng card member dhewe ing
   `/member` (H3) menawa dipasangke.
+- **EKSEKUSI M1 (ACC Gus Fi, 27 Sep)**: urutane M1 sadurunge P0
+  Production Certification (Golden Path C1→C4). Patang keputusan desain
+  wis ACC: (1) model **primary + additional (mode switch),
+  active-role-only** (ora union-all); (2) kabeh user saged multi-role,
+  admin ngassign via Pengguna page; (3) default role aktif mung login
+  = **primary** ("last used" ora di-persist ing V1); (4) audit:
+  snapshot `audit_log.user_role` = **acting role** (zero perubahan
+  20+ route), event anyar `auth:switch-role` nrekam
+  `{active_role: {before, after}, primary_role}`, **ora nambah kolom
+  anyar** ing audit_log. Skema **Option A**: `users.roles` JSON +
+  `sessions.active_role`, migrasi **V19**. Dokumen:
+  `docs/m1-multirole.md`. Commit plan: M1-1 docs → M1-2 skema V19 →
+  M1-3 auth → M1-4 UI → M1-5 audit → M1-6 test + release gate.
+
 - **H2 scope final (27 Sep)**: redirect role-aware **tanpa redirect anyar
   saka `/`** (ngguyu Q2: home `/` tetep kanggo kabeh role, dashboard =
   drill-down): post-login + reauth PIN + setup PIN -> `roleHome(role)`
