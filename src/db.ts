@@ -69,6 +69,9 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT UNIQUE NOT NULL,
   display_name TEXT DEFAULT '',
   role TEXT NOT NULL DEFAULT 'kasir',
+  -- M1 multi-role: JSON array of roles the account may act as
+  -- (must include the primary role). Backfilled in fullInit to [role].
+  roles TEXT NOT NULL DEFAULT '["kasir"]',
   active INTEGER NOT NULL DEFAULT 1,
   salt TEXT NOT NULL,
   pass_hash TEXT NOT NULL,
@@ -81,6 +84,9 @@ CREATE TABLE IF NOT EXISTS sessions (
   user_id INTEGER NOT NULL,
   expires_at TEXT NOT NULL,
   last_activity TEXT,
+  -- M1 multi-role: the role this session is currently acting as
+  -- (fallback to users.role when empty/legacy). Set on createSession.
+  active_role TEXT,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 -- PIN 4-6 digit per user (scrypt, sama seperti password). Untuk re-auth
@@ -485,6 +491,10 @@ async function migrate(d: Db) {
   // sessions.last_activity: jejak aktivitas terakhir utk idle timeout (refresh
   // tiap request; entek setelah session_timeout detik tanpa aktivitas).
   await execColumn(d, 'ALTER TABLE sessions ADD COLUMN last_activity TEXT');
+  // M1 multi-role (v19): users.roles JSON array + sessions.active_role.
+  // Idempotent via execColumn PRAGMA guard; purely additive.
+  await execColumn(d, `ALTER TABLE users ADD COLUMN roles TEXT NOT NULL DEFAULT '["kasir"]'`);
+  await execColumn(d, 'ALTER TABLE sessions ADD COLUMN active_role TEXT');
   // FASE P4 (2026-09-24, keputusan pengurus): komisi konsinyasi utk akad
   // WAKALAH BIL UJRAH (koreksi terminologi 24 Sep dsr riset Syafi'i —
   // BUKAN ju'alah, bentuk "laku = beli" = gharar): toko = wakil pemilik
@@ -814,7 +824,11 @@ export async function saveZakatSettings(
 // hanya dibaca via ZAKAT_SETTING_DEFAULTS saat key belum ada).
 // Purely additive; DB stempel v17 menjalankan fullInit sekali lagi
 // saat cold start berikutnya (~15-20 s satu kali).
-const SCHEMA_VERSION = 18;
+// Bump v19 (2026-09-27): M1 multi-role — users.roles (JSON array, must
+// include the primary users.role) + sessions.active_role (the role the
+// session is currently acting as). Purely additive + guarded backfill;
+// DB stempel v18 menjalankan fullInit sekali lagi saat cold start.
+const SCHEMA_VERSION = 19;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
@@ -845,6 +859,16 @@ async function fullInit(d: Db) {
     `UPDATE consignments SET settled_at = strftime('%Y-%m-%dT%H:%M:%fZ', settled_at) WHERE settled_at IS NOT NULL AND instr(settled_at, ' ') > 0;`
   );
   await seed(d);
+  // M1 multi-role backfill (only runs when the version stamp is < v19):
+  // give every user a roles array matching their primary role, and point
+  // each session's active_role at its user's primary role. Guarded so it
+  // never clobbers a multi-role array (M1-4+) or an already-set active_role.
+  await d.exec(
+    `UPDATE users SET roles = '["' || role || '"]' WHERE roles = '["kasir"]'`
+  );
+  await d.exec(
+    `UPDATE sessions SET active_role = (SELECT u.role FROM users u WHERE u.id = sessions.user_id) WHERE active_role IS NULL`
+  );
   // v15: drop dead table stock_opname (tidak pernah ditulis oleh kode
   // mana pun sejak era fitur v3; tanpa entry UI). Idempoten & aman utk
   // DB fresh (CREATE-nya sudah tidak ada di bagian atas). Data lama
