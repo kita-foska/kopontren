@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { kpiDelta, rp, startOfDayJakarta, type KpiDelta } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { PengurusDashboardClient } from '@/components/pengurus-dashboard-client';
+import { ActivityFeed, type FeedItem, type KpiMover } from '@/components/activity-feed';
 import { TermTip } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
@@ -93,6 +94,19 @@ export default async function PengurusDashboardPage() {
   );
   const deltaMember: KpiDelta | null =
     newMembers > 0 ? { text: '▲ ' + newMembers + ' baru · 30 hari ini', tone: 'up' } : null;
+
+  // I-8 UX-6: feed "Apa yang berubah" — 5 audit log terbaru (server-side,
+  // philosophy I-3: tanpa fetch tambahan di klien). Pengurus punya tier
+  // "audit" (read-only); user tanpa tier -> kartu tersembunyi.
+  const feedOk = canAccess(user, 'audit');
+  const feedLogs: FeedItem[] = feedOk
+    ? ((await d
+        .prepare(
+          `SELECT id, username, user_name, user_role, action, record_id, created_at
+           FROM audit_log ORDER BY id DESC LIMIT 5`
+        )
+        .all()) as FeedItem[])
+    : [];
 
   // Pengurus = read-only (TIDAK operasional): KPI yang mengarah ke halaman
   // operasional (kas/member/produk) dinamis -> /admin/laporan, agar pengurus
@@ -203,6 +217,28 @@ export default async function PengurusDashboardPage() {
           </Link>
         ))}
       </div>
+
+      {feedOk && (
+        <div className="mt-4">
+          <ActivityFeed
+            logs={feedLogs}
+            movers={
+              [
+                deltaSales
+                  ? { label: 'Penjualan 30h', text: deltaSales.text, tone: deltaSales.tone }
+                  : null,
+                deltaCash
+                  ? { label: 'Arus kas 30h', text: deltaCash.text, tone: deltaCash.tone }
+                  : null,
+                deltaMember
+                  ? { label: 'Member', text: deltaMember.text, tone: deltaMember.tone }
+                  : null,
+              ].filter((m): m is KpiMover => m !== null)
+            }
+            ctaHref="/admin/audit"
+          />
+        </div>
+      )}
 
       <div className="mt-4">
         <PengurusDashboardClient />

@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { kpiDelta, rp, startOfDayJakarta, type KpiDelta } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { LowStockClient } from '@/components/admin/low-stock-client';
+import { ActivityFeed, type FeedItem, type KpiMover } from '@/components/activity-feed';
 import { Button, TermTip } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
@@ -151,6 +152,19 @@ export default async function AdminDashboardPage() {
     cashPrev7.inn - cashPrev7.out,
     'vs 7 hari sebelumnya'
   );
+  // I-8 UX-6: feed "Apa yang berubah" — 5 audit log terbaru (server-side,
+  // philosophy I-3: tanpa fetch tambahan di klien). Hanya dirender utk
+  // user dgn tier "audit" (pengurus = read-only; manajer tak punya tier ->
+  // kartu tersembunyi, bukan dead-end UI).
+  const feedOk = canAccess(user, 'audit');
+  const feedLogs: FeedItem[] = feedOk
+    ? ((await d
+        .prepare(
+          `SELECT id, username, user_name, user_role, action, record_id, created_at
+           FROM audit_log ORDER BY id DESC LIMIT 5`
+        )
+        .all()) as FeedItem[])
+    : [];
   const cards: DashCard[] = [
     {
       label: 'Penjualan Hari Ini',
@@ -266,6 +280,25 @@ export default async function AdminDashboardPage() {
         </div>
         <LowStockClient items={stockForecast} canManageStock={canAccess(user, 'stock')} />
       </div>
+
+      {feedOk && (
+        <div className="mt-4">
+          <ActivityFeed
+            logs={feedLogs}
+            movers={
+              [
+                deltaSales
+                  ? { label: 'Penjualan hari ini', text: deltaSales.text, tone: deltaSales.tone }
+                  : null,
+                deltaCash
+                  ? { label: 'Arus kas 7h', text: deltaCash.text, tone: deltaCash.tone }
+                  : null,
+              ].filter((m): m is KpiMover => m !== null)
+            }
+            ctaHref="/admin/audit"
+          />
+        </div>
+      )}
     </Shell>
   );
 }

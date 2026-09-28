@@ -966,10 +966,34 @@
   `/admin/audit` `purge` (L4 + alasan), `/admin/data` `resetAll`
   (L5 + ketik `RESET SEMUA DATA`). OOS: migrasi L1 utk aksi
   non-destruktif; `importJson` tetap L2.
-- Backfill hash: I-2 = `8d585f4` · I-5 = `99c973c` · I-6 = report.
+- Backfill hash: I-2 = `8d585f4` · I-5 = `99c973c` · I-6 = `4de83fd`
+  (report di seksi ini; backfill dilakukan di seksi I-8).
 - Pixel-check Gus (3 item): (1) kas → box rose "Dampak" + tombol
   merah; (2) audit → textarea alasan, tombol disabled sampai diisi;
   (3) data → harus ketik `RESET SEMUA DATA` persis.
+- Backfill hash I-6 (selesai di commit I-8 docs): I-6 = `4de83fd`.
+
+### UX-6 FASE I: I-8 activity feed "Apa yang berubah" (27 Sep, commit I-8)
+- `src/components/activity-feed.tsx` baru (presentational, tanpa state
+  -> aman di server component): kartu "Apa yang berubah" = 5 audit
+  log terbaru + maks. 3 KPI mover (non-flat; urutan halaman =
+  penjualan -> arus kas -> member) + CTA "Lihat audit log" ke
+  `/admin/audit` (hanya render bila user punya tier `audit`).
+  `ACTION_LABEL` = 35 aksi dikenal; tak dikenal fallback raw action.
+  `timeAgo`: "baru saja" / "Xm lalu" / "Xj lalu" / "HH.mm" (WIB).
+- Feed server-side (philosophy I-3, tanpa fetch klien): kedua page
+  dashboard query `audit_log ORDER BY id DESC LIMIT 5` langsung;
+  movers = `kpiDelta` I-3 yang sudah ada (admin: hari ini vs kemarin
+  + 7h vs 7h; pengurus: 30h x3, termasuk member baru).
+- Guard `canAccess(user,'audit')`: pengurus punya tier audit
+  (read-only ok); user tanpa tier -> kartu tersembunyi total
+  (bukan dead-end UI kosong).
+- Verifikasi: tsc exit 0 + `next build` exit 0 (53/53); sw.js tetap
+  unstamped (placeholder, tak di-commit).
+- Pixel-check Gus (3 item): (1) kartu feed di /admin/dashboard +
+  /pengurus/dashboard (5 baris feed + chip mover + CTA);
+  (2) pengurus tanpa tier audit -> kartu feed tersembunyi total;
+  (3) aksi tak dikenal -> tampil raw action name.
 
 ## 2026-09-25
 ### GROSIR v1: harga grosir per produk + integrasi POS (25 Sep)
