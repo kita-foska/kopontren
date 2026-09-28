@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, apiRetry, Button, ErrorState, PageSkeleton, TermTip, Toast, useToast } from '@/components/ui';
+import { api, apiRetry, Button, ErrorState, PageSkeleton, TermTip, Toast, useTablistNav, useToast } from '@/components/ui';
 import { rp, startOfDayJakarta, todayWibStr } from '@/lib/format';
 import { HourBarChart, type HourPoint } from '../charts';
 import { buildLabaRugiWa, shareRekap } from '@/lib/rekap';
@@ -122,6 +122,13 @@ function PlRow({
 
 export function LaporanAdminClient() {
   const [tab, setTab] = useState<'ringkasan' | 'laba' | 'neraca'>('ringkasan');
+    // UX-8B: navigasi keyboard tablist (pola APG: ArrowLeft/Right wrap,
+    // Home/End) — konsisten dengan useTablistNav di pos/belanja/data/konsinyasi.
+    const TAB_KEYS = ['ringkasan', 'laba', 'neraca'] as const;
+    const { onTabKeyDown } = useTablistNav<'ringkasan' | 'laba' | 'neraca'>(
+      (i) => TAB_KEYS[i],
+      setTab
+    );
   // UX-7E: periode dipulihkan dari saved view (validasi ke set chip
   // 1/7/30/365 — nilai tak dikenal jatuh ke default 30).
   const [period, setPeriod] = useState(() => {
@@ -227,7 +234,13 @@ export function LaporanAdminClient() {
       {/* Tab A1: "Ringkasan" = konten & perilaku lama (intinya tak diubah);
           "Laba-Rugi" = statement P&L V1 (/api/keuangan);
           "Neraca" = foto posisi sederhana V1 (snapshot, /api/neraca). */}
-      <div className="mb-3 flex gap-1 border-b border-slate-200 dark:border-navy-700">
+      {/* UX-8B: role=tablist + APG keyboard nav (hook useTablistNav di atas). */}
+      <div
+        className="mb-3 flex gap-1 border-b border-slate-200 dark:border-navy-700"
+        role="tablist"
+        aria-label="Laporan"
+        onKeyDown={onTabKeyDown}
+      >
         {(
           [
             ['ringkasan', 'Ringkasan'],

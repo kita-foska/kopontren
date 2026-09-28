@@ -189,12 +189,19 @@ export function CommandPalette({
           onKeyDown={onKey}
           aria-label="Cari produk, member, transaksi, atau navigasi"
           placeholder="Pintar cari produk / member / transaksi, atau ketik komando…"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls="palette-listbox"
+          aria-expanded={true}
+          aria-activedescendant={
+            flat.length ? 'palette-opt-' + active : undefined
+          }
           className="w-full border-0 bg-transparent px-4 py-3.5 text-[15px] outline-none dark:bg-transparent"
         />
         {q.trim().length >= 2 && !results && (
           <p className="border-t border-stroke px-4 py-2 text-xs text-soft">Pintar mencari…</p>
         )}
-        <div ref={listRef} role="listbox" aria-label="Pilihan komando" className="max-h-[46vh] overflow-auto border-t border-stroke">
+        <div ref={listRef} id="palette-listbox" role="listbox" aria-label="Pilihan komando" className="max-h-[46vh] overflow-auto border-t border-stroke">
           {sections.map((sec) => (
             <div key={sec.title}>
               <p className="px-4 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-soft">{sec.title}</p>
@@ -206,6 +213,7 @@ export function CommandPalette({
                   <button
                     key={sec.title + i}
                     data-palette-item
+                    id={'palette-opt-' + i}
                     role="option"
                     aria-selected={on}
                     onMouseEnter={() => setActive(i)}
