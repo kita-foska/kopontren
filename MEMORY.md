@@ -2643,6 +2643,81 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   kontras, retry, `rp()`) vs nunggu validasi non-eng (P3/P4/NMID/
   monitor grosir); grosir v2 + QRIS asli tetep nunggu trigger.
 
+### UX-7D/7E ACC + audit UX-8 (read-only) — 27 Sep
+- **7D+7E ACC user**: commit `a844b54` (5 file, +113/−5),
+  dual-push master=main. tsc 0; build 54/54 (+1 route = `/api/search`
+  UX-7A, expected). **Audit-note 7D (VERIFIED, wajib inget)**:
+  pengurus TIDAK akses tier `kas` (guard isManager = admin+manajer)
+  MAUPUN `piutang` (allowlist ['admin','manajer','kasir']) → 5 CTA
+  pengurus (Laporan/Zakat/Audit/Ringkasan/Dashboard) = Option C,
+  SATU-SATUNYA pilihan valid. Jangan asumsikan pengurus bisa
+  piutang/kas di fitur baru.
+- **.gitignore**: `i[0-9]_*.txt` + `i[0-9]_*.cmd` + `.cline/` sudah
+  masuk commit `572cb2e` (ikut 8 file SOP docs/ + dual-push) →
+  request "i7_* small commit" = SELESAI via pola generik itu.
+- **Hasil audit UX-8** (grep/read-only, 27 Sep):
+  - **Responsive**: modifier sm:=59 / md:=18 / lg:=14 (POS sudah
+    tuned: min-w-0 grid, kartu bayar 2×2, 44px, bottom-nav).
+    0 modifier di: command-palette, activity-feed, notification-bell,
+    low-stock-client, breadcrumb, pin-pad, dsb. → cek visual 360px
+    utk palette + feed (Gus Fi).
+  - **A11y**: Batch D sudah ada (aria-expanded ×3, tablist ×3,
+    role=tab ×10 + aria-selected, Modal ESC+focus-trap+aria-modal,
+    toast role=alert/assertive, `prefers-reduced-motion` @globals L149,
+    ring focus-visible di Button ui.tsx). **GAP**: (1) keyboard-nav
+    APG tablist (ArrowLeft/Right/onTabKeyDown) = **0** → Batch E
+    TIDAK pernah selesai; (2) command-palette (UX-7B) = 0
+    onKeyDown (tanpa panah/Enter/Escape); (3) skip-link = 0;
+    (4) aria-current = 5 (sidebar OK).
+  - **Perf**: N+1 sudah batched (09d5f2d), ref-cache/ttl-cache +
+    invalidate('members:/products:/kas:/reports:') saat mutasi,
+    API no-store, statis 1th immutable, compress + no-sourcemap.
+    POS lazy (pos-lazy dynamic) → jsQR masuk chunk POS, BUKAN main.
+    next/image ×6, next/font ×3. `loading.tsx` HANYA
+    admin/dashboard (situs lain = PageSkeleton in-component,
+    acceptable).
+  - **Visual**: token T.* (hex mentah dilarang, enforced), rp()/
+    fmtDateTime/fmtDate/fmtTime/utcToWib/todayWibStr terpusat
+    (WIB + id-ID). Empty=74, useConfirm=25, TermTip=33,
+    PageSkeleton=58. I-2 DONE: ToastTone 'critical' + 90 dtk +
+    action undo (ui.tsx L449-496; dipakai produk-client ×2,
+    shift-client ×1). **Sisa GAP: 3 "Memuat…" polos di
+    laporan-admin-client: laba-rugi L472, jam-sibuk L325,
+    neraca L616 (ErrorState sudah punya prop `tech` collapsible
+    — hanya loading-nya yang belum skeleton).**
+  - **Golden path (VERIFIED end-to-end)**: banner shift
+    pos-client L1074-1130 → handleOpenShift L965 (POST /api/shifts,
+    guard 409 kalau sudah ada open) → F4 simpan (POST /api/sales
+    tx: stok−, snapshot cost, points, cashback, margin-guard,
+    cache-invalidate, notifikasi) → handleCloseShift L980 (PATCH,
+    hanya kasir tsb/manager; windowStats by_method + audit
+    shift:close + notifyShiftClosed) → modal rekap L2182.
+    /api/returns: restock guarded changes===1, rollback tx.
+    **Finding utk Gus**: sales TIDAK di-gate shift terbuka
+    (sengaja?) — transaksi di luar jendela shift tak masuk rekap
+    shift; perlu keputusan.
+  - **Financial reconciliation (KONSISTEN, tanpa takaran bug)**:
+    rumus kas kanonis = /api/kas kasAgg (Σsales + cash_in −
+    purchases − expenses − cash_out), dipakai juga /api/neraca
+    (komen eksplisit "identik dgn halaman Kas"); rumus HPP
+    snapshot SAMA PERSIS /api/reports (komen keuangan.ts L144).
+    V1 DOKUMENTASI (KEUANGAN_NOTES/NERACA_NOTES, bkn bug):
+    retur COGS belum dibalik; piutang/hutang = kas-only (bukan
+    P&L); zakat difilter paid_at; stok dinilai cost_price
+    (stok−/cost 0 diabaikan); modal "setara" ≠ ekuitas formal.
+- **Rencana implementasi UX-8 (NUNGGU ACC user)**:
+  - **8A** (P1, ~6 baris): 3 "Memuat…" → PageSkeleton/skeleton baris.
+  - **8B** (P2, ~80-120 baris): keyboard-nav APG utk 4 grup tablist
+    (roving focus + ArrowLeft/Right/Home/End) + command-palette
+    (ArrowUp/Down + Enter + Escape + aria-activedescendant).
+  - **8C** (P3, ~30 baris): skip-link "Langsung ke konten" +
+    focus-restore pasca Modal close.
+  - **8D** (opsional): loading.tsx utk /admin/laporan +
+    /pengurus/dashboard; keputusan gating shift utk sales.
+  - Est. 3 commit (8A/8B/8C) + dual-push; tiap commit: diff → tsc
+    0 → build → push master+main. Cek visual 4 viewport (360/768/
+    1024/1440) = Gus Fi, non-blocking.
+
 
 
 
