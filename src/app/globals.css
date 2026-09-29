@@ -19,7 +19,7 @@
      tailwind.config.ts (risk=rose, success=emerald, attention=amber,
      info=blue, gold=aksen amber, wine=cetak kartu member).
      Dipakai CSS non-Tailwind (chart, canvas, elemen kustom). */
-  --accent: #7a1835; /* accent-500 (brand/hero) */
+  --accent: var(--ac500); /* accent-500 (brand/hero) — terikat var brand (Theme T2, 29 Sep; fallback maroon sama persis) */
   --color-risk: #e11d48; /* rose-600 */
   --color-success: #059669; /* emerald-600 */
   --color-attention: #f59e0b; /* amber-500 */
@@ -192,3 +192,95 @@ body {
      override ke 58mm/0mm HANYA saat print struk via printReceipt() di pos-client. */
   @page { size: A4; margin: 8mm; }
 }
+
+/* =====================================================================
+   THEME OVERRIDES — 29 Sep 2026 (audit: docs/color-theme-audit.md)
+   Lapisan kustomisasi warna global: 5 preset brand via
+   `data-brand` di <html>. Mekanisme:
+   - Var --ac300..--ac700 (maroon = nilai SAAT INI => fallback 0
+     perubahan visual; data-brand absen/tak dikenal = maroon).
+   - Aturan di bawah UNLAYERED (di luar @layer) => menang cascade
+     vs @layer utilities Tailwind (kelas accent-* terkompilasi
+     statis saat build; override via CSS variable di runtime).
+   - Alpha via color-mix(in srgb, var(--acN) P%, transparent).
+   TIDAK di-retheme: navy, wine, role colors, PWA manifest, print.
+   ===================================================================== */
+:root {
+  --ac300: #e19db6;
+  --ac400: #c45a7e;
+  --ac500: #7a1835;
+  --ac600: #64142b;
+  --ac700: #4a0d20;
+}
+html[data-brand="green"] {
+  --ac300: #94d8b2; --ac400: #57b988; --ac500: #16774b;
+  --ac600: #0f5c3b; --ac700: #0a3f2a;
+}
+html[data-brand="blue"] {
+  --ac300: #97bced; --ac400: #5b94dc; --ac500: #1d4f91;
+  --ac600: #153d71; --ac700: #0e284d;
+}
+html[data-brand="dark-maroon"] {
+  --ac300: #c4819c; --ac400: #a54e6c; --ac500: #5c1224;
+  --ac600: #470c1b; --ac700: #300712;
+}
+html[data-brand="slate"] {
+  --ac300: #cbd5e1; --ac400: #94a3b8; --ac500: #475569;
+  --ac600: #334155; --ac700: #1e293b;
+}
+
+/* --- Base utilities (kelas accent-*; alpha = color-mix) --- */
+html[data-brand] .text-accent-300 { color: var(--ac300); }
+html[data-brand] .text-accent-500 { color: var(--ac500); }
+html[data-brand] .text-accent-600 { color: var(--ac600); }
+html[data-brand] .text-accent-700 { color: var(--ac700); }
+
+html[data-brand] .bg-accent-400 { background-color: var(--ac400); }
+html[data-brand] .bg-accent-400\/20 { background-color: color-mix(in srgb, var(--ac400) 20%, transparent); }
+html[data-brand] .bg-accent-500 { background-color: var(--ac500); }
+html[data-brand] .bg-accent-500\/5 { background-color: color-mix(in srgb, var(--ac500) 5%, transparent); }
+html[data-brand] .bg-accent-500\/10 { background-color: color-mix(in srgb, var(--ac500) 10%, transparent); }
+html[data-brand] .bg-accent-500\/15 { background-color: color-mix(in srgb, var(--ac500) 15%, transparent); }
+html[data-brand] .bg-accent-600 { background-color: var(--ac600); }
+
+html[data-brand] .border-accent-400 { border-color: var(--ac400); }
+html[data-brand] .border-accent-500 { border-color: var(--ac500); }
+html[data-brand] .border-accent-500\/30 { border-color: color-mix(in srgb, var(--ac500) 30%, transparent); }
+html[data-brand] .border-accent-500\/40 { border-color: color-mix(in srgb, var(--ac500) 40%, transparent); }
+html[data-brand] .border-accent-500\/60 { border-color: color-mix(in srgb, var(--ac500) 60%, transparent); }
+html[data-brand] .border-accent-600\/40 { border-color: color-mix(in srgb, var(--ac600) 40%, transparent); }
+
+html[data-brand] .ring-accent-500 { --tw-ring-color: var(--ac500); }
+html[data-brand] .ring-accent-500\/20 { --tw-ring-color: color-mix(in srgb, var(--ac500) 20%, transparent); }
+html[data-brand] .ring-accent-500\/30 { --tw-ring-color: color-mix(in srgb, var(--ac500) 30%, transparent); }
+
+html[data-brand] .shadow-accent-500\/20 { --tw-shadow-color: color-mix(in srgb, var(--ac500) 20%, transparent); }
+
+/* accent-color utk form control (checkbox/radio: produk-client) */
+html[data-brand] .accent-accent-500 { accent-color: var(--ac500); }
+
+/* --- Variant utilities (hover/focus/active) --- */
+html[data-brand] .hover\:bg-accent-500:hover { background-color: var(--ac500); }
+html[data-brand] .hover\:bg-accent-500\/10:hover { background-color: color-mix(in srgb, var(--ac500) 10%, transparent); }
+html[data-brand] .hover\:bg-accent-600:hover { background-color: var(--ac600); }
+html[data-brand] .hover\:border-accent-400:hover { border-color: var(--ac400); }
+html[data-brand] .hover\:border-accent-500:hover { border-color: var(--ac500); }
+html[data-brand] .hover\:text-accent-300:hover { color: var(--ac300); }
+html[data-brand] .hover\:text-accent-500:hover { color: var(--ac500); }
+html[data-brand] .active\:bg-accent-600:active { background-color: var(--ac600); }
+html[data-brand] .focus\:bg-accent-500:focus { background-color: var(--ac500); }
+html[data-brand] .focus\:border-accent-500:focus { border-color: var(--ac500); }
+html[data-brand] .focus\:ring-accent-500\/30:focus { --tw-ring-color: color-mix(in srgb, var(--ac500) 30%, transparent); }
+
+/* --- dark: variants (.dark di <html> — themeInit layout.tsx) --- */
+html[data-brand].dark .dark\:bg-accent-400 { background-color: var(--ac400); }
+html[data-brand].dark .dark\:text-accent-300 { color: var(--ac300); }
+
+/* --- .input (@apply di layer components — butuh aturan khusus;
+     border/ring saat focus ikut brand) --- */
+html[data-brand] .input:focus {
+  border-color: var(--ac500);
+  --tw-ring-color: color-mix(in srgb, var(--ac500) 30%, transparent);
+}
+
+
