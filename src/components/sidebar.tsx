@@ -24,6 +24,7 @@ const PREFETCH_PATHS = new Set([
   '/admin/member',
   '/admin/laporan',
   '/admin/zakat',
+  '/tutorial',
 ]);
 
 type NavItem = { href: string; label: string };
@@ -70,6 +71,7 @@ export const MENU_ITEMS: MenuDef[] = [
   { href: '/admin/qris', label: 'QRIS', level: 'ops' },
   { href: '/piutang', label: 'Poin & Piutang', level: 'piutang' },
   { href: '/admin/hutang', label: 'Hutang', roleLabel: { pembelian: 'Hutang Supplier' }, level: 'supplier' },
+  { href: '/tutorial', label: 'Tutorial', level: 'personal' },
   { href: '/admin/zakat', label: 'Zakat', level: 'zakat' },
   { href: '/admin/pengaturan-member', label: 'Keuntungan Member', level: 'admin' },
   { href: '/admin/member', label: 'Member', level: 'member' },
@@ -84,7 +86,7 @@ export const MENU_ITEMS: MenuDef[] = [
 
 /** 4 grup (Q1 27 Sep: Loyalty fold ke OPERASIONAL — 4 grup, bukan 5). */
 const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
-  { title: 'Utama', hrefs: ['/', '/admin/dashboard', '/pengurus/dashboard'] },
+  { title: 'Utama', hrefs: ['/', '/admin/dashboard', '/pengurus/dashboard', '/tutorial'] },
   {
     title: 'Operasional',
     hrefs: [
@@ -348,6 +350,7 @@ function groupsFor(role: Role): NavGroup[] {
         items: [
           { href: '/', label: 'Ringkasan' },
           { href: '/member', label: 'Kartu Saya' },
+          { href: '/tutorial', label: 'Tutorial' }, // T2: level personal = semua role
         ],
       },
     ];
