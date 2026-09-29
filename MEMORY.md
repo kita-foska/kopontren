@@ -1,6 +1,45 @@
 # MEMORY
 
 ## 2026-09-27
+### V2-2 (KRITIS): COGS/HPP reversal — netting dua sisi - 27 Sep
+- **Perintah (ACC Gus Fi)**: COGS reversal V2-2: P&L/KPI/Zakat net
+  DUA SISI — pendapatan dikurangi Σ returns.amount (sudah V1), COGS
+  dikurangi Σ returns.cogs (baru V2-2). Snapshot di-write-time;
+  retur lama = 0 (konservatif, TANPA backfill); 3 commit.
+- **C1 `980d57c`** (schema + write path): `returns.cogs`
+  INTEGER NOT NULL DEFAULT 0 via execColumn idempoten (purely
+  additive); SCHEMA_VERSION 19→20 — Turso fullInit sekali saat cold
+  start berikutnya (~15-20 s). POST /api/returns snapshot `cogs =
+  round(HPP item × qty)` DI-WRITE-TIME; rumus HPP per-item sama
+  persis P&L/reports/zakat: `si.cost_price` (snapshot saat sale);
+  0/kurang (sale pre-V2-1) → fallback harga beli produk saat ini
+  (`products.cost_price`, pola COALESCE /api/reports). GET
+  /api/returns +`cogs`; audit log +`cogs`; backup export/import
+  +`cogs` (JSON lama → `Number(r.cogs) || 0`).
+- **C2 `8880ddb`** (netting P&L/KPI/zakat + UI): `lib/keuangan.ts`
+  — `labaKotor = bersih − hpp + hppRetur` (payload +`hppRetur`
+  additive; KEUANGAN_NOTES + header di-update); `api/reports` —
+  KPI `profit = (penjualan − retur) − (HPP − COGS retur)` + payload
+  +`returns_total`; `api/zakat` — laba periode net dua sisi;
+  `lib/rekap.ts` — statement WA V2-2 (baris "Dibalik COGS Retur" +
+  footnote net); `laporan-admin-client.tsx` — baris kondisional
+  (hppRetur > 0), sub KPI "net penjualan − net HPP (V2-2)",
+  heading P&L (V2-2). test:rekap fixture +1 assert (20).
+- **C3 `85d24b0`** (rekonsiliasi #14 + UI + test): cek 14 `RETURN_COGS`
+  (flag-only read-only): `returns.cogs` harus = `si.cost_price ×
+  qty` utk item ber-snapshot (cost_price > 0); baris snapshot 0
+  (fallback harga beli produk saat write) tak dapat diverifikasi
+  ulang → dikecualikan; `cogs < 0` selalu drift. UI COLS/MONEY
+  RETURN_COGS; test:rekon skema + seed + korup → PASS 46 (14 cek).
+- **Verifikasi (27 Sep)**: tsc clean; battery `test:invariants`
+  40 / `test:rekon` 46 / `test:rekap` 20 / `test:zakat` 37 /
+  `test:golden` 59 / `test:margin` 57; `next build` OK (sw.js
+  stamped lokal — TIDAK pernah di-commit).
+- **Sisa**: V2-1 (I-7 void reason struktural) masih pending item
+  tersendiri (butuh ACC pengurus); cek visual V2-2 = Gus Fi
+  (non-blocking).
+- **Docs (commit berikutnya, V2-2d)**: log V2-2 iki ing MEMORY.md +
+  TODO.md item V2-2 dicentang.
 ### P0-C4 (KRITIS): Production release gate + sertifikasi produksi - 27 Sep
 - **Perintah (ACC Gus Fi)**: P0-C4 = C4 finalis P0 Production
   Certification (C1→C4): gate doc + update docs (MEMORY/TODO) +

@@ -1264,9 +1264,16 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
 **V2 DITUNDA (pasca-sertifikasi, liha gate doc seksi V2):**
 - [ ] **V2-1** I-7 void reason struktural - daftar alasan sah +
       risiko alur bisnis BUTUH ACC pengurus (UX-6.5).
-- [ ] **V2-2** COGS/HPP reversal - saiki (V1 doc-note
-      KEUANGAN_NOTES): COGS retur ora dibalik -> laba/HPP ora akurat;
-      implement reversal + sesuaikan invarian/rekonsiliasi.
+- [x] **V2-2** COGS/HPP reversal - SELESAI 27 Sep (3 commit,
+      dual-push): netting DUA SISI P&L/KPI/Zakat — pendapatan net
+      Σ returns.amount + HPP net Σ returns.cogs (`hppRetur`,
+      payload additive); snapshot cogs = round(HPP item × qty)
+      di-write-time (rumus sara P&L/reports/zakat: si.cost_price,
+      fallback harga beli produk saiki); retur pre-V2-2 cogs = 0
+      (konservatif, tanpa backfill). C1 `980d57c` schema v19→v20 +
+      write path (returns + backup); C2 `8880ddb` netting
+      (keuangan/reports/zakat/rekap WA/UI); C3 `85d24b0` rekonsiliasi
+      cek #14 RETURN_COGS + UI + test (rekon PASS 46) + docs.
 
 **Roadmap pasca-P0:** V2 (V2-1, V2-2) -> Fase 3 Akuntansi Terbaru
 (audit SAK EP / SAK Syariah / PAP -> proposal desain -> tashih ->
