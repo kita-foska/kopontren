@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOP Member — Kopontren Al Ittihad</title>
+<style>
+:root{--maroon:#7a1835;--wine:#7a1c1c;--bg:#faf5f6;--card:#fff;--line:#e9d5d8;--line2:#e2e8f0;--ink:#170a0e;--sub:#6b5a60;--ok:#059669;--bad:#e11d48;--warn:#f59e0b;--gold:#fbbf24;--slate:#f1f5f9}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,'Segoe UI',sans-serif;line-height:1.55;font-size:15px}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+.hero{background:var(--maroon);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px}
+.hero h1{font-size:1.55rem;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;opacity:.75;font-size:.85rem}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.meta span{background:rgba(255,255,255,.14);border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:600}
+h2{font-size:1.15rem;margin:28px 0 10px;font-weight:800}
+h2 .n{display:inline-block;background:var(--maroon);color:#fff;border-radius:8px;width:26px;height:26px;line-height:26px;text-align:center;font-size:.85rem;margin-right:8px}
+h3{font-size:.95rem;margin:18px 0 8px;font-weight:800;color:var(--maroon)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(23,10,14,.05)}
+ul,ol{padding-left:20px;margin:8px 0}
+li{margin:6px 0}
+.note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:.85rem;margin:12px 0}
+.todo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.todo{grid-template-columns:1fr}}
+.todo .card.d{border-top:4px solid var(--ok)}
+.todo .card.k{border-top:4px solid var(--bad)}
+.todo h3{margin-top:0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;color:#64748b;padding:8px;border-bottom:2px solid var(--line2);font-weight:800}
+td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.ok{color:var(--ok);font-weight:700}
+.bad{color:var(--bad);font-weight:700}
+.k4{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (min-width:700px){.k4{grid-template-columns:repeat(4,1fr)}}
+.kpi{border:1px solid var(--line2);border-radius:12px;padding:10px;background:#fff}
+.kpi .l{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
+.kpi .v{font-size:1.15rem;font-weight:800;margin-top:2px}
+.kpi .s{font-size:.66rem;color:#94a3b8}
+.kpi .m{color:var(--maroon)}
+.ledrow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:.8rem}
+.ledrow:last-child{border-bottom:none}
+.ledrow .pl{color:var(--ok);font-weight:700}
+.ledrow .mi{color:var(--bad);font-weight:700}
+.qrcard{border:2px solid #111;border-radius:12px;overflow:hidden;max-width:520px;background:#fff}
+.qrcard .head{display:flex;justify-content:space-between;align-items:center;background:var(--wine);padding:10px 16px;color:#fff}
+.chipm{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--maroon);color:#fff;border-radius:50%;font-size:.62rem;font-weight:800;flex:none}
+.anno{display:flex;gap:10px;margin:10px 0;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:10px 12px;font-size:.82rem}
+.anno .ch{flex:none;width:26px;height:26px;background:var(--warn);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+.legend{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;font-size:.8rem;margin-top:10px}
+.legend b{color:var(--ok)}
+@media print{
+body{background:#fff}
+.wrap{max-width:none;padding:0}
+.hero{border-radius:0}
+.anno{border-color:#94a3b8;background:#f8fafc}
+.card{box-shadow:none}
+@page{size:A4;margin:8mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1>SOP Member — Kopontren Al Ittihad</h1>
+<p>Panduan peran <b>Member</b> (santri): menikmati poin, cashback, dan kartu QR — cukup belanja dan tunjukkan kartu Anda.</p>
+<div class="meta"><span>Peran: Member</span><span>Halaman: /member (Dashboard Member)</span><span>Baca: ±5 menit</span><span>Angka di gambar = contoh (mock)</span></div>
+</div>
+
+<div class="note"><b>Cara baca:</b> lingkaran maroon ①–⑤ menunjuk elemen pada <b>gambar tiruan</b> di bagian bawah (bukan screenshot — digambar ulang dari aplikasi, warna maroon &amp; kartu wine). Semua angka hanya <b>contoh</b>.</div>
+
+<h2><span class="n">1</span>Tujuan peran Member</h2>
+<div class="card">
+<ul>
+<li><b>Dapat poin</b> setiap belanja di toko Kopontren (otomatis, tak perlu minta).</li>
+<li><b>Punya saldo reward</b> (uang kembali) yang bisa mengurangi belanja berikutnya.</li>
+<li><b>Tier (Silver/Gold)</b> naik otomatis seiring total belanja — makin sering belanja, makin besar keuntungannya.</li>
+<li><b>Kartu QR</b> — bukti keanggotaan; ditunjukkan saat belanja supaya poin &amp; cashback masuk.</li>
+</ul>
+<p style="margin-bottom:0">Peran Member adalah <b>hanya melihat data sendiri</b>: poin, riwayat, transaksi. Tidak ada menu toko/kas.</p>
+</div>
+
+<h2><span class="n">2</span>Alur kerja</h2>
+<div class="card">
+<ol>
+<li><b>Belanja</b> — ke toko, bilang ke kasir "saya member" (atau tunjukkan kartu QR Anda). Kasir memilih nama Anda di keranjang — poin &amp; cashback masuk otomatis <span class="chipm">①</span>.</li>
+<li><b>Lihat /member</b> — empat kartu: <b>Poin</b> (total + tier Anda), <b>Saldo Reward</b> (uang kembali), <b>Total Belanja</b> (sejak daftar), dan <b>Kartu &amp; Aksi</b> <span class="chipm">②</span>.</li>
+<li><b>Tebus reward</b> — saat belanja berikutnya, kasir bisa <b>tebus poin/saldo</b> (kolom "Tebus poin/saldo") — tagihan berkurang.</li>
+<li><b>Periksa riwayat</b> — "Riwayat Poin &amp; Reward" dan "Transaksi Saya" (20 terakhir) <span class="chipm">③</span>.</li>
+<li><b>Buka kartu QR</b> — tombol <b>"Lihat Kartu &amp; QR"</b> <span class="chipm">④</span>: pratinjau kartu (nama, tier, poin, QR) + tombol <b>Cetak Kartu</b> bila ingin salinan fisik <span class="chipm">⑤</span>.</li>
+</ol>
+</div>
+
+<h2><span class="n">3</span>Fitur yang tersedia untuk Member</h2>
+<div class="card">
+<table>
+<tr><th>Fitur</th><th>Pakai untuk</th></tr>
+<tr><td><b>Dashboard Member (/member)</b></td><td>Poin, saldo reward, total belanja, tier.</td></tr>
+<tr><td><b>Riwayat Poin &amp; Reward</b></td><td>Audit poin: setiap + (pembelian) dan − (tukar reward) tercatat dengan waktu &amp; nominal.</td></tr>
+<tr><td><b>Transaksi Saya</b></td><td>20 transaksi terakhir atas nama Anda (total, cara bayar, poin, status).</td></tr>
+<tr><td><b>Kartu &amp; QR</b></td><td>Buka pratinjau kartu QR (siap cetak landscape maroon).</td></tr>
+<tr><td><b>Ringkasan pribadi</b></td><td>Aktivitas terkait akun Anda.</td></tr>
+</table>
+</div>
+
+<h2><span class="n">4</span>Do's &amp; Don'ts</h2>
+<div class="todo">
+<div class="card d"><h3 class="ok">✔ Do's</h3>
+<ul>
+<li>Tunjukkan kartu / sebutkan nama <b>sebelum</b> kasir menekan simpan — kalau terlambat, poin tidak masuk.</li>
+<li>Cek <b>Riwayat</b> sesekali — selisih poin segera lapor kasir/Admin.</li>
+<li>Simpan <b>kartu QR</b> (foto/cetak) di dompet HP; QR baru berlaku selamanya sampai diganti.</li>
+<li>Ajak keluarga: daftar sebagai member terpisah agar poin masing-masing.</li>
+</ul></div>
+<div class="card k"><h3 class="bad">✘ Don'ts</h3>
+<ul>
+<li>Jangan <b>minta-minta</b> poin — sistemnya otomatis; kalau tidak masuk, berarti nama belum dipilih kasir.</li>
+<li>Jangan jual/teruskan <b>kartu QR Anda</b> ke orang lain (poin &amp; cashback atas nama Anda).</li>
+<li>Jangan harap saldo reward jadi tunai — fungsinya <b>pengurangan belanja</b> di toko.</li>
+</ul></div>
+</div>
+
+<h2><span class="n">5</span>Troubleshooting</h2>
+<div class="card">
+<table>
+<tr><th>Gangguan</th><th>Sebab</th><th>Solusi</th></tr>
+<tr><td>"Kartu keanggotaan belum terhubung ke akun ini"</td><td>Belum didaftarkan sebagai member</td><td>Minta Admin/Manajer daftarkan (nama + no. HP) di halaman Member.</td></tr>
+<tr><td>Poin tidak masuk setelah belanja</td><td>Kasir tidak memilih nama Anda di keranjang</td><td>Kesempatan berikutnya sebutkan/tunjukkan kartu; cek riwayat.</td></tr>
+<tr><td>QR tidak muncul ("QR belum dibuat")</td><td>Token QR belum dibuat (khusus dibuat oleh Admin/Manajer)</td><td>Minta Manajer/Admin membuka kartu Anda sekali — QR dibuat otomatis.</td></tr>
+<tr><td>Saldo reward tidak bisa ditebus</td><td>Saldo habis / nominal melebihi batas</td><td>Tombol "Maks" menandai nominal maksimal yang boleh.</td></tr>
+<tr><td>Tier turun? Tidak mungkin</td><td>Tier hanya naik (Silver→Gold) saat total belanja melewati ambang</td><td>Tidak perlu tindakan — pantau kartu.</td></tr>
+</table>
+</div>
+<h2><span class="n">6</span>Gambar tiruan: Dashboard Member &amp; Kartu QR</h2>
+
+<div class="repl" style="border:1px solid var(--line);background:#fff;margin:14px 0">
+<div style="background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569">/member — Dashboard Member <small>· contoh: Ahmad Fahmi, Gold</small></div>
+<div style="padding:14px">
+<div class="k4">
+<div class="kpi"><div class="l">Poin</div><div class="v m">150</div><div class="s">Tier Gold</div></div>
+<div class="kpi"><div class="l">Saldo Reward</div><div class="v m">Rp 10.000</div><div class="s">uang kembali</div></div>
+<div class="kpi"><div class="l">Total Belanja</div><div class="v m">Rp 5.400.000</div><div class="s">sejak 01/07/2025</div></div>
+<div class="kpi"><div class="l">Kartu &amp; Aksi</div><div style="font-size:.75rem;margin-top:4px"><b><span class="chipm">④</span> Lihat Kartu &amp; QR</b><div style="margin-top:4px;font-size:.66rem;color:#94a3b8">pratinjau + cetak</div></div></div>
+</div>
+
+<div class="card" style="border:1px solid var(--line2);margin-top:10px">
+<h5 style="margin:0 0 6px;font-size:.85rem"><span class="chipm">③</span> Riwayat Poin &amp; Reward</h5>
+<div class="ledrow"><span><b>Pembelian</b><div style="font-size:.66rem;color:#94a3b8">27/09 14:22 · Rp 14.000</div></span><span class="pl">+1 poin</span></div>
+<div class="ledrow"><span><b>Tukar poin &amp; saldo</b><div style="font-size:.66rem;color:#94a3b8">20/09 10:05 · Rp 5.000</div></span><span class="mi">−Rp 5.000</span></div>
+<div class="ledrow"><span><b>Pembelian</b><div style="font-size:.66rem;color:#94a3b8">18/09 16:40 · Rp 32.000</div></span><span class="pl">+3 poin</span></div>
+</div>
+
+<div class="card" style="border:1px solid var(--line2);margin-top:10px">
+<h5 style="margin:0 0 6px;font-size:.85rem">Transaksi Saya</h5>
+<div class="ledrow"><span><b>Rp 14.000</b><div style="font-size:.66rem;color:#94a3b8">27/09 14:22 · Tunai · +1 poin</div></span><span style="font-size:.62rem;font-weight:800;background:#d1fae5;color:#065f46;border-radius:6px;padding:2px 7px">Selesai</span></div>
+<div class="ledrow"><span><b>Rp 32.000</b><div style="font-size:.66rem;color:#94a3b8">18/09 16:40 · QRIS · +3 poin</div></span><span style="font-size:.62rem;font-weight:800;background:#d1fae5;color:#065f46;border-radius:6px;padding:2px 7px">Selesai</span></div>
+</div>
+</div></div>
+
+<div class="repl" style="border:1px solid var(--line);background:#fff;margin:14px 0">
+<div style="background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569">Modal "Kartu Anggota Member" (tombol "Lihat Kartu &amp; QR") <small>· siap cetak landscape</small></div>
+<div style="padding:14px">
+<div class="qrcard">
+<div class="head">
+<div><div style="font-size:.7rem;font-weight:800;letter-spacing:.15em">KOPONTREN AL ITTIHAD</div><div style="font-size:.6rem;opacity:.8">KARTU ANGGOTA MEMBER</div></div>
+<span style="background:var(--gold);color:#451a03;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:6px">GOLD</span>
+</div>
+<div style="display:flex;gap:14px;padding:16px;align-items:center">
+<div style="flex:1"><b style="font-size:1rem">Ahmad Fahmi</b><div style="font-size:.7rem;color:#64748b">0812xxxx5678 · Terdaftar 01/07/2025</div>
+<div style="display:flex;gap:14px;margin-top:8px;font-size:.66rem;color:#64748b"><span>Poin <b style="color:#111">150</b></span><span>Cashback <b style="color:#111">Rp 10.000</b></span><span>Belanja <b style="color:#111">Rp 5.400.000</b></span></div></div>
+<div style="width:96px;height:96px;border:1px solid var(--line2);background:repeating-linear-gradient(45deg,#fff 0 8px,#f1f5f9 8px 16px);display:flex;align-items:center;justify-content:center;font-size:.55rem;color:#64748b">[QR CODE]</div>
+</div>
+<div style="border-top:1px solid var(--line2);padding:8px 16px;font-size:.6rem;color:#64748b">Tunjukkan kartu ini saat berbelanja — poin &amp; cashback (uang kembali) diterapkan otomatis.</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:12px">
+<span class="btn" style="background:var(--maroon);color:#fff"><span class="chipm">⑤</span> Cetak Kartu</span>
+<span class="btn">Perbarui QR</span>
+<span class="btn">Tutup</span>
+</div>
+</div></div>
+
+<h3>Anotasi — "Ini tombol untuk apa, di sini Anda bisa apa"</h3>
+<div class="anno"><span class="ch">①</span><div><b>Pilih member di keranjang kasir</b> — saat Anda belanja, kasir memilih nama Anda (kolom "Santri / Member"); baris "Member: Ahmad Fahmi · 150 poin" muncul. Tanpa ini, poin tidak masuk.</div></div>
+<div class="anno"><span class="ch">②</span><div><b>Empat kartu ringkasan</b> — di sini Anda bisa lihat posisi poin, saldo reward, total belanja, dan tombol kartu QR. Tier (Gold/Silver) tertulis di kartu Poin.</div></div>
+<div class="anno"><span class="ch">③</span><div><b>Riwayat &amp; Transaksi</b> — setiap pergerakan poin (hijau = masuk, merah = keluar) dan transaksi Anda; sebagai bukti audit bila ada selisih.</div></div>
+<div class="anno"><span class="ch">④</span><div><b>Tombol "Lihat Kartu &amp; QR"</b> — buka pratinjau kartu (nama, tier, poin, QR). QR = kunci identitas Anda saat belanja.</div></div>
+<div class="anno"><span class="ch">⑤</span><div><b>"Cetak Kartu"</b> — kartu tercetak landscape maroon (selalu terang). "Perbarui QR" = token baru; kartu lama tidak berlaku (pilih ini hanya bila kartu hilang).</div></div>
+
+<div class="legend"><b>Keterangan warna:</b> maroon = brand · wine = header kartu · emas (GOLD) = tier premium · hijau = poin masuk/selesai · merah = poin keluar. Dokumen ini <b>siap cetak A4</b> (Ctrl+P) — bisa dibagikan ke santri.</div>
+</div>
+</body>
+</html>

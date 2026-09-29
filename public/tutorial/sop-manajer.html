@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOP Manajer — Kopontren Al Ittihad</title>
+<style>
+:root{--maroon:#7a1835;--wine:#7a1c1c;--bg:#faf5f6;--card:#fff;--line:#e9d5d8;--line2:#e2e8f0;--ink:#170a0e;--sub:#6b5a60;--ok:#059669;--bad:#e11d48;--warn:#f59e0b;--slate:#f1f5f9}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,'Segoe UI',sans-serif;line-height:1.55;font-size:15px}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+.hero{background:var(--maroon);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px}
+.hero h1{font-size:1.55rem;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;opacity:.75;font-size:.85rem}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.meta span{background:rgba(255,255,255,.14);border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:600}
+h2{font-size:1.15rem;margin:28px 0 10px;font-weight:800}
+h2 .n{display:inline-block;background:var(--maroon);color:#fff;border-radius:8px;width:26px;height:26px;line-height:26px;text-align:center;font-size:.85rem;margin-right:8px}
+h3{font-size:.95rem;margin:18px 0 8px;font-weight:800;color:var(--maroon)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(23,10,14,.05)}
+ul,ol{padding-left:20px;margin:8px 0}
+li{margin:6px 0}
+.note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:.85rem;margin:12px 0}
+.todo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.todo{grid-template-columns:1fr}}
+.todo .card.d{border-top:4px solid var(--ok)}
+.todo .card.k{border-top:4px solid var(--bad)}
+.todo h3{margin-top:0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;color:#64748b;padding:8px;border-bottom:2px solid var(--line2);font-weight:800}
+td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.ok{color:var(--ok);font-weight:700}
+.bad{color:var(--bad);font-weight:700}
+.kpig{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media (min-width:700px){.kpig{grid-template-columns:repeat(3,1fr)}}
+.kpi{border:1px solid var(--line2);border-radius:12px;padding:10px;background:#fff}
+.kpi .l{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
+.kpi .v{font-size:1.1rem;font-weight:800;color:var(--maroon);margin-top:2px}
+.kpi .s{font-size:.66rem;color:#94a3b8}
+.kpi .d{font-size:.66rem;font-weight:700}
+.kpi .up{color:var(--ok)}.kpi .dn{color:var(--bad)}
+.kpi.warn{border-color:#fcd34d}
+.qa{display:flex;flex-wrap:wrap;gap:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:10px;font-weight:700;font-size:.8rem;border:1px solid transparent;cursor:pointer;background:#f1f5f9}
+.btn.pri{background:var(--maroon);color:#fff}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:.72rem}
+.chipm{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--maroon);color:#fff;border-radius:50%;font-size:.62rem;font-weight:800;flex:none}
+.anno{display:flex;gap:10px;margin:10px 0;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:10px 12px;font-size:.82rem}
+.anno .ch{flex:none;width:26px;height:26px;background:var(--warn);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+.legend{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;font-size:.8rem;margin-top:10px}
+.legend b{color:var(--ok)}
+@media print{
+body{background:#fff}
+.wrap{max-width:none;padding:0}
+.hero{border-radius:0}
+.anno{border-color:#94a3b8;background:#f8fafc}
+.card{box-shadow:none}
+@page{size:A4;margin:8mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1>SOP Manajer — Kopontren Al Ittihad</h1>
+<p>Panduan peran <b>Manajer</b>: pengelola "lengkap" — punya semua wewenang Admin <i>dan</i> boleh langsung mengoperasikan POS &amp; cetak QR member.</p>
+<div class="meta"><span>Peran: Manajer</span><span>Wewenang: Admin + POS + QR Member</span><span>Detail replika halaman: lihat SOP-ADMIN.html</span><span>Angka di gambar = contoh</span></div>
+</div>
+
+<div class="note"><b>Catatan:</b> tampilan halaman Manajer <b>sama persis</b> dengan Admin (menu, kartu, tabel). Perbedaan hanya di <b>wewenang</b> (lihat tabel di bawah) — karena itu dokumen ini lebih ringkas. Untuk replika halaman Produk/Laporan/Dashboard, buka <b>SOP-ADMIN.html</b>.</div>
+
+<h2><span class="n">1</span>Tujuan peran Manajer</h2>
+<div class="card">
+<ul>
+<li><b>Dua topi</b>: mengelola toko (seperti Admin) <i>dan</i> langsung menangani kasir saat ramai — tanpa berpindah akun.</li>
+<li><b>Member services</b>: membuat &amp; memperbarui QR kartu member (keistimewaan di luar kasir biasa).</li>
+<li><b>Kontingen</b>: menjaga toko tetap jalan saat admin berhalangan, termasuk stok, kas, dan backup.</li>
+</ul>
+</div>
+
+<h2><span class="n">2</span>Alur kerja harian</h2>
+<div class="card">
+<ol>
+<li>Setiap pagi: <b>Dashboard</b> — KPI &amp; stok menipis (sama seperti alur Admin).</li>
+<li>Menjelang ramai: masuk <b>POS</b> — melayani seperti kasir, tetapi boleh <b>ubah harga per item</b> (diskon disetujui / koreksi harga) dan pilih member.</li>
+<li>Kartu member: dari daftar Member, buka kartu → tombol <b>"Perbarui QR"</b> (konfirmasi: kartu lama tidak berlaku lagi) / <b>"Cetak Kartu"</b> (cetak landscape maroon).</li>
+<li>Menutup hari: tutup shift kasir (bila Anda pegang shift), cek rekap, backup mingguan bila jatuh tempo.</li>
+</ol>
+</div>
+
+<h2><span class="n">3</span>Fitur &amp; wewenang Manajer vs Admin</h2>
+<div class="card">
+<table>
+<tr><th>Aktivitas</th><th>Admin</th><th>Manajer</th></tr>
+<tr><td>Halaman Admin (kas, produk, belanja, hutang, member, pengguna, audit, notifikasi, backup)</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+<tr><td>POS / Kasir (menjual)</td><td>—</td><td class="ok">✓ + ubah harga item</td></tr>
+<tr><td>Buat / perbarui QR kartu member</td><td>—</td><td class="ok">✓</td></tr>
+<tr><td>Laporan &amp; rekap</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+<tr><td>Zakat</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+<tr><td>Audit log (siapa mengubah apa)</td><td class="ok">✓</td><td>— (pengurus &amp; admin)</td></tr>
+<tr><td>Data &amp; Backup (unduh, versi DB)</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+</table>
+<p style="font-size:.82rem;color:var(--sub);margin-bottom:0">Prinsipnya: Manajer = "admin yang boleh turun ke meja kasir". Jika tugasnya murni pengelolaan (bukan jual), tetap gunakan akun Admin.</p>
+</div>
+
+<h2><span class="n">4</span>Do's &amp; Don'ts</h2>
+<div class="todo">
+<div class="card d"><h3 class="ok">✔ Do's</h3>
+<ul>
+<li>Gunakan hak ubah harga item <b>hanya untuk koreksi</b> (diskon disetujui, kesalahan harga) — selalu beri alasan di catatan transaksi.</li>
+<li>Perbarui QR <b>hanya</b> bila kartu hilang/curangi — beri tahu member bahwa kartu lama tidak berlaku.</li>
+<li>Turun ke POS saat <b>ramai/darurat</b> saja; rutinitas harian tetap diserahkan ke kasir.</li>
+<li>Laporkan perubahan besar (harga, stok massal) ke pengurus melalui laporan mingguan.</li>
+</ul></div>
+<div class="card k"><h3 class="bad">✘ Don'ts</h3>
+<ul>
+<li>Jangan <b>bermain-main</b> ubah harga saat tidak ada kehati-hatian — setiap perubahan tercatat di audit.</li>
+<li>Jangan memakai akun Manajer untuk <b>kepentingan pribadi</b> (mis. memberi diskon besar-besaran).</li>
+<li>Jangan perbarui QR member <b>tanpa konfirmasi</b> — aplikasi memaksa dialog konfirmasi, jangan dilompati.</li>
+<li>Jangan campur akun: satu orang = satu akun; jangan bagi PIN Manajer.</li>
+</ul></div>
+</div>
+
+<h2><span class="n">5</span>Troubleshooting</h2>
+<div class="card">
+<table>
+<tr><th>Gangguan</th><th>Sebab</th><th>Solusi</th></tr>
+<tr><td>POS tidak bisa diakses</td><td>Peran belum termasuk wewenang POS</td><td>Cek halaman Pengguna: pastikan perannya "Manajer" (bukan "Admin").</td></tr>
+<tr><td>Member minta "QR belum dibuat" padahal dia admin biasa</td><td>Pembuatan QR khusus peran Manajer/Admin penuh</td><td>Gunakan akun Manajer; token dibuat otomatis saat kartu pertama dibuka.</td></tr>
+<tr><td>Stok berubah tak terduga</td><td>Retur/belanja dari cabang lain</td><td>Lihat feed Aktivitas + log Audit (kolom operator &amp; waktu).</td></tr>
+<tr><td>Kesulitan membedakan akun Manajer/Admin di log</td><td>Keduanya mirip</td><td>Log Audit menampilkan nama pengguna — selalu buka dengan akun Anda sendiri; beri nama jelas (mis. "mrs_hana", "adinda_admin").</td></tr>
+</table>
+</div>
+<h2><span class="n">6</span>Gambar tiruan: Dashboard (ringkas) &amp; Kartu QR Member</h2>
+<p style="font-size:.85rem;color:var(--sub)">Dua replika kecil. Replika penuh halaman Produk/Laporan/Dashboard ada di <b>SOP-ADMIN.html</b>.</p>
+
+<div class="repl" style="border:1px solid var(--line);background:#fff;margin:14px 0">
+<div style="background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569">(a) /admin/dashboard — tampilan sama untuk Manajer <small>· contoh</small></div>
+<div style="padding:14px">
+<div style="background:var(--maroon);color:#fff;border-radius:12px;padding:12px 14px;margin-bottom:12px"><b style="font-size:1rem">Dashboard <span style="opacity:.8">Admin</span></b><div style="font-size:.7rem;opacity:.75">Selasa, 22 September 2026 · ringkasan operasional Kopontren</div></div>
+<div class="kpig">
+<div class="kpi"><span class="chipm">①</span><div class="l">Penjualan Hari Ini</div><div class="v">Rp 1.240.000</div><div class="s">38 transaksi</div><div class="d up">▲ +12%</div></div>
+<div class="kpi warn"><div class="l">Belum Direkap</div><div class="v">2</div><div class="s">Rp 86.000 menunggu rekap</div></div>
+<div class="kpi"><div class="l">Arus Kas 7 Hari</div><div class="v">Rp 2.150.000</div><div class="d up">▲ sehat</div></div>
+<div class="kpi"><div class="l">Member Aktif</div><div class="v">126</div><div class="s">41 Silver · 12 Gold</div></div>
+<div class="kpi warn"><div class="l">Piutang Buka</div><div class="v">Rp 150.000</div><div class="s">3 pelanggan</div></div>
+<div class="kpi warn"><div class="l">Hutang Supplier</div><div class="v">Rp 420.000</div><div class="s">2 supplier</div></div>
+</div>
+<div class="card" style="border:1px solid var(--line2);margin-top:10px">
+<h5 style="margin:0 0 8px;font-size:.85rem"><span class="chipm">②</span> Aksi cepat</h5>
+<div class="qa">
+<span class="btn pri sm">+ Jual (POS)</span>
+<span class="btn sm">Kelola Produk</span>
+<span class="btn sm">Laporan Pengurus</span>
+<span class="btn sm">Pengguna</span>
+<span class="btn sm">Data &amp; Backup</span>
+</div>
+</div>
+</div></div>
+
+<div class="repl" style="border:1px solid var(--line);background:#fff;margin:14px 0">
+<div style="background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569">(b) Modal "Kartu Anggota Member" (ketika Manajer membuka kartu) <small>· siap cetak landscape</small></div>
+<div style="padding:14px">
+<div style="border:2px solid #111;border-radius:12px;overflow:hidden;max-width:520px">
+<div style="display:flex;justify-content:space-between;align-items:center;background:var(--wine);padding:10px 16px;color:#fff">
+<div><div style="font-size:.7rem;font-weight:800;letter-spacing:.15em">KOPONTREN AL ITTIHAD</div><div style="font-size:.6rem;opacity:.8">KARTU ANGGOTA MEMBER</div></div>
+<span style="background:var(--gold);color:#451a03;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:6px">GOLD</span>
+</div>
+<div style="display:flex;gap:14px;padding:16px;background:#fff">
+<div style="flex:1"><b style="font-size:1rem">Ahmad Fahmi</b><div style="font-size:.7rem;color:#64748b">0812xxxx5678 · Terdaftar 01/07/2025</div>
+<div style="display:flex;gap:14px;margin-top:8px;font-size:.66rem;color:#64748b"><span>Poin <b style="color:#111">150</b></span><span>Cashback <b style="color:#111">Rp 10.000</b></span><span>Belanja <b style="color:#111">Rp 5.400.000</b></span></div></div>
+<div style="width:96px;height:96px;border:1px solid #e2e8f0;background:repeating-linear-gradient(45deg,#fff 0 8px,#f1f5f9 8px 16px);display:flex;align-items:center;justify-content:center;font-size:.55rem;color:#64748b">[QR CODE]</div>
+</div>
+<div style="border-top:1px solid #e2e8f0;padding:8px 16px;font-size:.6rem;color:#64748b;background:#fff">Tunjukkan kartu ini saat berbelanja — poin &amp; cashback (uang kembali) diterapkan otomatis.</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:12px">
+<span class="btn pri sm"><span class="chipm">③</span> Cetak Kartu</span>
+<span class="btn sm">Perbarui QR</span>
+<span class="btn sm">Tutup</span>
+</div>
+</div></div>
+
+<h3>Anotasi</h3>
+<div class="anno"><span class="ch">①</span><div><b>Kartu KPI + panah</b> — angka operasional harian; kartu kuning = perlu tindakan (rekap tertunda, hutang/piutang menumpuk).</div></div>
+<div class="anno"><span class="ch">②</span><div><b>"+ Jual (POS)"</b> — keistimewaan Manajer: langsung ke meja kasir dari dashboard; tombol lain lompat ke halaman Admin.</div></div>
+<div class="anno"><span class="ch">③</span><div><b>Tombol Cetak Kartu / Perbarui QR</b> — cetak landscape maroon; "Perbarui QR" memaksa dialog konfirmasi (kartu lama batal). Kedua tombol ini khusus wewenang Manajer/Admin penuh.</div></div>
+
+<div class="legend"><b>Ringkasan peran:</b> Manajer = semua halaman Admin + POS + layanan QR member. Jika satu peran untuk satu orang sudah cukup, tetapkan <b>Admin</b>; tetapkan <b>Manajer</b> bila orang itu memang sering turun ke kasir. Halaman ini <b>siap cetak A4</b> (Ctrl+P).</div>
+</div>
+</body>
+</html>

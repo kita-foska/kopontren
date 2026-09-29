@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOP Kasir — Kopontren Al Ittihad</title>
+<style>
+:root{--maroon:#7a1835;--wine:#7a1c1c;--bg:#faf5f6;--card:#fff;--line:#e9d5d8;--line2:#e2e8f0;--ink:#170a0e;--sub:#6b5a60;--ok:#059669;--bad:#e11d48;--warn:#f59e0b;--gold:#fbbf24;--slate:#f1f5f9}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,'Segoe UI',sans-serif;line-height:1.55;font-size:15px}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+.hero{background:var(--maroon);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px}
+.hero h1{font-size:1.55rem;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;opacity:.75;font-size:.85rem}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.meta span{background:rgba(255,255,255,.14);border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:600}
+h2{font-size:1.15rem;margin:28px 0 10px;font-weight:800}
+h2 .n{display:inline-block;background:var(--maroon);color:#fff;border-radius:8px;width:26px;height:26px;line-height:26px;text-align:center;font-size:.85rem;margin-right:8px}
+h3{font-size:.95rem;margin:18px 0 8px;font-weight:800;color:var(--maroon)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(23,10,14,.05)}
+ul,ol{padding-left:20px;margin:8px 0}
+li{margin:6px 0}
+.note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:.85rem;margin:12px 0}
+.todo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.todo{grid-template-columns:1fr}}
+.todo .card.d{border-top:4px solid var(--ok)}
+.todo .card.k{border-top:4px solid var(--bad)}
+.todo h3{margin-top:0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;color:#64748b;padding:8px;border-bottom:2px solid var(--line2);font-weight:800}
+td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.ok{color:var(--ok);font-weight:700}
+.bad{color:var(--bad);font-weight:700}
+.repl{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;margin:14px 0;box-shadow:0 2px 10px rgba(23,10,14,.07)}
+.repl-title{background:var(--slate);border-bottom:1px solid var(--line2);padding:10px 14px;font-size:.8rem;font-weight:700;color:#475569;display:flex;justify-content:space-between;align-items:center}
+.repl-title small{font-weight:400;color:#94a3b8}
+.repl-body{padding:14px}
+.app{background:#fff;border:1px solid var(--line2);border-radius:14px;padding:14px;font-size:.85rem}
+.app h4{font-size:1.1rem;font-weight:800;margin:0 0 10px}
+.app h4 .m{color:var(--maroon)}
+.app h4 small{font-size:.72rem;font-weight:600;color:#64748b}
+.shift{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border:1px solid var(--line2);background:#fff;border-radius:12px;padding:10px;font-size:.72rem;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.dot{width:10px;height:10px;border-radius:50%;background:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,.2)}
+.shift b{font-size:.75rem}
+.shift .em{color:var(--ok);font-weight:700}
+.searchrow{display:flex;gap:8px;margin:12px 0}
+.inp{flex:1;min-height:44px;border:1px solid #cbd5e1;border-radius:10px;padding:8px 12px;font-size:.78rem;background:#fff}
+.inp::placeholder{color:#94a3b8}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:10px;font-weight:700;font-size:.8rem;border:1px solid transparent;cursor:pointer;background:#f1f5f9}
+.btn.pri{background:var(--maroon);color:#fff}
+.btn.amber{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:.72rem}
+.pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.pill{white-space:nowrap;border:1px solid var(--line2);border-radius:999px;padding:5px 12px;font-size:.72rem;font-weight:700;background:#fff;color:#475569;min-height:34px}
+.pill.on{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (min-width:700px){.grid2{grid-template-columns:1fr 1fr 1fr}}
+.pcard{position:relative;border:1px solid var(--line2);border-radius:12px;padding:10px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.pcard.in{border-color:rgba(122,24,53,.6);box-shadow:0 0 0 3px rgba(122,24,53,.15)}
+.pcard .q{position:absolute;top:-6px;right:-6px;background:var(--maroon);color:#fff;font-size:.65rem;font-weight:800;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.pcard b{display:block;font-size:.78rem;line-height:1.25}
+.pcard .cat{font-size:.66rem;color:#94a3b8;margin-top:2px}
+.pcard .pr{font-size:.82rem;font-weight:800;color:var(--maroon);margin-top:8px}
+.stk{display:inline-block;font-size:.6rem;font-weight:800;border-radius:6px;padding:2px 6px;margin-left:4px;vertical-align:middle}
+.stk.g{background:#f1f5f9;color:#475569}.stk.a{background:#fef3c7;color:#92400e}.stk.r{background:#ffe4e6;color:#9f1239}
+.grosir{font-size:.58rem;font-weight:800;color:var(--ok);background:rgba(5,150,105,.12);border-radius:5px;padding:1px 5px;margin-left:4px}
+.cart{border:1px solid var(--line2);border-radius:12px;padding:12px;background:#fff;margin-top:12px}
+.cart h5{margin:0 0 8px;font-size:.85rem;display:flex;gap:6px;align-items:center}
+.citem{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px dashed var(--line2);font-size:.78rem}
+.citem:last-of-type{border-bottom:none}
+.citem .nm{flex:1}
+.mm{width:30px;height:30px;min-width:30px;border:1px solid var(--line2);border-radius:8px;background:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.pay4{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.pay4 .p{border:1px solid var(--line2);border-radius:10px;padding:8px 10px;font-size:.75rem;font-weight:700;background:#fff;display:flex;align-items:center;gap:6px;min-height:44px}
+.pay4 .p.on{border-color:var(--maroon);background:#fdf2f5;box-shadow:0 0 0 2px rgba(122,24,53,.15)}
+.pay4 .p.am{border-color:#fcd34d;background:#fffbeb;color:#92400e}
+.pay4 .p small{margin-left:auto;background:#e2e8f0;border-radius:6px;padding:1px 6px;font-size:.62rem;color:#475569}
+.subtotal{display:flex;justify-content:space-between;font-weight:800;font-size:.95rem;margin:10px 0 6px}
+.subtotal .m{color:var(--maroon)}
+.receipt{width:250px;margin:0 auto;background:#fff;border:1px dashed #94a3b8;border-radius:6px;padding:10px 12px;font-family:'Courier New',monospace;font-size:11px;color:#111;line-height:1.45}
+.receipt .ctr{text-align:center}
+.receipt hr{border:none;border-top:1px dashed #333;margin:6px 0}
+.receipt .row{display:flex;justify-content:space-between}
+.receipt .em{color:var(--ok);font-weight:700}
+.anno{display:flex;gap:10px;margin:14px 0;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px;padding:10px 12px;font-size:.82rem}
+.anno .ch{flex:none;width:26px;height:26px;background:var(--warn);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem}
+.chipm{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--maroon);color:#fff;border-radius:50%;font-size:.62rem;font-weight:800;flex:none}
+.legend{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;font-size:.8rem}
+.legend b{color:var(--ok)}
+@media print{
+body{background:#fff}
+.wrap{max-width:none;padding:0}
+.hero{border-radius:0}
+.anno{border-color:#94a3b8;background:#f8fafc}
+.repl,.card,.receipt{box-shadow:none}
+@page{size:A4;margin:8mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1>SOP Kasir — Kopontren Al Ittihad</h1>
+<p>Panduan harian peran <b>Kasir</b>: membuka shift, melayani transaksi di POS, hingga menutup shift dan membuat rekap.</p>
+<div class="meta"><span>Peran: Kasir</span><span>Prioritas 1</span><span>Halaman: /kasir (POS)</span><span>Angka di gambar = contoh (mock)</span></div>
+</div>
+
+<div class="note" style="margin-bottom:2px"><b>Cara baca dokumen ini:</b> lingkaran maroon ①–⑨ (di teks langkah di atas) menunjuk elemen pada <b>gambar tiruan</b> di bagian bawah; kotak kuning "Anotasi" menjelaskan tiap elemen — "ini tombol untuk apa, di sini Anda bisa apa". Gambar tiruan dibuat persis dari tampilan aplikasi (warna maroon, kartu putih, tombol) — <i>bukan</i> screenshot. Semua angka hanya <b>contoh</b>.</div>
+
+<h2><span class="n">1</span>Tujuan peran Kasir</h2>
+<div class="card">
+<ul>
+<li><b>Melayani penjualan</b> di toko Kopontren lewat aplikasi (POS) — cepat, akurat, tercatat otomatis.</li>
+<li><b>Jaga kas jujur:</b> semua penjualan, QRIS, dan transfer tercatat otomatis ke buku kas — tidak ada yang luput.</li>
+<li><b>Terapkan poin &amp; cashback</b> otomatis untuk member (santri) — cukup pilih namanya di keranjang.</li>
+<li><b>Buat rekap harian</b> (tutup shift) supaya Admin/Pengurus tahu penjualan hari itu.</li>
+</ul>
+<p style="margin-bottom:0">Kasir <b>tidak</b> mengubah harga, stok, atau pengguna — itu wewenang Admin/Manajer. Yang boleh dilakukan kasir: jual, pilih member, tebus poin, cetak struk, buka/tutup shift.</p>
+</div>
+
+<h2><span class="n">2</span>Alur kerja harian</h2>
+<div class="card">
+<ol>
+<li><b>Buka aplikasi, login</b> — pakai PIN (4–6 digit) atau akun. Halaman pertama kasir = <b>Kasir POS</b>.</li>
+<li><b>Buka shift</b> — tekan <span class="chipm">⓵</span> <b>"Buka Shift Kasir"</b>. Isi label (mis. "Shift Pagi") dan <b>uang awal kasir</b> di laci. Kalau belum ada shift, banner di atas menampilkan titik kuning <i>"Belum ada shift kasir yang dibuka hari ini"</i>.</li>
+<li><b>Terima pesanan</b> — tap kartu produk <span class="chipm">⓶</span>, atau <b>scan barcode</b> (scanner / kamera), atau ketik nama lalu Enter (auto-tambah). Item masuk <b>Keranjang Kasir</b> <span class="chipm">⓷</span>; ubah jumlah lewat tombol <b>− / +</b>. Nomor kecil di pojok kartu = jumlah di keranjang.</li>
+<li><b>Pilih pembeli</b> — jika member/santri: pilih dari daftar <span class="chipm">⓸</span>. Poin, diskon, dan saldo reward dihitung otomatis; boleh <b>tebus poin/saldo</b> <span class="chipm">⓹</span>. Pembeli biasa? Biarkan kosong atau tulis namanya.</li>
+<li><b>Pilih cara bayar</b> <span class="chipm">⓺</span>: <b>1 Tunai</b> · <b>2 QRIS/Non-tunai</b> · <b>3 Transfer</b> · <b>4 Campur</b> (split). Tunai: ketik <b>uang diterima</b> → aplikasi hitung <b>kembalian</b> otomatis. Campur: isi nominal Tunai/Transfer/QRIS sampai total cocok (tanpa piutang — harus lunas).</li>
+<li><b>Simpan transaksi</b> — tombol <span class="chipm">⓻</span> <b>"Simpan"</b> (hotkey F4), struk 58mm <span class="chipm">⓼</span> ikut tercetak. Transaksi tercatat <i>menunggu rekap</i> shift.</li>
+<li><b>Tutup shift</b> — tekan <span class="chipm">⓽</span> <b>"Tutup Shift &amp; Rekap"</b>: cocokkan total penjualan dengan uang di laci (uang awal + kas masuk − belanja/pengeluaran). Rekap dapat dikirim via <b>WhatsApp</b> untuk arsip pengurus.</li>
+</ol>
+<div class="note" style="margin-bottom:0"><b>Mode offline:</b> internet putus? Jual tetap jalan — transaksi masuk <b>antrean offline</b> dan tersinkron otomatis saat sinyal kembali. Banner kuning <i>"N transaksi offline menunggu sinkronisasi"</i> muncul; tekan <b>"Sinkronkan Sekarang"</b> bila perlu.</div>
+</div>
+<h2><span class="n">3</span>Fitur yang tersedia untuk Kasir</h2>
+<div class="card">
+<table>
+<tr><th>Fitur</th><th>Pakai untuk</th></tr>
+<tr><td><b>POS: kartu produk + kategori</b></td><td>Memilih barang yang dijual; gulir pil kategori (Semua, Minuman, Sembako, …).</td></tr>
+<tr><td><b>Pencarian &amp; scan barcode</b></td><td>Ketik nama (Enter = auto-tambah) atau scan scanner/kamera. Produk berbarcode tampil otomatis.</td></tr>
+<tr><td><b>Keranjang Kasir</b></td><td>Daftar pesanan berjalan; ubah jumlah (−/+), hapus, lihat subtotal per item.</td></tr>
+<tr><td><b>Member &amp; poin</b></td><td>Pilih member → poin, diskon tier (Silver/Gold), dan saldo reward dihitung otomatis; bisa tebus poin/saldo (tombol "Maks" = tebus semua yang boleh).</td></tr>
+<tr><td><b>4 cara bayar</b></td><td>Tunai (kembalian otomatis), QRIS/Non-tunai, Transfer, Campur (split, harus lunas).</td></tr>
+<tr><td><b>Shift kasir</b></td><td>Buka/tutup shift + rekap otomatis (penjualan, kas masuk/keluar, selisih).</td></tr>
+<tr><td><b>Struk 58mm &amp; WhatsApp</b></td><td>Cetak struk termal; kirim struk/rekap via WhatsApp (deep-link, tanpa API).</td></tr>
+<tr><td><b>Mode offline</b></td><td>Internet mati: transaksi masuk antrean, sinkron otomatis nanti.</td></tr>
+<tr><td><b>Hotkey &amp; panduan</b></td><td>F1 cari · F2 pembeli · F3 bayar · F4 simpan · F5 cetak · F6 split · F7 shift · 1/2/3/4 metode. Tombol "Panduan kasir" buka shortcut lengkap.</td></tr>
+<tr><td><b>Retur</b></td><td>Halaman Retur (/retur): batalkan/ganti barang tercatat — stok &amp; kas kembali otomatis.</td></tr>
+</table>
+</div>
+
+<h2><span class="n">4</span>Do's &amp; Don'ts</h2>
+<div class="todo">
+<div class="card d"><h3 class="ok">✔ Do's — lakukan</h3>
+<ul>
+<li>Buka shift <b>sebelum</b> melayani transaksi pertama hari itu.</li>
+<li>Pastikan <b>member dipilih dulu</b> sebelum bayar agar poin/cashback masuk.</li>
+<li>Berikan <b>struk</b> ke pembeli setiap kali transaksi.</li>
+<li>Cek <b>kembalian</b> dari aplikasi, jangan hitung ulang di kepala.</li>
+<li>Tutup shift di akhir hari &amp; kirim rekap ke pengurus (WhatsApp).</li>
+<li>Bila banner offline muncul, tekan <b>Sinkronkan Sekarang</b> setelah sinyal kembali.</li>
+<li>Retur/ganti barang lewat halaman <b>Retur</b> — bukan menghapus manual.</li>
+</ul></div>
+<div class="card k"><h3 class="bad">✘ Don'ts — jangan</h3>
+<ul>
+<li>Jangan jual <b>tanpa shift</b> (transaksi jadi "menunggu rekap" tanpa acuannya).</li>
+<li>Jangan memakai <b>metode Campur belum lunas</b> — total split harus persis = total tagihan.</li>
+<li>Jangan <b>menghapus/mengubah transaksi</b> setelah simpan — gunakan Retur.</li>
+<li>Jangan <b>berbagi PIN</b> atau akun dengan kasir lain.</li>
+<li>Jangan lupa <b>mencatat uang awal</b> yang akurat saat buka shift — rekap selisih bergantung pada itu.</li>
+<li>Jangan tutup shift saat masih ada <b>transaksi offline antre</b> (sinkronkan dulu).</li>
+</ul></div>
+</div>
+<h2><span class="n">5</span>Troubleshooting</h2>
+<div class="card">
+<table>
+<tr><th>Gangguan</th><th>Sebab</th><th>Solusi</th></tr>
+<tr><td>Tombol <b>"Simpan"</b> tidak bisa ditekan / transaksi gagal</td><td>Uang kurang, split belum lunas, atau stok kurang</td><td>Baca pesan merah di panel bayar: lengkapi uang / perkecil jumlah barang.</td></tr>
+<tr><td>Produk tidak ditemukan saat scan</td><td>Produk belum ada barcode, atau nama beda</td><td>Ketik nama manual di kolom cari; minta Admin menambah barcode di halaman Produk.</td></tr>
+<tr><td>Badge stok <b>kuning/merah</b> (mis. "3 pcs")</td><td>Stok menipis (kuning &lt; 5) / habis (merah, tombol tidak aktif)</td><td>Informasi ke Gudang untuk stok masuk; tawarkan produk pengganti.</td></tr>
+<tr><td>Member tidak muncul di daftar</td><td>Belum didaftarkan, atau pencarian salah</td><td>Minta Admin menambah member di halaman Admin → Member.</td></tr>
+<tr><td>Banner kuning <b>"N transaksi offline menunggu sinkronisasi"</b></td><td>Internet sempat putus; transaksi antre di perangkat</td><td>Setelah sinyal kembali, tekan <b>"Sinkronkan Sekarang"</b>. Jangan tutup shift dulu.</td></tr>
+<tr><td>Struk tidak keluar setelah simpan</td><td>Printer tidak terhubung</td><td>Cek printer; struk tetap tersimpan — cetak ulang (F5) atau kirim via WhatsApp.</td></tr>
+<tr><td>Rekap selisih laci tidak cocok</td><td>Uang awal salah catat / kas keluar tak tercatat</td><td>Kas keluar dicatat lewat jurnal kas (Admin) sebelum tutup shift; bandingkan ulang.</td></tr>
+</table>
+</div>
+
+<h2><span class="n">6</span>Gambar tiruan: Layar Kasir POS</h2>
+<p style="font-size:.85rem;color:var(--sub)">Meniru tampilan <code>/kasir</code> di aplikasi persis (maroon, kartu, tombol). Semua angka <b>contoh</b>. Penanda ①–⑨ merujuk ke elemen.</p>
+
+<div class="repl">
+<div class="repl-title"><span>Halaman "Kasir POS" (/kasir) — state shift aktif</span><small>contoh: Shift Pagi</small></div>
+<div class="repl-body">
+<div class="app">
+<h4>Kasir <span class="m">POS</span> <small>· transaksi otomatis menunggu laporan</small></h4>
+
+<div class="shift">
+<span class="dot"></span>
+<b>Shift Aktif: Shift Pagi</b> <span style="color:#94a3b8">· Mulai: 07:00 ·</span>
+<span class="em">12 Transaksi (Rp 385.000)</span>
+<span style="flex:1"></span>
+<span class="btn sm">Panduan kasir</span>
+<span class="btn amber sm"><span class="chipm">⓽</span> Tutup Shift &amp; Rekap</span>
+</div>
+
+<div style="display:flex;gap:8px;align-items:center;border:1px solid #bfdbfe;background:#eff6ff;border-radius:12px;padding:8px 12px;font-size:.7rem;color:#2563eb;font-weight:600;margin-top:8px">
+● Mode offline — POS tetap berjalan. Transaksi akan tersimpan &amp; tersinkron otomatis.
+</div>
+
+<div class="searchrow">
+<span class="inp">🔍 Ketik nama / scan barcode — Enter utk auto-add (F1)……</span>
+<span class="btn sm">▦ Scan Barcode</span>
+</div>
+
+<div class="pills">
+<span class="pill on">Semua</span><span class="pill">Minuman</span><span class="pill">Sembako</span><span class="pill">Kecap</span><span class="pill">Permen</span><span class="pill">Lainnya</span>
+</div>
+
+<div class="grid2">
+<div class="pcard in"><span class="q">2</span><b>Aqua 600ml</b><span class="cat">Minuman · #8991001</span><div class="pr">Rp 3.000<span class="stk g">24 bot</span></div></div>
+<div class="pcard in"><span class="q">1</span><b>Indomie Goreng</b><span class="cat">Sembako · #8991002</span><div class="pr">Rp 3.500<span class="stk g">40 bks</span></div></div>
+<div class="pcard"><b>Sabun Mandi</b><span class="cat">Lainnya</span><div class="pr">Rp 4.000<span class="stk a">3 pcs</span></div></div>
+<div class="pcard"><b>Teh Pucuk 500ml</b><span class="cat">Minuman · #8991004</span><div class="pr">Rp 4.500<span class="grosir">Grosir</span><span class="stk g">18 bot</span></div></div>
+</div>
+<div class="cart">
+<h5>🛒 Keranjang Kasir <span class="pill on" style="font-size:.62rem">3 item</span></h5>
+<div class="citem"><b style="width:110px">Aqua 600ml</b><span class="mm">−</span><span style="min-width:24px;text-align:center;font-weight:700">2</span><span class="mm">+</span><span style="text-align:right;margin-left:auto"><b>Rp 6.000</b><br><span style="font-size:.62rem;color:#94a3b8">@Rp 3.000/bot</span></span></div>
+<div class="citem"><b style="width:110px">Indomie Goreng</b><span class="mm">−</span><span style="min-width:24px;text-align:center;font-weight:700">1</span><span class="mm">+</span><span style="text-align:right;margin-left:auto"><b>Rp 3.500</b><br><span style="font-size:.62rem;color:#94a3b8">@Rp 3.500/bks</span></span></div>
+<div class="citem"><b style="width:110px">Teh Pucuk 500ml</b><span class="mm">−</span><span style="min-width:24px;text-align:center;font-weight:700">1</span><span class="mm">+</span><span style="text-align:right;margin-left:auto"><b>Rp 4.500</b><br><span style="font-size:.62rem;color:#94a3b8">@Rp 4.500/bot</span></span></div>
+<span class="inp" style="display:block;margin:10px 0 6px;font-size:.72rem">👤 Santri / Member (opsional) — dipilih: Ahmad Fahmi (0812xxxx5678) · 150 poin · Gold</span>
+<div style="border:1px solid #fcd34d;background:#fffbeb;border-radius:10px;padding:8px 10px;font-size:.72rem;margin-bottom:8px">
+<div style="font-weight:700;margin-bottom:4px"><span class="chipm">⓹</span> Tebus poin/saldo</div>
+<div style="display:flex;gap:6px"><span class="inp" style="min-height:34px;font-size:.7rem;width:120px">Rp 0</span><span class="btn sm">Maks</span></div>
+<div style="margin-top:4px;color:#475569">Saldo: 150 poin · saldo reward Rp 10.000 · maks Rp 25.000</div>
+</div>
+<span class="inp" style="display:block;font-size:.72rem;margin-bottom:8px">Nama pembeli umum (opsional)</span>
+<div class="pay4">
+<span class="p on"><span class="chipm">⓺</span>💵 Tunai <small>1</small></span>
+<span class="p">📱 QRIS / Non-Tunai <small>2</small></span>
+<span class="p">🏦 Transfer <small>3</small></span>
+<span class="p am">🔀 Campur <small>4</small></span>
+</div>
+<span class="inp" style="display:block;font-size:.75rem;margin-bottom:8px">Uang diterima (Rp) — contoh: 20.000 &nbsp;→&nbsp; <b style="color:var(--ok)">Kembali Rp 2.500</b></span>
+<div class="subtotal"><span>Total</span><span class="m">Rp 14.000</span></div>
+<div style="display:flex;gap:8px">
+<span class="btn pri" style="flex:1"><span class="chipm">⓻</span> Simpan &amp; Cetak (F4)</span>
+<span class="btn sm">✕ Hapus</span>
+</div>
+</div>
+<div style="margin-top:8px;font-size:.7rem;color:#94a3b8"><span class="chipm">⓵</span> Ketika belum ada shift, banner berganti menjadi titik kuning <i>"Belum ada shift kasir yang dibuka hari ini"</i> + tombol maroon <b>"Buka Shift Kasir"</b> (isi label + uang awal). <span class="chipm">⓶</span> kartu produk di atas. <span class="chipm">⓷</span> panel keranjang ini. <span class="chipm">⓸</span> daftar member. <span class="chipm">⓼</span> struk setelah simpan (gambar berikutnya).</div>
+</div>
+</div>
+</div>
+<div class="repl">
+<div class="repl-title"><span>Struk termal 58mm (setelah "Simpan")</span><small>print-ready</small></div>
+<div class="repl-body">
+<div class="receipt">
+<div class="ctr">
+<div style="font-weight:bold;font-size:13px">KOPONTREN AL ITTIHAD</div>
+<div>Kasir &amp; Pembukuan</div>
+<div>================================</div>
+</div>
+<div>No. : #1042</div>
+<div>Tgl : 27/09/2026 14:22</div>
+<div>Kasir : Budi (Kasir)</div>
+<div>Pembeli : Ahmad Fahmi</div>
+<div>Member : Ahmad Fahmi</div>
+<hr>
+<div>Aqua 600ml</div>
+<div class="row"><span>2 bot x 3.000</span><span>6.000</span></div>
+<div>Indomie Goreng</div>
+<div class="row"><span>1 bks x 3.500</span><span>3.500</span></div>
+<div>Teh Pucuk 500ml</div>
+<div class="row"><span>1 bot x 4.500</span><span>4.500</span></div>
+<hr>
+<div class="row"><span>Total</span><span><b>14.000</b></span></div>
+<div class="row"><span>Metode Bayar</span><span>Tunai</span></div>
+<div class="row"><span>Diterima</span><span>20.000</span></div>
+<div class="row" style="font-weight:bold"><span>Kembali</span><span>2.500</span></div>
+<div class="row em" style="margin-top:4px"><span>Poin Didapat</span><span>+1 Poin</span></div>
+<hr>
+<div class="ctr" style="font-size:10px">
+Jazakumullah Khairan Katsiran<br>
+Barang yang sudah dibeli tidak dapat ditukar
+</div>
+</div>
+</div>
+</div>
+
+<h3>Anotasi — "Ini tombol untuk apa, di sini Anda bisa apa"</h3>
+<div class="anno"><span class="ch">⓵</span><div><b>Tombol Buka Shift</b> — muncul hanya ketika belum ada shift. Isi <b>label</b> (mis. "Shift Pagi") dan <b>uang awal</b> di laci. Mulai kerja = titik hijau "Shift Aktif".</div></div>
+<div class="anno"><span class="ch">⓶</span><div><b>Kartu produk</b> — tap = masuk keranjang. Angka di pojok atas = jumlah di keranjang. Badge stok: abu (aman) / kuning (&lt;5) / merah (habis). Stiker hijau "Grosir" = ada harga lebih murah untuk jumlah banyak.</div></div>
+<div class="anno"><span class="ch">⓷</span><div><b>Keranjang Kasir</b> — di sini Anda naik-turunkan jumlah (−/+), hapus item, dan lihat subtotal tiap barang. Di atas total ada pilihan member &amp; pembeli.</div></div>
+<div class="anno"><span class="ch">⓸</span><div><b>Daftar Santri/Member</b> — pilih pembeli. Poin, diskon tier, dan saldo reward hitung sendiri; muncul baris "Member: nama (poin)".</div></div>
+<div class="anno"><span class="ch">⓹</span><div><b>Tebus poin/saldo</b> — kasir boleh mengurangi tagihan dengan poin &amp; cashback member. Tombol "Maks" = tebus sesuai batas maksimal.</div></div>
+<div class="anno"><span class="ch">⓺</span><div><b>4 cara bayar</b> — 1 Tunai, 2 QRIS/Non-tunai, 3 Transfer, 4 Campur (split). Nomor = hotkey di keyboard.</div></div>
+<div class="anno"><span class="ch">⓻</span><div><b>Tombol Simpan &amp; Cetak</b> — transaksi tercatat, stok berkurang, kas masuk, struk tercetak. Ini satu-satunya jalan transaksi masuk sistem.</div></div>
+<div class="anno"><span class="ch">⓼</span><div><b>Struk</b> — bukti resmi: nomor transaksi, kasir, item, cara bayar, kembali, poin. Bisa dicetak (F5) atau dikirim WhatsApp.</div></div>
+<div class="anno"><span class="ch">⓽</span><div><b>Tutup Shift &amp; Rekap</b> — di akhir shift: buat rekap (penjualan, kas, selisih laci). Rekap dikirim ke pengurus via WhatsApp.</div></div>
+
+<div class="legend"><b>Keterangan warna:</b> maroon = elemen utama/brand · hijau = sukses/shift aktif · kuning = peringatan (shift belum buka, antrean offline, stok menipis) · merah = masalah (stok habis, uang kurang). Arahkan cetak ke PDF halaman ini bila ingin pegang salinan di kasir.</div>
+</div>
+</body>
+</html>

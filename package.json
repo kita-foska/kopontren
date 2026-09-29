@@ -12,6 +12,7 @@
     "import:products": "node scripts/import-products.mjs",
     "import:excel": "node scripts/import-excel.mjs",
     "fix:sales": "node scripts/fix-negative-sales.mjs",
+    "sync:tutorial": "node scripts/sync-tutorial.mjs",
     "test:margin": "node scripts/test-margin.ts",
     "test:split": "node scripts/test-split.ts",
     "test:phone": "node scripts/test-members-phone.ts",
