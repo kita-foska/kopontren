@@ -109,6 +109,15 @@ const COLS: Record<string, { k: string; t: string }[]> = {
     { k: 'expected', t: 'Terbayar (konsinyasi)' },
     { k: 'recorded', t: 'Tercatat kas' },
   ],
+  RETURN_COGS: [
+    { k: 'id', t: 'Retur #' },
+    { k: 'sale_id', t: 'Transaksi' },
+    { k: 'product_id', t: 'Produk' },
+    { k: 'qty', t: 'Qty retur' },
+    { k: 'cogs', t: 'COGS tercatat' },
+    { k: 'cost_price', t: 'HPP item' },
+    { k: 'expected', t: 'HPP diharapkan' },
+  ],
 };
 
 /** Kolom bernilai rupiah (format id-ID). */
@@ -127,6 +136,8 @@ const MONEY = new Set([
   'cashback_balance',
   'expected',
   'recorded',
+  'cogs',
+  'cost_price',
 ]);
 
 function cellVal(r: Record<string, unknown>, k: string): string {
@@ -195,7 +206,7 @@ export function RekonsiliasiClient() {
         </Button>
       </div>
 
-      {/* 13 kartu cek (drift di-ring merah + tabel detail baris) */}
+      {/* 14 kartu cek (drift di-ring merah + tabel detail baris) */}
       {data.checks?.map((c) => {
         const cols = COLS[c.id] ?? [];
         const bad = c.status === 'drift';

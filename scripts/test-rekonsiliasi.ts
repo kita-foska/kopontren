@@ -1,5 +1,5 @@
 /**
- * P0-C3 — test 13 cek rekonsiliasi (modul src/lib/rekonsiliasi.ts, flag-only).
+ * P0-C3 — test 14 cek rekonsiliasi (modul src/lib/rekonsiliasi.ts, flag-only).
  *
  * Dijalankan LANGSUNG oleh Node (type-stripping, Node >= 23.6 / v24):
  *     npm run test:rekon     (== node scripts/test-rekonsiliasi.ts)
@@ -8,7 +8,7 @@
  * scripts/test-neraca.ts.
  *
  * Alur:
- *   1. Seed sehat (selaras dgn guard tulis app) → SEMUA 13 cek 'ok',
+ *   1. Seed sehat (selaras dgn guard tulis app) → SEMUA 14 cek 'ok',
  *      clean=true, drift_total=0.
  *   2. Korup (edits manual/DB) → cek target drift dgn jumlah persis;
  *      drift_total=16, clean=false.
@@ -53,14 +53,16 @@ CREATE TABLE sale_items (
   id INTEGER PRIMARY KEY,
   sale_id INTEGER NOT NULL,
   product_id INTEGER,
-  qty INTEGER NOT NULL
+  qty INTEGER NOT NULL,
+  cost_price INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE returns (
   id INTEGER PRIMARY KEY,
   sale_id INTEGER NOT NULL,
   product_id INTEGER,
   qty INTEGER NOT NULL DEFAULT 0,
-  amount INTEGER NOT NULL DEFAULT 0
+  amount INTEGER NOT NULL DEFAULT 0,
+  cogs INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE shifts (
   id INTEGER PRIMARY KEY,
@@ -127,7 +129,7 @@ CREATE TABLE consignments (
 `;
 
 /**
- * Seed sehat: setiap baris selaras dgn guard tulis app — 13 cek 'ok'.
+ * Seed sehat: setiap baris selaras dgn guard tulis app — 14 cek 'ok'.
  *  - Shif 1 (kasir 1, [06:00,09:00)): 2 sales (100.000 + 50.000), kas
  *    120.000 (sales tunai 100.000 + porsi split 20.000).
  *  - Konsinyasi: ujrah tercatat = 8.000 + 10.000 (rate 20%, floor/unit);
@@ -139,8 +141,8 @@ INSERT INTO sales (id, kasir_id, pay_method, total, amount_paid, change, pay_spl
   (2, 1, 'cash', 50000, 50000, 0, '[{"m":"cash","a":20000},{"m":"tf","a":30000}]', '2026-09-27T07:30:00.000Z'),
   (3, 2, 'tf', 20000, 20000, 0, NULL, '2026-09-27T08:00:00.000Z'),
   (4, 2, 'cash', 50000, 50000, 0, '[{"m":"cash","a":25000},{"m":"tf","a":25000}]', '2026-09-27T08:10:00.000Z');
-INSERT INTO sale_items (sale_id, product_id, qty) VALUES (1, 1, 2), (2, 2, 1);
-INSERT INTO returns (sale_id, product_id, qty, amount) VALUES (1, 1, 1, 50000);
+INSERT INTO sale_items (sale_id, product_id, qty, cost_price) VALUES (1, 1, 2, 5000), (2, 2, 1, 40000);
+INSERT INTO returns (sale_id, product_id, qty, amount, cogs) VALUES (1, 1, 1, 50000, 5000);
 INSERT INTO shifts (id, kasir_id, status, start_time, end_time, sales_count, sales_total, cash_total)
   VALUES (1, 1, 'closed', '2026-09-27T06:00:00.000Z', '2026-09-27T09:00:00.000Z', 2, 150000, 120000);
 INSERT INTO products (id, name, stock) VALUES (1, 'Madu Sachet', 50), (2, 'Madu Box', 10), (3, 'Air Mineral', 0);
@@ -158,8 +160,9 @@ INSERT INTO cash_entries (type, label, amount) VALUES
 `;
 
 /**
- * Korup (simulasi edit manual/DB) — 13 target drift; efek silang yg
- * sengaja: total negatif (sales 3) juga melanggar SALES_PAY.
+ * Korup (simulasi edit manual/DB) — 14 target drift (RETURN_COGS: over-
+ * retur baru cogs 0 ≠ 25.000); efek silang yg sengaja: total negatif
+ * (sales 3) juga melanggar SALES_PAY.
  */
 const CORRUPT = `
 UPDATE sales SET amount_paid = 99000 WHERE id = 1;
@@ -200,9 +203,10 @@ async function main(): Promise<void> {
   db.exec(SCHEMA);
   db.exec(SEED);
 
-  // ── Fase 1: DB sehat → SEMUA 13 cek 'ok' ─────────────────────────
+  // ── Fase 1: DB sehat → SEMUA 14 cek 'ok' ─────────────────────────
   const p1 = await queryRekonsiliasi(makeShim(db));
-  eq('sehat: 13 cek', p1.checks.length, 13);
+  eq('sehat: 14 cek', p1.checks.length, 14);
+  eq('sehat: RETURN_COGS selaras', find(p1, 'RETURN_COGS').detail, 'semua cogs retur selaras dgn snapshot HPP item (V2-2)');
   eq('sehat: drift_total = 0', p1.drift_total, 0);
   eq('sehat: clean = true', p1.clean, true);
   for (const c of p1.checks) ok("sehat: " + c.id + " 'ok' + baris kosong", c.status === 'ok' && c.rows.length === 0, c.detail);
@@ -213,13 +217,14 @@ async function main(): Promise<void> {
   // ── Fase 2: DB korup → drift persis pada cek target ──────────────
   db.exec(CORRUPT);
   const p2 = await queryRekonsiliasi(makeShim(db));
-  eq('korup: drift_total = 16', p2.drift_total, 16);
+  eq('korup: drift_total = 17', p2.drift_total, 17);
   eq('korup: clean = false', p2.clean, false);
   eq('SALES_PAY = 2 (sales 1 & 3)', find(p2, 'SALES_PAY').drift_count, 2);
   eq('SALES_MONEY = 1 (total negatif)', find(p2, 'SALES_MONEY').drift_count, 1);
   eq('SPLIT = 1 (metode tak dikenal)', find(p2, 'SPLIT').drift_count, 1);
   eq('SHIFT = 1 (rekap ≠ recompute)', find(p2, 'SHIFT').drift_count, 1);
   eq('RETURN = 2 (orphan + over-return)', find(p2, 'RETURN').drift_count, 2);
+  eq('RETURN_COGS = 1 (cogs 0 ≠ 25.000)', find(p2, 'RETURN_COGS').drift_count, 1);
   eq('STOCK = 1 (stok negatif)', find(p2, 'STOCK').drift_count, 1);
   eq('DEBTS = 1 (aritmetika piutang)', find(p2, 'DEBTS').drift_count, 1);
   eq('PAYABLES = 1 (kolom supplier_name)', find(p2, 'PAYABLES').drift_count, 1);

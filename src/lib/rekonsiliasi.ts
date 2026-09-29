@@ -21,8 +21,9 @@
  *    'Kon. …'/'Ujrah Kon. …') bisa sah-saja memicu flag: modul ini
  *    MELAPORKAN, tidak memutuskan.
  *
- * 13 cek: SALES_PAY, SALES_MONEY, SPLIT, SHIFT, RETURN, STOCK, DEBTS,
- * PAYABLES, POINTS, CASHBACK, KONSIN, KONSIN_UJRAH, KONSIN_PAY.
+ * 14 cek: SALES_PAY, SALES_MONEY, SPLIT, SHIFT, RETURN, STOCK, DEBTS,
+ * PAYABLES, POINTS, CASHBACK, KONSIN, KONSIN_UJRAH, KONSIN_PAY,
+ * RETURN_COGS (V2-2).
  */
 
 import type { QueryDb } from './keuangan.ts';
@@ -41,7 +42,8 @@ export type RekCheckId =
   | 'CASHBACK'
   | 'KONSIN'
   | 'KONSIN_UJRAH'
-  | 'KONSIN_PAY';
+  | 'KONSIN_PAY'
+  | 'RETURN_COGS';
 
 export type RekCheck = {
   id: RekCheckId;
@@ -71,6 +73,7 @@ export const REKONSILIASI_NOTES: string[] = [
   'Ledger reward: poin (earn/redeem/void/return) & cashback (cashback/cashback_use/return_cash) — penyempurnaan INV-4 P0-C2.',
   "Data legacy (poin tanpa ledger, jurnal kas manual berlabel 'Kon. …'/'Ujrah Kon. …') bisa memicu flag sah-saja — modul melaporkan, tidak memutuskan.",
   'Dikenal (di luar cakupan C3): /api/neraca off-balance masih membaca tabel legacy consignment_items yang tak ada di skema saat ini (data P4 ada di consignments).',
+  'COGS retur (V2-2): baris retur dgn snapshot HPP item > 0 (sale_items.cost_price) harus cogs = HPP item × qty retur; baris snapshot 0 (fallback harga beli produk saat write) tak dapat diverifikasi ulang, dikecualikan; baris pre-V2-2 cogs = 0 (konservatif).',
 ];
 
 const TOP = 20;
@@ -496,6 +499,43 @@ export async function queryRekonsiliasi(d: QueryDb): Promise<RekPayload> {
         drift,
         `terbayar tercatat ${exp.toLocaleString('id-ID')} vs kas keluar ${act.toLocaleString('id-ID')}`,
         drift ? [{ expected: exp, recorded: act }] : []
+      )
+    );
+  }
+
+  // ── 14. RETURN_COGS: integritas COGS retur (V2-2) ──────────────────
+  // returns.cogs (snapshot HPP saat write, V2-2) harus = si.cost_price ×
+  // qty utk item ber-snapshot (cost_price > 0). Baris snapshot 0 memakai
+  // fallback harga beli produk saat write (harga bisa berubah) → tak
+  // bisa recompute, dikecualikan; cogs < 0 selalu drift. Baris pre-V2-2
+  // cogs = 0 — hanya terverifikasi bila item-nya punya snapshot > 0.
+  {
+    const kBad = await num(
+      d,
+      `SELECT COUNT(*) c
+       FROM returns r
+       JOIN sale_items si ON si.sale_id = r.sale_id AND si.product_id = r.product_id
+       WHERE (si.cost_price > 0 AND r.cogs != si.cost_price * r.qty) OR r.cogs < 0`
+    );
+    checks.push(
+      chk(
+        'RETURN_COGS',
+        'COGS retur (cogs = HPP item × qty, V2-2)',
+        kBad,
+        kBad
+          ? `${kBad} baris cogs tak selaras dgn snapshot HPP item`
+          : 'semua cogs retur selaras dgn snapshot HPP item (V2-2)',
+        kBad
+          ? await topRows(
+              d,
+              `SELECT r.id, r.sale_id, r.product_id, r.qty, r.cogs,
+                     si.cost_price, si.cost_price * r.qty AS expected
+                FROM returns r
+                JOIN sale_items si ON si.sale_id = r.sale_id AND si.product_id = r.product_id
+                WHERE (si.cost_price > 0 AND r.cogs != si.cost_price * r.qty) OR r.cogs < 0
+                ORDER BY r.id DESC LIMIT ${TOP}`
+            )
+          : []
       )
     );
   }
