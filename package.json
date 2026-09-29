@@ -24,7 +24,8 @@
     "test:wholesale": "node scripts/test-wholesale.ts",
     "test:qris": "node scripts/test-qris.ts",
     "test:fetch": "node scripts/test-fetch-util.ts",
-    "test:roles": "node scripts/test-roles.ts"
+    "test:roles": "node scripts/test-roles.ts",
+    "test:golden": "node scripts/test-golden.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.0",

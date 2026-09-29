@@ -25,7 +25,7 @@ async function getProductsCache(live: boolean): Promise<{ products: unknown[]; c
       `(SELECT COALESCE(json_group_array(json_object('min_qty', min_qty, 'discount_percent', discount_percent)), '[]')
          FROM product_prices pp
          WHERE pp.product_id = p.id
-         ORDER BY pp.min_qty) AS wholesale,`;
+         ORDER BY pp.min_qty) AS wholesale`;
     const products: unknown[] = live
       ? await d.prepare(
           `SELECT p.*, ${wholesaleCol} FROM products p WHERE p.active = 1 ORDER BY p.category, p.name`
