@@ -1,6 +1,20 @@
 # MEMORY
 
 ## 2026-09-27
+### Roadmap: bakpao.id CANCELLED + pembaruan urutan - 27 Sep
+- **Keputusan (ACC Gus Fi)**: roadmap bakpao.id (7 fitur: live
+  ticker multi-cabang, tangga loyalty tier, katalog hadiah +
+  ranking, panel bagi-hasil per role, onboarding mitra/reseller,
+  hero + trust badges, timeline + demo) = CANCELLED — tidak perlu,
+  tidak diimplementasi. Dihapus dari TODO.md + release gate (item
+  diganti label CANCELLED); entry historis P0-C4 tetap asli
+  (integritas log).
+- **Urutan roadmap baru**: V2-2 COGS reversal (SELESAI, commit
+  `980d57c` `8880ddb` `85d24b0` + docs `315ef66`) -> V2-1 I-7
+  void reason (pending, butuh ACC pengurus) -> Fase 3 Akuntansi
+  Terbaru (audit SAK EP / SAK Syariah / PAP -> proposal desain ->
+  tashih -> implementasi) -> Maintenance (audit periodik, test,
+  performance, ongoing).
 ### V2-2 (KRITIS): COGS/HPP reversal — netting dua sisi - 27 Sep
 - **Perintah (ACC Gus Fi)**: COGS reversal V2-2: P&L/KPI/Zakat net
   DUA SISI — pendapatan dikurangi Σ returns.amount (sudah V1), COGS

@@ -114,7 +114,8 @@ confidence · confidence language — post-certification backlog.
 1. **V2** — V2-1 (I-7) → V2-2 (COGS reversal).
 2. **Fase 3 — Akuntansi Terbaru**: audit akuntansi (SAK EP,
    SAK Syariah, PAP) → proposal desain → tashih → implementasi.
-3. **Roadmap bakpao.id** (7 fitur).
+3. **bakpao.id roadmap** (7 features): **CANCELLED** (Gus Fi
+   decision, 2026-09-27 — not needed; not to be implemented).
 
 ## Standing release rules
 

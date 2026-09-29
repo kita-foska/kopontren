@@ -1275,9 +1275,18 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
       (keuangan/reports/zakat/rekap WA/UI); C3 `85d24b0` rekonsiliasi
       cek #14 RETURN_COGS + UI + test (rekon PASS 46) + docs.
 
-**Roadmap pasca-P0:** V2 (V2-1, V2-2) -> Fase 3 Akuntansi Terbaru
-(audit SAK EP / SAK Syariah / PAP -> proposal desain -> tashih ->
-implementasi) -> roadmap bakpao.id (7 fitur).
+**Roadmap pasca-P0 (DIUPDATE 27 Sep, ACC Gus Fi):**
+1. **V2-2** COGS reversal retur — SELESAI (4 commit: `980d57c`,
+   `8880ddb`, `85d24b0`, docs `315ef66`; dual-push).
+2. **V2-1** I-7 void reason — PENDING (butuh ACC pengurus).
+3. **Fase 3 Akuntansi Terbaru** — PENDING (audit SAK EP / SAK Syariah
+   / PAP -> proposal desain -> tashih -> implementasi).
+4. **Maintenance** — ongoing (audit periodik, test, performance).
+- Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
+  loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,
+  onboarding mitra/reseller, hero + trust badges, timeline + demo)
+  = **CANCELLED** (keputusan Gus Fi, 27 Sep — ora perlu; ora
+  diimplementasi).
 
 
 **Notifikasi & komunikasi:**
