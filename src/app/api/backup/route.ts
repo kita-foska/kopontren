@@ -16,6 +16,7 @@ type Backup = {
   cash_entries?: unknown[];
   consignments?: unknown[];
   members?: unknown[];
+  point_history?: unknown[];
   shifts?: unknown[];
   debts?: unknown[];
   payables?: unknown[];
@@ -69,6 +70,7 @@ export async function GET() {
       'SELECT id, owner, owner_phone, item_name, unit, qty_received, agree_price, commission_rate, qty_sold, qty_returned, amount_paid, status, note, created_at, settled_at FROM consignments'
     ),
     members: await all('SELECT * FROM members'),
+    point_history: await all('SELECT * FROM point_history'),
     shifts: await all('SELECT * FROM shifts'),
     debts: await all('SELECT * FROM debts'),
     payables: await all('SELECT * FROM payables'),
@@ -117,7 +119,7 @@ export async function POST(req: Request) {
       // memakai ID eksplisit — tanpa clear, ID lama akan tabrakan PK
       // (UNIQUE fail).
       await d.exec(
-        'DELETE FROM notification_logs; DELETE FROM notification_settings; DELETE FROM notifications; DELETE FROM returns; DELETE FROM sale_items; DELETE FROM sales; DELETE FROM purchases; DELETE FROM expenses; DELETE FROM cash_entries; DELETE FROM products; DELETE FROM consignments; DELETE FROM members; DELETE FROM shifts; DELETE FROM debts; DELETE FROM payables; DELETE FROM audit_log;'
+        'DELETE FROM notification_logs; DELETE FROM notification_settings; DELETE FROM notifications; DELETE FROM returns; DELETE FROM sale_items; DELETE FROM sales; DELETE FROM purchases; DELETE FROM expenses; DELETE FROM cash_entries; DELETE FROM products; DELETE FROM consignments; DELETE FROM point_history; DELETE FROM members; DELETE FROM shifts; DELETE FROM debts; DELETE FROM payables; DELETE FROM audit_log;'
       );
       const insP = d.prepare(
         'INSERT INTO products (id, name, category, unit, base_price, cost_price, stock, active, barcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -273,6 +275,20 @@ export async function POST(req: Request) {
           normTs(m.created_at, new Date().toISOString())
         );
       }
+      const insPH = d.prepare(
+        'INSERT INTO point_history (id, member_id, delta, reason, amount, sale_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      );
+      for (const ph of (payload.point_history as Record<string, unknown>[]) || []) {
+        await insPH.run(
+          Number(ph.id),
+          Number(ph.member_id),
+          Number(ph.delta) || 0,
+          String(ph.reason ?? ''),
+          Number(ph.amount) || 0,
+          ph.sale_id != null ? Number(ph.sale_id) : null,
+          normTs(ph.created_at, new Date().toISOString())
+        );
+      }
       const insSh = d.prepare(
         `INSERT INTO shifts (id, kasir_id, label, status, start_time, end_time, sales_count, sales_total, cash_total, by_method, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -413,6 +429,7 @@ export async function POST(req: Request) {
     await logAudit(user, 'backup:import', 'database', null, undefined, {
       products: (payload.products as unknown[] | undefined)?.length ?? 0,
       sales: (payload.sales as unknown[] | undefined)?.length ?? 0,
+      point_history: (payload.point_history as unknown[] | undefined)?.length ?? 0,
       debts: (payload.debts as unknown[] | undefined)?.length ?? 0,
       payables: (payload.payables as unknown[] | undefined)?.length ?? 0,
       returns: (payload.returns as unknown[] | undefined)?.length ?? 0,
