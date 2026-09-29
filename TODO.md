@@ -1321,8 +1321,12 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
 1. **V2-2** COGS reversal retur — SELESAI (4 commit: `980d57c`,
    `8880ddb`, `85d24b0`, docs `315ef66`; dual-push).
 2. **V2-1** I-7 void reason — PENDING (butuh ACC pengurus).
-3. **Fase 3 Akuntansi Terbaru** — PENDING (audit SAK EP / SAK Syariah
-   / PAP -> proposal desain -> tashih -> implementasi).
+3. **Fase 3 Akuntansi Terbaru** — A.1 audit SELESAI (29 Sep):
+   `docs/akuntansi-audit.md` (single-entry basis kas; 3 laporan V1
+   ada; 0 COA/jurnal/GL/neraca saldo; 14 cek rekonsiliasi; gap vs
+   SAK EP/SAK Syariah/PAP — semua item standar & fiqih = PERLU
+   TASHIH; opsi 1-3 + checklist tashih 12 soal). Next: F3.2 proposal
+   desain -> tashih -> implementasi. Menunggu ACC Gus Fi.
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
   loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,
