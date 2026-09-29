@@ -628,6 +628,13 @@ export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
   qris_nmid2: '',
   qris_mcc: '',
   qris_city: '',
+  // Theme T3 (2026-09-29): tema warna brand global — allow-list
+  // maroon|green|blue|dark-maroon|slate. Shell (src/components/shell.tsx)
+  // membaca via GET /api/settings lalu set <html data-brand>; layer CSS T2
+  // di globals.css menerapkan override (maroon = default = visual saat ini,
+  // zero-change). Tanpa row di DB, getSettings tetap mengembalikan default
+  // ini (tidak perlu migrasi/schema baru — tabel settings key-value).
+  theme: 'maroon',
 };
 
 export async function getSettings(): Promise<Record<string, string>> {

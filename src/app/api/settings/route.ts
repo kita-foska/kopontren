@@ -6,8 +6,9 @@ import { clampRate } from '@/lib/konsinyasi';
 /**
  * Read-only shop settings utk widget klien (mis. target nomor WA
  * notifikasi stok di dashboard admin). Hanya field publik —
- * tidak pernah berisi kredensial. `session_timeout` (detik) &
+ * tidak pernah berisi kredensial. `session_timeout` (detik),
  * `konsinyasi_commission` (FASE P4, % komisi toko utk akad ju'alah)
+ * & `theme` (Theme T3, brand color: maroon|green|blue|dark-maroon|slate)
  * di-inkludkan utk UI admin; penulisan via PUT (admin-only).
  */
 export async function GET() {
@@ -30,6 +31,8 @@ export async function GET() {
     qris_nmid2: s.qris_nmid2,
     qris_mcc: s.qris_mcc,
     qris_city: s.qris_city,
+    // Theme T3 (2026-09-29): brand color theme utk shell (data-brand).
+    theme: s.theme || 'maroon',
   });
 }
 
@@ -92,6 +95,22 @@ export async function PUT(req: Request) {
     const v = qrisText(b.qris_city, 30);
     if (v.length > 30) return NextResponse.json({ error: 'qris_city maks 30 karakter' }, { status: 400 });
     patch.qris_city = v;
+  }
+  // Theme T3 (2026-09-29): brand color theme. Allow-list FIX — nilai hex
+  // punya single source of truth di layer CSS T2 (globals.css), jadi input
+  // bebas hex TIDAK diterima (cegah tema rusak / nilai tak dikenal).
+  // saveSettings memfilter via SHOP_SETTING_DEFAULTS (theme sudah di sana)
+  // + log audit otomatis (db.ts).
+  const THEME_CHOICES = ['maroon', 'green', 'blue', 'dark-maroon', 'slate'];
+  if (b.theme !== undefined) {
+    const v = String(b.theme).trim();
+    if (!THEME_CHOICES.includes(v)) {
+      return NextResponse.json(
+        { error: `theme harus salah satu: ${THEME_CHOICES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+    patch.theme = v;
   }
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: 'Tindakan tidak dikenal' }, { status: 400 });

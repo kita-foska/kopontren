@@ -17,6 +17,17 @@ type User = {
 };
 type Resp = { users: User[]; self: User };
 
+// Theme T3 (2026-09-29): swatch = ac500 per preset utk kartu "Tema warna".
+// SYNC POINT hex: nilai di sini = layer CSS T2 (globals.css) =
+// meta theme-color di shell.tsx. Ubah ketiganya bareng.
+const SWATCH: Record<string, string> = {
+  maroon: '#7A1835',
+  green: '#16774B',
+  blue: '#1D4F91',
+  'dark-maroon': '#5C1224',
+  slate: '#475569',
+};
+
 export function PenggunaClient() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +46,9 @@ export function PenggunaClient() {
   const [ownPin, setOwnPin] = useState({ old: '', next: '', confirm: '' });
   const [timeout, setTimeoutSec] = useState('');
   const [timeoutBusy, setTimeoutBusy] = useState(false);
+  // Theme T3 (2026-09-29): tema warna brand global (allow-list, kartu di bawah).
+  const [theme, setTheme] = useState('maroon');
+  const [themeBusy, setThemeBusy] = useState(false);
   // Busy guards (per-file useState): cegah double-submit per operasi.
   const [createBusy, setCreateBusy] = useState(false);
   const [resetPwBusy, setResetPwBusy] = useState(false);
@@ -60,10 +74,15 @@ export function PenggunaClient() {
   }, []);
   useEffect(() => {
     load();
-    api<{ session_timeout?: number }>('/api/settings')
+    api<{ session_timeout?: number; theme?: string }>('/api/settings')
       .then((r) => {
         if (r.ok && r.data && typeof r.data.session_timeout === 'number') {
           setTimeoutSec(String(r.data.session_timeout));
+        }
+        if (r.ok && r.data && typeof r.data.theme === 'string') {
+          // Allow-list check (Object.keys, bukan `in` — cegah match
+          // properti prototype thd nilai anomali di DB lama).
+          setTheme(Object.keys(SWATCH).includes(r.data.theme) ? r.data.theme : 'maroon');
         }
       })
       .catch(() => undefined);
@@ -209,6 +228,24 @@ export function PenggunaClient() {
     setTimeoutBusy(false);
     if (r.ok) showToast('Session timeout disimpan (berlaku utk sesi berikutnya).');
     else showToast(r.error || 'Gagal menyimpan', 'error');
+  }
+
+  // Theme T3 (2026-09-29): simpan tema warna brand (allow-list, PUT
+  // /api/settings -> saveSettings + log audit). Sukses = dispatch event
+  // 'kopontren:theme-change' -> shell.tsx menerapkan data-brand +
+  // meta theme-color SEKARANG (live, tanpa reload). User lain dapat
+  // tema berikutnya saat mount/refresh (V1; real-time push = V2).
+  async function saveTheme() {
+    setThemeBusy(true);
+    const r = await api('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ theme }),
+    });
+    setThemeBusy(false);
+    if (r.ok) {
+      showToast('Tema warna disimpan.');
+      window.dispatchEvent(new CustomEvent('kopontren:theme-change', { detail: theme }));
+    } else showToast(r.error || 'Gagal menyimpan', 'error');
   }
 
   // M1-4: edit peran (primary + tambahan) via PUT /api/users.
@@ -371,6 +408,31 @@ export function PenggunaClient() {
             />
             <Button variant="primary" disabled={timeoutBusy || !timeout} onClick={saveTimeout}>
               {timeoutBusy ? 'Menyimpan…' : 'Simpan'}
+            </Button>
+          </div>
+        </div>
+        <div className="card p-4">
+          <h2 className="mb-1 font-bold">Tema warna</h2>
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+            Warna aksen global (tombol, link, badge, chart). Tersimpan utk semua user;
+            berlaku utk user lain saat refresh / mount berikutnya.
+          </p>
+          <div className="flex items-center gap-2">
+            <select className="input" value={theme} onChange={(e) => setTheme(e.target.value)}>
+              <option value="maroon">Maroon (default)</option>
+              <option value="green">Green</option>
+              <option value="blue">Blue</option>
+              <option value="dark-maroon">Dark Maroon</option>
+              <option value="slate">Slate</option>
+            </select>
+            {/* Swatch = warna aksen yang akan diterapkan (ac500 preset, SWATCH). */}
+            <span
+              aria-hidden
+              className="h-9 w-9 shrink-0 rounded-lg border border-black/10 dark:border-white/10"
+              style={{ background: SWATCH[theme] ?? SWATCH.maroon }}
+            />
+            <Button variant="primary" disabled={themeBusy} onClick={saveTheme}>
+              {themeBusy ? 'Menyimpan…' : 'Simpan'}
             </Button>
           </div>
         </div>
@@ -576,9 +638,13 @@ export function PenggunaClient() {
                     key={r}
                     className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
                   >
+                    {/* Theme T3 (2026-09-29): accent-[#7A1835] ->
+                        accent-[var(--ac500)] — token brand; maroon default
+                        pixel-identical, preset lain otomatis via layer CSS T2
+                        (globals.css). */}
                     <input
                       type="checkbox"
-                      className="accent-[#7A1835]"
+                      className="accent-[var(--ac500)]"
                       checked={roleExtra.includes(r)}
                       onChange={(e) =>
                         setRoleExtra((prev) =>

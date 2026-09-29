@@ -115,6 +115,56 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
     };
   }, [switchOpen]);
 
+  // Theme T3 (2026-09-29): terapkan brand color theme.
+  // - On mount: GET /api/settings -> <html data-brand> (layer CSS T2 di
+  //   globals.css menangani visual; nilai tak dikenal = maroon = default).
+  // - Live: setelah admin simpan di /admin/pengguna, kartu itu dispatch
+  //   event 'kopontren:theme-change' (detail = theme) -> terapkan sekarang
+  //   tanpa reload.
+  // meta theme-color (chrome browser mobile) ikut disinkron. Catatan:
+  // manifest PWA tetap maroon (statik, tak bisa diubah runtime) —
+  // konstrain desain, bukan bug.
+  // SYNC POINT hex: nilai ac500 di bawah = layer CSS T2 (globals.css)
+  // = swatch di pengguna-client.tsx. Ubah ketiganya bareng.
+  const applyBrand = (theme: string) => {
+    const BRANDS = ['maroon', 'green', 'blue', 'dark-maroon', 'slate'];
+    const brand = BRANDS.includes(theme) ? theme : 'maroon';
+    const root = document.documentElement;
+    if (brand === 'maroon') delete root.dataset.brand;
+    else root.dataset.brand = brand;
+    const META: Record<string, string> = {
+      maroon: '#7A1835',
+      green: '#16774B',
+      blue: '#1D4F91',
+      'dark-maroon': '#5C1224',
+      slate: '#475569',
+    };
+    let m = document.querySelector('meta[name="theme-color"]');
+    if (!m) {
+      m = document.createElement('meta');
+      m.setAttribute('name', 'theme-color');
+      document.head.appendChild(m);
+    }
+    m.setAttribute('content', META[brand]);
+  };
+  useEffect(() => {
+    let alive = true;
+    api<{ theme?: string }>('/api/settings')
+      .then((r) => {
+        if (alive && r.ok && r.data && typeof r.data.theme === 'string') applyBrand(r.data.theme);
+      })
+      .catch(() => undefined); // offline/gagal -> fallback maroon (tanpa data-brand)
+    const onThemeChange = (e: Event) => {
+      const t = (e as CustomEvent).detail;
+      if (typeof t === 'string') applyBrand(t);
+    };
+    window.addEventListener('kopontren:theme-change', onThemeChange);
+    return () => {
+      alive = false;
+      window.removeEventListener('kopontren:theme-change', onThemeChange);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen">
       {/* UX-8C: skip-link (a11y): tersembunyi sampai di-focus via Tab —
