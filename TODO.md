@@ -1321,12 +1321,20 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
 1. **V2-2** COGS reversal retur — SELESAI (4 commit: `980d57c`,
    `8880ddb`, `85d24b0`, docs `315ef66`; dual-push).
 2. **V2-1** I-7 void reason — PENDING (butuh ACC pengurus).
-3. **Fase 3 Akuntansi Terbaru** — A.1 audit SELESAI (29 Sep):
-   `docs/akuntansi-audit.md` (single-entry basis kas; 3 laporan V1
-   ada; 0 COA/jurnal/GL/neraca saldo; 14 cek rekonsiliasi; gap vs
-   SAK EP/SAK Syariah/PAP — semua item standar & fiqih = PERLU
-   TASHIH; opsi 1-3 + checklist tashih 12 soal). Next: F3.2 proposal
-   desain -> tashih -> implementasi. Menunggu ACC Gus Fi.
+3. **Fase 3 Akuntansi Terbaru** — F3.1 audit (`84a3266`) + F3.2 proposal SELESAI (29 Sep):
+   `docs/akuntansi-audit.md` (A.1) + `docs/akuntansi-proposal.md`
+   (F3.2: COA 52 akun 6 grup; skema jurnal double-entry immutable
+   + running balance + invariant D=K; auto-posting 3 wave; 5
+   laporan formal; modul akad 5 tipe; koperasi Level C + SHU;
+   ZIS terpisah; peta PAP; migrasi saldo pembuka @ N; R1-R8
+   mitigasi; roadmap 32 commit 6 wave; §13 = 14 poin keputusan).
+   12 keputusan Gus Fi: badan = koperasi resmi; standar hybrid
+   PRIORITAS SYARIAH (SAK Syariah -> PAP -> SAK EP); Level C;
+   COA B; ZIS A; SHU A; wakaf B (ditunda); auto-posting B
+   (bertahap); saldo pembuka A; laporan A; akad A (bareng
+   fondasi); timeline B (6 minggu). Next: **F3.3 = review +
+   keputusan GUS FI langsung** (14 poin §13; pengasuh mengikuti;
+   TIDAK ada forum terpisah) -> F3.4+ implementasi.
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
   loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,
