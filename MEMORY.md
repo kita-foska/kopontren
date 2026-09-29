@@ -6,8 +6,9 @@
   HTML SOP + panduan di `docs/` bisa dibaca DALAM app (`/tutorial`),
   tanpa website terpisah. 3 commit (T1-T3), dual-push master+main.
 - **T1 `784cd86` (28 Sep)**: `scripts/sync-tutorial.mjs` +
-  `package.json` (`sync:tutorial`) + `public/tutorial/*.html` (8
-  file: DOKUMENTASI-APLIKASI + 7 SOP-*.html). Aturan sync: `docs/`
+  `package.json` (`sync:tutorial`) + `public/tutorial/*.html` (9
+  file: DOKUMENTASI-APLIKASI + 7 SOP-*.html + AKUNTANSI-PROPOSAL
+  (F3.2 snapshot, H1 `c3ade14`)). Aturan sync: `docs/`
   = source of truth; `public/tutorial/` = hasil salin, TIDAK
   pernah diedit manual; gate 0 tag `<script>` (viewer iframe
   `sandbox="allow-same-origin"` TANPA allow-scripts -> pertahanan
@@ -26,6 +27,20 @@
   dijalankan di sesi T2 (verifikasi build saat deploy/CI).
 - **T3 (commit ini)**: docs (MEMORY + TODO item baru di seksi
   "Fitur") — fitur tutorial GENAP (T1+T2+T3).
+- **H1 `c3ade14` (29 Sep) — snapshot proposal F3.2**:
+  `docs/AKUNTANSI-PROPOSAL.html` (748 baris) = snapshot 1:1 dari
+  `docs/akuntansi-proposal.md` @ `e3cfd30` utk review F3.3.
+  0 tag script (gate sync gagal-hard); tema maroon SOP-ADMIN; TOC
+  anchor pill + `:target` highlight; §13 = 14 kartu keputusan
+  amber + checkbox non-persist (print A4 utk rekam centang).
+  `sync-tutorial.mjs` MAP += entry; `tutorial-data.ts` TUTORIALS
+  += entry -> route `/tutorial/akuntansi-proposal`; public copy
+  via `npm run sync:tutorial` (SYNC-TUTORIAL-OK 9 file). Dual-push
+  main+master = `c3ade14`. Catatan: lokal `master` ditemukan
+  masih di `84a3266` (stale) -> `git branch -f master c3ade14`
+  lalu push (fast-forward sah). **Setelah F3.3** (keputusan
+  §13 turun) -> regenerate HTML + re-sync (1 commit kecil).
+  Sumber kebenaran tetap `docs/akuntansi-proposal.md`.
 - **Sisa / catatan**: pixel-check /tutorial + 1 halaman viewer +
   404 (Gus Fi, non-blocking). Deploy: HTML public/ ikut mekanisme
   SW version-stamp yang sudah ada (stempel SW-BUILD berubah saat

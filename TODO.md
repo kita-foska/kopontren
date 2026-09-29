@@ -1328,12 +1328,18 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
    laporan formal; modul akad 5 tipe; koperasi Level C + SHU;
    ZIS terpisah; peta PAP; migrasi saldo pembuka @ N; R1-R8
    mitigasi; roadmap 32 commit 6 wave; §13 = 14 poin keputusan).
+   Snapshot HTML bacaan (H1 `c3ade14`, 29 Sep):
+   `docs/AKUNTANSI-PROPOSAL.html` + route `/tutorial/akuntansi-proposal`
+   (0-script; tema maroon SOP-ADMIN; §13 = 14 kartu amber + checkbox,
+   print A4 utk rekam centang). Pasca-F3.3 (keputusan turun) ->
+   regenerate HTML + re-sync (1 commit kecil).
    12 keputusan Gus Fi: badan = koperasi resmi; standar hybrid
    PRIORITAS SYARIAH (SAK Syariah -> PAP -> SAK EP); Level C;
    COA B; ZIS A; SHU A; wakaf B (ditunda); auto-posting B
    (bertahap); saldo pembuka A; laporan A; akad A (bareng
    fondasi); timeline B (6 minggu). Next: **F3.3 = review +
-   keputusan GUS FI langsung** (14 poin §13; pengasuh mengikuti;
+   keputusan GUS FI langsung** (14 poin §13 via
+   `/tutorial/akuntansi-proposal`; pengasuh mengikuti;
    TIDAK ada forum terpisah) -> F3.4+ implementasi.
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
