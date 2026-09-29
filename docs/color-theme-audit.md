@@ -186,3 +186,32 @@ pixel-identik). Visual check 5 preset = Gus Fi (non-blocking).
   allow-list `theme` (bukan string bebas; di luar 5 nilai = 400);
   `saveSettings` sudah auto-log audit (pola `session_timeout`).
 - `GET /api/settings` (login-only) + field `theme`.
+
+## 12. Addendum T4 (29 Sep): fitur SELESAI T1-T4
+
+| #  | Commit    | Isi                                                                 | Status                    |
+| -- | --------- | ------------------------------------------------------------------- | ------------------------- |
+| T1 | `b230a3e` | dokumen audit ini + rencana T2-T4                                    | dual-push master+main     |
+| T2 | `2c4940b` | globals.css: var 5 preset + 38 aturan override unlayered (+93/-1)    | tsc + build 0/0           |
+| T3 | `346229d` | db.ts + api/settings + shell.tsx + pengguna-client.tsx (+145/-3)     | tsc + build 0/0 (56 hal)  |
+| T4 | (addendum)| MEMORY + TODO + seksi ini (docs-only)                                | dual-push master+main     |
+
+- Jumlah aturan override ACTUAL = **38** (perkiraan §2 ≈ 30;
+  selisih = varian hover/active/focus + 2 aturan `dark:` +
+  1 pengecualian `.input` — semua = re-declare selector yg
+  terpakai per sensus §2).
+- **Sync point hex** (ubah bareng, ketiganya): var blocks
+  globals.css = map `SWATCH` (pengguna-client.tsx) = map
+  `META` (shell.tsx) — masing-masing ber-komentar `SYNC POINT`.
+- **Constraint PWA dipertahankan** (§8): `manifest.json`
+  `theme_color` + ikon tetap maroon statis (stabilitas install);
+  yang berubah runtime = `meta[name=theme-color]` saja.
+- **Visual check 5 preset: SELESAI Gus Fi 29 Sep** — semua
+  nilai hex ACC tanpa penyesuaian; maroon tetap default
+  pixel-identik.
+- **Sisa V2 (non-blocking)**: (a) live-push theme ke sesi lain
+  yang terbuka (V1: diterapkan saat mount berikutnya; sesi
+  admin = instan via event); (b) mitigasi flash maroon utk tema
+  non-maroon (script inline RSC di layout.tsx); (c) custom hex
+  bebas (V1: allow-list 5 preset saja — mencegah hex tak
+  teruji masuk sistem).

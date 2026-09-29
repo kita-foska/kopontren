@@ -421,6 +421,24 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
   commit `eeb9a50`.
 
 ## Fitur
+- [x] **Theme warna global (5 preset) — SELESAI T1-T4 (29 Sep 2026):**
+  kustomisasi warna app tanpa ubah kode (V1, Option A):
+  `docs/color-theme-audit.md` (audit + plan, T1 `b230a3e`) +
+  lapisan override CSS var `data-brand` di globals.css
+  (T2 `2c4940b`, 38 aturan unlayered, maroon = pixel-identik) +
+  settings key `theme` allow-list `maroon|green|blue|dark-maroon|
+  slate` TANPA migration (T3 `346229d`): GET/PUT /api/settings +
+  hook Shell (`<html data-brand>` + `meta theme-color` + event
+  `kopontren:theme-change` live-switch) + kartu "Tema warna"
+  (dropdown + swatch + Simpan) di /admin/pengguna + migrasi
+  checkbox `accent-[#7A1835]` -> `accent-[var(--ac500)]`.
+  Fallback tema tak dikenal/absen = `maroon`. Sync point hex
+  (ubah bareng): var blocks globals.css = map `SWATCH`
+  (pengguna-client) = map `META` (shell.tsx). Constraint:
+  manifest PWA tetap maroon statis. tsc EXIT 0 + `next build`
+  0/0, dual-push master+main. Visual check 5 preset ACC Gus Fi
+  29 Sep. V2 opsional (non-blocking): live-push sesi lain +
+  mitigasi flash load awal.
 - [x] **Riwayat poin & reward per member (point_history) — SELESAI (25 Sep 2026):**
   endpoint baru `GET /api/members/[id]/points` (tier 'member', paginasi limit 20)
   + `src/lib/points.ts` (label reason + deteksi unit delta + query, modul murni

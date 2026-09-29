@@ -30,7 +30,7 @@
   404 (Gus Fi, non-blocking). Deploy: HTML public/ ikut mekanisme
   SW version-stamp yang sudah ada (stempel SW-BUILD berubah saat
   deploy) — `public/sw.js` TIDAK pernah di-commit.
-### Theme warna (fitur berikutnya) - AUDIT SELESAI + PLAN ACC 29 Sep
+### Theme warna global (5 preset) - SELESAI T1-T4 29 Sep (dual-push master+main)
 - **Arah (Gus Fi)**: kustomisasi warna app tanpa ubah kode. V1 =
   Option A: 5 preset (maroon default, green, blue, dark-maroon,
   slate), global setting (kontrol admin), UI dropdown di
@@ -50,6 +50,40 @@
   allow-list di PUT /api/settings + GET +ui, hook Shell set
   `data-brand` + meta theme-color) -> T4 docs + MEMORY.
   Fallback: tema tak dikenal/absen = `maroon`.
+- **T1 `b230a3e` (29 Sep)**: dokumen audit + rencana T2-T4.
+- **T2 `2c4940b` (29 Sep)**: `src/app/globals.css` +93/-1: var
+  `:root --ac300..700` (nilai maroon = nilai saat ini) + 4 blok
+  `html[data-brand=...]` (green|blue|dark-maroon|slate);
+  `--accent` -> `var(--ac500)`; 38 aturan override UNLAYERED
+  (text/bg/border/ring/shadow/accent-500 base + varian alpha via
+  color-mix + hover/active/focus + dark: + .input). Maroon =
+  pixel-identik. tsc EXIT 0 + build 0/0.
+- **T3 `346229d` (29 Sep)**: 4 file +145/-3: `db.ts`
+  `SHOP_SETTING_DEFAULTS.theme='maroon'` (tanpa migration,
+  key-value); `api/settings` GET +theme, PUT allow-list 5 nilai
+  (400 bila dilanggar, hex terbuka TIDAK masuk); `shell.tsx`
+  fetch on mount -> `<html data-brand>` + `meta theme-color` +
+  listen `kopontren:theme-change` (live, tanpa reload; offline ->
+  maroon); `pengguna-client.tsx` kartu "Tema warna" (dropdown +
+  swatch + Simpan; dispatch event on save) + migrasi checkbox
+  `accent-[#7A1835]` -> `accent-[var(--ac500)]`. tsc EXIT 0 +
+  `next build` 0/0 (56 halaman).
+- **T4 (commit ini)**: docs (MEMORY + TODO + addendum
+  `docs/color-theme-audit.md` §12) — fitur theme GENAP T1-T4.
+- **Sync point hex** (ubah bareng, ketiganya): var blocks
+  globals.css = map `SWATCH` pengguna-client = map `META`
+  shell.tsx (komentar `SYNC POINT` di kedua file TS).
+- **Constraint dipertahankan**: PWA manifest.json tetap maroon
+  statis (stabilitas install); hex mentah `lib/tokens.ts` tak
+  di-ubah (SSR build-time); flash maroon saat load awal utk tema
+  non-maroon diterima V1 (mitigasi V2 = script inline RSC di
+  layout.tsx).
+- **V2 opsional (non-blocking)**: live-push theme ke sesi lain
+  yg terbuka (saat ini = diterapkan saat mount berikutnya);
+  mitigasi flash; custom hex (saat ini allow-list admin saja).
+- **Visual check 5 preset: Gus Fi SELESAI 29 Sep** — semua
+  preset ACC, tanpa penyesuaian hex; maroon = default
+  pixel-identik terjamin.
 
 ## 2026-09-27
 ### Roadmap: bakpao.id CANCELLED + pembaruan urutan - 27 Sep
