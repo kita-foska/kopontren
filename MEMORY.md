@@ -1,6 +1,38 @@
 # MEMORY
 
 ## 2026-09-27
+### P0-C1 (KRITIKAL): Golden Path E2E release gate + bug SQL products - 27 Sep
+- **Perintah (ACC Gus Fi)**: P0-C1 = golden path E2E test sebagai
+  release gate. `scripts/test-golden.ts` + `docs/qa/GOLDEN-PATH.md`
+  + skrip `test:golden` (package.json). 7 skenario GP-01..GP-07
+  menjalankan API HTTP nyata (DB lokal baru), lalu cek invarian
+  duit read-only di SQLite. Aturan: deploy Turso/Vercel hanya bila
+  `test:golden` EXIT 0 (ALL_PASS).
+- **BUG KRITIKAL PRODUKSI (ditemukan P0-C1)**: `src/app/api/products/
+  route.ts`, kolom `wholesaleCol` punya koma akhir (di-intro commit
+  `37d0a34` feat grosir) -> query jadi `SELECT p.*, ... AS wholesale,
+  FROM products` -> `near "FROM": syntax error` -> **500 di SETIAP
+  `GET /api/products` ter-autentikasi** (katalog produk tak bisa
+  dimuat di /admin/produk). Fix: buang koma akhir. Ini bukti golden
+  path menemukan bug nyata produksi.
+- **Bug harness test**: `main()` membuat `adminJar` tapi TIDAK
+  pernah login -> semua skenario admin-gated (GP-02..GP-07) tanpa
+  cookie sesi -> 401 cascade (bukan flake dev-mode; deterministik).
+  Fix: tambah login admin ke `adminJar` di `main()`.
+- **Red herring diagnostik**: kredensial seed admin = `kopontren`
+  (bukan `admin`); diagnostik awal pakai kata sandi salah -> 401
+  misarah. Selalu verifikasi kredensial seed dulu.
+- **gp03**: user multi-role dedikatif `gp03-kasir` (kasir, lalu
+  tambah `pembelian`), re-login agar role aktif di-hormati; assert
+  200/403 sesuai FEATURE_MATRIX. (Sebelumnya gp03 memutar admin
+  seeded; kini tidak.)
+- **Verifikasi**: `tsc --noEmit` EXIT 0; `next build` EXIT 0;
+  `GOLDEN_MODE=prod` -> **ALL_PASS (59 PASS, 0 FAIL)**. Audit
+  `user:create`/`user:roles`/`auth:switch-role` fired; roles gp03
+  `[kasir, pembelian]` persisted.
+- **Aksi pasca-deploy**: Vercel auto-deploy; Gus Fi verifikasi
+  `/admin/produk` bisa dibuka (sebelumnya 500).
+
 ### UX-6 (FASE I): audit sistem komunikasi + rencana commit — I-1 & I-3 SELESAI 27 Sep
 - **Perintah (ACC Gus Fi, 27 Sep)**: audit read-only UX-6
   (Attention System) + rencana implementasi. Eksekusi
