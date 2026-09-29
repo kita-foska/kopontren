@@ -351,6 +351,30 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       perubahan kode** — hanya tercatat di MEMORY.md + item ini,
       tidak ada commit khusus.
 
+- [x] **Tutorial / dokumentasi in-app (T1-T3, 28-29 Sep 2026)** —
+      SELESAI: `docs/*.html` (8: DOKUMENTASI-APLIKASI + 7 SOP) =
+      source of truth -> `npm run sync:tutorial`
+      (`scripts/sync-tutorial.mjs`) menyalin ke
+      `public/tutorial/<slug>.html` (hapus stale + GATE 0 tag
+      `<script>` + cek ukuran; `public/tutorial/` TIDAK pernah
+      diedit manual; pelanggaran = exit 1 SYNC-TUTORIAL-FAIL).
+      T1 `784cd86`: script + 8 HTML + script package.json.
+      T2 `117e20a`: `src/lib/tutorial-data.ts` (TUTORIALS[8]
+      slug/tittle/deskripsi, map identik dgn sync MAP;
+      `slugOk()`/`tutorialBySlug()`), `/tutorial` landing
+      (guard login + level personal = 7 role; grid 8 kartu),
+      `/tutorial/[slug]` viewer (iframe
+      `sandbox="allow-same-origin"` TANPA allow-scripts —
+      pertahanan vs script injection; slug tak dikenal ->
+      notFound(), 404 page sudah ada), sidebar link "Tutorial"
+      level personal di 7 menu role (+item menu member; label
+      level pengurus "Khusus Pengurus" -> "Semua Level").
+      T3 = commit ini (docs MEMORY + TODO). Konvensi: ubah
+      `docs/*.html` -> `npm run sync:tutorial` -> commit docs +
+      `public/tutorial` BERSAMA. Verifikasi: T2 tsc EXIT 0;
+      pixel-check /tutorial + 1 halaman viewer + 404 (Gus Fi,
+      non-blocking).
+
 ## Performa (status: BERSIH)
 - [x] Target Turso Rows Read < 3.000 tercapai: list cap 50 baris,
       agregat di-cache 60 dtk + invalidasi, N+1 dibatch, gate

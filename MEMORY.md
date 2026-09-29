@@ -1,5 +1,56 @@
 # MEMORY
 
+## 2026-09-29
+### Tutorial / dokumentasi in-app (T1-T3) - SELESAI 28-29 Sep
+- **Perintah (ACC Gus Fi, 28-29 Sep)**: fitur dokumentasi in-app —
+  HTML SOP + panduan di `docs/` bisa dibaca DALAM app (`/tutorial`),
+  tanpa website terpisah. 3 commit (T1-T3), dual-push master+main.
+- **T1 `784cd86` (28 Sep)**: `scripts/sync-tutorial.mjs` +
+  `package.json` (`sync:tutorial`) + `public/tutorial/*.html` (8
+  file: DOKUMENTASI-APLIKASI + 7 SOP-*.html). Aturan sync: `docs/`
+  = source of truth; `public/tutorial/` = hasil salin, TIDAK
+  pernah diedit manual; gate 0 tag `<script>` (viewer iframe
+  `sandbox="allow-same-origin"` TANPA allow-scripts -> pertahanan
+  vs script injection); hapus file stale tak ada di MAP; cek
+  ukuran paska-salin; pelanggaran = exit 1 SYNC-TUTORIAL-FAIL.
+- **T2 `117e20a` (29 Sep)**: `src/lib/tutorial-data.ts`
+  (TUTORIALS[8] slug/tittle/deskripsi — map IDENTIK dg MAP sync;
+  `slugOk()`/`tutorialBySlug()`), `src/app/tutorial/page.tsx`
+  (landing: guard login + level personal = 7 role; grid 8 kartu),
+  `src/app/tutorial/[slug]/page.tsx` (viewer: validasi slug ->
+  notFound(); TutorialFrame = iframe `/tutorial/<s>.html`
+  `sandbox="allow-same-origin"`), `src/components/sidebar.tsx`
+  (link "Tutorial" level personal di 7 menu role + active match
+  /tutorial; +item menu member; label level pengurus
+  "Khusus Pengurus" -> "Semua Level"). tsc EXIT 0; build belum
+  dijalankan di sesi T2 (verifikasi build saat deploy/CI).
+- **T3 (commit ini)**: docs (MEMORY + TODO item baru di seksi
+  "Fitur") — fitur tutorial GENAP (T1+T2+T3).
+- **Sisa / catatan**: pixel-check /tutorial + 1 halaman viewer +
+  404 (Gus Fi, non-blocking). Deploy: HTML public/ ikut mekanisme
+  SW version-stamp yang sudah ada (stempel SW-BUILD berubah saat
+  deploy) — `public/sw.js` TIDAK pernah di-commit.
+### Theme warna (fitur berikutnya) - AUDIT SELESAI + PLAN ACC 29 Sep
+- **Arah (Gus Fi)**: kustomisasi warna app tanpa ubah kode. V1 =
+  Option A: 5 preset (maroon default, green, blue, dark-maroon,
+  slate), global setting (kontrol admin), UI dropdown di
+  /admin/pengguna (kartu "Tema Warna" — preseden: halaman itu
+  sudah handle session_timeout via /api/settings).
+- **Audit read-only (29 Sep)**: 187 pemakaian kelas `accent-*`
+  terkompilasi statis (28 token berbeda) -> mekanisme = lapisan
+  override CSS var (`--ac300..700` + `data-brand` di `<html>`,
+  re-declare selector `accent-*` yg terpakai; varian alpha via
+  `color-mix`); 5 situs hex mentah (globals.css x3, tokens.ts x2
+  via T, manifest.json PWA statis = constraint); `wine`
+  (cetak kartu) + `navy` (netral gelap) + role colors = TIDAK
+  di-retheme; dark mode ortogonal (cookie user dark|light).
+- **Plan 4 commit (ACC 29 Sep)**: T1 docs/color-theme-audit.md ->
+  T2 globals.css (var brand + override layer, maroon = 0 perubahan
+  visual) -> T3 settings.theme (`SHOP_SETTING_DEFAULTS`, validasi
+  allow-list di PUT /api/settings + GET +ui, hook Shell set
+  `data-brand` + meta theme-color) -> T4 docs + MEMORY.
+  Fallback: tema tak dikenal/absen = `maroon`.
+
 ## 2026-09-27
 ### Roadmap: bakpao.id CANCELLED + pembaruan urutan - 27 Sep
 - **Keputusan (ACC Gus Fi)**: roadmap bakpao.id (7 fitur: live
