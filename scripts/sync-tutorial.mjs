@@ -28,6 +28,7 @@ const MAP = [
   ['SOP-MEMBER.html', 'sop-member.html'],
   ['SOP-PEMBELIAN.html', 'sop-pembelian.html'],
   ['SOP-PENGURUS.html', 'sop-pengurus.html'],
+  ['AKUNTANSI-PROPOSAL.html', 'akuntansi-proposal.html'],
 ];
 
 mkdirSync(outDir, { recursive: true });

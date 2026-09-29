@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proposal Akuntansi Level C — Kopontren Al Ittihad</title>
+<style>
+:root{--maroon:#7a1835;--wine:#7a1c1c;--bg:#faf5f6;--card:#fff;--line:#e9d5d8;--line2:#e2e8f0;--ink:#170a0e;--sub:#6b5a60;--ok:#059669;--bad:#e11d48;--warn:#f59e0b;--gold:#fbbf24;--slate:#f1f5f9}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,'Segoe UI',sans-serif;line-height:1.55;font-size:15px}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+.hero{background:var(--maroon);color:#fff;border-radius:16px;padding:20px;margin-bottom:16px}
+.hero h1{font-size:1.55rem;margin:0 0 4px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;opacity:.75;font-size:.85rem}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.meta span{background:rgba(255,255,255,.14);border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:600}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.toc a{white-space:nowrap;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:5px 12px;font-size:.72rem;font-weight:700;text-decoration:none}
+.toc a:hover{background:rgba(255,255,255,.16)}
+.toc a.hot{background:var(--warn);border-color:var(--warn);color:#fff}
+section{scroll-margin-top:12px}
+section:target h2{color:var(--warn)}
+section:target h2 .n{background:var(--warn)}
+h2{font-size:1.15rem;margin:28px 0 10px;font-weight:800}
+h2 .n{display:inline-block;background:var(--maroon);color:#fff;border-radius:8px;width:26px;height:26px;line-height:26px;text-align:center;font-size:.85rem;margin-right:8px}
+h3{font-size:.95rem;margin:18px 0 8px;font-weight:800;color:var(--maroon)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(23,10,14,.05)}
+ul,ol{padding-left:20px;margin:8px 0}
+li{margin:6px 0}
+.note{background:#fff7ed;border:1px solid #fed7aa;border-left:4px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:.85rem;margin:12px 0}
+.tbl{border:1px solid var(--line2);border-radius:12px;overflow-x:auto;background:#fff;margin:12px 0}
+.tbl table{width:100%;border-collapse:collapse;font-size:.85rem;min-width:560px}
+th{text-align:left;text-transform:uppercase;font-size:.68rem;letter-spacing:.05em;color:#64748b;padding:8px;border-bottom:2px solid var(--line2);font-weight:800}
+td{padding:9px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.tag{display:inline-block;font-size:.6rem;font-weight:800;border-radius:6px;padding:2px 7px;white-space:nowrap}
+.tag.g{background:#d1fae5;color:#065f46}
+.tag.a{background:#fef3c7;color:#92400e}
+.tag.r{background:#ffe4e6;color:#9f1239}
+.tag.b{background:#dbeafe;color:#1e40af}
+.sql{background:#1e293b;color:#e2e8f0;border-radius:12px;padding:14px;font-size:.75rem;overflow-x:auto;line-height:1.5;margin:12px 0}
+.sql .c{color:#94a3b8}
+.decide{background:#fffbeb;border:2px solid #fcd34d;border-radius:16px;padding:16px;margin:12px 0}
+.decide-band{background:var(--warn);color:#fff;border-radius:12px;padding:12px 16px;font-weight:800;font-size:.95rem;margin:8px 0}
+.ditem{display:grid;grid-template-columns:26px 1fr;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;align-items:start}
+.ditem input[type=checkbox]{width:20px;height:20px;margin-top:3px;accent-color:var(--maroon)}
+.ditem .t{font-weight:800;font-size:.88rem}
+.ditem .o{font-size:.8rem;color:var(--sub);margin-top:4px}
+.ditem .ans{margin-top:10px;font-size:.8rem;color:var(--sub);border-top:1px dashed var(--line2);padding-top:8px}
+.ditem .ans b{color:var(--ink)}
+.legend{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;font-size:.8rem;margin-top:10px}
+.legend b{color:var(--ok)}
+.fnote{background:var(--slate);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;font-size:.78rem;color:#475569;margin-top:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+@media (max-width:640px){.kpi{grid-template-columns:1fr 1fr}}
+.kpi .card{border-top:4px solid var(--maroon);padding:10px}
+.kpi .l{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
+.kpi .v{font-size:1.1rem;font-weight:800;color:var(--maroon);margin-top:2px}
+code{background:var(--slate);border-radius:5px;padding:1px 6px;font-size:.78rem}
+@media print{
+body{background:#fff}
+.wrap{max-width:none;padding:0}
+.hero{border-radius:0}
+.decide{border-color:#94a3b8}
+.card,.tbl{box-shadow:none}
+section:target h2{color:var(--maroon)}
+section:target h2 .n{background:var(--maroon)}
+@page{size:A4;margin:8mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+<h1>Proposal Akuntansi Level C — Kopontren Al Ittihad</h1>
+<p>Fase 3 F3.2 · 29 Sep 2026 · DESAIN DRAFT — menunggu 14 keputusan §13 (Gus Fi). F3.3 = review + keputusan langsung; pengasuh mengikuti.</p>
+<div class="meta"><span>Status: DRAFT (F3.2 selesai, tunggu F3.3)</span><span>Level C — koperasi resmi</span><span>Hybrid: SAK Syariah &gt; PAP &gt; SAK EP</span><span>COA 52 akun / 6 grup</span><span>14 poin PKGF (§13)</span><span>32 commit / 6 wave</span><span>🖨 Cetak / PDF: Ctrl+P (siap A4)</span></div>
+<div class="toc">
+<a href="#s0">§0 Keputusan</a><a href="#s1">§1 Konteks</a><a href="#s2">§2 COA</a><a href="#s3">§3 Jurnal</a><a href="#s4">§4 Auto-posting</a><a href="#s5">§5 Laporan</a><a href="#s6">§6 Akad</a><a href="#s7">§7 Koperasi</a><a href="#s8">§8 ZIS</a><a href="#s9">§9 PAP</a><a href="#s10">§10 Migrasi</a><a href="#s11">§11 Risiko</a><a href="#s12">§12 Roadmap</a><a class="hot" href="#s13">§13 14 Keputusan</a><a href="#s14">§14 Aturan</a>
+</div>
+</div>
+<div class="note"><b>Aturan syariah first:</b> semua nilai fiqih/standar (nisbah, rate zakat, margin, rasio SHU, denda, penyusutan, amil) = <b>PERLU KEPUTUSAN GUS FI</b> <span class="tag a">PKGF</span>. Tidak ada default angka fiqih di aplikasi — field input tanpa nilai awal. Halaman ini = <b>snapshot bacaan</b>; sumber kebenaran tetap <code>docs/akuntansi-proposal.md</code> @ <code>e3cfd30</code> (F3.2). Centang di §13 tidak tersimpan (viewer 0-script) — keputusan dicatat di chat; versi PDF/cetak menyimpan centang.</div>
+
+<section id="s0">
+<h2><span class="n">0</span>Ringkasan Eksekutif + 12 Catatan Keputusan</h2>
+<div class="card">
+<p>Proposal ini = implementasi <b>Level C (struktur koperasi penuh)</b> dgn standar <b>hybrid PRIORITAS SYARIAH</b> (SAK Syariah utama, PAP, SAK EP fallback), di atas fondasi Opsi 1 (COA + jurnal double-entry + auto-posting + 5 laporan) + Opsi 2 (modul akad) + Opsi 3 (koperasi).</p>
+<h3>Tabel keputusan final (Gus Fi, 29 Sep 2026)</h3>
+<div class="tbl"><table>
+<tr><th>#</th><th>Item</th><th>Keputusan</th></tr>
+<tr><td>1</td><td>Badan hukum</td><td><b>Koperasi resmi</b> (proses registrasi berjalan)</td></tr>
+<tr><td>2</td><td>Standar</td><td><b>Hybrid — PRIORITAS SYARIAH</b> (SAK Syariah + PAP + SAK EP)</td></tr>
+<tr><td>3</td><td>Level struktur</td><td><b>C — Full koperasi</b> (simpanan + SHU + modal penyertaan)</td></tr>
+<tr><td>4</td><td>COA</td><td><b>B — Menengah, ±40–60 akun</b> (proposal: 52 akun, §2)</td></tr>
+<tr><td>5</td><td>ZIS</td><td><b>A — Perlu</b> (pemisahan akun ZIS, §8)</td></tr>
+<tr><td>6</td><td>SHU</td><td><b>A — Perlu</b> (hitung + distribusi, §7)</td></tr>
+<tr><td>7</td><td>Wakaf</td><td><b>B — Belum sekarang</b> (ditunda; hook disiapkan §8)</td></tr>
+<tr><td>8</td><td>Auto-posting</td><td><b>B — Bertahap</b> (Wave 1/2/3, §4)</td></tr>
+<tr><td>9</td><td>Saldo pembuka</td><td><b>A — Saat implementasi</b> (Wave 6, §10)</td></tr>
+<tr><td>10</td><td>Laporan</td><td><b>A — 5 lengkap</b> (Posisi Keuangan, Laba-Rugi, LPE, LAK, CALK, §5)</td></tr>
+<tr><td>11</td><td>Modul akad</td><td><b>A — Bareng fondasi</b> (Wave 3, §6)</td></tr>
+<tr><td>12</td><td>Timeline</td><td><b>B — Menengah, 6 minggu</b> (±30 commit, §12)</td></tr>
+</table></div>
+<p>Estimasi total: <b>28–32 commit, 6 wave, 6 minggu</b> (rincian §12). Semua angka syariah di dokumen ini = <b>placeholder teknis</b>, bukan ketentuan — keputusan nilai = <b>Gus Fi</b> (§13).</p>
+</div>
+</section>
+
+<section id="s1">
+<h2><span class="n">1</span>Konteks Legal &amp; Standar</h2>
+<div class="card">
+<h3>1.1 Dual-entity design</h3>
+<div class="tbl"><table>
+<tr><th>Entitas</th><th>Status</th><th>Representasi di app</th></tr>
+<tr><td><b>Koperasi Kopontren</b> (resmi, registrasi berjalan)</td><td>Utama</td><td>COA penuh, simpanan, SHU, akad, ZIS — semua tabel baru Fase 3</td></tr>
+<tr><td><b>Pesantren Al Ittihad</b> (unit non-komersial)</td><td>Pendamping</td><td>Akun memo grup 69xx (PAP) — dana pesantren tercatat terpisah, bukan dicampur dgn kas toko</td></tr>
+</table></div>
+<ul>
+<li>Sampai registrasi koperasi tuntas, laporan berjalan dgn label entitas <b>"Kopontren (dalam proses)"</b> — flag <code>settings.coop_registered</code> (nilai awal: belum) untuk tampilan CALK. PERLU KEPUTUSAN GUS FI: kapan label di-switch (§13.7).</li>
+<li>Dana pesantren (sumbangan, kegiatan madrasah) belum tercatat di app (audit §7) → masuk sebagai <b>akun memo grup 69xx + input manual</b> (bukan POS). Tidak ada pencampuran dgn arus kas toko (invariant: kas GL toko = kas V1).</li>
+</ul>
+<h3>1.2 Hierarki standar (keputusan #2)</h3>
+<ol>
+<li><b>SAK Syariah</b> (utama) — untuk akun syariah: ZIS (§8), akad (§6), bagi hasil, denda ke kas sosial.</li>
+<li><b>PAP</b> (BI+MUI) — peta akun pesantren (grup 69xx); teks PAP belum dimiliki app (open item §9).</li>
+<li><b>SAK EP</b> (fallback) — konstruksi umum: Posisi Keuangan, Laba-Rugi, LPE, LAK, CALK (§5).</li>
+<li><b>ED SAK Koperasi</b> — rujukan opsional utk struktur SHU/simpanan; status finalisasi = item riset (§13.9).</li>
+</ol>
+</div>
+</section>
+
+<section id="s2">
+<h2><span class="n">2</span>Bagan Akun (COA) — ±52 Akun, 6 Grup (Keputusan #4: B)</h2>
+<div class="card">
+<p><b>Legenda status:</b> <span class="tag g">APL</span> = struktur teknis disetujui masuk build (tanpa nilai syariah) · <span class="tag a">PKGF</span> = <b>PERLU KEPUTUSAN GUS FI</b> (nilai/aktivasi menunggu F3.3). Nomor mengikuti pola SAK EP 2 digit grup. Grup 6xx = syariah/pesantren (SAK Syariah/PAP).</p>
+<h3>2.1 10xx ASET (12)</h3>
+<div class="tbl"><table>
+<tr><th>Kode</th><th>Nama</th><th>Sumber data / deskripsi</th><th>Status</th></tr>
+<tr><td>1010</td><td>Kas Toko</td><td>agregat kas POS (<code>/api/kas</code> rumus kanonik)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>1020</td><td>Kas Bank</td><td>setoran/transfer (cash_entries jenis bank)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>1030</td><td>Piutang Penjualan</td><td><code>debts</code> (remaining open)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>1040</td><td>Persediaan</td><td>stok × harga beli (snapshot COGS V2-2)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>1050</td><td>Aset Tetap</td><td>modal aset (input manual, nilai awal = tashih buku pembuka)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>1060</td><td>Akum. Penyusutan</td><td>contra-asset 1050 (metode: lurus, umur = PKGF §13.8)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>1070</td><td>Piutang Murabahah</td><td>akad murabahah (term) yang belum lunas</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>1080</td><td>Investasi Mudharabah</td><td>dana shahib (pemilik modal) per akad</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>1090</td><td>Investasi Musyarakah</td><td>kontribusi per akad</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>1100</td><td>Kas ZIS</td><td>kas sosial zakat/infak/sedekah/denda (terpisah, §8)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>1110</td><td>Piutang Zakat</td><td>mustahik yang belum menerima (jika ada penyaluran bertahap)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>1120</td><td>Aset Wakaf</td><td>memo-only, <b>ditunda</b> (keputusan #7)</td><td><span class="tag a">PKGF</span></td></tr>
+</table></div>
+<h3>2.2 20xx KEWAJIBAN (10)</h3>
+<div class="tbl"><table>
+<tr><th>Kode</th><th>Nama</th><th>Sumber data / deskripsi</th><th>Status</th></tr>
+<tr><td>2010</td><td>Hutang Pembelianan</td><td><code>payables</code> (remaining open)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>2020</td><td>Hutang Ujrah Konsinyasi</td><td>settlement neto komisi pemilik (P4, default 20% = <b>provisional, P4 belum tashih</b>)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>2030</td><td>Utang Cashback Member</td><td><code>members.cashback_balance</code> (kewajiban, bukan beban — A1)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>2040</td><td>Kewajiban Akad (jika koperasi = pihak pembeli)</td><td>murabahah/musyarakah dari pihak ketiga</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>2050</td><td>Simpanan Pokok</td><td>per anggota, <b>boleh dijamin, kembali saat keluar</b></td><td><span class="tag g">APL</span></td></tr>
+<tr><td>2060</td><td>Simpanan Wajib</td><td>per anggota, jadwal setor (jumlah &amp; jadwal = PKGF §13.10)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>2070</td><td>Simpanan Sukarela</td><td>tabungan anggota, bisa ditarik (ketentuan = PKGF)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>2080</td><td>SHU Berjalan</td><td>SHU tahun berjalan sebelum distribusi</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>2090</td><td>ZIS Terkumpul Belum Disalurkan</td><td>zakat/infak diterima, belum keluar</td><td><span class="tag a">PKGF</span></td></tr>
+</table></div>
+<h3>2.3 30xx EKUITAS (7)</h3>
+<div class="tbl"><table>
+<tr><th>Kode</th><th>Nama</th><th>Sumber data / deskripsi</th><th>Status</th></tr>
+<tr><td>3010</td><td>Modal Penyertaan</td><td>saldo pembuka (input) + setoran tambahan anggota</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>3020</td><td>SHU Ditahan</td><td>SHU setelah distribusi (carry ekuitas)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>3030</td><td>SHU Cadangan Umum</td><td>alokasi % (rasio = PKGF §13.4)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>3040</td><td>SHU Cadangan Khusus</td><td>alokasi %</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>3050</td><td>SHU Jasa Anggota</td><td>accrued sebelum distribusi (bobot = PKGF)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>3060</td><td>SHU Dibagi</td><td>jurnal distribusi (mengurangi 3020)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>3070</td><td>Koreksi Saldo</td><td>jurnal koreksi administrasi (non-akad)</td><td><span class="tag g">APL</span></td></tr>
+</table></div>
+<h3>2.4 40xx PENDAPATAN (10)</h3>
+<div class="tbl"><table>
+<tr><th>Kode</th><th>Nama</th><th>Sumber data / deskripsi</th><th>Status</th></tr>
+<tr><td>4010</td><td>Pendapatan Penjualan</td><td>Σ<code>sales.total</code> bruto</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>4020</td><td>Potongan &amp; Diskon</td><td>diskon manual + member + redeem poin (loyalty = diskon/hibah, CHECKLIST B)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>4030</td><td>Retur Penjualan</td><td>Σ<code>returns</code></td><td><span class="tag g">APL</span></td></tr>
+<tr><td>4040</td><td>Ujrah Konsinyasi</td><td><code>cash_entries</code> income "Ujrah Kon…" (P4 — 20% <b>provisional</b>)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>4050</td><td>Pendapatan Ijarah</td><td>sewa aset/ruang (akad, §6)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>4060</td><td>Laba Murabahah</td><td>margin tetap per akad (diakui saat penerimaan, pola IFRS/Syariah — rincian = PKGF)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>4070</td><td>Bagi Hasil Mudharabah</td><td>porsi koperasi sebagai shahib al-mal</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>4080</td><td>Bagi Hasil Musyarakah</td><td>porsi koperasi</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>4090</td><td>ZIS Masuk</td><td>infak/sedekah diterima → kas sosial</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>4100</td><td>Wakaf Masuk</td><td>placeholder <b>ditunda</b> (keputusan #7)</td><td><span class="tag a">PKGF</span></td></tr>
+</table></div>
+<h3>2.5 50xx BEBAN (10)</h3>
+<div class="tbl"><table>
+<tr><th>Kode</th><th>Nama</th><th>Sumber data / deskripsi</th><th>Status</th></tr>
+<tr><td>5010</td><td>HPP</td><td>snapshot <code>sale_items.cost_price</code> (V2-2)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>5020</td><td>Retur COGS</td><td>netting <code>returns.cogs</code> (V2-2)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>5030</td><td>Beban Operasional</td><td><code>expenses.category</code> per kategori</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>5040</td><td>Beban Penyusutan</td><td>dari 1060 (metode/umur = PKGF)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>5050</td><td>Denda/Keterlambatan (clearing)</td><td>denda diterima: Debit 1010 → Kredit 5050; alokasi ke kas sosial: Debit 5050 → Kredit 1100 (CHECKLIST B; saat ini 0 skema denda)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>5060</td><td>Bagi Hasil Partner</td><td>porsi partner (mudharabah/musyarakah, nisbah = PKGF)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>5070</td><td>Beban Ijarah</td><td>jika koperasi sebagai penyewa</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>5080</td><td>Distribusi SHU</td><td>jurnal distribusi ke 3060 → kas/transfer</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>5090</td><td>Zakat Keluar</td><td>distribusi zakat → mustahik (jembatan <code>zakat_history</code>, §8)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>5100</td><td>Infak/Sedekah Keluar</td><td>distribusi kas sosial</td><td><span class="tag g">APL</span></td></tr>
+</table></div>
+<h3>2.6 60xx SYARIAH &amp; PESANTREN / PAP (3) — memo &amp; khusus</h3>
+<div class="tbl"><table>
+<tr><th>Kode</th><th>Nama</th><th>Sumber data / deskripsi</th><th>Status</th></tr>
+<tr><td>6010</td><td>Dana Pesantren</td><td>sumbangan/kegiatan pesantren (input manual, <b>tidak</b> campur kas toko)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>6020</td><td>Aset Wakaf (memo)</td><td>placeholder <b>ditunda</b> (keputusan #7)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>6030</td><td>Zakat Tijarah Dibayar</td><td>jembatan dari <code>zakat_history</code> (P3 — 24K/market/haul <b>belum tashih, provisional</b>)</td><td><span class="tag a">PKGF</span></td></tr>
+</table></div>
+<p><b>Total: 12 + 10 + 7 + 10 + 10 + 3 = 52 akun</b> (di rentang 40–60, keputusan #4).</p>
+<h3>2.7 Tata kelola COA</h3>
+<ul>
+<li>COA di-seed via migrasi skema <code>v21</code> (idempoten, pola <code>db.ts</code>); tabel <code>coa(code PRIMARY KEY, name, group, kind, status, pap_ref, needs_decision, created_by)</code>.</li>
+<li><b>Tambah = admin menu <code>/admin/coa</code>; hapus = TIDAK ADA</b> (akun yang pernah dipakai jurnal tidak dihapus, hanya <code>status=closed</code>).</li>
+<li>Kolom <code>pap_ref</code> = nomor akun PAP bila cocok (isi saat teks PAP tersedia, §9); <code>needs_decision=1</code> untuk semua akun PKGF (tampil badge di UI sampai keputusan turun).</li>
+<li>Grup 6xx &amp; 4090/4100/5090/5100 <b>diaktifkan bertahap</b>: seed tetap ada, namun posting hanya terjadi lewat fitur yg dibangun (ZIS Wave 2, akad Wave 3) — tidak ada auto-posting ke akun PKGF sebelum F3.3.</li>
+</ul>
+</div>
+</section>
+<section id="s3">
+<h2><span class="n">3</span>Skema Jurnal — Double-Entry, Immutable, Invariant D=K</h2>
+<div class="card">
+<h3>3.1 Tabel</h3>
+<pre class="sql"><span class="c">-- v21 (additive; semua tabel baru, tidak ubah tabel lama)</span>
+CREATE TABLE IF NOT EXISTS journal_entries(
+  id TEXT PRIMARY KEY,              -- uuid; satu transaksi sumber = 1 entry
+  ref_table TEXT NOT NULL,          -- 'sales','purchases','expenses','cash_entries',
+                                    -- 'debts','payables','consignments','akad','coop','zis','manual','open'
+  ref_id TEXT,                      -- FK logis ke sumber (bukan FK hard, agar backup/restore bebas)
+  entry_date TEXT NOT NULL,         -- ISO, WIB (lihat 3.4 R1)
+  type TEXT NOT NULL,               -- 'auto' | 'manual' | 'reversal' | 'opening' | 'closing'
+  desc TEXT,
+  created_by TEXT,
+  created_at TEXT NOT NULL,
+  reversed_by TEXT,                 -- entry id (nanti diisi) — koreksi = reversal
+  CHECK (ref_table IS NOT NULL)
+);
+CREATE TABLE IF NOT EXISTS journal_lines(
+  entry_id TEXT NOT NULL,
+  account_code TEXT NOT NULL,      -- FK coa.code (coa dulu)
+  debit INTEGER NOT NULL DEFAULT 0,-- integer rupiah penuh
+  credit INTEGER NOT NULL DEFAULT 0,
+  balance_running INTEGER,         -- saldo kumulatif setelah line ini
+  source TEXT,                     -- detail sumber (mis 'sales#id', 'akad#id:installment#2')
+  PRIMARY KEY(entry_id, account_code, source)
+);
+CREATE INDEX IF NOT EXISTS idx_jl_acct ON journal_lines(account_code, entry_id);
+CREATE INDEX IF NOT EXISTS idx_je_date ON journal_entries(entry_date);</pre>
+<p>Aturan nilai: <code>debit</code> XOR <code>credit</code> (satu sisi = 0, sisi lain ≥ 0), <code>debit+credit &gt; 0</code>. <b>Rupiah integer penuh</b> (1 rupiah = 1, tanpa desimal) — konsisten dgn <code>sales.total</code> (integer).</p>
+<h3>3.2 Invariant &amp; integritas</h3>
+<ol>
+<li><b>D=K per entry</b>: di-enforce <b>dua lapis</b> (app level wajib di <code>lib/jurnal.ts</code> sebelum commit; DB level: Turso/libSQL tidak punya multi-row constraint → enforce = app + <b>cek rekonsiliasi #15 <code>JOURNAL_BAL</code></b> <code>Σ debit = Σ credit</code> per entry + global, flag-only read-only, pola R7/INV).</li>
+<li><b>Immutable</b>: tidak ada <code>UPDATE</code>/<code>DELETE</code> pada entry/line yang sudah tercatat. Koreksi = <b>jurnal pembalik (reversal)</b>: <code>type='reversal'</code>, kolom <code>reversed_by</code> terisi kedua arah, desc "Reversal of JE-xxx (alasan: …)". <code>audit_log</code> mencatat tiap reversal (siapa/kapan).</li>
+<li><b>Running balance</b>: kolom <code>balance_running</code> di <code>journal_lines</code> = saldo akun kumulatif s/d line tsb. Benefit (R5): report/neraca saldo <b>baca kolom terakhir per akun</b> (indexed) → hindari full-scan Σ per render. Saat write: SELECT balance terakhir akun tsb dalam <b>tx yang sama</b>.</li>
+<li><b>Satu transaksi sumber = satu <code>journal_entries</code></b> (multi-line di dalam); idempoten via UNIQUE <code>(ref_table, ref_id, type)</code> untuk posting auto (re-post transaksi sama = tidak double; posting ulang pasca-reversal pakai ref_id baru <code>…#rev1</code>).</li>
+<li>Jurnal manual: UI <code>/admin/jurnal</code> (tier <code>admin</code>), wajib desc, validasi D=K, hanya akun status=open.</li>
+<li>Jurnal penutup (<code>closing</code>): transfer pendapatan/beban → 3020 SHU Ditahan per periode (tahunan atau bulanan = PKGF §13.11).</li>
+</ol>
+<h3>3.3 Modul (bebas-import, pola <code>lib/neraca.ts</code>; test <code>scripts/test-jurnal.ts</code> in-memory)</h3>
+<ul>
+<li><code>lib/jurnal.ts</code>: <code>postJournal(db, {ref_table, ref_id, lines[]})</code> (tx: cek idempoten → validasi D=K → insert entry+lines dgn balance_running → invalidate cache), <code>reverseJournal(db, entryId, reason, user)</code>, <code>openingBalance(db, date)</code> (jurnal tipe <code>opening</code>).</li>
+<li><code>lib/gl.ts</code>: <code>accountBalance(db, code, at?)</code>, <code>trialBalance(db, at)</code>, <code>accountStatement(db, code, from, to)</code> (buku besar: opening + kronologis + closing).</li>
+<li>R5: cache <code>gl:</code> TTL 60 dtk untuk trial balance &amp; saldo (pola cache lama); query per akun = akses terindeks.</li>
+</ul>
+<h3>3.4 Zona waktu (mitigasi R1 — known-issue zakat UTC)</h3>
+<ul>
+<li><code>entry_date</code> &amp; <code>created_at</code> selalu <b>ISO WIB (+07:00)</b> — pakai helper <code>nowWib()</code> (satu-satunya sumber waktu untuk jurnal; pola <code>T00:00:00+07:00</code> yang sudah dipakai cutoff V2).</li>
+<li><b>Fix zona waktu modul zakat</b> (<code>paid_at</code> terekam/terbaca UTC → display/periode WIB) = commit tersendiri di Wave 5; R1 wajib close <b>sebelum</b> zakat diambil dari GL (LAK Wave 2 &amp; penguatan Wave 5), bukan boleh.</li>
+<li>Cek rekonsiliasi baru <code>JOURNAL_TZ</code>: assert <code>entry_date</code> selalu berakhiran <code>+07:00</code>.</li>
+</ul>
+</div>
+</section>
+<section id="s4">
+<h2><span class="n">4</span>Auto-posting — 3 Wave (Keputusan #8: B)</h2>
+<div class="card">
+<p><b>Prinsip:</b> <b>satu tx per transaksi</b> (transaksi + jurnal dalam satu commit DB, pola <code>writeAndInvalidate</code>); posting gagal = transaksi gagal (rollback); idempoten (§3.2.4); setiap posting meng-invalidate cache <code>'kas:'</code>/<code>'keuangan:'</code>/<code>'neraca:'</code>/<code>'gl:'</code>.</p>
+<h3>4.1 Wave 1 (mgg 1–2) — POS / kas / belanja</h3>
+<div class="tbl"><table>
+<tr><th>Sumber</th><th>Pemicu</th><th>Jurnal</th></tr>
+<tr><td><code>sales</code></td><td>INSERT</td><td>Debit 1010 (cash/QRIS→1010, bank/transfer→1020) atau 1030 (kredit) · Kredit 4010 (bruto) · Debit 4020 diskon/redeem · Debit 5010 HPP · Kredit 1040 (stok keluar)</td></tr>
+<tr><td><code>cash_entries</code></td><td>INSERT</td><td>income: Debit 1010/1020 → Kredit 4040 (ujrah kon.) / 4090 (ZIS masuk) / 3010 (setoran modal); expense: Debit 5030/50xx (per label) → Kredit 1010</td></tr>
+<tr><td><code>expenses</code></td><td>INSERT</td><td>Debit 5030 (per kategori) → Kredit 1010/1020</td></tr>
+<tr><td><code>purchases</code></td><td>INSERT</td><td>Debit 1040 (stok masuk) → Kredit 1010 (lunas) / 2010 (tempo)</td></tr>
+<tr><td>shift close</td><td>UPDATE <code>shifts</code></td><td>(tanpa jurnal — kontrol kasir; diverifikasi rekon #16: Σ shift vs jurnal kas periode sama)</td></tr>
+</table></div>
+<h3>4.2 Wave 2 (mgg 3–4) — piutang / hutang / retur / konsinyasi</h3>
+<div class="tbl"><table>
+<tr><th>Sumber</th><th>Pemicu</th><th>Jurnal</th></tr>
+<tr><td><code>debts</code></td><td>INSERT</td><td><b>TANPA journal entry</b> (lihat §4.5 — piutang sudah terbukukan lewat <code>sales</code>)</td></tr>
+<tr><td><code>debts</code></td><td>bayar % (UPDATE)</td><td>Debit 1010 → Kredit 1030 (sebesar nominal bayar)</td></tr>
+<tr><td><code>payables</code></td><td>bayar (UPDATE)</td><td>Debit 2010 → Kredit 1010</td></tr>
+<tr><td><code>returns</code></td><td>INSERT</td><td>Debit 4030 + Debit 1040 (stok kembali @<code>cogs</code>) → Kredit 1030/1010; netting HPP: Debit 5020 / Kredit 5010 (V2-2)</td></tr>
+<tr><td><code>consignments</code></td><td>SETTLEMENT</td><td>Debit 1010 (bruto) · split: Kredit 2020 (komisi pemilik, % = <code>konsinyasi_commission</code> <b>provisional 20% P4</b>) + Kredit 4010 (sisa = pendapatan koperasi). Ujrah diterima: Debit 1010 → Kredit 4040. <b>Mapping P4 TIDAK diubah diam-diam (R6)</b></td></tr>
+</table></div>
+<h3>4.3 Wave 3 (mgg 4–5) — akad / koperasi / ZIS</h3>
+<div class="tbl"><table>
+<tr><th>Sumber</th><th>Pemicu</th><th>Jurnal</th></tr>
+<tr><td><code>akad_*</code> (§6)</td><td>per event (pencairan, angsuran, bagi hasil, settlement)</td><td>per tipe akad (§6.4)</td></tr>
+<tr><td>simpanan anggota</td><td>setor/tarik</td><td>setor: Debit 1010 → Kredit 2050/2060/2070; tarik: kebalikan</td></tr>
+<tr><td>SHU (§7)</td><td>hitung/distribusi</td><td>hitung: Debit 3020 → Kredit 3030/3040/3050/3060 (rasio PKGF); bayar: Debit 3060 → Kredit 1010 / Kredit 2070 (dihitung di tabungan)</td></tr>
+<tr><td>ZIS (§8)</td><td>input manual</td><td>masuk: Debit 1010 → Kredit 1100; zakat keluar: Debit 5090 → Kredit 1100; infak keluar: Debit 5100 → Kredit 1100</td></tr>
+</table></div>
+<h3>4.4 Batas scope per wave</h3>
+<ul>
+<li>Wave 1 = <b>minimal viable GL</b>: kas, penjualan, belanja, HPP → Laporan Posisi &amp; Laba-Rugi formal bisa diverifikasi vs V1 (rekon #16) sejak akhir Wave 1.</li>
+<li>Wave 2 = siklus kredit &amp; retur utuh (akrual piutang/hutang).</li>
+<li>Wave 3 = entitas syariah &amp; koperasi (akad, SHU, simpanan, ZIS).</li>
+<li><b>TIDAK auto-post</b>: jurnal penutup (manual periodik), koreksi (selalu reversal manual), saldo pembuka (sekali, Wave 6).</li>
+</ul>
+<h3>4.5 Anti-double (kredit penjualan &amp; tempo pembelian)</h3>
+<p><b>Satu sumber = satu entry lengkap.</b></p>
+<ul>
+<li><code>sales</code> metode <code>credit</code>: Debit 1030 + Debit 5010 (HPP) → Kredit 4010 (pendapatan penuh) + Kredit 1040 (stok keluar). Piutang = sisi debit entry sales.</li>
+<li><code>debts</code> = tabel pelacak sisa piutang <b>per customer</b>. INSERT <code>debts</code> <b>tidak membuat entry</b>; entry terjadi hanya saat <b>pembayaran</b>: Debit 1010 → Kredit 1030 (sebesar nominal bayar).</li>
+<li><code>payables</code> = pelacak sisa hutang per supplier. INSERT tidak membuat entry; entry di <code>purchases</code> tempo: Debit 1040 → Kredit 2010; dan pembayaran: Debit 2010 → Kredit 1010.</li>
+</ul>
+<p>Hasil: tidak ada double booking, invariant D=K selalu utuh, dan <code>debts</code>/<code>payables</code> tetap tabel operational (sumber saldo akun 1030/2010 utk rekonsiliasi #16).</p>
+</div>
+</section>
+<section id="s5">
+<h2><span class="n">5</span>5 Laporan Formal (Keputusan #10: A)</h2>
+<div class="card">
+<p>Semua: periode WIB (<code>nowWib</code>), guard tier <code>laporan</code>, cache 60 dtk, CSV export, <b>label standar</b> (§1.2). Halaman baru di <code>/admin/laporan</code> (tab: Formal | GL | V1 lama — V1 TIDAK dihapus, paralel s/d rekonsiliasi F3.5 green).</p>
+<h3>5.1 Laporan Posisi Keuangan (Neraca)</h3>
+<ul>
+<li><b>Aset</b>: lancar (1010+1020+1030+1040+1070+1100+1110) · tetap neto (1050−1060) · investasi syariah (1080+1090) · wakaf (memo 1120/6020, tidak dijumlahkan).</li>
+<li><b>Kewajiban</b>: lancar (2010+2020+2030+2040+2100) · anggota (2050+2060+2070+2080) · ZIS (2090).</li>
+<li><b>Ekuitas</b>: 3010+3020+3030+3040+3050+3060+3070.</li>
+<li><b>Periksa D=K: ΣAset = ΣKewajiban + ΣEkuitas</b> (invariant §3.2.1; jika ngga balance, report menolak render + flag rekon #15).</li>
+</ul>
+<h3>5.2 Laporan Laba-Rugi (Periode)</h3>
+<ul>
+<li>Pendapatan: 4010 − (4020+4030) = neto operasi.</li>
+<li>(−) HPP: (5010 − 5020) = <b>Laba Kotor</b>.</li>
+<li>(−) Beban operasi: 5030+5040+5060+5070+5080 → Laba Sebelum ZIS/Denda.</li>
+<li>(−) ZIS/denda: 5050+5090+5100+6030 → <b>Laba Bersih</b>.</li>
+<li>MEMO (tidak digabung): ujrah konsinyasi (P4), cashback (kewajiban, bukan beban — keputusan A1), SHU (di LPE/CALK).</li>
+<li>Struktur baris netting = V1 <code>keuangan.ts</code> (V2-2 <code>hppRetur</code>) dipetakan ke akun COA.</li>
+</ul>
+<h3>5.3 Laporan Perubahan Ekuitas (LPE)</h3>
+<p>Per kolom: Modal (3010) · SHU Ditahan (3020) · Cadangan Umum (3030) · Cadangan Khusus (3040) · Jasa Anggota (3050) · Dibagi (3060) · Koreksi (3070). Baris: pembuka + SHU diperoleh (dari LKA, jurnal closing §3.2.6) + alokasi (rasio <b>PKGF §13.4</b>) − distribusi = penutup.</p>
+<p>Catatan: simpanan 2050–2070 = kewajiban anggota (bukan ekuitas) — ditampilkan di neraca sisi kewajiban + <b>footnote LPE</b> (perubahan saldo simpanan periode).</p>
+</div>
+</section>
+<section id="s5b">
+<h2><span class="n">5</span>5 Laporan Formal — LAK / CALK / Rekonsiliasi (lanjutan)</h2>
+<div class="card">
+<h3>5.4 Laporan Arus Kas (LAK)</h3>
+<p>Per akun kas (1010 toko / 1020 bank / 1100 ZIS):</p>
+<ul>
+<li><b>Operasional</b>: Kas penjualan (K-1010 dari 4010 neto kas), (+) kas retur, (−) belanja kas (5030, 2010 bayar), (−/+) stok kas (1040 vs 2010), perubahan piutang/hutang dagang.</li>
+<li><b>Investasi</b>: aset tetap (1050), akad (pencairan 1070–1090, penerimaan angsuran).</li>
+<li><b>Pendanaan</b>: modal (3010), simpanan anggota (2050–2070), SHU distribusi (3060).</li>
+<li><b>Kas Sosial (1100)</b>: ditampilkan seksi terpisah — masuk (infak/sedekah/denda) &amp; keluar (zakat/infak distribusi) — <b>dilarang dicampur</b> ke kas usaha (invariant rekon #16: 1010+1020 = kas V1; 1100 terpisah).</li>
+<li>Footer: saldo awal → arus per aktivitas → saldo akhir, cross-check dgn <code>shifts</code> (#16).</li>
+</ul>
+<h3>5.5 CALK (Catatan Atas LK) — template</h3>
+<ol>
+<li>Informasi umum entitas + <b>status koperasi</b> (flag §1.1, "dalam proses" s/d registrasi tuntas) + dasar penyusunan (hybrid SAK Syariah–PAP–SAK EP, §1.2) + tanggal N buku pembuka (§10).</li>
+<li>Ikhtiar &amp; struktur: unit usaha toko POS + dana pesantren (memo 6010), multi-store siap.</li>
+<li>Kebijakan akuntansi utama: HPP (RNB snapshot V2-2), penyusutan (metode/umur <b>PKGF §13.8</b>), komisi konsinyasi (provisional P4), zakat (provisional P3), nisbah &amp; margin akad (<b>PKGF §13.1/3/5</b>), kurs: n/a (IDR).</li>
+<li>Komponen kas: 1010/1020/1100 terpisah.</li>
+<li>Piutang &amp; hutang per lawan transaksi (ringkasan).</li>
+<li>Ekuitas: modal, simpanan, SHU + rasio distribusi (<b>PKGF</b>).</li>
+<li>ZIS: diterima/disalurkan per jenis (zakat/infak/sedekah/denda), periode.</li>
+<li>Akad berjalan per jenis + saldo per akad.</li>
+<li>Peristiwa pasca-periode (manual input).</li>
+</ol>
+<p><b>Penerima LK formal = PKGF §13.13</b> (siapa menerima &amp; berapa sering: pengurus? pengasuh? BKK? rapat anggota?).</p>
+<h3>5.6 Invariant rekonsiliasi baru (cek #15–#17, pola flag-only read-only <code>lib/rekonsiliasi.ts</code> + <code>docs/qa/DATA-INVARIANTS.md</code>)</h3>
+<div class="tbl"><table>
+<tr><th>#</th><th>Cek</th><th>Rumus</th></tr>
+<tr><td>15 <code>JOURNAL_BAL</code></td><td>Σ debit = Σ credit per entry &amp; global</td><td>invariant D=K</td></tr>
+<tr><td>16 <code>GL_CASH</code></td><td><b>kas V1 (rumus kanonik <code>/api/kas</code>) = saldo GL (1010+1020) per periode</b> &amp; per shift; 1100 tidak ikut</td><td>"angka kas V1 ≈ kas GL" (cek rekonsiliasi wajib)</td></tr>
+<tr><td>17 <code>GL_TZ</code></td><td>semua <code>entry_date</code> berakhiran <code>+07:00</code></td><td>mitigasi R1</td></tr>
+</table></div>
+<p>Selisih #16 = bug posting → flag-only (read-only), TIDAK auto-fix; dilaporkan di halaman rekonsiliasi + test <code>scripts/test-rekonsiliasi.ts</code> (golden path F3.5).</p>
+</div>
+</section>
+<section id="s6">
+<h2><span class="n">6</span>Modul Akad (Keputusan #11: A — bareng fondasi, Wave 3)</h2>
+<div class="card">
+<h3>6.1 Struktur tabel</h3>
+<pre class="sql"><span class="c">-- v22</span>
+CREATE TABLE IF NOT EXISTS akad(
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,            -- 'murabahah'|'mudharabah'|'musyarakah'|'ijarah'|'wakalah'
+  counterparty TEXT NOT NULL,    -- nama pihak lawan
+  amount INTEGER NOT NULL,       -- integer rupiah
+  terms_json TEXT,              -- {margin_nisbah, jangka, schedule[], ...}
+  status TEXT NOT NULL DEFAULT 'active', -- active|settled|cancelled
+  opened_at TEXT NOT NULL,       -- ISO WIB
+  settled_at TEXT,
+  note TEXT,
+  UNIQUE(type, counterparty, opened_at, amount)  -- anti-double input
+);
+CREATE TABLE IF NOT EXISTS akad_events(
+  id TEXT PRIMARY KEY,
+  akad_id TEXT NOT NULL,
+  kind TEXT NOT NULL,           -- per type, lihat 6.4
+  amount INTEGER NOT NULL,
+  event_date TEXT NOT NULL,     -- ISO WIB
+  posted_entry TEXT,            -- id journal_entries
+  created_by TEXT, created_at TEXT NOT NULL
+);</pre>
+<p>UI: <code>/admin/akad</code> (list + create + timeline event + detail jurnal terkait). Tier <code>admin</code>. Per-type form: margin/nisbah <b>field input manual per akad</b> (TIDAK preset default syariah) — placeholder teknis; nilai ketentuan = <b>PERLU KEPUTUSAN GUS FI (§13.1/3/5/6)</b>. Wakalah = konsinyasi yang SUDAH ADA (P4) — modul <code>akad</code> hanya mencatat jurnalnya (bridge), <b>bukan</b> duplikat fitur.</p>
+<h3>6.2 Per-tipe — event &amp; aturan</h3>
+<div class="tbl"><table>
+<tr><th>Tipe</th><th>Event valid</th><th>Catatan teknis</th></tr>
+<tr><td>murabahah</td><td>pencairan, angsuran, settlement, (denda→kas sosial)</td><td>harga jual = pokok + margin tetap; margin = PKGF</td></tr>
+<tr><td>mudharabah</td><td>pencairan (dana), kontribusi, bagi hasil (per periode), settlement</td><td>nisbah = PKGF; pembagian di event <code>bagi_hasil</code></td></tr>
+<tr><td>musyarakah</td><td>pencairan (kontribusi), bagi hasil, settlement</td><td>rasio = PKGF</td></tr>
+<tr><td>ijarah</td><td>pencairan (imbalan awal, jika ada), ijarah periodik, settlement</td><td>rate sewa = PKGF</td></tr>
+<tr><td>wakalah</td><td>(bridge ke konsinyasi P4: ujrah + settlement neto)</td><td>komisi = <code>konsinyasi_commission</code> (P4 provisional)</td></tr>
+</table></div>
+<h3>6.3 Simulasi</h3>
+<p>Form akad menampilkan <b>simulasi</b> (tanpa booking): total kewajiban, jadwal, porsi bagi hasil per skenario — semua angka dari input user (nisbah/margin), bukan asumsi app.</p>
+</div>
+</section>
+
+<section id="s6b">
+<h2><span class="n">6</span>Modul Akad — Posting Rules &amp; Parameter (lanjutan)</h2>
+<div class="card">
+<h3>6.4 Posting rules per tipe (ref_table=<code>'akad'</code>, <code>ref_id=akad#id:evt#kind</code>)</h3>
+<div class="tbl"><table>
+<tr><th>Tipe &amp; event</th><th>Jurnal</th></tr>
+<tr><td>Murabahah — pencairan</td><td>Debit 1010 (terima pembayaran pertama) · Kredit 2040 (sisa pokok+margin bila bertahap) / Kredit 4060 (lunas saat pencairan)</td></tr>
+<tr><td>Murabahah — angsuran</td><td>Debit 1010 → Kredit 2040 (nominal angsuran)</td></tr>
+<tr><td>Murabahah — settlement (lunas)</td><td>Debit 2040 → Kredit 4060 (recognition margin sisa)</td></tr>
+<tr><td>Mudharabah — pencairan</td><td>Debit 1010 (P diterima) → Kredit 1080 (P ditahan s/d settlement)</td></tr>
+<tr><td>Mudharabah — bagi hasil</td><td>1 entry 4 sisi: Debit 1080 (Pc) + Debit 5060 (Pp) → Kredit 4070 (Pc, porsi koperasi) + Kredit 1010 (Pp, dibayar cash) — D=K utuh; bila Pp ditahan dulu: Kredit 2040</td></tr>
+<tr><td>Musyarakah — pencairan</td><td>Debit 1010 (K diterima) → Kredit 1090</td></tr>
+<tr><td>Musyarakah — bagi hasil</td><td>1 entry 4 sisi: Debit 1090 (Pc) + Debit 5060 (Pp) → Kredit 4080 (Pc) + Kredit 1010 (Pp)</td></tr>
+<tr><td>Musyarakah/mudharabah — settlement</td><td>Debit 1080/1090 (sisa pokok) → Kredit 1010 (pengembalian ke shahib/pemilik)</td></tr>
+<tr><td>Ijarah — periodik</td><td>Debit 1010 → Kredit 4050 (imbalan sewa)</td></tr>
+<tr><td>Wakalah (bridge P4)</td><td>settlement: Debit 1010 (bruto) → Kredit 2020 + Kredit 4010; ujrah: Debit 1010 → Kredit 4040 (sama §4.2)</td></tr>
+<tr><td>Denda diterima</td><td>Debit 1010 → Kredit 5050 (clearing "denda diterima"); alokasi ke kas sosial: Debit 5050 → Kredit 1100. Aturan denda = <b>PKGF §13.6</b></td></tr>
+</table></div>
+<div class="note">Catatan: entry <code>bagi hasil</code> &amp; <code>settlement</code> dirancang agar <b>tidak mengubah saldo Kas</b> (non-cash: pergeseran antar akun) — hanya event "terima pembayaran" yang menyentuh 1010/1020. Cek rekonsiliasi #16 tetap valid karena kas V1 tidak berubah utk event non-cash.</div>
+<h3>6.5 Semua parameter syariah = PERLU KEPUTUSAN GUS FI</h3>
+<div class="tbl"><table>
+<tr><th>Parameter</th><th>Opsi teknis yang ditawarkan app</th></tr>
+<tr><td>Margin murabahah</td><td>% per akad (input manual, simulasi §6.3)</td></tr>
+<tr><td>Nisbah mudharabah/musyarakah</td><td>% per akad (input manual)</td></tr>
+<tr><td>Rate ijarah</td><td>nominal per periode per akad</td></tr>
+<tr><td>Denda keterlambatan</td><td>skema: ada/tidak; nominal/rasio; tujuan = kas sosial 1100 (CHECKLIST B)</td></tr>
+<tr><td>Pengakuan laba murabahah</td><td>saat penerimaan (cash basis) vs periode (accrual)</td></tr>
+<tr><td>Frekuensi bagi hasil</td><td>per periode (bulanan/triwulan/rapat) — periodik manual</td></tr>
+</table></div>
+</div>
+</section>
+</section>
+<section id="s7">
+<h2><span class="n">7</span>Struktur Koperasi (Level C — Keputusan #3)</h2>
+<div class="card">
+<h3>7.1 Tabel</h3>
+<pre class="sql"><span class="c">-- v22 (bersama modul akad)</span>
+CREATE TABLE IF NOT EXISTS coop_members(
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  npwp TEXT,
+  member_since TEXT NOT NULL,     -- ISO WIB
+  status TEXT NOT NULL DEFAULT 'aktif', -- aktif|nonaktif|keluar
+  UNIQUE(name)
+);
+CREATE TABLE IF NOT EXISTS coop_savings(
+  member_id TEXT NOT NULL,
+  kind TEXT NOT NULL,             -- 'pokok'|'wajib'|'sukarela'
+  amount INTEGER NOT NULL,
+  saved_at TEXT NOT NULL,
+  PRIMARY KEY(member_id, kind, saved_at, amount)
+);
+CREATE TABLE IF NOT EXISTS coop_shu(
+  id TEXT PRIMARY KEY,            -- satu baris per periode distribusi
+  period TEXT NOT NULL,           -- '2026' / '2026-Q1' (periodik = PKGF §13.11)
+  shu_total INTEGER NOT NULL,    -- dari jurnal closing (3020)
+  cadangan_umum INTEGER,
+  cadangan_khusus INTEGER,
+  jasa_anggota INTEGER,
+  dibagi INTEGER,
+  rasio_json TEXT,               -- {cad_umum, cad_khusus, jasa, dibagi} (%)
+  created_by TEXT, created_at TEXT NOT NULL,
+  UNIQUE(period)
+);</pre>
+<h3>7.2 Alur SHU (distribusi = jurnal, hitungan = input)</h3>
+<ol>
+<li><b>Hitung</b>: admin input SHU periode (dari LKA/Laba-Rugi) ke <code>/admin/koperasi/shu</code> + rasio alokasi (cadangan umum/khusus/jasa anggota/sisa dibagi). Rasio = <b>PERLU KEPUTUSAN GUS FI §13.4</b> (app TIDAK mengisi default angka rasio).</li>
+<li><b>Posting</b>: jurnal <code>ref_table='coop'</code>:
+  <ul>
+  <li>alokasi: Debit 3020 (SHU Ditahan) → Kredit 3030 + 3040 + 3050 + 3060 (per rasio).</li>
+  <li>jasa anggota: Debit 3050 → Kredit 2070 (per anggota dihitung di tabungan) atau 1010 (tunai).</li>
+  <li>cadangan: berhenti di 3030/3040 (ekuitas).</li>
+  </ul>
+</li>
+<li><b>Simpanan</b>:
+  <ul>
+  <li>setor: Debit 1010 → Kredit 2050/2060/2070 (per <code>kind</code>).</li>
+  <li>tarik sukarela: Debit 2070 → Kredit 1010 (sisa ≥ 0 per anggota, cek aplikasi; ketentuan tarik = PKGF).</li>
+<section id="s8">
+<h2><span class="n">8</span>Pemisahan ZIS (Keputusan #5: A; #7: wakaf ditunda)</h2>
+<div class="card">
+<h3>8.1 Prinsip</h3>
+<ul>
+<li>Dana sosial (zakat/infak/sedekah/denda) <b>terpisah dari kas usaha</b>: kas masuk = <code>1100</code> (Kas ZIS); Kas Toko <code>1010/1020</code> <b>tidak pernah</b> menyentuh ZIS (invariant rekon #16).</li>
+<li><b>Anti-campur</b>: LAK menampilkan ZIS sebagai seksi terpisah (§5.4); neraca menampilkan 1100 di aset lancar, 2090 di kewajiban khusus.</li>
+</ul>
+<h3>8.2 Tabel &amp; UI</h3>
+<pre class="sql">CREATE TABLE IF NOT EXISTS zis(
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,             -- 'zakat'|'infak'|'sedekah'|'denda'
+  direction TEXT NOT NULL,        -- 'in'|'out'
+  amount INTEGER NOT NULL,
+  payer TEXT,                    -- pemberi (in) / mustahik (out)
+  occurred_at TEXT NOT NULL,      -- ISO WIB
+  posted_entry TEXT,             -- id journal_entries
+  created_by TEXT, created_at TEXT NOT NULL
+);</pre>
+<ul>
+<li>UI <code>/admin/zis</code>: input manual sederhana (in/out per kind), riwayat, export CSV. Jurnal auto dari <code>zis</code> (§4.3).</li>
+<li><b>Jembatan modul zakat P3 (TIDAK refactor, R6)</b>: baris <code>zakat_history</code> yang sudah ada = sumber angka 6030/5090; F3.2 tidak mengubah modul <code>zakat-*</code>. Setelah tashih P3 turun, jembatan bisa di-switch (commit terpisah).</li>
+<li><b>Wakaf (ditunda)</b>: akun 1120/4100/6020 sudah di-seed; TIDAK ada fitur posting sampai keputusan #7 di-revisi. Hook = kolom <code>kind='wakaf'</code> di <code>zis</code> + jurnal manual.</li>
+</ul>
+<h3>8.3 Rate zakat &amp; aturan penyaluran = PERLU KEPUTUSAN GUS FI</h3>
+<p>Rate zakat (mal, tijarah, fitrah, dll.) &amp; siapa mustahik yang sah = <b>PKGF §13.2</b> (provisional P3: 24K/market/haul belum tashih — app menampilkan badge "provisional" di UI zakat sampai keputusan turun).</p>
+</div>
+</section>
+
+<section id="s9">
+<h2><span class="n">9</span>Peta Kepatuhan PAP (Pedoman Akuntansi Pesantren, BI+MUI)</h2>
+<div class="card">
+<h3>9.1 Open item: sumber teks PAP</h3>
+<p><b>Pertanyaan terbuka (§13.9):</b> teks PAP belum dimiliki app. Opsi sumber (urutan prioritas):</p>
+<ol>
+<li>Publikasi <b>Bank Indonesia</b> (PAP keluaran BI+MUI — cari di situs BI, bagian kebijakan/standar akuntansi non-BA).</li>
+<li>Publikasi <b>MUI</b> (situs resmi MUI / penerbit fatwa).</li>
+<li>Salinan cetakan dari pengurus/pengasuh (jika sudah ada di pondok).</li>
+<li>Jika tak tersedia sampai Wave 2: <b>fallback = SAK Syariah + SAK EP</b> untuk akun pesantren (6010) — app tetap build, kolom <code>pap_ref</code> (COA, §2.7) kosong sampai teks PAP dapat.</li>
+</ol>
+<h3>9.2 Peta akun (draft, menunggu teks PAP)</h3>
+<div class="tbl"><table>
+<tr><th>Grup COA usul</th><th>Ekuivalen PAP (kiraan)</th><th>Catatan</th></tr>
+<tr><td>6010 Dana Pesantren</td><td>Dana kegiatan pesantren / sumbangan</td><td>memo, input manual</td></tr>
+<tr><td>6020 Aset Wakaf</td><td>Aset wakaf (PSAK 112, ditunda)</td><td>placeholder</td></tr>
+<tr><td>4090/5090/5100 ZIS</td><td>Dana sosial pesantren</td><td>terpisah dari kas toko</td></tr>
+<tr><td>(baru) 60xx</td><td>Beban kegiatan pesantren</td><td>TIDAK dibuat sampai teks PAP ada</td></tr>
+</table></div>
+<p>Peta final = <b>commit tersendiri setelah teks PAP tersedia + keputusan Gus Fi</b> — tidak masuk Wave 1–5.</p>
+<h3>9.3 Komitmen desain</h3>
+<ul>
+<li>TIDAK ada pencampuran kas toko dgn dana pesantren (invariant #16).</li>
+<li>Akun pesantren (6010/6020) = memo-only di neraca (tidak dijumlahkan ke total aset/kewajiban formal).</li>
+<li>CALK menampilkan seksi pesantren terpisah (§5.5.7).</li>
+</ul>
+</div>
+</section>
+
+<section id="s10">
+<h2><span class="n">10</span>Migrasi / Saldo Pembuka (Keputusan #9: A)</h2>
+<div class="card">
+<h3>10.1 Tanggal N</h3>
+<ul>
+<li><b>Tanggal buku pembuka N = PERLU KEPUTUSAN GUS FI §13.12</b> (saran teknis: akhir bulan terakhir sebelum implementasi Wave 6, misal <code>31 Okt 2026</code>; fleksibel sampai Wave 6).</li>
+<li>Semua jurnal <code>type='opening'</code> dgn <code>entry_date = N</code>, <code>ref_table='open'</code>.</li>
+</ul>
+<h3>10.2 Jurnal pembuka (buku N)</h3>
+<div class="tbl"><table>
+<tr><th>Akun</th><th>Nilai @ N</th><th>Sumber</th></tr>
+<tr><td>1010 Kas Toko</td><td>saldo kas V1 @ N (<code>/api/kas</code> rumus kanonik per store + manual entries)</td><td>input manual + verifikasi V1</td></tr>
+<tr><td>1020 Kas Bank</td><td>saldo bank @ N (manual)</td><td>input manual</td></tr>
+<tr><td>1030 Piutang</td><td>Σ <code>debts</code> remaining open @ N</td><td>query app</td></tr>
+<tr><td>1040 Persediaan</td><td>stok × harga beli @ N (snapshot V2-2)</td><td>query app</td></tr>
+<tr><td>1050 Aset Tetap</td><td>nilai buku awal aset</td><td><b>input manual + tashih</b> (R3)</td></tr>
+<tr><td>1100 Kas ZIS</td><td>0 (dimulai bersih)</td><td>—</td></tr>
+<tr><td>2010 Hutang</td><td>Σ <code>payables</code> remaining open @ N</td><td>query app</td></tr>
+<tr><td>2030 Cashback</td><td>Σ <code>members.cashback_balance</code> &gt; 0 @ N</td><td>query app</td></tr>
+<tr><td>2050–2070 Simpanan</td><td>0 atau input (jika sudah ada simpanan manual)</td><td><b>input manual</b></td></tr>
+<tr><td>3010 Modal</td><td><b>= ΣAset − ΣKewajiban − ΣSimpanan − SHU</b> (seimbang, R3)</td><td>hasil hitung (bukan input bebas)</td></tr>
+</table></div>
+<div class="note"><b>Invariant buku pembuka: D = K (ΣAset = ΣKewajiban + Ekuitas + Simpanan).</b> 3010 dihitung sebagai selisih, sehingga selalu balance — <b>TIDAK</b> pakai angka "Modal Setara" V1 (bukan ekuitas, R3).</div>
+<h3>10.3 Eksekusi &amp; rollback</h3>
+<ul>
+<li>UI <code>/admin/gl/opening</code> (tier <code>super</code>, sekali, terkunci setelah post): input → validasi D=K → post <code>type='opening'</code>.</li>
+<li>Post opening <b>TIDAK reverse-able otomatis</b> (immutable, §3.2.2); koreksi = jurnal <code>3070 Koreksi Saldo</code> + <code>audit_log</code>.</li>
+<li><b>Rollback</b> (sistem sudah running, tidak mau GL): backup DB (pola backup/restore existing, <code>backup.json</code>), flag <code>gl_enabled</code>, tabel GL tidak dihapus; V1 tetap hidup paralel tanpa perubahan.</li>
+</ul>
+<h3>Rekon &amp; test GL</h3>
+<ul>
+<li>1010+1020 (GL) <b>harus =</b> kas V1 (rumus kanonik) <b>tepat</b>. Selisih = bug → flag (bukan auto-fix).</li>
+<li>1030 = Σ debts, 2010 = Σ payables, 2030 = Σ cashback, 1040 = stok×harga beli — bandingkan query sumber vs GL.</li>
+<li><code>scripts/test-gl.ts</code> golden path: opening → auto-posting → closing → 5 laporan → rekon #15/#16/#17 all PASS (pola <code>test-rekonsiliasi.ts</code>).</li>
+</ul>
+</div>
+</section>
+
+<section id="s11">
+<h2><span class="n">11</span>Risiko R1–R8 + Mitigasi (dari audit §8)</h2>
+<div class="card">
+<div class="tbl"><table>
+<tr><th>#</th><th>Risiko (audit)</th><th>Mitigasi di proposal</th></tr>
+<tr><td>R1</td><td>Zakat UTC known-issue (<code>paid_at</code> UTC vs WIB)</td><td>Jurnal hanya <code>nowWib()</code> (+07:00), §3.4; rekon #17 <code>GL_TZ</code>; <b>commit fix zona waktu zakat di Wave 5 (wajib)</b> sebelum GL memakai angka zakat; LAK/ZIS periode selalu WIB</td></tr>
+<tr><td>R2</td><td>Neraca V1 baca legacy <code>consignment_items</code> (data P4 di <code>consignments</code>)</td><td>GL (V2) TIDAK membaca <code>consignment_items</code>; rekon #16 berbasis <code>consignments</code> (sumber resmi P4); <code>consignment_items</code> dibiarkan legacy (TIDAK dihapus) — cleanup = scope terpisah</td></tr>
+<tr><td>R3</td><td>Tidak ada saldo awal ("Modal Setara" ≠ ekuitas)</td><td>Buku pembuka @ N (§10): 3010 dihitung sebagai <b>selisih</b> agar D=K; nilai 1050 aset tetap = input + keputusan</td></tr>
+<tr><td>R4</td><td>Konflik label fase (A1–A3 lama vs plan)</td><td>Label F3.x konsisten (audit §10); proposal &amp; commit pakai F3.x; label V1 report tetap "V1"</td></tr>
+<tr><td>R5</td><td>Turso Rows-Read (agregat global = termahal)</td><td><code>balance_running</code> + index <code>idx_jl_acct</code> (§3.1) → saldo = 1 akses terindeks; trial balance per akun; cache <code>gl:</code> 60 dtk; batch per transaksi</td></tr>
+<tr><td>R6</td><td>Tashih P3/P4 terbuka (larangan prabatasih)</td><td><b>TIDAK</b> refactor <code>zakat-*</code>/<code>konsinyasi</code> sampai tashih turun; GL membangun <b>sekitarnya</b> (akun + jembatan); komisi 20% tetap via <code>konsinyasi_commission</code> (setting, ubah tanpa code); badge "provisional" di UI zakat &amp; ujrah kon.</td></tr>
+<tr><td>R7</td><td>Pola test bebas-import + in-memory</td><td><code>lib/jurnal.ts</code>, <code>lib/gl.ts</code>, <code>lib/zis.ts</code>, <code>lib/coop.ts</code> bebas-import; test <code>test-jurnal/gl/zis/coop</code> (in-memory, tanpa import Next)</td></tr>
+<tr><td>R8</td><td><code>kp-zip3</code> beku, tak ada GL</td><td>Tidak ada pinjam desain; lapisan GL = desain baru di repo ini (proposal ini = blueprint); referensi hanya utk pola modul &amp; backup</td></tr>
+</table></div>
+<p><b>Risiko tambahan (app):</b></p>
+<ul>
+<li>R9: <b>Post-GL, kas V1 &amp; GL selisih</b> (bug posting) → rekon #16 flag-only; selisih tampil peringatan merah di laporan formal, tidak di-sembunyikan.</li>
+<li>R10: <b>Rollback</b> → §10.3 (flag <code>gl_enabled</code>, backup, tabel tidak dihapus). V1 tetap hidup paralel tanpa perubahan.</li>
+</ul>
+</div>
+</section>
+
+<section id="s12">
+<h2><span class="n">12</span>Roadmap &amp; Commit Map (Keputusan #12: B — 6 Minggu)</h2>
+<div class="card">
+<div class="note">Total <b>28–32 commit, 6 wave</b>. Tiap commit: test + <code>next build</code> EXIT 0 + <code>git ls-remote</code> verify + dual-push master+main + <code>public/sw.js</code> TIDAK staged (aturan, §14).</div>
+<h3>Wave 1 — Fondasi GL (mgg 1–2, 5 commit)</h3>
+<div class="tbl"><table>
+<tr><th>#</th><th>Scope</th><th>Catatan</th></tr>
+<tr><td>W1.1</td><td>Skema <code>v21</code>: tabel <code>coa</code> + seed 52 akun + <code>journal_entries</code>/<code>journal_lines</code> + <code>settings.gl_enabled</code> + <code>settings.coop_registered</code></td><td>idempoten; seed = semua 52 akun, PKGF dgn <code>needs_decision=1</code></td></tr>
+<tr><td>W1.2</td><td><code>lib/jurnal.ts</code> (post/reversal/opening; D=K; balance_running; idempoten; invalidate cache) + <code>lib/gl.ts</code> (balance, trial, statement) + <code>scripts/test-jurnal.ts</code></td><td>pola R7</td></tr>
+<tr><td>W1.3</td><td>Auto-posting Wave 1: <code>sales</code>, <code>cash_entries</code>, <code>expenses</code>, <code>purchases</code> (§4.1; hanya jika <code>gl_enabled=1</code>)</td><td>invalidate cache <code>kas:/keuangan:/neraca:/gl:</code></td></tr>
+<tr><td>W1.4</td><td>UI <code>/admin/jurnal</code> (list, detail, manual, reversal) + <code>/admin/gl</code> (buku besar, trial balance)</td><td>tier admin; cache</td></tr>
+<tr><td>W1.5</td><td>Rekon #15 <code>JOURNAL_BAL</code> + #17 <code>GL_TZ</code> di <code>lib/rekonsiliasi.ts</code> + test + UI flag</td><td>flag-only</td></tr>
+</table></div>
+<h3>Wave 2 — Laporan formal + ZIS (mgg 3–4, 7 commit)</h3>
+<div class="tbl"><table>
+<tr><th>#</th><th>Scope</th></tr>
+<tr><td>W2.1</td><td>Auto-posting Wave 2: pembayaran <code>debts</code>/<code>payables</code>, <code>returns</code> (netting V2-2), <code>consignments</code> (bridge P4; mapping TIDAK diubah, R6)</td></tr>
+<tr><td>W2.2</td><td>Laporan Posisi Keuangan formal (<code>lib/laporan/posisi.ts</code> + API + UI tab)</td></tr>
+<tr><td>W2.3</td><td>Laba-Rugi formal (<code>lib/laporan/lka.ts</code>) — struktur V1 → COA (netting <code>hppRetur</code> utuh)</td></tr>
+<tr><td>W2.4</td><td>LPE (<code>lib/laporan/lpe.ts</code>)</td></tr>
+<tr><td>W2.5</td><td>LAK (<code>lib/laporan/lak.ts</code>) — per aktivitas + seksi kas sosial terpisah</td></tr>
+<tr><td>W2.6</td><td>CALK template (<code>lib/laporan/calk.ts</code> + UI form) — label standar §1.2 + badge PKGF</td></tr>
+<tr><td>W2.7</td><td>Modul ZIS: tabel <code>zis</code> + <code>lib/zis.ts</code> + <code>/admin/zis</code> + auto-posting + anti-campur (#16 seksi ZIS)</td></tr>
+</table></div>
+<h3>Wave 3 — Akad (mgg 4–5, 5 commit)</h3>
+<div class="tbl"><table>
+<tr><th>#</th><th>Scope</th></tr>
+<tr><td>W3.1</td><td>Skema <code>v22</code>: <code>akad</code> + <code>akad_events</code></td></tr>
+<tr><td>W3.2</td><td><code>lib/akad.ts</code> (per event, §6.4) + <code>scripts/test-akad.ts</code> (golden: murabahah &amp; mudharabah)</td></tr>
+<tr><td>W3.3</td><td>UI <code>/admin/akad</code> (form per tipe + simulasi §6.3 + timeline event + jurnal terkait)</td></tr>
+<tr><td>W3.4</td><td>Bridge wakalah: jurnal utk settlement/ujrah <code>consignments</code> (aktifkan bila <code>gl_enabled=1</code>)</td></tr>
+<tr><td>W3.5</td><td>Denda (bila skema aktif post-PKGF §13.6): input denda → 5050 → 1100 + test</td></tr>
+</table></div>
+<h3>Wave 4 — Koperasi (mgg 5–6, 5 commit)</h3>
+<div class="tbl"><table>
+<tr><th>#</th><th>Scope</th></tr>
+<tr><td>W4.1</td><td>Skema: <code>coop_members</code>, <code>coop_savings</code>, <code>coop_shu</code> (v22 lanjutan / v23)</td></tr>
+<tr><td>W4.2</td><td><code>lib/coop.ts</code> (setor/tarik simpanan, validasi sisa ≥ 0, keluar anggota) + test</td></tr>
+<tr><td>W4.3</td><td>UI <code>/admin/koperasi</code> (anggota, simpanan per anggota, riwayat, rumpun)</td></tr>
+<tr><td>W4.4</td><td>SHU: hitung (input + rasio, §7.2) + posting distribusi + test</td></tr>
+<tr><td>W4.5</td><td>Modal penyertaan (3010) + jurnal closing periodik (§3.2.6)</td></tr>
+</table></div>
+<h3>Wave 5 — Penguatan (mgg 5–6, 5 commit)</h3>
+<div class="tbl"><table>
+<tr><th>#</th><th>Scope</th></tr>
+<tr><td>W5.1</td><td><b>Fix zona waktu zakat (R1)</b>: <code>paid_at</code>/periode → WIB (<code>nowWib</code>) + test zakat update; badge "provisional" tetap (R6)</td></tr>
+<tr><td>W5.2</td><td>Rekon #16 <code>GL_CASH</code> (kas V1 = kas GL per periode + per shift + ZIS terpisah) + golden F3.5</td></tr>
+<tr><td>W5.3</td><td>Export: CSV laporan formal + export GL (journal, trial, buku besar)</td></tr>
+<tr><td>W5.4</td><td>Cache &amp; perf (R5): audit query GL, index, batch (target: trial &lt; 200ms @ 100k lines)</td></tr>
+<tr><td>W5.5</td><td>Test &amp; build final Wave 5 (all green)</td></tr>
+</table></div>
+<h3>Wave 6 — Migrasi + SOP (mgg 6, 4 commit)</h3>
+<div class="tbl"><table>
+<tr><th>#</th><th>Scope</th></tr>
+<tr><td>W6.1</td><td>UI <code>/admin/gl/opening</code> (input saldo pembuka, validasi D=K, sekali-post, §10)</td></tr>
+<tr><td>W6.2</td><td>Post opening @ N (tanggal keputusan §13.12) + verifikasi rekon #15/#16</td></tr>
+<tr><td>W6.3</td><td><code>docs/SOP-GL.md</code>: operasional GL (jurnal harian, koreksi via reversal, closing periodik, distribusi SHU, input ZIS, hak per tier)</td></tr>
+<tr><td>W6.4</td><td>Docs closing: update <code>README.md</code> (seksi GL) + <code>TODO.md</code> (F3.4–F3.6 done) + label F3.6</td></tr>
+</table></div>
+<p><b>Total: 5+7+5+5+5+4 = 32 commit</b> (rentang 28–32; dapat dipadatkan 28 bila W5.3 digabung W5.4 &amp; W3.5 ditunda).</p>
+<h3>Gate antar-wave</h3>
+<ul>
+<li><b>Akhir Wave 1</b>: rekon #15 green (D=K utuh); kas GL (1010+1020) = kas V1 (cek manual, bukan flag).</li>
+<li><b>Akhir Wave 2</b>: 5 laporan render; rekon #16 per shift green.</li>
+<li><b>Akhir Wave 3</b>: test akad golden (murabahah &amp; mudharabah) PASS.</li>
+<li><b>Akhir Wave 4</b>: SHU posting balance + simpanan validasi PASS.</li>
+<li><b>Akhir Wave 5</b>: R1 close; all rekon green; perf target R5.</li>
+<li><b>Wave 6</b>: F3.5 rekon green → F3.6 closing commit.</li>
+</ul>
+</div>
+</section>
+
+<section id="s13">
+<h2><span class="n">13</span>Poin Keputusan Tersisa — 14 Item (F3.3)</h2>
+<div class="decide">
+<div class="decide-band">⚖ KEPUTUSAN GUS FI (F3.3) — semua 14 item = PERLU KEPUTUSAN GUS FI; pengasuh mengikuti, tidak ada forum terpisah. Cline TIDAK memutuskan fiqih/standar.</div>
+<p class="o" style="font-size:.82rem;color:#92400e">Centang (✅) = item sudah diputuskan. Centang <b>tidak tersimpan</b> (viewer 0-script) — keputusan dicatat di chat / dicetak PDF. Rujukan setiap item = seksi proposal terkait.</p>
+
+<label class="ditem"><input type="checkbox"><span><span class="t">#1 Nisbah mudharabah &amp; musyarakah</span><span class="o">% per akad (input manual) — tetapkan rentang/referensi yg dipakai · <b>§6.5</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#2 Rate zakat (mal/tijarah/fitrah) + mustahik</span><span class="o">angka + daftar mustahik sah (finalkan P3: 24K/market/haul) · <b>§8.3</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#3 Margin murabahah</span><span class="o">% / nominal per akad; basis pengakuan (cash vs accrual) · <b>§6.5</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#4 Rasio distribusi SHU</span><span class="o">(cadangan umum / khusus / jasa anggota / dibagi) — % per komponen + periodik distribusi · <b>§7.2</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#5 Rate ijarah</span><span class="o">nominal per periode per akad · <b>§6.5</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#6 Denda keterlambatan</span><span class="o">ada/tidak; nominal/rasio; wajib ke kas sosial (CHECKLIST B) · <b>§6.4</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#7 Penerima LK formal (CALK/LK 5)</span><span class="o">siapa (pengurus? pengasuh? BKK? rapat anggota) &amp; frekuensi · <b>§5.5</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#8 Tanggal N buku pembuka + angka saldo pembuka</span><span class="o">tanggal + nilai 1050 aset tetap · <b>§10</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#9 Sumber teks PAP (+ status ED SAK Koperasi)</span><span class="o">BI / MUI / salinan pengurus; bila tak dapat = fallback SAK Syariah+SAK EP · <b>§9</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#10 Simpanan wajib + ketentuan tarik sukarela</span><span class="o">jumlah &amp; jadwal per anggota + aturan tarik · <b>§7.2</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#11 Periode closing jurnal + penyusutan</span><span class="o">(tahunan / bulanan) + metode penyusutan &amp; umur aset (1050/1060) · <b>§3.2.6</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#12 Pola pencairan mudharabah/musyarakah</span><span class="o">(1080 vs 2040, §6.4) — pilih pola booking · <b>§6.4</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#13 Switch label entitas</span><span class="o">("Kopontren (dalam proses)" → resmi) — kapan <code>coop_registered=1</code> · <b>§1.1</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<label class="ditem"><input type="checkbox"><span><span class="t">#14 Revisi keputusan #7 (wakaf)</span><span class="o">bila wakaf tidak lagi ditunda — scope tambahan (PSAK 112) · <b>§8.2</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+</div>
+<div class="note"><b>Aturan F3.3 (alur baru):</b> Cline presentasi dokumen ini → Gus Fi tinjau + putuskan item 1–14 → (pengasuh mengikuti keputusan) → keputusan di-rekam di <code>docs/akuntansi-keputusan.md</code> (commit terpisah) → revisi proposal bila perlu (commit terpisah) → F3.4+ mulai.</div>
+</section>
+
+<section id="s14">
+<h2><span class="n">14</span>Aturan Kerja (Reminder, Sesuai Repo)</h2>
+<div class="card">
+<ul>
+<li><b>Dual-push disiplin</b>: tiap commit → <code>git push origin master</code> + <code>git push origin main</code> + verify <code>git ls-remote origin master main</code> sinkron.</li>
+<li><b>Show diff</b> sebelum commit; commit message <b>ASCII-safe</b> (subject tanpa karakter jawa/non-ASCII; body boleh Indonesia — tulis via <code>[IO.File]::WriteAllLines</code> no-BOM).</li>
+<li><b><code>public/sw.js</code> TIDAK pernah di-commit</b> (diabaikan, disiplin lama).</li>
+<li><code>D:\Ngudi Susilo\kopontren-app</code> = D write/commit; <code>D:\Ngudi Susilo\kp-zip3</code> = reference-only (baca, jangan tulis).</li>
+<li><b>Syariah first, features second</b>; Cline mengusulkan, Gus Fi memutuskan.</li>
+<li>Larangan prabatasih (P3/P4): jangan finalkan angka zakat/konsinyasi &amp; jangan ubah mapping P4 diam-diam sampai tashih turun.</li>
+<li>Tiap commit implementasi (F3.4+): test golden + <code>next build</code> EXIT 0 + backup DB sebelum migrasi skema baru (v21/v22/v23).</li>
+<li>Visual check oleh Gus Fi: ongoing, TIDAK blocking.</li>
+</ul>
+</div>
+<div class="fnote">
+<b>Sumber kebenaran:</b> <code>docs/akuntansi-proposal.md</code> @ <code>e3cfd30</code> (F3.2, 29 Sep 2026). Halaman ini = snapshot bacaan 0-script (tanpa tag script) untuk review F3.3 — dicetak A4 (Ctrl+P) / disimpan PDF agar centang §13 tercatat. Jika keputusan §13 turun (F3.3) → HTML di-regenerate + re-sync (1 commit kecil). <b>Cetak / PDF: Ctrl+P.</b>
+</div>
+</div>
+</body>
+</html>
+  <li>pokok kembali saat anggota keluar: Debit 2050 → Kredit 1010 (kembali sesuai simpanan pokok).</li>
+  <li><b>Jumlah &amp; jadwal simpanan wajib = PKGF §13.10</b> (app hanya wadah pencatatan, bukan penentu besaran).</li>
+  </ul>
+</li>
+<li>Modal penyertaan (3010): setoran tambahan anggota/admin: Debit 1010 → Kredit 3010.</li>
+</ol>
+<h3>7.3 Koneksi ke V1</h3>
+<ul>
+<li>Anggota koperasi ≠ member loyalty (dua entitas berbeda; bisa orang yang sama — tidak ada penggabungan data).</li>
+<li>SHU hanya dihitung dari <b>LKA formal (GL)</b> — bukan dari Laba Bersih V1 (V1 = operasional saja, MEMO cashback/zakat).</li>
+</ul>
+</div>
+</section>

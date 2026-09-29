@@ -52,6 +52,11 @@ export const TUTORIALS: Tutorial[] = [
     title: 'SOP Pengurus',
     desc: 'Panduan dashboard global: laporan, audit, zakat (read-only pengurus).',
   },
+  {
+    slug: 'akuntansi-proposal',
+    title: 'Proposal Akuntansi F3.2',
+    desc: 'Desain GL koperasi Level C (F3.2) untuk review F3.3: COA 52 akun, jurnal, 5 laporan, akad, SHU, ZIS, + 14 poin keputusan (§13).',
+  },
 ];
 
 /** Validasi slug (guard route /tutorial/[slug] — mirror MENU_ITEMS). */
