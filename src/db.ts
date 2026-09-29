@@ -509,6 +509,13 @@ async function migrate(d: Db) {
     d,
     'ALTER TABLE consignments ADD COLUMN commission_rate INTEGER NOT NULL DEFAULT 20'
   );
+  // V2-2 (2026-09-27): COGS reversal — returns.cogs: HPP snapshot jumlah
+  // diretur per baris retur, ditulis POST /api/returns (rumus HPP per-item
+  // sama persis dengan /api/keuangan, /api/reports, /api/zakat:
+  // sale_items.cost_price snapshot saat sale; 0/kurang -> fallback harga
+  // beli produk saat ini). Baris lama DEFAULT 0 (konservatif, TANPA
+  // backfill). Idempoten via execColumn, purely additive.
+  await execColumn(d, 'ALTER TABLE returns ADD COLUMN cogs INTEGER NOT NULL DEFAULT 0');
   // user_pins: PIN ter-hash scrypt (mirip password), 1 baris per user.
   await d.exec(
     "CREATE TABLE IF NOT EXISTS user_pins (" +
@@ -828,7 +835,13 @@ export async function saveZakatSettings(
 // include the primary users.role) + sessions.active_role (the role the
 // session is currently acting as). Purely additive + guarded backfill;
 // DB stempel v18 menjalankan fullInit sekali lagi saat cold start.
-const SCHEMA_VERSION = 19;
+// Bump v20 (2026-09-27, V2-2): returns.cogs — HPP snapshot jumlah diretur
+// per baris retur (COGS reversal: P&L / KPI / zakat sekarang mengurangkan
+// Σ returns.cogs dari HPP bruto; retur pre-V2-2 cogs = 0, konservatif —
+// lihat KEUANGAN_NOTES di lib/keuangan.ts). Purely additive (execColumn
+// idempoten, tanpa ubah data); DB stempel v19 menjalankan fullInit sekali
+// lagi saat cold start berikutnya (~15-20 s, satu kali).
+const SCHEMA_VERSION = 20;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

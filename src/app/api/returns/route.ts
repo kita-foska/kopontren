@@ -12,6 +12,7 @@ type ReturnRow = {
   qty: number;
   reason: string;
   amount: number;
+  cogs: number;
   created_at: string;
   sale_customer: string;
   sale_total: number;
@@ -30,7 +31,7 @@ export async function GET(req: Request) {
   const returns = (
     (await d
       .prepare(
-        `SELECT r.id, r.sale_id, r.product_id, r.qty, r.reason, r.amount, r.created_at,
+        `SELECT r.id, r.sale_id, r.product_id, r.qty, r.reason, r.amount, r.created_at, r.cogs,
                 s.customer AS sale_customer, s.total AS sale_total,
                 si.product_name AS item_name
          FROM returns r
@@ -84,7 +85,13 @@ export async function POST(req: Request) {
   const item = (
     (await d
       .prepare(
-        'SELECT product_name, unit_price, qty, subtotal, discount FROM sale_items WHERE sale_id = ? AND product_id = ? LIMIT 1'
+        `SELECT si.product_name, si.unit_price, si.qty, si.subtotal, si.discount,
+                 COALESCE(si.cost_price, 0) AS cost_price,
+                 COALESCE(p.cost_price, 0) AS product_cost
+          FROM sale_items si
+          LEFT JOIN products p ON p.id = si.product_id
+          WHERE si.sale_id = ? AND si.product_id = ?
+          LIMIT 1`
       )
       .all(saleId, productId))[0] as
       | {
@@ -93,6 +100,8 @@ export async function POST(req: Request) {
           qty: number;
           subtotal: number;
           discount: number;
+          cost_price: number;
+          product_cost: number;
         }
       | undefined
   );
@@ -129,6 +138,16 @@ export async function POST(req: Request) {
     Number(item.subtotal || item.unit_price * soldQty) - Number(item.discount || 0)
   );
   const amount = Math.round((lineNet * qty) / soldQty);
+  // V2-2 COGS reversal: HPP snapshot jumlah diretur, tercatat saat write
+  // (bukan recompute) — P&L / KPI / zakat mengurangkan Σ cogs dari HPP
+  // bruto. Rumus HPP per-item sama persis dengan tiga modul tersebut:
+  // si.cost_price (snapshot saat sale); 0/kurang (sale pre-V2-1) ->
+  // fallback harga beli produk saat ini (p.cost_price) — konservatif,
+  // pola COALESCE yang dipakai route reports. Kedua-duanya 0 (tidak ada
+  // data harga beli) -> cogs 0.
+  const cogs = Math.round(
+    (Number(item.cost_price) > 0 ? Number(item.cost_price) : Number(item.product_cost || 0)) * qty
+  );
   const now = new Date().toISOString();
 
   let newId = 0;
@@ -167,9 +186,9 @@ export async function POST(req: Request) {
         throw new Error('Retur dobel ditolak: retur identik baru saja tercatat (double-submit?)');
       const info = await d
         .prepare(
-          'INSERT INTO returns (sale_id, product_id, qty, reason, amount, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+          'INSERT INTO returns (sale_id, product_id, qty, reason, amount, created_at, cogs) VALUES (?, ?, ?, ?, ?, ?, ?)'
         )
-        .run(saleId, productId, qty, reason, amount, now);
+        .run(saleId, productId, qty, reason, amount, now, cogs);
       // Guard (pattern DELETE /api/sales/[id]): pastikan baris retur
       // benar-benar tercatat (changes === 1) SEBELUM efek samping
       // (restock & refund) berjalan. changes === 0 -> throw -> seluruh
@@ -269,6 +288,7 @@ export async function POST(req: Request) {
     product_name: item.product_name,
     qty,
     amount,
+    cogs,
     reason: reason || undefined,
     refund,
     rewards_rolled_back: revNote !== '',

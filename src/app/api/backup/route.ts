@@ -75,7 +75,7 @@ export async function GET() {
     debts: await all('SELECT * FROM debts'),
     payables: await all('SELECT * FROM payables'),
     returns: await all(
-      'SELECT id, sale_id, product_id, qty, reason, amount, created_at FROM returns'
+      'SELECT id, sale_id, product_id, qty, reason, amount, created_at, cogs FROM returns'
     ),
     notification_settings: await all('SELECT * FROM notification_settings'),
     notification_logs: await all('SELECT * FROM notification_logs'),
@@ -311,7 +311,7 @@ export async function POST(req: Request) {
       // Retur (selesai di atas: sales + sale_items sudah terisi). ID eksplisit
       // dipertahankan agar relasi sale_id/product_id tetap konsisten.
       const insRet = d.prepare(
-        'INSERT INTO returns (id, sale_id, product_id, qty, reason, amount, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO returns (id, sale_id, product_id, qty, reason, amount, created_at, cogs) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
       );
       for (const r of (payload.returns as Record<string, unknown>[]) || []) {
         await insRet.run(
@@ -321,7 +321,9 @@ export async function POST(req: Request) {
           Number(r.qty) || 0,
           String(r.reason ?? ''),
           Number(r.amount) || 0,
-          normTs(r.created_at, new Date().toISOString())
+          normTs(r.created_at, new Date().toISOString()),
+          // V2-2: backup JSON lama tidak punya cogs -> 0 (konservatif, tanpa backfill).
+          Number(r.cogs) || 0
         );
       }
       const insDebt = d.prepare(
