@@ -1,6 +1,41 @@
 # MEMORY
 
 ## 2026-09-27
+### P0-C2 (KRITIS): Harness invarian data + bug backup point_history - 27 Sep
+- **Perintah (ACC Gus Fi)**: P0-C2 = invarian data (duit + poin) dengan
+  restore drill nyata. Deliverable: `scripts/test-invariants.ts`
+  (40 cek: seed duit/poin -> invarian pre -> backup -> simulasi
+  kehilangan total DB -> server restart -> restore -> verifikasi
+  jumlah + invarian post) + `docs/qa/DATA-INVARIANTS.md` + skrip
+  `test:invariants` (package.json).
+- **BUG KRITIS PRODUKSI (ditemukan P0-C2)**: `src/app/api/backup/
+  route.ts` TIDAK menyertakan `point_history` di ekspor (GET),
+  impor (POST), daftar DELETE, maupun audit. Blame: `point_history`
+  masuk skema `a6850f9` (2026-09-17, schema batch 2) + ledger
+  `dbd5cd3` (09-18); cakupan backup terakhir diperluas `d435f57`
+  (09-20) TANPA point_history. Dampak: backup JSON kehilangan
+  riwayat poin member; restore ke DB segar = ledger hilang;
+  restore ke DB lama = baris point_history stale/orphan (tak
+  di-DELETE, tak di-INSERT) -> drift integritas. Fix P0-C2:
+  `point_history` masuk type Backup, ekspor GET, daftar DELETE
+  (setelah consignments, sebelum members), INSERT loop (ID
+  eksplisit, `sale_id` nullable, `normTs`), + audit.
+- **Bug harness (bukan produk)**: handle file SQLite di Windows
+  baru lepas beberapa detik setelah pohon `next dev` dibunuh
+  -> cek "DB file dihapus" gagal acak. Fix: `spawn detached +
+  windowsHide` (proses grup sendiri), `stopServer` Windows loop
+  `taskkill /T /F` sampai root PID mati (maks. 10x, jeda 1 dtk),
+  `removeWithRetry` (jendela 90 dtk utk simulasi kehilangan,
+  30 dtk utk cleanup akhir).
+- **Verifikasi**: `tsc --noEmit` EXIT 0; `node scripts/
+  test-invariants.ts` (dev) -> **PASS 40 / FAIL 0 / ALL_PASS /
+  EXIT 0**; DB sementara bersih otomatis; tak ada sisa proses
+  node.
+- **Aksi**: commit 4 file (test-invariants.ts, DATA-INVARIANTS.md,
+  package.json, backup/route.ts) dual-push master+main; Vercel
+  auto-deploy fix backup; entry MEMORY.md ini menyusul di commit
+  doc berikutnya.
+
 ### P0-C1 (KRITIKAL): Golden Path E2E release gate + bug SQL products - 27 Sep
 - **Perintah (ACC Gus Fi)**: P0-C1 = golden path E2E test sebagai
   release gate. `scripts/test-golden.ts` + `docs/qa/GOLDEN-PATH.md`
