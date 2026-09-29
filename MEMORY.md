@@ -1,6 +1,49 @@
 # MEMORY
 
 ## 2026-09-27
+### P0-C4 (KRITIS): Production release gate + sertifikasi produksi - 27 Sep
+- **Perintah (ACC Gus Fi)**: P0-C4 = C4 finalis P0 Production
+  Certification (C1→C4): gate doc + update docs (MEMORY/TODO) +
+  cleanup scratch. Deliverable: `docs/qa/PRODUCTION-RELEASE-GATE.md`
+  (baru; bahasa Inggris, sejajar GOLDEN-PATH.md/DATA-INVARIANTS.md)
+  ngemu: (1) aturan gate ("ora ono sing ship menawa gate abang");
+  (2) gate otomatis 7 item (`test:golden` prod + `test:invariants`
+  prod + `test:rekon` + `test:roles` + regresi battery 12 skrip +
+  `tsc --noEmit` + `next build`); (3) gate deploy/verifikasi Vercel
+  (dual-push, Ready+Production, SW stamp berubah, sw.js ber-stamp
+  PERNAH di-commit, smoke `/admin/produk`, live run rekonsiliasi —
+  `drift_total` 0 ing data sehat); (4) tabel status C1–C4; (5) tabel
+  4 bug produksi temuan P0; (6) cakupan sertifikasi (ORA ngemu:
+  tashih P3/P4, batasan V1 KEUANGAN_NOTES, verifikasi operasional
+  manual); (7) item P1/P2 non-blocking sisa + V2 ditunda +
+  Kelompok P1–P15 + roadmap pasca-P0; (8) release rules standing.
+- **4 bug produksi P0 (dokumentasi gate doc)**: (1) SQL products
+  koma akhir — intro `37d0a34` (grosir), 500 SETIAP GET
+  /api/products ter-autentikasi, fix `662b654` (C1); (2)
+  `point_history` missing saka backup export/import/DELETE/audit,
+  fix `7f09341` (C2); (3) rekonsiliasi nulis `payables.owner_name`
+  — kolom nyata `supplier_name` (SQL "no such column" 500), fix
+  `206350f` (C3); (4) KONSIN sub-cek overpay `amount_paid >
+  tagihan` + settled disempurnakke `> 0`, fix `206350f` (C3).
+  Kabeh papat ditemukang gate test P0 piyambak — validasi cara
+  P0 nemokak bug produksi nyata.
+- **V2 DITUNDA (pasca-sertifikasi, liha gate doc seksi V2)**:
+  V2-1 = I-7 void reason struktural (daftar alasan sah + risiko alur
+  bisnis BUTUH ACC pengurus → UX-6.5); V2-2 = COGS/HPP reversal
+  (saiki V1 doc-note KEUANGAN_NOTES: retur COGS ora dibalik →
+  laba/HPP ora akurat; implement reversal + sesuaikan invarian +
+  rekonsiliasi). Roadmap pasca-P0: V2 → Fase 3 Akuntansi Terbaru
+  (audit SAK EP/SAK Syariah/PAP → proposal desain → tashih →
+  implementasi) → roadmap bakpao.id (7 fitur).
+- **Cleanup**: scratch `_*.txt`/`_build.cmd` ing repo root dihapus
+  lokal (git-ignored, ora ke-push). 2 CSV stok 09/23 tetep RETAIN
+  (keputusan housekeeping 27 Sep; salah siji inggit tracked).
+- **Verifikasi**: C4 = murni docs — ora ana perubahan kode, mula
+  gate tsc/build ora perlu; verif = isi file resik + `git status`
+  bersih saka scope P0-C4.
+- **Aksi**: commit 3 file (docs/qa/PRODUCTION-RELEASE-GATE.md anyar,
+  MEMORY.md, TODO.md) dual-push master+main.
+  **P0 Production Certification = SELESAI.**
 ### P0-C3 (KRITIS): Modul rekonsiliasi 13 cek read-only + admin UI - 27 Sep
 - **Perintah**: rekonsiliasi data (flag-only, TANPA auto-fix): validasi
   konsistensi finansial antar modul. Deliverable:

@@ -1216,7 +1216,7 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
       Renomer: `cc45511` = M1-3-prep (bagian M1-4), bukan M1-3.
       Status: M1-1…M1-4 + M1-6 SELESAI; M1-5 = audit
       (`auth:switch-role` + `user:roles` events sudah ada — verify
-      release-gate). Next: P0 Production Certification.
+      release-gate). P0 Production Certification SELESAI 27 Sep (C1-C4; gate doc `docs/qa/PRODUCTION-RELEASE-GATE.md`) - liha seksi P0 di bawah.
       — siji akun duwe role pirang-pirang (`users.roles` JSON, skema
       **V19**, `users.role` = primary). **Dokumen desain:
       `docs/m1-multirole.md`** (4 keputusan ACC + commit plan
@@ -1238,6 +1238,39 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
       **Interim saiki**: akun pirang-pirang (jangan share akun);
       admin bisa ndeleng card member dhewe ing `/member` (H3)
       menawa dipasangke.
+
+### P0 Production Certification (C1-C4) - SELESAI 27 Sep
+
+- [x] **C1** Golden Path E2E release gate (`test:golden` +
+      `docs/qa/GOLDEN-PATH.md`) - commit `662b654`; bug kritis
+      ditemukak: SQL products koma akhir (500 ing SETIAP
+      `GET /api/products` ter-autentikasi; intro `37d0a34`).
+- [x] **C2** Invarian data + restore drill (`test:invariants` +
+      `docs/qa/DATA-INVARIANTS.md`) - commit `7f09341`; bug kritis
+      ditemukak: `point_history` missing saka backup
+      (export/import/DELETE/audit).
+- [x] **C3** Rekonsiliasi 13 cek read-only (`test:rekon` +
+      `/admin/rekonsiliasi` + `GET /api/reconciliation`) - commit
+      `206350f`; 2 bug ditemukak: kolom `payables.supplier_name`
+      (dulu nulis `owner_name`) + KONSIN sub-cek overpay.
+- [x] **C4** Production release gate doc - commit iki:
+      `docs/qa/PRODUCTION-RELEASE-GATE.md` anyar (gate checklist
+      otomatis + deploy, tabel 4 bug, cakupan sertifikasi, item
+      P1/P2 non-blocking, roadmap pasca-P0) + update MEMORY/TODO +
+      cleanup scratch `_*.txt`.
+- **Total P0: 4 bug produksi nyata ditemukak** - detail + dampak:
+      gate doc seksi "P0 findings".
+
+**V2 DITUNDA (pasca-sertifikasi, liha gate doc seksi V2):**
+- [ ] **V2-1** I-7 void reason struktural - daftar alasan sah +
+      risiko alur bisnis BUTUH ACC pengurus (UX-6.5).
+- [ ] **V2-2** COGS/HPP reversal - saiki (V1 doc-note
+      KEUANGAN_NOTES): COGS retur ora dibalik -> laba/HPP ora akurat;
+      implement reversal + sesuaikan invarian/rekonsiliasi.
+
+**Roadmap pasca-P0:** V2 (V2-1, V2-2) -> Fase 3 Akuntansi Terbaru
+(audit SAK EP / SAK Syariah / PAP -> proposal desain -> tashih ->
+implementasi) -> roadmap bakpao.id (7 fitur).
 
 
 **Notifikasi & komunikasi:**
