@@ -9,8 +9,13 @@
  * ── Keputusan A1 (di-approve user, pasca audit A0) ─────────────────────
  * V1:
  *  - Return revenue dikurangkan (seluruh `returns.amount` yang tercatat).
- *  - Return COGS BELUM dibalik: baris return tidak menyimpan cost
- *    snapshot → angka konservatif. Skema `returns` JANGAN diubah di V1.
+ * V2-2 (2026-09-27): COGS retur kini DIBALIK dua sisi (retur sejak V2-2
+ * menyimpan cogs snapshot saat write; retur pre-V2-2 cogs = 0,
+ * konservatif, tanpa backfill):
+ *  - Pendapatan bersih = penjualan − Σ returns.amount (sisi revenue).
+ *  - Laba Kotor = bersih − HPP bruto + hppRetur, dengan `hppRetur` =
+ *    Σ returns.cogs per periode (offset COGS, tidak mengurangi HPP
+ *    bruto yang ditampilkan).
  *  - `sales.total` sudah NETO (diskon manual, diskon member, dan redeem
  *    sudah dipotong saat transaksi) → Pendapatan Bersih = Σsales.total −
  *    Σreturns.amount. "Bruto" hanya dipakai utk detail ekspansi UI.
@@ -69,7 +74,12 @@ export type KeuanganPayload = {
   };
   /** HPP: Σ si.qty × COALESCE(NULLIF(si.cost_price,0), p.cost_price, 0). */
   hpp: number;
-  /** pendapatan.bersih − hpp. */
+  /**
+   * V2-2 (COGS reversal): Σ returns.cogs per periode — offset HPP dari
+   * barang yang kembali. Retur pre-V2-2 cogs = 0 (konservatif).
+   */
+  hppRetur: number;
+  /** pendapatan.bersih − hpp + hppRetur. */
   labaKotor: number;
   beban: {
     /** Σ expenses.amount [periode]. */
@@ -98,7 +108,7 @@ export type KeuanganPayload = {
  */
 export const KEUANGAN_NOTES: string[] = [
   'Perhitungan V1 menggunakan seluruh retur yang tercatat. Status refund belum tersimpan secara permanen — angka bisa mencakup retur tanpa pengembalian uang.',
-  'COGS untuk retur belum dibalik (baris retur tidak menyimpan cost snapshot); harga pokok bersifat konservatif.',
+  'COGS retur sudah dibalik sejak V2-2 (Σ returns.cogs mengurangi HPP, menaikkan laba kotor); retur pre-V2-2 cogs = 0 — konservatif, tanpa backfill.',
   'Cashback adalah kewajiban kepada member (saldo tertunda), bukan beban — ditampilkan sebagai memo agar tidak dobel hitung.',
   'Zakat tercatat terpisah (zakat_history), bukan beban operasional — ditampilkan sebagai memo.',
   'Settlement konsinyasi adalah pembayaran kepada pemilik barang (di luar P&L; penjualan barangnya tidak tercatat di sales) — ditampilkan sebagai memo, bukan beban.',
@@ -135,10 +145,10 @@ export async function queryKeuangan(
 
   const ret = (await d
     .prepare(
-      `SELECT COUNT(*) c, COALESCE(SUM(amount), 0) v
+      `SELECT COUNT(*) c, COALESCE(SUM(amount), 0) v, COALESCE(SUM(cogs), 0) rc
        FROM returns WHERE created_at >= ? AND created_at <= ?`
     )
-    .get(...p)) as { c: number; v: number };
+    .get(...p)) as { c: number; v: number; rc: number };
 
   // HPP per-item (snapshot): cost_price saat penjualan; fallback harga
   // produk saat ini hanya bila snapshot 0 (legacy). RUMUS SAMA PERSIS
@@ -206,7 +216,9 @@ export async function queryKeuangan(
   // Bruto = neto + potongan yang sudah dipotong (hanya utk detail UI).
   const bruto = sales.t + sales.disc + sales.mdisc + sales.red;
   const bersih = sales.t - ret.v;
-  const labaKotor = bersih - hppRow.v;
+  // V2-2 (COGS netting): HPP bersih = HPP bruto − COGS barang yang
+  // kembali (Σ returns.cogs; retur pre-V2-2 cogs = 0, konservatif).
+  const labaKotor = bersih - hppRow.v + ret.rc;
 
   return {
     sales_count: sales.c,
@@ -220,6 +232,7 @@ export async function queryKeuangan(
       bersih,
     },
     hpp: hppRow.v,
+    hppRetur: ret.rc,
     labaKotor,
     beban: {
       total: exp.v,

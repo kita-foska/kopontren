@@ -199,13 +199,14 @@ export function shareWa(text: string, phone?: string) {
 export function buildLabaRugiWa(p: KeuanganPayload, from: string, to: string): string {
   const idr = (n: number) => rp(n);
   const lines: string[] = [];
-  lines.push('*LAPORAN LABA-RUGI OPERASIONAL (V1)*');
+  lines.push('*LAPORAN LABA-RUGI OPERASIONAL (V2-2)*');
   lines.push('Periode: ' + from + ' s.d. ' + to);
   lines.push('===========================');
   lines.push('Penjualan Bruto: ' + idr(p.pendapatan.bruto));
   lines.push('Retur Penjualan Tercatat: -' + idr(p.pendapatan.retur));
   lines.push('Pendapatan Bersih: ' + idr(p.pendapatan.bersih));
   lines.push('HPP (COGS): -' + idr(p.hpp));
+  lines.push('Dibalik COGS Retur (V2-2): +' + idr(p.hppRetur));
   lines.push('*Laba Kotor: ' + idr(p.labaKotor) + '*');
   lines.push('Beban Operasional: -' + idr(p.beban.total));
   lines.push('===========================');
@@ -218,7 +219,7 @@ export function buildLabaRugiWa(p: KeuanganPayload, from: string, to: string): s
   lines.push('Ujrah Konsinyasi (komisi toko): ' + idr(p.memo.ujrah_konsinyasi.total));
   lines.push('---');
   lines.push(
-    'V1: retur COGS belum dibalik; piutang/hutang & kas belum terintegrasi (lihat Catatan V1).'
+    'V2-2: laba kotor net COGS retur (Σ returns.cogs); retur pre-V2-2 cogs = 0 (konservatif). Piutang/hutang & kas belum terintegrasi (lihat Catatan V2-2).'
   );
   return lines.join('\n');
 }

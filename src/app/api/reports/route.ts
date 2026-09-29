@@ -39,6 +39,16 @@ export async function GET(req: Request) {
         )
         .get(from)) as { v: number }
     ).v;
+    // V2-2 (COGS netting): retur per periode — sisi revenue (Σ amount)
+    // dan sisi COGS (Σ cogs; retur sejak V2-2, pre-V2-2 cogs = 0).
+    const retAgg = (
+      (await d
+        .prepare(
+          `SELECT COALESCE(SUM(amount), 0) v, COALESCE(SUM(cogs), 0) rc
+           FROM returns WHERE created_at >= ?`
+        )
+        .get(from)) as { v: number; rc: number }
+    );
     const purchases = (
       (await d
         .prepare(`SELECT COALESCE(SUM(qty * unit_cost),0) v FROM purchases WHERE created_at >= ?`)
@@ -114,7 +124,10 @@ export async function GET(req: Request) {
       sales_count: sales.c,
       sales_total: sales.t,
       cogs,
-      profit: sales.t - cogs,
+      returns_total: retAgg.v,
+      // V2-2: profit = (penjualan − retur) − (HPP − COGS retur),
+      // net dua sisi — konsisten dgn P&L (lib/keuangan) & zakat.
+      profit: sales.t - retAgg.v - (cogs - retAgg.rc),
       purchases_total: purchases,
       expenses_total: expenses,
       cash_in: cashIn,

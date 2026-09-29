@@ -105,7 +105,8 @@ async function computeZakat(): Promise<ZakatCalculation> {
  *   modal   = Σ stok × harga jual base_price (mode 'market', default —
  *             V1: proxy harga pasar) ATAU Σ stok × cost_price ('hpp',
  *             fallback konservatif) — mode = setting `valuation_mode`
- *   laba    = laba kotor periode (penjualan − COGS); periode di-ANCHOR
+ *   laba    = laba kotor periode net V2-2: (penjualan − Σ retur)
+ *             − (COGS − Σ COGS retur); periode di-ANCHOR
  *             pada haul_start_date (haul tetap 1 th, P3-Q1);
  *             last_zakat_date TAK me-reset (pembayaran = ta'jil), hanya
  *             fallback anchor bila haul_start_date kosong + audit
@@ -155,7 +156,17 @@ async function computeZakatLive(
         .get(period_start_utc)) as { v: number }
     ).v
   );
-  const laba = salesTotal - cogs;
+  // V2-2 (COGS netting): retur sejak period_start — sisi revenue
+  // (Σ amount) dan sisi COGS (Σ cogs; retur pre-V2-2 cogs = 0).
+  const retAgg = (
+    (await d
+      .prepare(
+        `SELECT COALESCE(SUM(amount), 0) v, COALESCE(SUM(cogs), 0) rc
+         FROM returns WHERE created_at >= ?`
+      )
+      .get(period_start_utc)) as { v: number; rc: number }
+  );
+  const laba = salesTotal - retAgg.v - (cogs - retAgg.rc);
 
   const piutang = Number(
     (

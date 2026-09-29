@@ -148,6 +148,7 @@ function main(): void {
       bersih: 1800000,
     },
     hpp: 1200000,
+    hppRetur: 0,
     labaKotor: 600000,
     beban: { total: 300000, count: 5, byCategory: [] },
     labaBersih: 300000,
@@ -174,6 +175,10 @@ function main(): void {
       lr.includes('Ujrah Konsinyasi (komisi toko): Rp 100.000')
   );
   ok('laba-rugi: TIDAK ADA duplikasi "Rp Rp"', !lr.includes('Rp Rp'));
+  ok(
+    'laba-rugi: baris "Dibalik COGS Retur (V2-2)" ada (+Rp 0 utk fixture)',
+    lr.includes('Dibalik COGS Retur (V2-2): +Rp 0')
+  );
 
   console.log('---');
   console.log('PASS: ' + passes + '  FAIL: ' + failures);
