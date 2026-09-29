@@ -76,6 +76,7 @@ export const MENU_ITEMS: MenuDef[] = [
   { href: '/admin/laporan', label: 'Laporan Pengurus', level: 'laporan' },
   { href: '/admin/notifications', label: 'Notifikasi', level: 'admin' }, // H5: buka untuk pengurus (read-only)
   { href: '/admin/audit', label: 'Audit', level: 'audit' },
+  { href: '/admin/rekonsiliasi', label: 'Rekonsiliasi', level: 'laporan' },
   { href: '/admin/pengguna', label: 'Pengguna', level: 'admin' },
   { href: '/admin/data', label: 'Data & Backup', level: 'admin' },
   { href: '/admin/migrate', label: 'Import CSV', level: 'admin' },
@@ -114,6 +115,7 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
       '/admin/laporan',
       '/admin/notifications',
       '/admin/audit',
+      '/admin/rekonsiliasi',
       '/admin/pengguna',
       '/admin/data',
       '/admin/migrate',

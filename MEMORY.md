@@ -1,6 +1,48 @@
 # MEMORY
 
 ## 2026-09-27
+### P0-C3 (KRITIS): Modul rekonsiliasi 13 cek read-only + admin UI - 27 Sep
+- **Perintah**: rekonsiliasi data (flag-only, TANPA auto-fix): validasi
+  konsistensi finansial antar modul. Deliverable:
+  `src/lib/rekonsiliasi.ts` (modul murni bebas-import, QueryDb) +
+  `GET /api/reconciliation` (guard tier 'laporan' = admin/manajer/
+  pengurus; cache ref-cache key 'rekonsiliasi' TTL 60 dtk) +
+  `/admin/rekonsiliasi` (shell server + `rekonsiliasi-client.tsx`
+  lazy, kolom detail per id cek via config `COLS`, MONEY format
+  `toLocaleString('id-ID')`) + sidebar (item "Rekonsiliasi" level
+  'laporan', grup Sistem) + skrip `test:rekon`.
+- **13 cek**: SALES_PAY (paid−change=total semua baris), SALES_MONEY
+  (nominal tak negatif, INV-7), SPLIT (pay_split JSON valid + Σ=total
+  + metode cash/tf/wa), SHIFT (30 rekap closed vs recompute window
+  [start,end) kasir tsb; by_method tak dibandingkan), RETURN (orphan
+  INV-3 + over-return per sale_item), STOCK (negatif, INV-1), DEBTS
+  (remaining=amount−paid, INV-5), PAYABLES (idem, INV-6), POINTS
+  (members.points = Σ point_history earn/redeem/void/return —
+  penyempurnaan INV-4: reason 'refund' TIDAK ditulis app manapun;
+  'return' = rollback retur penuh), CASHBACK (cashback_balance = Σ
+  reason cashback/cashback_use/return_cash), KONSIN (sisa ≥ 0 per
+  guard 'sell'/'return'; tak overpay per guard 'pay'; settled ⇒
+  lunas per guard 'close' — ketiganya mirror /api/konsinyasi),
+  KONSIN_UJRAH (Σ komisi = Σ kas masuk 'Ujrah Kon. %' — per-row
+  commission_rate snapshot, floor/unit = SQLite int div), KONSIN_PAY
+  (Σ amount_paid = Σ kas keluar 'Kon. %').
+- **Detail per cek**: status ok/drift + drift_count + ≤20 baris
+  selisih (rows: Record[]); cek agregat kas (UJRAH/PAY) = 1 baris
+  {expected, recorded}. Flag-only: modul TIDAK memodifikasi data.
+- **Bug caught saat verifikasi skema**: cek PAYABLES awal menulis
+  `owner_name` — kolom nyata = `supplier_name` (src/db.ts L374,
+  /api/payables, notify.ts) → SQL "no such column" 500 bila tak
+  di-fix. Cek KONSIN ditambah sub-cek overpay (`amount_paid >`
+  tagihan) mirror guarded UPDATE aksi 'pay'.
+- **Verifikasi**: `node scripts/test-rekonsiliasi.ts` (43 assert,
+  node:sqlite in-memory, seed selaras-guard → 13 ok; 12 mutation
+  korup → drift_total 16 dgn jumlah persis per cek + DB kosong +
+  sanity NOTES) = **PASS 43 / FAIL 0 / ALL_PASS / EXIT 0**;
+  `tsc --noEmit` EXIT 0; `next build` EXIT 0.
+- **Aksi**: commit 8 file (rekonsiliasi.ts, reconciliation/route.ts,
+  admin/rekonsiliasi/page.tsx, rekonsiliasi-client.tsx,
+  test-rekonsiliasi.ts, package.json, sidebar.tsx, MEMORY.md) dual-
+  push master+main.
 ### P0-C2 (KRITIS): Harness invarian data + bug backup point_history - 27 Sep
 - **Perintah (ACC Gus Fi)**: P0-C2 = invarian data (duit + poin) dengan
   restore drill nyata. Deliverable: `scripts/test-invariants.ts`
