@@ -20,6 +20,15 @@
   p{margin:6px 0}
   label.chk{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:#fff;cursor:pointer;min-height:44px}
   input[type=checkbox]{width:22px;height:22px;min-width:22px;accent-color:var(--maroon);margin-top:2px}
+  input[type=radio]{width:22px;height:22px;min-width:22px;accent-color:var(--maroon);flex-shrink:0;margin-top:2px}
+  fieldset.tashih{border:none;margin:8px 0;padding:0}
+  fieldset.tashih>legend{font-weight:600;color:var(--maroon);margin-bottom:4px}
+  label.tashih-opt{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:#fff;cursor:pointer;min-height:44px}
+  .tashih-note{width:100%;min-height:64px;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:.9rem;resize:vertical;margin:8px 0}
+  .tashih-copy{display:inline-flex;gap:8px;align-items:center;background:var(--maroon);color:#fff;border:none;border-radius:10px;padding:10px 16px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer;min-height:44px;margin-top:4px}
+  .tashih-copy:disabled{opacity:.5;cursor:default}
+  .tashih-copy-msg{font-weight:400;font-size:.85rem}
+  .tashih-preview{width:100%;min-height:140px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#f6f2ec;font:inherit;font-size:.8rem;white-space:pre-wrap}
   input[type=text],input[type=date]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;min-height:44px}
   .row{display:flex;gap:10px;flex-wrap:wrap}
   .row>div{flex:1 1 180px}
@@ -39,6 +48,8 @@
     .card,details,label.chk{break-inside:avoid}
     tr{break-inside:avoid}
     input[type=text],input[type=date]{border:1px solid #999;min-height:56px} /* ruang tanda tangan ±4 cm */
+    .tashih-copy{display:none}
+    label.tashih-opt,.tashih-note{break-inside:avoid}
   }
 </style>
 </head>
@@ -77,10 +88,28 @@
   </div>
 
   <div class="card">
-    <h2>4. Permohonan Keputusan Pengurus (☐ = beri tanda)</h2>
-    <label class="chk"><input type="checkbox"> <span><b>Setuju</b> skema komisi wakalah bil ujrah (ujrah tercatat saat barang terjual) sesuai implementasi di aplikasi.</span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Setuju</b> komisi boleh <b>berbeda-beda per kesepakatan</b> dengan pemilik (input per titipan + default per pemilik); titipan yang sedang berjalan tetap terkunci (tidak diubah sepihak).</span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Setuju</b> meneruskan sisa pertanyaan ke ulama: dasar hitung ujrah memakai persentase harga perjanjian (bukan harga jual aktual) — alternatif bila diperlukan = ujrah mitsli (lihat lampiran).</span></label>
+    <h2>4. Permohonan Keputusan Pengurus (pilih satu per poin)</h2>
+    <fieldset class="tashih">
+      <legend>Poin 1 — skema komisi wakalah bil ujrah</legend>
+      <label class="tashih-opt"><input type="radio" name="p4-p1" value="Setuju"> <span><b>Setuju</b> skema komisi wakalah bil ujrah (ujrah tercatat saat barang terjual) sesuai implementasi di aplikasi.</span></label>
+      <label class="tashih-opt"><input type="radio" name="p4-p1" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
+      <label class="tashih-opt"><input type="radio" name="p4-p1" value="Koreksi"> <span><b>Koreksi</b> — tulis koreksi / perubahan di catatan</span></label>
+    </fieldset>
+    <textarea class="tashih-note" data-note="p4-p1" placeholder="Catatan poin 1 (wajib bila Ora Setuju / Koreksi)"></textarea>
+    <fieldset class="tashih">
+      <legend>Poin 2 — komisi berbeda per kesepakatan + titipan berjalan terkunci</legend>
+      <label class="tashih-opt"><input type="radio" name="p4-p2" value="Setuju"> <span><b>Setuju</b> komisi boleh <b>berbeda-beda per kesepakatan</b> dengan pemilik (input per titipan + default per pemilik); titipan yang sedang berjalan tetap terkunci (tidak diubah sepihak).</span></label>
+      <label class="tashih-opt"><input type="radio" name="p4-p2" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
+      <label class="tashih-opt"><input type="radio" name="p4-p2" value="Koreksi"> <span><b>Koreksi</b> — tulis koreksi / perubahan di catatan</span></label>
+    </fieldset>
+    <textarea class="tashih-note" data-note="p4-p2" placeholder="Catatan poin 2 (wajib bila Ora Setuju / Koreksi)"></textarea>
+    <fieldset class="tashih">
+      <legend>Poin 3 — meneruskan sisa pertanyaan ke ulama (dasar hitung ujrah)</legend>
+      <label class="tashih-opt"><input type="radio" name="p4-p3" value="Setuju"> <span><b>Setuju</b> meneruskan sisa pertanyaan ke ulama: dasar hitung ujrah memakai persentase harga perjanjian (bukan harga jual aktual) — alternatif bila diperlukan = ujrah mitsli (lihat lampiran).</span></label>
+      <label class="tashih-opt"><input type="radio" name="p4-p3" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
+      <label class="tashih-opt"><input type="radio" name="p4-p3" value="Koreksi"> <span><b>Koreksi</b> — tulis koreksi / perubahan di catatan</span></label>
+    </fieldset>
+    <textarea class="tashih-note" data-note="p4-p3" placeholder="Catatan poin 3 (wajib bila Ora Setuju / Koreksi)"></textarea>
     <h3>Persetujuan</h3>
     <div class="row">
       <div><label class="meta">Nama / jabatan<br><input type="text"></label></div>
@@ -108,6 +137,83 @@
     </div>
     <p class="meta"><b>Status:</b> Provisional — implemented based on strongest available fiqh position. Pending tashih by pengasuh. Subject to correction. (26 Sep 2026; dokumen hanya — tanpa perubahan kode; tercatat di SYARIAH-CHECKLIST.md item P4 + TODO A1.1.)</p>
   </details>
+
+  <div class="card">
+    <h2>Copy Jawaban Tashih</h2>
+    <p class="meta">Isi pilihan + catatan di atas, lalu salin teks terstruktur di bawah untuk dikirim ke tim aplikasi. Non-persisten: tidak disimpan; tombol + preview tersembunyi saat cetak.</p>
+    <button id="tashih-copy" class="tashih-copy" type="button">Copy Jawaban</button>
+    <textarea id="tashih-preview" class="tashih-preview" readonly placeholder="Isi pilihan di atas — teks siap-salin akan tampil di sini."></textarea>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  var ITEMS = [
+    { n: 1, title: "Skema wakalah bil ujrah", name: "p4-p1" },
+    { n: 2, title: "Komisi per kesepakatan + titipan terkunci", name: "p4-p2" },
+    { n: 3, title: "Meneruskan dasar hitung ujrah ke ulama", name: "p4-p3" }
+  ];
+  var btn = document.getElementById("tashih-copy");
+  var preview = document.getElementById("tashih-preview");
+
+  function chosenValue(name) {
+    var el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : null;
+  }
+  function noteOf(name) {
+    var el = document.querySelector('textarea[data-note="' + name + '"]');
+    return el && el.value.trim() ? el.value.trim() : "-";
+  }
+  function buildText() {
+    var sju = 0, ora = 0, kor = 0, follow = [];
+    var s = [];
+    s.push("JAWABAN TASHIH — P4 KONSINYASI");
+    s.push("Tanggal: " + new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }));
+    s.push("Oleh: Gus Fi (Ali Makfi)");
+    s.push("");
+    ITEMS.forEach(function (it) {
+      var v = chosenValue(it.name);
+      s.push(it.n + ". " + it.title + " → " + (v ? v : "(belum dipilih)"));
+      s.push("   Catatan: " + noteOf(it.name));
+      if (v === "Setuju") sju++;
+      else if (v === "Ora Setuju") ora++;
+      else if (v === "Koreksi") kor++;
+      if (v === "Koreksi" || v === "Ora Setuju") follow.push(it.n);
+    });
+    s.push("");
+    s.push("Ringkasan: " + sju + " Setuju, " + ora + " Ora Setuju, " + kor + " Koreksi");
+    s.push("Perlu ditindaklanjuti: " + (follow.length ? follow.join(", ") : "-"));
+    return s.join("\n");
+  }
+  function refresh() { preview.value = buildText(); }
+  function legacyCopy() {
+    if (preview.select) preview.select();
+    document.execCommand("copy");
+  }
+  function copyText() {
+    var markOk = function () {
+      var old = btn.querySelector(".tashih-copy-msg");
+      if (old) old.remove();
+      var span = document.createElement("span");
+      span.className = "tashih-copy-msg";
+      span.textContent = "Tersalin ✓";
+      btn.appendChild(span);
+      setTimeout(function () { if (span.parentNode) span.remove(); }, 2500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(preview.value).then(markOk).catch(function () { legacyCopy(); markOk(); });
+    } else {
+      legacyCopy();
+      markOk();
+    }
+  }
+  btn.addEventListener("click", copyText);
+  document.querySelectorAll(".tashih-opt input, .tashih-note").forEach(function (el) {
+    el.addEventListener("input", refresh);
+  });
+  refresh();
+})();
+</script>
 
 </div>
 </body>

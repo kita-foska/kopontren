@@ -55,6 +55,11 @@ const SCRIPT_ALLOW = new Set([
   // MAP; exception future-proofing utk gate script jikalau ke-entuku
   // MAP ngarep.
   'P3-TASHIH-ZAKAT.html',
+  // P4-PROPOSAL-KONSINYASI.html (ACC Gus Fi, 30 Sep 2026, via sesi DeepSeek):
+  // file ROOT repo (P4-PROPOSAL-KONSINYASI.html, bukan di docs/), belum ada
+  // di MAP; exception future-proofing utk gate script jikalau ke-entuku
+  // MAP ngarep.
+  'P4-PROPOSAL-KONSINYASI.html',
 ]);
 
 let ok = true;
