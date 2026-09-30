@@ -499,6 +499,19 @@ CREATE TABLE IF NOT EXISTS coop_shu(
   <ul>
   <li>setor: Debit 1010 → Kredit 2050/2060/2070 (per <code>kind</code>).</li>
   <li>tarik sukarela: Debit 2070 → Kredit 1010 (sisa ≥ 0 per anggota, cek aplikasi; ketentuan tarik = PKGF).</li>
+  <li>pokok kembali saat anggota keluar: Debit 2050 → Kredit 1010 (kembali sesuai simpanan pokok).</li>
+  <li><b>Jumlah &amp; jadwal simpanan wajib = PKGF §13.10</b> (app hanya wadah pencatatan, bukan penentu besaran).</li>
+  </ul>
+</li>
+<li>Modal penyertaan (3010): setoran tambahan anggota/admin: Debit 1010 → Kredit 3010.</li>
+</ol>
+<h3>7.3 Koneksi ke V1</h3>
+<ul>
+<li>Anggota koperasi ≠ member loyalty (dua entitas berbeda; bisa orang yang sama — tidak ada penggabungan data).</li>
+<li>SHU hanya dihitung dari <b>LKA formal (GL)</b> — bukan dari Laba Bersih V1 (V1 = operasional saja, MEMO cashback/zakat).</li>
+</ul>
+</div>
+</section>
 <section id="s8">
 <h2><span class="n">8</span>Pemisahan ZIS (Keputusan #5: A; #7: wakaf ditunda)</h2>
 <div class="card">
@@ -733,16 +746,3 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 </div>
 </body>
 </html>
-  <li>pokok kembali saat anggota keluar: Debit 2050 → Kredit 1010 (kembali sesuai simpanan pokok).</li>
-  <li><b>Jumlah &amp; jadwal simpanan wajib = PKGF §13.10</b> (app hanya wadah pencatatan, bukan penentu besaran).</li>
-  </ul>
-</li>
-<li>Modal penyertaan (3010): setoran tambahan anggota/admin: Debit 1010 → Kredit 3010.</li>
-</ol>
-<h3>7.3 Koneksi ke V1</h3>
-<ul>
-<li>Anggota koperasi ≠ member loyalty (dua entitas berbeda; bisa orang yang sama — tidak ada penggabungan data).</li>
-<li>SHU hanya dihitung dari <b>LKA formal (GL)</b> — bukan dari Laba Bersih V1 (V1 = operasional saja, MEMO cashback/zakat).</li>
-</ul>
-</div>
-</section>
