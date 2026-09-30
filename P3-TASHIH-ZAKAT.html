@@ -22,6 +22,16 @@
   .q b{color:var(--maroon)}
   label.chk{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:#fff;cursor:pointer;min-height:44px}
   input[type=checkbox]{width:22px;height:22px;min-width:22px;accent-color:var(--maroon);margin-top:2px}
+  input[type=radio]{width:22px;height:22px;min-width:22px;accent-color:var(--maroon);flex-shrink:0;margin-top:2px}
+  fieldset.tashih{border:none;margin:8px 0;padding:0}
+  fieldset.tashih>legend{font-weight:600;color:var(--maroon);margin-bottom:4px}
+  label.tashih-opt{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:10px;margin:8px 0;background:#fff;cursor:pointer;min-height:44px}
+  .tashih-hint{font-size:.85rem;color:var(--soft);margin:8px 0;padding:8px 10px;background:#faf8f5;border-radius:8px}
+  .tashih-note{width:100%;min-height:64px;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:.9rem;resize:vertical;margin:8px 0}
+  .tashih-copy{display:inline-flex;gap:8px;align-items:center;background:var(--maroon);color:#fff;border:none;border-radius:10px;padding:10px 16px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer;min-height:44px;margin-top:4px}
+  .tashih-copy:disabled{opacity:.5;cursor:default}
+  .tashih-copy-msg{font-weight:400;font-size:.85rem}
+  .tashih-preview{width:100%;min-height:140px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#f6f2ec;font:inherit;font-size:.8rem;white-space:pre-wrap}
   input[type=text],input[type=date]{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;min-height:44px}
   .row{display:flex;gap:10px;flex-wrap:wrap}
   .row>div{flex:1 1 180px}
@@ -39,6 +49,8 @@
     .card,details,label.chk{break-inside:avoid}
     tr{break-inside:avoid}
     input[type=text],input[type=date]{border:1px solid #999;min-height:56px} /* ruang tanda tangan ±4 cm */
+    .tashih-copy{display:none}
+    label.tashih-opt,.tashih-note,.tashih-hint{break-inside:avoid}
   }
 </style>
 </head>
@@ -67,36 +79,53 @@
       <span class="meta">Kondisi aplikasi (sejak 26 Sep): periode laba di-ANCHOR pada <code>haul_start_date</code> (haul tetap 1 tahun); <code>last_zakat_date</code> tidak me-reset siklus (pembayaran = ta'jil), hanya audit + fallback bila haul start kosong. Akumulasi (accrual) proporsional hari haul ditampilkan di UI. Standar zakat tijarah umumnya = harta dagang SELURUH pada jatuh haul.</span><br>
       <b>Mengapa?</b> "Laba terakumulasi sejak pembayaran terakhir" boleh sebagai cara praktis, atau harus pakai haul 1 tahun yang tetap?
     </div>
-    <label class="chk"><input type="checkbox"> <span><b>Opsi A:</b> Mekanik saat ini (sejak pembayaran terakhir) sah sebagai cara praktis.</span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Opsi B:</b> Harus haul tetap 1 tahun (periode laba sejak awal haul, tak peduli kapan dibayar).</span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Lainnya:</b> <input type="text" style="margin-top:6px"></span></label>
+    <p class="tashih-hint"><b>Referensi opsi:</b> A — Mekanik saat ini (sejak pembayaran terakhir) sah sebagai cara praktis · B — Harus haul tetap 1 tahun (periode laba sejak awal haul, tak peduli kapan dibayar).</p>
+    <fieldset class="tashih">
+      <legend>Pilih satu (tashih) — Setuju = posisi aplikasi sah · Koreksi = tulis posisi pengganti di catatan</legend>
+      <label class="tashih-opt"><input type="radio" name="soal1" value="Setuju"> <span><b>Setuju</b> — posisi aplikasi saat ini sah</span></label>
+      <label class="tashih-opt"><input type="radio" name="soal1" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
+      <label class="tashih-opt"><input type="radio" name="soal1" value="Koreksi"> <span><b>Koreksi</b> — tulis posisi lain di catatan (bisa mengutip opsi A/B atau lain)</span></label>
+    </fieldset>
+    <textarea class="tashih-note" data-note="soal1" placeholder="Catatan (wajib bila Ora Setuju / Koreksi)"></textarea>
 
     <div class="q">
       <b>Soal 2 — Harga emas (nisab).</b><br>
       <span class="meta">Kondisi aplikasi: harga emas diisi manual oleh admin; standar saat ini PROVISIONAL <b>24 karat murni</b> (emas 14 karat tidak layak — riset Muktamar NU ke-35; menunggu tashih). Nisab = 85 g × harga tersebut. Sejak 26 Sep ada log verifikasi <code>zakat_gold_standards</code> (append-only: karat, harga/g, sumber, tanggal, oleh) — entri terbaru = standar terkini.</span><br>
       <b>Mengapa?</b> (a) sumber harga resmi mana (Antam / spot dunia / harga daerah), (b) frekuensi verifikasi + dicatat di mana, (c) bila ragu, opsi hati-hati yang mana (pakai harga tertinggi / tunda zakat)?
     </div>
-    <label class="chk"><input type="checkbox"> <span><b>Sumber harga:</b> <input type="text" placeholder="mis. Antam / Pegadaian / harga daerah"></span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Frekuensi + tempat catat:</b> <input type="text" placeholder="mis. tiap hari kerja, catat di /admin/zakat"></span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Opsi hati-hati bila ragu:</b> <input type="text" placeholder="mis. pakai harga tertinggi / tunda zakat"></span></label>
+    <fieldset class="tashih">
+      <legend>Pilih satu (tashih) — sub-jawaban ditulis di catatan (a/b/c)</legend>
+      <label class="tashih-opt"><input type="radio" name="soal2" value="Setuju"> <span><b>Setuju</b> — posisi aplikasi (standar 24K provisional + log verifikasi append-only) diterima</span></label>
+      <label class="tashih-opt"><input type="radio" name="soal2" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
+      <label class="tashih-opt"><input type="radio" name="soal2" value="Koreksi"> <span><b>Koreksi</b> — tulis koreksi di catatan (a/b/c)</span></label>
+    </fieldset>
+    <textarea class="tashih-note" data-note="soal2" placeholder="Catatan: a) sumber harga (mis. Antam / Pegadaian / harga daerah) · b) frekuensi + tempat catat (mis. tiap hari kerja, /admin/zakat) · c) opsi hati-hati bila ragu (mis. pakai harga tertinggi / tunda zakat)"></textarea>
 
     <div class="q">
       <b>Soal 3 — Modal (barang dagangan dinilai berapa).</b><br>
       <span class="meta">Kondisi aplikasi (sejak 26 Sep): modal = stok × (mode <code>valuation_mode</code> "market": harga jual produk — V1 proxy harga pasar | mode "hpp": harga perolehan). Ada dua pendekatan baku: (a) modal murni — hanya untung yang dizakati (sebagian ulama Hanafi); (b) modal + untung (mayoritas &amp; MUI Fatwa No. 78/2023 [judul: menunggu pengasuh]) — dan bila (b), persediaan dinilai pada HPP atau harga jual saat jatuh haul? Jawaban provisional aplikasi: mode market (default) | hpp (fallback).</span><br>
       <b>Mengapa?</b> Memakai modal HPP sekarang (angka terendah, hati-hati terhadap harta) sudah cukup, atau harus ke nilai pasar / pendekatan hanya-untung?
     </div>
-    <label class="chk"><input type="checkbox"> <span><b>Opsi A:</b> Modal HPP (kondisi saat ini) sah.</span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Opsi B:</b> Nilai pasar saat jatuh haul (modal + untung).</span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Opsi C:</b> Pendekatan hanya-untung.</span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Lainnya:</b> <input type="text"></span></label>
+    <p class="tashih-hint"><b>Referensi pendekatan:</b> A — Modal HPP (kondisi saat ini) sah · B — Nilai pasar saat jatuh haul (modal + untung) · C — Pendekatan hanya-untung.</p>
+    <fieldset class="tashih">
+      <legend>Pilih satu (tashih) — Setuju = jawaban provisional aplikasi (mode market / hpp fallback) sah</legend>
+      <label class="tashih-opt"><input type="radio" name="soal3" value="Setuju"> <span><b>Setuju</b> — jawaban provisional aplikasi sah</span></label>
+      <label class="tashih-opt"><input type="radio" name="soal3" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
+      <label class="tashih-opt"><input type="radio" name="soal3" value="Koreksi"> <span><b>Koreksi</b> — tulis pendekatan lain di catatan (bisa mengutip A/B/C atau lain)</span></label>
+    </fieldset>
+    <textarea class="tashih-note" data-note="soal3" placeholder="Catatan (wajib bila Ora Setuju / Koreksi)"></textarea>
   </div>
 
   <div class="card">
     <h2>3. Keputusan Tashih (pilih satu)</h2>
-    <label class="chk"><input type="checkbox"> <span><b>Diterima dengan catatan</b> — catatan: <input type="text" style="margin-top:6px"></span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Diterima</b> (rumus aplikasi dipakai apa adanya)</span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Perlu revisi rumus</b> — keterangan: <input type="text" style="margin-top:6px"></span></label>
-    <label class="chk"><input type="checkbox"> <span><b>Ditolak</b> — zakat cukup dihitung manual</span></label>
+    <fieldset class="tashih">
+      <legend>Pilih satu (keputusan final)</legend>
+      <label class="tashih-opt"><input type="radio" name="keputusan" value="DITERIMA DENGAN CATATAN"> <span><b>Diterima dengan catatan</b> — tulis catatan di bawah</span></label>
+      <label class="tashih-opt"><input type="radio" name="keputusan" value="DITERIMA"> <span><b>Diterima</b> (rumus aplikasi dipakai apa adanya)</span></label>
+      <label class="tashih-opt"><input type="radio" name="keputusan" value="PERLU REVISI"> <span><b>Perlu revisi rumus</b> — tulis keterangan di bawah</span></label>
+      <label class="tashih-opt"><input type="radio" name="keputusan" value="DITOLAK"> <span><b>Ditolak</b> — zakat cukup dihitung manual</span></label>
+    </fieldset>
+    <textarea class="tashih-note" data-note="keputusan" placeholder="Catatan / keterangan (wajib bila Diterima dengan catatan / Perlu revisi / Ditolak)"></textarea>
     <h3>Identitas panel &amp; tanggal</h3>
     <div class="row">
       <div><label class="meta">Nama panel / lembaga<br><input type="text"></label></div>
@@ -135,6 +164,88 @@ saat presentasi.</pre>
     <p class="meta"><b>Koreksi sitasi (riset 26 Sep 2026):</b> baris 3 semula tertulis "DSN-MUI Fatwa No. 8/2008" — keliru: No. 08/DSN-MUI/IV/2000 = fatwa pembiayaan musyarakah, bukan zakat; DSN-MUI (Sharia Board MUI) berdomain muamalah/keuangan syariah, bukan fatwa zakat (domain Komisi Fatwa MUI). Nomor "78/2023" diberikan tim &amp; BELUM TERVERIFIKASI — judul &amp; substansi diverifikasi pengasuh sebelum dokumen ini jadi dasar tashih.</p>
     <p class="meta">Halaman spesifik silakan dilengkapi panel. Dokumen sumber: P3-TASHIH-ZAKAT.md (repo kopontren).</p>
   </details>
+
+  <div class="card">
+    <h2>Copy Jawaban Tashih</h2>
+    <p class="meta">Isi pilihan + catatan di atas, lalu salin teks terstruktur di bawah untuk dikirim ke tim aplikasi. Non-persisten: tidak disimpan; tombol + preview tersembunyi saat cetak.</p>
+    <button id="tashih-copy" class="tashih-copy" type="button">Copy Jawaban</button>
+    <textarea id="tashih-preview" class="tashih-preview" readonly placeholder="Isi pilihan di atas — teks siap-salin akan tampil di sini."></textarea>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  var ITEMS = [
+    { n: 1, title: "Soal 1 — Haul (masa zakat)", name: "soal1" },
+    { n: 2, title: "Soal 2 — Harga emas (nisab)", name: "soal2" },
+    { n: 3, title: "Soal 3 — Modal (barang dagangan dinilai berapa)", name: "soal3" },
+    { n: 4, title: "Keputusan Tashih", name: "keputusan" }
+  ];
+  var btn = document.getElementById("tashih-copy");
+  var preview = document.getElementById("tashih-preview");
+
+  function chosenValue(name) {
+    var el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : null;
+  }
+  function noteOf(name) {
+    var el = document.querySelector('textarea[data-note="' + name + '"]');
+    return el && el.value.trim() ? el.value.trim() : "-";
+  }
+  function buildText() {
+    var sju = 0, ora = 0, kor = 0, follow = [];
+    var s = [];
+    s.push("JAWABAN TASHIH — P3 ZAKAT TIJARAH");
+    s.push("Tanggal: " + new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }));
+    s.push("Oleh: Gus Fi (Ali Makfi)");
+    s.push("");
+    ITEMS.forEach(function (it) {
+      var v = chosenValue(it.name);
+      s.push(it.n + ". " + it.title + " → " + (v ? v : "(belum dipilih)"));
+      s.push("   Catatan: " + noteOf(it.name));
+      if (it.n < 4) {
+        if (v === "Setuju") sju++;
+        else if (v === "Ora Setuju") ora++;
+        else if (v === "Koreksi") kor++;
+        if (v === "Koreksi" || v === "Ora Setuju") follow.push(it.n);
+      } else {
+        if (v === "PERLU REVISI" || v === "DITOLAK" || v === "DITERIMA DENGAN CATATAN") follow.push(it.n);
+      }
+    });
+    s.push("");
+    s.push("Ringkasan: " + sju + " Setuju, " + ora + " Ora Setuju, " + kor + " Koreksi");
+    s.push("Perlu ditindaklanjuti: " + (follow.length ? follow.join(", ") : "-"));
+    return s.join("\n");
+  }
+  function refresh() { preview.value = buildText(); }
+  function legacyCopy() {
+    if (preview.select) preview.select();
+    document.execCommand("copy");
+  }
+  function copyText() {
+    var markOk = function () {
+      var old = btn.querySelector(".tashih-copy-msg");
+      if (old) old.remove();
+      var span = document.createElement("span");
+      span.className = "tashih-copy-msg";
+      span.textContent = "Tersalin ✓";
+      btn.appendChild(span);
+      setTimeout(function () { if (span.parentNode) span.remove(); }, 2500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(preview.value).then(markOk).catch(function () { legacyCopy(); markOk(); });
+    } else {
+      legacyCopy();
+      markOk();
+    }
+  }
+  btn.addEventListener("click", copyText);
+  document.querySelectorAll(".tashih-opt input, .tashih-note").forEach(function (el) {
+    el.addEventListener("input", refresh);
+  });
+  refresh();
+})();
+</script>
 
 </div>
 </body>

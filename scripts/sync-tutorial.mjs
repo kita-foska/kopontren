@@ -48,7 +48,14 @@ for (const f of readdirSync(outDir).filter((f) => f.endsWith('.html'))) {
 // (allow-same-origin, TIDAK ada allow-scripts) tetap memblokir eksekusi script
 // ini; script hanya berjalan saat file dibuka langsung di browser.
 // JANGAN perluas daftar ini tanpa catatan keputusan baru.
-const SCRIPT_ALLOW = new Set(['AKUNTANSI-PROPOSAL.html']);
+const SCRIPT_ALLOW = new Set([
+  'AKUNTANSI-PROPOSAL.html',
+  // P3-TASHIH-ZAKAT.html (ACC Gus Fi, 30 Sep 2026, via sesi DeepSeek):
+  // file ROOT repo (P3-TASHIH-ZAKAT.html, bukan di docs/), belum ada di
+  // MAP; exception future-proofing utk gate script jikalau ke-entuku
+  // MAP ngarep.
+  'P3-TASHIH-ZAKAT.html',
+]);
 
 let ok = true;
 for (const [src, dest] of MAP) {
