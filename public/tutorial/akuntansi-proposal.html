@@ -94,7 +94,7 @@ section:target h2 .n{background:var(--maroon)}
 <a href="#s0">§0 Keputusan</a><a href="#s1">§1 Konteks</a><a href="#s2">§2 COA</a><a href="#s3">§3 Jurnal</a><a href="#s4">§4 Auto-posting</a><a href="#s5">§5 Laporan</a><a href="#s6">§6 Akad</a><a href="#s7">§7 Koperasi</a><a href="#s8">§8 ZIS</a><a href="#s9">§9 PAP</a><a href="#s10">§10 Migrasi</a><a href="#s11">§11 Risiko</a><a href="#s12">§12 Roadmap</a><a class="hot" href="#s13">§13 14 Keputusan</a><a href="#s14">§14 Aturan</a>
 </div>
 </div>
-<div class="note"><b>Aturan syariah first:</b> semua nilai fiqih/standar (nisbah, rate zakat, margin, rasio SHU, denda, penyusutan, amil) = <b>PERLU KEPUTUSAN GUS FI</b> <span class="tag a">PKGF</span>. Tidak ada default angka fiqih di aplikasi — field input tanpa nilai awal. Halaman ini = <b>snapshot bacaan</b>; sumber kebenaran tetap <code>docs/akuntansi-proposal.md</code> @ <code>e3cfd30</code> (F3.2). §13 kini ada antarmuka tashih interaktif (radio Setuju/Ora Setuju/Koreksi + catatan + tombol copy; exception JS terdokumentasi 30 Sep 2026) — tombol copy bekerja saat file dibuka langsung di browser; di viewer in-app (iframe 0-script) pilihan tidak tersimpan, keputusan tetap dicatat di chat / <code>docs/akuntansi-keputusan.md</code>; versi PDF/cetak menampilkan daftar item bersih. <b>UPDATE 30 SEP 2026:</b> F3.3 TELAH TERJAWAB — 12 Setuju, 0 Ora Setuju, 2 Koreksi (#6 denda tidak ada; #14 wakaf aktif); ter-rekam <code>docs/akuntansi-keputusan.md</code>; revisi snapshot @ <code>3af7250</code>.</div>
+<div class="note"><b>Aturan syariah first:</b> semua nilai fiqih/standar (nisbah, rate zakat, margin, rasio SHU, denda, penyusutan, amil) = <b>PERLU KEPUTUSAN GUS FI</b> <span class="tag a">PKGF</span>. Tidak ada default angka fiqih di aplikasi — field input tanpa nilai awal. Halaman ini = <b>snapshot bacaan</b>; sumber kebenaran tetap <code>docs/akuntansi-proposal.md</code> @ <code>e3cfd30</code> (F3.2). §13 kini ada antarmuka tashih interaktif (radio Setuju/Ora Setuju/Koreksi + catatan + tombol copy; exception JS terdokumentasi 30 Sep 2026) — tombol copy bekerja saat file dibuka langsung di browser; di viewer in-app (iframe 0-script) pilihan tidak tersimpan, keputusan tetap dicatat di chat / <code>docs/akuntansi-keputusan.md</code>; versi PDF/cetak menampilkan daftar item bersih. <b>UPDATE 30 SEP 2026:</b> F3.3 TELAH TERJAWAB — 12 Setuju, 0 Ora Setuju, 2 Koreksi (#6 denda tidak ada; #14 wakaf aktif); ter-rekam <code>docs/akuntansi-keputusan.md</code>; revisi snapshot @ <code>3af7250</code>. <b>UPDATE TASHIH P3 (30 SEP 2026):</b> tashih dok. P3 zakat <code>P3-TASHIH-ZAKAT</code> TERJAWAB–DITERIMA (1 Setujuan, 0 Ora, 1 Koreksi; Soal 3 modal belum dipilih, catatan B) — haul koreksi (anchor 22 Okt 2025) + harga emas terendah = final; ter-rekam <code>docs/akuntansi-keputusan.md</code> + md §15.4; revisi snapshot @ commit tashih P3 (seksi 15 di bawah).</div>
 
 <section id="s0">
 <h2><span class="n">0</span>Ringkasan Eksekutif + 12 Catatan Keputusan</h2>
@@ -549,7 +549,7 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 <li><b>Wakaf (AKTIF — revisi F3.3 #14, 30 Sep 2026)</b>: keputusan #7 ("Belum sekarang") di-revisi. Akun 1120/4100/6020 <b>aktif</b> (bukan placeholder ditunda). Booking = input <code>kind='wakaf'</code> di UI <code>/admin/zis</code> + jurnal manual ke 1120/4100/6020 (scope tambahan PSAK 112); invarian anti-campur tetap (rekon #16). Build = W3.5 (roadmap §12).</li>
 </ul>
 <h3>8.3 Rate zakat &amp; aturan penyaluran = PERLU KEPUTUSAN GUS FI</h3>
-<p>Rate zakat (mal, tijarah, fitrah, dll.) &amp; siapa mustahik yang sah = <b>PKGF §13.2 — TERPUTUSKAN F3.3 #2 (30 Sep 2026)</b>: angka P3 (24K/market/haul) + daftar mustahik <b>final</b>. Badge "provisional" di UI zakat tetap sampai switch jembatan <code>zakat_history</code> (R6, commit terpisah saat F3.4+).</p>
+<p>Rate zakat (mal, tijarah, fitrah, dll.) &amp; siapa mustahik yang sah = <b>PKGF §13.2 — TERPUTUSKAN F3.3 #2 (30 Sep 2026)</b>, <b>diperbarui tashih dok. P3 (30 Sep, GUS FI — DITERIMA; §15.4 md / seksi 15 di bawah)</b>: nisab 24K (harga emas <b>terendah</b>) + haul (anchor 22 Okt 2025, penampang "seolah sudah haul" + keterangan nishab) + kadar 2,5% + daftar mustahik = <b>final</b>; <code>valuation_mode</code> (market/hpp) = <b>masih provisional</b> (Soal 3 belum dipilih, catatan B) — badge "provisional" di UI zakat untuk aspek modal tetap sampai jawaban turun. Jembatan <code>zakat_history</code> boleh di-switch + spesifikasi diimplementasi saat commit F3.4+ (R6).</p>
 </div>
 </section>
 
@@ -630,7 +630,7 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 <tr><td>R3</td><td>Tidak ada saldo awal ("Modal Setara" ≠ ekuitas)</td><td>Buku pembuka @ N (§10): 3010 dihitung sebagai <b>selisih</b> agar D=K; nilai 1050 aset tetap = input + keputusan</td></tr>
 <tr><td>R4</td><td>Konflik label fase (A1–A3 lama vs plan)</td><td>Label F3.x konsisten (audit §10); proposal &amp; commit pakai F3.x; label V1 report tetap "V1"</td></tr>
 <tr><td>R5</td><td>Turso Rows-Read (agregat global = termahal)</td><td><code>balance_running</code> + index <code>idx_jl_acct</code> (§3.1) → saldo = 1 akses terindeks; trial balance per akun; cache <code>gl:</code> 60 dtk; batch per transaksi</td></tr>
-<tr><td>R6</td><td>Tashih P3/P4 terbuka (larangan prabatasih)</td><td><b>TIDAK</b> refactor <code>zakat-*</code>/<code>konsinyasi</code> sampai tashih turun; GL membangun <b>sekitarnya</b> (akun + jembatan); komisi 20% tetap via <code>konsinyasi_commission</code> (setting, ubah tanpa code); badge "provisional" di UI zakat &amp; ujrah kon.</td></tr>
+<tr><td>R6</td><td>Tashih P3/P4 terbuka (larangan prabatasih) — <b>P3 (zakat): tashih turun 30 Sep (dok. P3: DITERIMA; Soal 3 modal belum dipilih); P4: tetap terbuka</b></td><td><b>TIDAK</b> refactor <code>zakat-*</code>/<code>konsinyasi</code> sampai tashih turun — untuk P3 LEPAS sebatas aspek terjawab (haul/nisab/kadar/mustahik): spesifikasi koreksi §15.4 diimplementasi + jembatan di-switch saat commit F3.4+; aspek modal (<code>valuation_mode</code>) tetap provisional sampai Soal 3 terjawab; P4 <code>konsinyasi</code> tetap menunggu tashih; komisi 20% tetap via <code>konsinyasi_commission</code> (setting, ubah tanpa code); badge "provisional" di UI zakat (aspek modal) &amp; ujrah kon.</td></tr>
 <tr><td>R7</td><td>Pola test bebas-import + in-memory</td><td><code>lib/jurnal.ts</code>, <code>lib/gl.ts</code>, <code>lib/zis.ts</code>, <code>lib/coop.ts</code> bebas-import; test <code>test-jurnal/gl/zis/coop</code> (in-memory, tanpa import Next)</td></tr>
 <tr><td>R8</td><td><code>kp-zip3</code> beku, tak ada GL</td><td>Tidak ada pinjam desain; lapisan GL = desain baru di repo ini (proposal ini = blueprint); referensi hanya utk pola modul &amp; backup</td></tr>
 </table></div>
@@ -881,13 +881,27 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 <li><b><code>public/sw.js</code> TIDAK pernah di-commit</b> (diabaikan, disiplin lama).</li>
 <li><code>D:\Ngudi Susilo\kopontren-app</code> = D write/commit; <code>D:\Ngudi Susilo\kp-zip3</code> = reference-only (baca, jangan tulis).</li>
 <li><b>Syariah first, features second</b>; Cline mengusulkan, Gus Fi memutuskan.</li>
-<li>Larangan prabatasih (P3/P4): P3 angka zakat <b>sudah turun via F3.3 #2 (30 Sep)</b> — boleh di-switch saat implementasi (R6); P4 (konsinyasi) tetap jangan finalkan angka &amp; jangan ubah mapping diam-diam sampai tashih P4 turun.</li>
+<li>Larangan prabatasih (P3/P4): <b>P3 zakat = tashih SUDAH TURUN (30 Sep: F3.3 #2 + tashih dok. P3 <code>P3-TASHIH-ZAKAT</code> — DITERIMA; rinci §15.4)</b> — spesifikasi koreksi (haul anchor 22 Okt 2025 + penampang "seolah sudah haul" + keterangan nishab; harga emas terendah) boleh diimplementasi + jembatan di-switch saat commit F3.4+; <b>kecuali aspek modal (Soal 3, belum dipilih)</b> tetap provisional. P4 (konsinyasi) tetap jangan finalkan angka &amp; jangan ubah mapping diam-diam sampai tashih P4 turun.</li>
 <li>Tiap commit implementasi (F3.4+): test golden + <code>next build</code> EXIT 0 + backup DB sebelum migrasi skema baru (v21/v22/v23).</li>
 <li>Visual check oleh Gus Fi: ongoing, TIDAK blocking.</li>
 </ul>
 </div>
+
+<section id="s15">
+<h2><span class="n">15</span>Tashih P3 zakat (30 Sep 2026 — DITERIMA, GUS FI)</h2>
+<div class="card">
+<p>Tashih dok. <code>P3-TASHIH-ZAKAT</code>: <b>1 Setujuan, 0 Ora Setujuan, 1 Koreksi; Soal 3 belum dipilih (catatan B)</b>. Keputusan tashih <b>DITERIMA</b> — "yang penting manut rumusan Nahdliyin ulama lan hasil bahtsul masail pondok pesantren." Ter-rekam <code>docs/akuntansi-keputusan.md</code> (seksi "Keputusan P3") + md §15.4.</p>
+<ul>
+<li><b>Soal 1 — Haul: KOREKSI.</b> Anchor haul = <code>2025-10-22</code> (toko koperasi berjalan / niat berdagang), bukan sejak pembayaran terakhir &amp; bukan auto-awal-bulan → seed <code>zakat_settings.haul_start_date = 2025-10-22</code>; haul pertama jatuh <b>22 Okt 2026</b>. Musyawarah boleh memutuskan ta'jil; pembayaran tetap TIDAK me-reset anchor. Penampang UI baru: nilai zakat (total harta × 2,5%, basis haul penuh) selalu tampil "seolah sudah haul", + keterangan "belum wajib zakat karena belum nishab" bila &lt; nisab (nishab tidak memblokir tampilan).</li>
+<li><b>Soal 2 — Harga emas: SETUJU (terendah).</b> Nisab = 85 g × harga emas TERENDAH (minimum harga tercatat <code>zakat_gold_standards</code> dalam jendela/periode haul, bukan entri terbaru).</li>
+<li><b>Soal 3 — Modal: BELUM DIPILIH (catatan B).</b> B = nilai pasar saat jatuh haul (modal + untung); <code>valuation_mode</code> (default market, fallback hpp) tetap provisional sampai jawaban final turun.</li>
+<li><b>Dampak pada proposal:</b> R6 (baris risiko), §8.3, §14 di atas diperbarui di snapshot ini + md. <b>P4 tetap open</b> (tidak terpengaruh). Implementasi spesifikasi = commit F3.4+ sesuai roadmap §12. Open item: jawaban final Soal 3 + verifikasi judul MUI Fatwa No. 78/2023.</li>
+</ul>
+</div>
+</section>
+
 <div class="fnote">
-<b>Sumber kebenaran:</b> <code>docs/akuntansi-proposal.md</code> @ <code>3af7250</code> (revisi F3.3, 30 Sep 2026; snapshot awal F3.2 = <code>e3cfd30</code>). Revisi snapshot pasca-F3.3 (keputusan §13 terjawab 30 Sep) + re-sync public/tutorial (commit ini). <b>Cetak / PDF: Ctrl+P.</b>
+<b>Sumber kebenaran:</b> <code>docs/akuntansi-proposal.md</code> (snapshot F3.2 awal = <code>e3cfd30</code>; revisi F3.3 @ <code>3af7250</code>). Revisi snapshot tashih P3 (30 Sep): banner, R6, §8.3, §14 + seksi 15 baru (di atas). <b>Cetak / PDF: Ctrl+P.</b>
 </div>
 </div>
 <script>

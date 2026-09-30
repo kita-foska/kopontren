@@ -163,6 +163,22 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 - [ ] Diverifikasi: judul MUI Fatwa No. 78/2023 (untuk pengasuh) —
       referensi lama "DSN-MUI 8/2008" keliru (riset 26 Sep; lihat
       P3-TASHIH-ZAKAT.md §D footnote koreksi sitasi).
+- [x] FASE 2 — **P3 tashih zakat TERJAWAB (30 Sep 2026, GUS FI — DITERIMA,
+      `P3-TASHIH-ZAKAT`)**: 1 Setujuan, 0 Ora, 1 Koreksi; Soal 3 belum dipilih
+      (catatan B). (1) Haul KOREKSI: anchor `2025-10-22` (toko koperasi
+      berjalan/niat berdagang), hajatan haul pertama 22 Okt 2026, ta'jil boleh
+      diputuskan musyawarah, penampang "seolah sudah haul" + keterangan "belum
+      wajib karena belum nishab"; (2) harga emas TERENDAH = final; (3) modal
+      `valuation_mode` tetap provisional. Ter-rekam `docs/akuntansi-keputusan.md`
+      (seksi "Keputusan P3") + `docs/akuntansi-proposal.md` §15.4 +
+      `SYARIAH-CHECKLIST.md` seksi F; snapshot `docs/AKUNTANSI-PROPOSAL.html`
+      + `public/tutorial/akuntansi-proposal.html` re-sync (commit tashih P3).
+      Implementasi spesifikasi koreksi + switch jembatan `zakat_history` =
+      commit F3.4+ (R6).
+- [ ] **P3 Soal 3 (modal zakat / `valuation_mode`) — jawaban final pengasuh
+      belum turun** (catatan B = nilai pasar saat jatuh haul, modal + untung;
+      opsi A = HPP modal tetap di kaki). `valuation_mode` tetap provisional
+      sampai jawaban; terapkan saat turun (komit terpisah).
 - [x] FASE 2 — Step 3 (dokumen P4 hanya) — SELESAI (26 Sep,
       commit 3, dual-push master+main): mapping akuntansi P4
       (supplier ≠ revenue Kopontren; ujrah = revenue — off-P&L

@@ -1,6 +1,30 @@
 # MEMORY
 
 ## 2026-09-30
+### P3 TASHIH ZAKAT TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + revisi docs + snapshot (commit C2 + C3)
+- **Tashih dok. P3 (`P3-TASHIH-ZAKAT.md/.html`)**: 1 Setujuan, 0
+  Ora Setujuan, 1 Koreksi; Soal 3 belum dipilih (catatan B);
+  keputusan tashih **DITERIMA** ("yang penting manut rumusan
+  Nahdliyin ulama lan hasil bahtsul masail pondok pesantren").
+  (1) Haul KOREKSI: anchor `2025-10-22` (mulai toko koperasi
+  berjalan) → haul pertama 22 Okt 2026; ta'jil boleh (musyawarah);
+  penampang "seolah sudah haul" + keterangan "belum wajib karena
+  belum nishab" (bukan nol); pembayaran TIDAK me-reset anchor.
+  (2) Harga emas TERENDAH = final (min `zakat_gold_standards`
+  jendela haul). (3) Modal (`valuation_mode` market/hpp) belum
+  dipilih → tetap provisional.
+- **C2 `ac00791`**: `P3-TASHIH-ZAKAT.md` (STATUS + seksi G baru) +
+  `.html` (kartu jawaban + prefill) + `docs/akuntansi-proposal.md`
+  (§0 note, §8.2, §8.3, baris R6, §14, baru §15.4) +
+  `SYARIAH-CHECKLIST.md` seksi F (STATUS TASHIH).
+- **C3 (commit ini)**: regenerate snapshot `docs/AKUNTANSI-PROPOSAL.html`
+  (banner + R6 + §8.3 + §14 + seksi 15 baru + fnote) + re-sync
+  `public/tutorial/akuntansi-proposal.html` + TODO.md (item P3
+  terjawab + open item baru: jawaban final Soal 3) + MEMORY.
+- **Sisa/open**: (1) jawaban final Soal 3 (modal) dari pengasuh;
+  (2) verifikasi judul MUI Fatwa No. 78/2023; (3) implementasi
+  spesifikasi koreksi + switch `zakat_history` = commit F3.4+
+  (R6); P4 konsinyasi tetap open.
 ### F3.3 TERJAWAB — jawaban tashih GUS FI + revisi + regenerate (3 commit, dual-push master+main)
 - **Jawaban tashih GUS FI (30 Sep)** atas §13
   `docs/AKUNTANSI-PROPOSAL.html` (14 poin, via
