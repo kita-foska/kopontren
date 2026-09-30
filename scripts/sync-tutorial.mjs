@@ -42,6 +42,14 @@ for (const f of readdirSync(outDir).filter((f) => f.endsWith('.html'))) {
   }
 }
 
+// EXCEPSI TERDOKUMENTASI (keputusan Gus Fi, 30 Sep 2026): AKUNTANSI-PROPOSAL.html
+// punya antarmuka tashih interaktif (radio Setuju/Ora Setuju/Koreksi + catatan +
+// tombol copy via inline vanilla JS). Sandbox iframe viewer in-app
+// (allow-same-origin, TIDAK ada allow-scripts) tetap memblokir eksekusi script
+// ini; script hanya berjalan saat file dibuka langsung di browser.
+// JANGAN perluas daftar ini tanpa catatan keputusan baru.
+const SCRIPT_ALLOW = new Set(['AKUNTANSI-PROPOSAL.html']);
+
 let ok = true;
 for (const [src, dest] of MAP) {
   const srcPath = path.join(docsDir, src);
@@ -52,9 +60,13 @@ for (const [src, dest] of MAP) {
   }
   const text = readFileSync(srcPath, 'utf8');
   if (/<script[\s>]/i.test(text)) {
-    console.error(`GAGAL: ${src} mengandung <script> — viewer sandbox allow-same-origin (tanpa allow-scripts), sumber harus tetap 0 script tag`);
-    ok = false;
-    continue;
+    if (SCRIPT_ALLOW.has(src)) {
+      console.warn(`eccepsi: ${src} mengandung <script> — eccepsi terdokumentasi (Gus Fi, 30 Sep 2026): antarmuka tashih; sandbox iframe viewer tetap memblokir eksekusi.`);
+    } else {
+      console.error(`GAGAL: ${src} mengandung <script> — viewer sandbox allow-same-origin (tanpa allow-scripts), sumber harus tetap 0 script tag`);
+      ok = false;
+      continue;
+    }
   }
   copyFileSync(srcPath, path.join(outDir, dest));
   const a = statSync(srcPath).size;

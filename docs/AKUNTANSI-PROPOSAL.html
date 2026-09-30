@@ -60,6 +60,18 @@ tr:last-child td{border-bottom:none}
 .kpi .l{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748b}
 .kpi .v{font-size:1.1rem;font-weight:800;color:var(--maroon);margin-top:2px}
 code{background:var(--slate);border-radius:5px;padding:1px 6px;font-size:.78rem}
+/* Tashih interface — documented exception (Gus Fi, 30 Sep 2026) */
+.ditem.titem{display:block}
+.trow{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;align-items:center}
+.opt{display:inline-flex;align-items:center;min-height:44px;font-weight:700;font-size:.85rem;cursor:pointer}
+.opt input{width:19px;height:19px;margin:0 7px 0 0;accent-color:var(--maroon);cursor:pointer}
+.tgn{width:100%;min-height:44px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font:inherit;font-size:.8rem;background:#fff;box-sizing:border-box}
+.tashih-ui{margin-top:16px}
+.tbtn{min-height:44px;padding:10px 20px;border:0;border-radius:8px;background:var(--maroon);color:#fff;font-weight:800;font-size:.9rem;cursor:pointer}
+.tbtn:active{transform:translateY(1px)}
+.tprev{width:100%;margin-top:12px;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font:12px/1.5 ui-monospace,Consolas,monospace;background:var(--slate);color:var(--ink);box-sizing:border-box}
+#tashih-status{font-size:.78rem;color:#475569;margin-left:10px}
+@media print{.tashih-ui,.titem .trow{display:none}}
 @media print{
 body{background:#fff}
 .wrap{max-width:none;padding:0}
@@ -82,7 +94,7 @@ section:target h2 .n{background:var(--maroon)}
 <a href="#s0">§0 Keputusan</a><a href="#s1">§1 Konteks</a><a href="#s2">§2 COA</a><a href="#s3">§3 Jurnal</a><a href="#s4">§4 Auto-posting</a><a href="#s5">§5 Laporan</a><a href="#s6">§6 Akad</a><a href="#s7">§7 Koperasi</a><a href="#s8">§8 ZIS</a><a href="#s9">§9 PAP</a><a href="#s10">§10 Migrasi</a><a href="#s11">§11 Risiko</a><a href="#s12">§12 Roadmap</a><a class="hot" href="#s13">§13 14 Keputusan</a><a href="#s14">§14 Aturan</a>
 </div>
 </div>
-<div class="note"><b>Aturan syariah first:</b> semua nilai fiqih/standar (nisbah, rate zakat, margin, rasio SHU, denda, penyusutan, amil) = <b>PERLU KEPUTUSAN GUS FI</b> <span class="tag a">PKGF</span>. Tidak ada default angka fiqih di aplikasi — field input tanpa nilai awal. Halaman ini = <b>snapshot bacaan</b>; sumber kebenaran tetap <code>docs/akuntansi-proposal.md</code> @ <code>e3cfd30</code> (F3.2). Centang di §13 tidak tersimpan (viewer 0-script) — keputusan dicatat di chat; versi PDF/cetak menyimpan centang.</div>
+<div class="note"><b>Aturan syariah first:</b> semua nilai fiqih/standar (nisbah, rate zakat, margin, rasio SHU, denda, penyusutan, amil) = <b>PERLU KEPUTUSAN GUS FI</b> <span class="tag a">PKGF</span>. Tidak ada default angka fiqih di aplikasi — field input tanpa nilai awal. Halaman ini = <b>snapshot bacaan</b>; sumber kebenaran tetap <code>docs/akuntansi-proposal.md</code> @ <code>e3cfd30</code> (F3.2). §13 kini ada antarmuka tashih interaktif (radio Setuju/Ora Setuju/Koreksi + catatan + tombol copy; exception JS terdokumentasi 30 Sep 2026) — tombol copy bekerja saat file dibuka langsung di browser; di viewer in-app (iframe 0-script) pilihan tidak tersimpan, keputusan tetap dicatat di chat / <code>docs/akuntansi-keputusan.md</code>; versi PDF/cetak menampilkan daftar item bersih.</div>
 
 <section id="s0">
 <h2><span class="n">0</span>Ringkasan Eksekutif + 12 Catatan Keputusan</h2>
@@ -706,22 +718,142 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 <h2><span class="n">13</span>Poin Keputusan Tersisa — 14 Item (F3.3)</h2>
 <div class="decide">
 <div class="decide-band">⚖ KEPUTUSAN GUS FI (F3.3) — semua 14 item = PERLU KEPUTUSAN GUS FI; pengasuh mengikuti, tidak ada forum terpisah. Cline TIDAK memutuskan fiqih/standar.</div>
-<p class="o" style="font-size:.82rem;color:#92400e">Centang (✅) = item sudah diputuskan. Centang <b>tidak tersimpan</b> (viewer 0-script) — keputusan dicatat di chat / dicetak PDF. Rujukan setiap item = seksi proposal terkait.</p>
+<p class="o" style="font-size:.82rem;color:#92400e">Pilih <b>Setuju / Ora Setuju / Koreksi</b> tiap item (tulis catatan bila perlu), lalu tekan <b>📋 Copy Jawaban Tashih</b> di bawah → paste ke Cline. Radio <b>tidak tersimpan</b> di dalam aplikasi (viewer iframe 0-script) — tombol copy bekerja saat file dibuka langsung di browser; keputusan tetap dicatat di <code>docs/akuntansi-keputusan.md</code>. Rujukan setiap item = seksi proposal terkait.</p>
 
-<label class="ditem"><input type="checkbox"><span><span class="t">#1 Nisbah mudharabah &amp; musyarakah</span><span class="o">% per akad (input manual) — tetapkan rentang/referensi yg dipakai · <b>§6.5</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#2 Rate zakat (mal/tijarah/fitrah) + mustahik</span><span class="o">angka + daftar mustahik sah (finalkan P3: 24K/market/haul) · <b>§8.3</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#3 Margin murabahah</span><span class="o">% / nominal per akad; basis pengakuan (cash vs accrual) · <b>§6.5</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#4 Rasio distribusi SHU</span><span class="o">(cadangan umum / khusus / jasa anggota / dibagi) — % per komponen + periodik distribusi · <b>§7.2</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#5 Rate ijarah</span><span class="o">nominal per periode per akad · <b>§6.5</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#6 Denda keterlambatan</span><span class="o">ada/tidak; nominal/rasio; wajib ke kas sosial (CHECKLIST B) · <b>§6.4</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#7 Penerima LK formal (CALK/LK 5)</span><span class="o">siapa (pengurus? pengasuh? BKK? rapat anggota) &amp; frekuensi · <b>§5.5</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#8 Tanggal N buku pembuka + angka saldo pembuka</span><span class="o">tanggal + nilai 1050 aset tetap · <b>§10</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#9 Sumber teks PAP (+ status ED SAK Koperasi)</span><span class="o">BI / MUI / salinan pengurus; bila tak dapat = fallback SAK Syariah+SAK EP · <b>§9</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#10 Simpanan wajib + ketentuan tarik sukarela</span><span class="o">jumlah &amp; jadwal per anggota + aturan tarik · <b>§7.2</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#11 Periode closing jurnal + penyusutan</span><span class="o">(tahunan / bulanan) + metode penyusutan &amp; umur aset (1050/1060) · <b>§3.2.6</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#12 Pola pencairan mudharabah/musyarakah</span><span class="o">(1080 vs 2040, §6.4) — pilih pola booking · <b>§6.4</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#13 Switch label entitas</span><span class="o">("Kopontren (dalam proses)" → resmi) — kapan <code>coop_registered=1</code> · <b>§1.1</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
-<label class="ditem"><input type="checkbox"><span><span class="t">#14 Revisi keputusan #7 (wakaf)</span><span class="o">bila wakaf tidak lagi ditunda — scope tambahan (PSAK 112) · <b>§8.2</b></span><span class="ans">Keputusan Gus Fi: <b>______________________</b></span></span></label>
+<div class="ditem titem">
+<div><span class="t" id="tit1">#1 Nisbah mudharabah &amp; musyarakah</span><span class="o">% per akad (input manual) — tetapkan rentang/referensi yg dipakai · <b>§6.5</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti1" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti1" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti1" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin1" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit2">#2 Rate zakat (mal/tijarah/fitrah) + mustahik</span><span class="o">angka + daftar mustahik sah (finalkan P3: 24K/market/haul) · <b>§8.3</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti2" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti2" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti2" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin2" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit3">#3 Margin murabahah</span><span class="o">% / nominal per akad; basis pengakuan (cash vs accrual) · <b>§6.5</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti3" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti3" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti3" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin3" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit4">#4 Rasio distribusi SHU</span><span class="o">(cadangan umum / khusus / jasa anggota / dibagi) — % per komponen + periodik distribusi · <b>§7.2</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti4" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti4" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti4" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin4" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit5">#5 Rate ijarah</span><span class="o">nominal per periode per akad · <b>§6.5</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti5" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti5" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti5" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin5" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit6">#6 Denda keterlambatan</span><span class="o">ada/tidak; nominal/rasio; wajib ke kas sosial (CHECKLIST B) · <b>§6.4</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti6" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti6" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti6" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin6" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit7">#7 Penerima LK formal (CALK/LK 5)</span><span class="o">siapa (pengurus? pengasuh? BKK? rapat anggota) &amp; frekuensi · <b>§5.5</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti7" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti7" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti7" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin7" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit8">#8 Tanggal N buku pembuka + angka saldo pembuka</span><span class="o">tanggal + nilai 1050 aset tetap · <b>§10</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti8" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti8" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti8" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin8" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit9">#9 Sumber teks PAP (+ status ED SAK Koperasi)</span><span class="o">BI / MUI / salinan pengurus; bila tak dapat = fallback SAK Syariah+SAK EP · <b>§9</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti9" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti9" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti9" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin9" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit10">#10 Simpanan wajib + ketentuan tarik sukarela</span><span class="o">jumlah &amp; jadwal per anggota + aturan tarik · <b>§7.2</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti10" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti10" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti10" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin10" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit11">#11 Periode closing jurnal + penyusutan</span><span class="o">(tahunan / bulanan) + metode penyusutan &amp; umur aset (1050/1060) · <b>§3.2.6</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti11" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti11" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti11" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin11" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit12">#12 Pola pencairan mudharabah/musyarakah</span><span class="o">(1080 vs 2040, §6.4) — pilih pola booking · <b>§6.4</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti12" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti12" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti12" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin12" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit13">#13 Switch label entitas</span><span class="o">("Kopontren (dalam proses)" → resmi) — kapan <code>coop_registered=1</code> · <b>§1.1</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti13" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti13" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti13" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin13" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+<div class="ditem titem">
+<div><span class="t" id="tit14">#14 Revisi keputusan #7 (wakaf)</span><span class="o">bila wakaf tidak lagi ditunda — scope tambahan (PSAK 112) · <b>§8.2</b></span></div>
+<div class="trow">
+<label class="opt"><input type="radio" name="ti14" value="SETUJU"> Setuju</label>
+<label class="opt"><input type="radio" name="ti14" value="ORA SETUJU"> Ora Setuju</label>
+<label class="opt"><input type="radio" name="ti14" value="KOREKSI"> Koreksi</label>
+</div>
+<div class="trow"><textarea id="tin14" class="tgn" rows="2" placeholder="Catatan (opsional)..."></textarea></div>
+</div>
+</div>
+<div class="tashih-ui">
+<div class="trow">
+<button type="button" class="tbtn" id="tashih-copy">📋 Copy Jawaban Tashih</button>
+<span id="tashih-status"></span>
+</div>
+<textarea id="tashih-preview" class="tprev" rows="16" readonly></textarea>
+<p class="note">Klik <b>Copy</b>, lalu paste ke Cline. Jika clipboard gagal, klik kotak preview, tekan <b>Ctrl+A</b> lalu <b>Ctrl+C</b>.</p>
 </div>
 <div class="note"><b>Aturan F3.3 (alur baru):</b> Cline presentasi dokumen ini → Gus Fi tinjau + putuskan item 1–14 → (pengasuh mengikuti keputusan) → keputusan di-rekam di <code>docs/akuntansi-keputusan.md</code> (commit terpisah) → revisi proposal bila perlu (commit terpisah) → F3.4+ mulai.</div>
 </section>
@@ -744,5 +876,64 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 <b>Sumber kebenaran:</b> <code>docs/akuntansi-proposal.md</code> @ <code>e3cfd30</code> (F3.2, 29 Sep 2026). Halaman ini = snapshot bacaan 0-script (tanpa tag script) untuk review F3.3 — dicetak A4 (Ctrl+P) / disimpan PDF agar centang §13 tercatat. Jika keputusan §13 turun (F3.3) → HTML di-regenerate + re-sync (1 commit kecil). <b>Cetak / PDF: Ctrl+P.</b>
 </div>
 </div>
+<script>
+/* Tashih interactive interface — documented exception (Gus Fi, 30 Sep 2026).
+   In-app viewer iframe sandbox (allow-same-origin, no allow-scripts) blocks this
+   script; the interface works when the file is opened directly in a browser. */
+(function () {
+  var N = 14;
+  var preview = document.getElementById('tashih-preview');
+  var status = document.getElementById('tashih-status');
+
+  function today() {
+    return new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function buildTashihText() {
+    var s = 0, o = 0, k = 0, follow = [];
+    var out = [];
+    out.push('JAWABAN TASHIH — AKUNTANSI PROPOSAL (F3.3)');
+    out.push('Tanggal: ' + today());
+    out.push('Oleh: Gus Fi (Ali Makfi)');
+    out.push('');
+    for (var i = 1; i <= N; i++) {
+      var title = document.getElementById('tit' + i).textContent.replace(/^#\d+\s*/, '');
+      var checked = document.querySelector('input[name="ti' + i + '"]:checked');
+      var choice = checked ? checked.value : 'BELUM DIPILIH';
+      var note = document.getElementById('tin' + i).value.trim();
+      out.push(i + '. ' + title + ' \u2192 ' + choice.toUpperCase());
+      out.push('   Catatan: ' + (note ? note : '-'));
+      if (choice === 'SETUJU') s++;
+      else if (choice === 'ORA SETUJU') o++;
+      else if (choice === 'KOREKSI') k++;
+      if (choice === 'ORA SETUJU' || choice === 'KOREKSI') follow.push(i);
+    }
+    out.push('');
+    out.push('Ringkasan: ' + s + ' Setuju, ' + o + ' Ora Setuju, ' + k + ' Koreksi');
+    out.push('Perlu ditindaklanjuti: ' + (follow.length ? follow.join(', ') : 'tidak ada'));
+    return out.join('\n');
+  }
+  function update() { preview.value = buildTashihText(); }
+  function fallback() {
+    try {
+      preview.focus();
+      preview.select();
+      if (document.execCommand('copy')) { status.textContent = '\u2713 tersalin dari kotak preview.'; }
+      else { status.textContent = '\u2717 salin otomatis gagal \u2014 klik kotak preview, tekan Ctrl+A lalu Ctrl+C.'; }
+    } catch (e) { status.textContent = '\u2717 salin otomatis gagal \u2014 klik kotak preview, tekan Ctrl+A lalu Ctrl+C.'; }
+  }
+  document.getElementById('tashih-copy').addEventListener('click', function () {
+    var txt = buildTashihText();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () {
+        status.textContent = '\u2713 tersalin ke clipboard \u2014 paste ke Cline.';
+      }, fallback);
+    } else { fallback(); }
+  });
+  var s13 = document.getElementById('s13');
+  s13.addEventListener('change', update);
+  s13.addEventListener('input', update);
+  update();
+})();
+</script>
 </body>
 </html>
