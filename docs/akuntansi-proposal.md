@@ -13,6 +13,10 @@
 >   (nisbah, rate zakat, rasio SHU, akad terms) ditandai
 >   **PERLU KEPUTUSAN GUS FI** — Cline hanya menyajikan opsi teknis.
 > - Dasar: `docs/akuntansi-audit.md` (A.1, commit `84a3266`).
+> - **Revisi 30 Sep 2026 (pasca-F3.3):** jawaban tashih Gus Fi
+>   ter-rekam di `docs/akuntansi-keputusan.md` — 12 Setuju, 0 Ora
+>   Setuju, 2 Koreksi: #6 (tidak ada denda keterlambatan) & #14
+>   (wakaf AKTIF, revisi keputusan #7). Rincian perubahan: §15.
 
 ---
 
@@ -33,7 +37,7 @@ Tabel keputusan final (Gus Fi, 29 Sep 2026):
 | 4 | COA | **B — Menengah, ±40–60 akun** (proposal: 52 akun, §2) |
 | 5 | ZIS | **A — Perlu** (pemisahan akun ZIS, §8) |
 | 6 | SHU | **A — Perlu** (hitung + distribusi, §7) |
-| 7 | Wakaf | **B — Belum sekarang** (ditunda; hook disiapkan §8) |
+| 7 | Wakaf | **AKTIF** (revisi F3.3 #14, 30 Sep 2026 — dari "B — Belum sekarang"; §8, §15) |
 | 8 | Auto-posting | **B — Bertahap** (Wave 1/2/3, §4) |
 | 9 | Saldo pembuka | **A — Saat implementasi** (Wave 6, §10) |
 | 10 | Laporan | **A — 5 lengkap** (Posisi Keuangan, Laba-Rugi, LPE, LAK, CALK, §5) |
@@ -43,6 +47,8 @@ Tabel keputusan final (Gus Fi, 29 Sep 2026):
 Estimasi total: **28–32 commit, 6 wave, 6 minggu** (rincian §12).
 Semua angka syariah di dokumen ini = **placeholder teknis**,
 bukan ketentuan — keputusan nilai = **Gus Fi** (§13).
+**PASCA-F3.3 (30 Sep 2026): semua 14 poin §13 terjawab** (12 Setuju,
+2 Koreksi #6 & #14 — lihat §15 + `docs/akuntansi-keputusan.md`).
 
 ---
 
@@ -67,7 +73,7 @@ bukan ketentuan — keputusan nilai = **Gus Fi** (§13).
 ### 1.2 Hierarki standar (keputusan #2)
 
 1. **SAK Syariah** (utama) — untuk akun syariah: ZIS (§8), akad
-   (§6), bagi hasil, denda ke kas sosial.
+   (§6), bagi hasil (skema denda dihapus — F3.3 #6, §15).
 2. **PAP** (BI+MUI) — peta akun pesantren (grup 69xx); teks PAP
    belum dimiliki app (open item §9).
 3. **SAK EP** (fallback) — konstruksi umum: Posisi Keuangan,
@@ -98,9 +104,9 @@ Grup 6xx = syariah/pesantren (SAK Syariah/PAP).
 | 1070 | Piutang Murabahah | akad murabahah (term) yang belum lunas | PKGF |
 | 1080 | Investasi Mudharabah | dana shahib (pemilik modal) per akad | PKGF |
 | 1090 | Investasi Musyarakah | kontribusi per akad | PKGF |
-| 1100 | Kas ZIS | kas sosial zakat/infak/sedekah/denda (terpisah, §8) | APL |
+| 1100 | Kas ZIS | kas sosial zakat/infak/sedekah (terpisah, §8; denda dihapus F3.3 #6) | APL |
 | 1110 | Piutang Zakat | mustahik yang belum menerima (jika ada penyaluran bertahap) | PKGF |
-| 1120 | Aset Wakaf | memo-only, **ditunda** (keputusan #7) | PKGF |
+| 1120 | Aset Wakaf | **AKTIF** (revisi F3.3 #14, 30 Sep — keputusan #7 di-revisi; booking via §8) | APL |
 
 ### 2.2 20xx KEWAJIBAN (10)
 
@@ -141,7 +147,7 @@ Grup 6xx = syariah/pesantren (SAK Syariah/PAP).
 | 4070 | Bagi Hasil Mudharabah | porsi koperasi sebagai shahib al-mal | PKGF |
 | 4080 | Bagi Hasil Musyarakah | porsi koperasi | PKGF |
 | 4090 | ZIS Masuk | infak/sedekah diterima → kas sosial | APL |
-| 4100 | Wakaf Masuk | placeholder **ditunda** (keputusan #7) | PKGF |
+| 4100 | Wakaf Masuk | **AKTIF** (revisi F3.3 #14 — keputusan #7 di-revisi; booking via §8) | APL |
 
 ### 2.5 50xx BEBAN (10)
 
@@ -327,8 +333,9 @@ paralel s/d rekonsiliasi F3.5 green).
 - Pendapatan: 4010 − (4020+4030) = neto operasi.
 - (−) HPP: (5010 − 5020) = **Laba Kotor**.
 - (−) Beban operasi: 5030+5040+5060+5070+5080 → Laba Sebelum
-  ZIS/Denda.
-- (−) ZIS/denda: 5050+5090+5100+6030 → **Laba Bersih**.
+  ZIS.
+- (−) ZIS: 5090+5100+6030 → **Laba Bersih** (5050 tidak aktif —
+  F3.3 #6: tidak ada skema denda).
 - MEMO (tidak digabung): ujrah konsinyasi (P4), cashback
   (kewajiban, bukan beban — keputusan A1), SHU (di LPE/CALK).
 - Struktur baris netting = V1 `keuangan.ts` (V2-2 `hppRetur`)
@@ -354,7 +361,7 @@ Per akun kas (1010 toko / 1020 bank / 1100 ZIS):
 - **Pendanaan**: modal (3010), simpanan anggota (2050–2070),
   SHU distribusi (3060).
 - **Kas Sosial (1100)**: ditampilkan seksi terpisah — masuk
-  (infak/sedekah/denda) & keluar (zakat/infak distribusi) —
+  (infak/sedekah; denda dihapus F3.3 #6) & keluar (zakat/infak distribusi) —
   **dilarang dicampur** ke kas usaha (invariant rekon #16:
   1010+1020 = kas V1; 1100 terpisah).
 - Footer: saldo awal → arus per aktivitas → saldo akhir,
@@ -369,13 +376,13 @@ Per akun kas (1010 toko / 1020 bank / 1100 ZIS):
    (memo 6010), multi-store siap.
 3. Kebijakan akuntansi utama: HPP (RNB snapshot V2-2),
    penyusutan (metode/umur **PKGF §13.8**), komisi konsinyasi
-   (provisional P4), zakat (provisional P3), nisbah & margin akad
+   (provisional P4), zakat (P3 final via F3.3 #2, 30 Sep — bridge belum di-switch, R6), nisbah & margin akad
    (**PKGF §13.1/3/5**), kurs: n/a (IDR).
 4. Komponen kas: 1010/1020/1100 terpisah.
 5. Piutang & hutang per lawan transaksi (ringkasan).
 6. Ekuitas: modal, simpanan, SHU + rasio distribusi (**PKGF**).
-7. ZIS: diterima/disalurkan per jenis (zakat/infak/sedekah/denda),
-   periode.
+7. ZIS: diterima/disalurkan per jenis (zakat/infak/sedekah/wakaf;
+   denda dihapus F3.3 #6), periode.
 8. Akad berjalan per jenis + saldo per akad.
 9. Peristiwa pasca-periode (manual input).
 **Penerima LK formal = PKGF §13.13** (siapa menerima & berapa
@@ -436,7 +443,7 @@ mencatat jurnalnya (bridge), **bukan** duplikat fitur.
 
 | Tipe | Event valid | Catatan teknis |
 |---|---|---|
-| murabahah | pencairan, angsuran, settlement, (denda→kas sosial) | harga jual = pokok + margin tetap; margin = PKGF |
+| murabahah | pencairan, angsuran, settlement (denda dihapus — F3.3 #6) | harga jual = pokok + margin tetap; margin = PKGF |
 | mudharabah | pencairan (dana), kontribusi, bagi hasil (per periode), settlement | nisbah = PKGF; pembagian di event `bagi_hasil` |
 | musyarakah | pencairan (kontribusi), bagi hasil, settlement | rasio = PKGF |
 | ijarah | pencairan (imbalan awal, jika ada), ijarah periodik, settlement | rate sewa = PKGF |
@@ -462,7 +469,7 @@ mencatat jurnalnya (bridge), **bukan** duplikat fitur.
 | Musyarakah/mudharabah — settlement | Debit 1080/1090 (sisa pokok) → Kredit 1010 (pengembalian ke shahib/pemilik) |
 | Ijarah — periodik | Debit 1010 → Kredit 4050 (imbalan sewa) |
 | Wakalah (bridge P4) | settlement: Debit 1010 (bruto) → Kredit 2020 + Kredit 4010; ujrah: Debit 1010 → Kredit 4040 (sama §4.2) |
-| Denda diterima | Debit 1010 → Kredit 5050 (clearing "denda diterima"); alokasi ke kas sosial: Debit 5050 → Kredit 1100. Aturan denda = **PKGF §13.6** |
+| Denda diterima | **TIDAK DIANGKAT** — F3.3 #6 (30 Sep): tidak ada skema denda; akun 5050 `status=closed` (lihat §15) |
 
 > Catatan: entry `bagi hasil` & `settlement` dirancang agar
 > **tidak mengubah saldo Kas** (non-cash: pergeseran antar
@@ -477,7 +484,7 @@ mencatat jurnalnya (bridge), **bukan** duplikat fitur.
 | Margin murabahah | % per akad (input manual, simulasi §6.3) |
 | Nisbah mudharabah/musyarakah | % per akad (input manual) |
 | Rate ijarah | nominal per periode per akad |
-| Denda keterlambatan | skema: ada/tidak; nominal/rasio; tujuan = kas sosial 1100 (CHECKLIST B) |
+| Denda keterlambatan | **TIDAK ADA** (keputusan F3.3 #6, 30 Sep) — penanganan keterlambatan via mekanisme lain tanpa denda; di luar scope GL |
 | Pengakuan laba murabahah | saat penerimaan (cash basis) vs periode (accrual) |
 | Frekuensi bagi hasil | per periode (bulanan/triwulan/rapat) — periodik manual |
 
@@ -550,11 +557,11 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 
 ---
 
-## 8. Pemisahan ZIS (keputusan #5: A; #7: wakaf ditunda)
+## 8. Pemisahan ZIS (keputusan #5: A; #7 wakaf: **AKTIF** pasca-revisi F3.3 #14)
 
 ### 8.1 Prinsip
 
-- Dana sosial (zakat/infak/sedekah/denda) **terpisah dari kas
+- Dana sosial (zakat/infak/sedekah/wakaf) **terpisah dari kas
   usaha**: kas masuk = `1100` (Kas ZIS); Kas Toko `1010/1020`
   **tidak pernah** menyentuh ZIS (invariant rekon #16).
 - **Anti-campur**: LAK menampilkan ZIS sebagai seksi terpisah
@@ -566,7 +573,7 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 ```sql
 CREATE TABLE IF NOT EXISTS zis(
   id TEXT PRIMARY KEY,
-  kind TEXT NOT NULL,             -- 'zakat'|'infak'|'sedekah'|'denda'
+  kind TEXT NOT NULL,             -- 'zakat'|'infak'|'sedekah'|'wakaf'
   direction TEXT NOT NULL,        -- 'in'|'out'
   amount INTEGER NOT NULL,
   payer TEXT,                    -- pemberi (in) / mustahik (out)
@@ -582,16 +589,20 @@ CREATE TABLE IF NOT EXISTS zis(
   `zakat_history` yang sudah ada = sumber angka 6030/5090;
   F3.2 tidak mengubah modul `zakat-*`. Setelah tashih P3 turun,
   jembatan bisa di-switch (commit terpisah).
-- **Wakaf (ditunda)**: akun 1120/4100/6020 sudah di-seed; TIDAK
-  ada fitur posting sampai keputusan #7 di-revisi. Hook = kolom
-  `kind='wakaf'` di `zis` + jurnal manual.
+- **Wakaf (AKTIF — revisi F3.3 #14, 30 Sep 2026)**: keputusan #7
+  ("Belum sekarang") di-revisi. Akun 1120/4100/6020 **aktif**
+  (bukan placeholder ditunda). Booking = hook §8.2: input
+  `kind='wakaf'` di UI `/admin/zis` + jurnal manual ke
+  1120/4100/6020 (scope tambahan PSAK 112); invarian anti-campur
+  tetap (rekon #16). Build = W3.5 (roadmap §12).
 
 ### 8.3 Rate zakat & aturan penyaluran = PERLU KEPUTUSAN GUS FI
 
 - Rate zakat (mal, tijarah, fitrah, dll.) & siapa mustahik yang
-  sah = **PKGF §13.2** (provisional P3: 24K/market/haul belum
-  tashih — app menampilkan badge "provisional" di UI zakat
-  sampai keputusan turun).
+  sah = **PKGF §13.2 — TERPUTUSKAN F3.3 #2 (30 Sep 2026)**:
+  angka P3 (24K/market/haul) + daftar mustahik **final**. Badge
+  "provisional" di UI zakat tetap sampai switch jembatan
+  `zakat_history` (R6, commit terpisah saat F3.4+).
 ---
 
 ## 9. Peta Kepatuhan PAP (Pedoman Akuntansi Pesantren, BI+MUI)
@@ -614,7 +625,7 @@ Opsi sumber (urutan prioritas):
 | Grup COA usul | Ekuivalen PAP (kiraan) | Catatan |
 |---|---|---|
 | 6010 Dana Pesantren | Dana kegiatan pesantren / sumbangan | memo, input manual |
-| 6020 Aset Wakaf | Aset wakaf (PSAK 112, ditunda) | placeholder |
+| 6020 Aset Wakaf | Aset wakaf (PSAK 112) | **AKTIF** (revisi F3.3 #14, 30 Sep), booking via §8.2 |
 | 4090/5090/5100 ZIS | Dana sosial pesantren | terpisah dari kas toko |
 | (baru) 60xx | Beban kegiatan pesantren | TIDAK dibuat sampai teks PAP ada |
 
@@ -694,7 +705,7 @@ keputusan Gus Fi** — tidak masuk Wave 1–5.
 
 
 | 5040 | Beban Penyusutan | dari 1060 (metode/umur = PKGF) | PKGF |
-| 5050 | Denda/Keterlambatan (clearing) | denda diterima: Debit 1010 → Kredit 5050; alokasi ke kas sosial: Debit 5050 → Kredit 1100 (CHECKLIST B; saat ini 0 skema denda) | PKGF |
+| 5050 | Denda/Keterlambatan (clearing) | **TIDAK AKTIF** — F3.3 #6 (30 Sep): tidak ada skema denda; seed `status=closed` (§2.7) | CLOSED |
 | 5060 | Bagi Hasil Partner | porsi partner (mudharabah/musyarakah, nisbah = PKGF) | PKGF |
 | 5070 | Beban Ijarah | jika koperasi sebagai penyewa | PKGF |
 | 5080 | Distribusi SHU | jurnal distribusi ke 3060 → kas/transfer | PKGF |
@@ -706,8 +717,8 @@ keputusan Gus Fi** — tidak masuk Wave 1–5.
 | Kode | Nama | Sumber data / deskripsi | Status |
 |---|---|---|---|
 | 6010 | Dana Pesantren | sumbangan/kegiatan pesantren (input manual, **tidak** campur kas toko) | PKGF |
-| 6020 | Aset Wakaf (memo) | placeholder **ditunda** (keputusan #7) | PKGF |
-| 6030 | Zakat Tijarah Dibayar | jembatan dari `zakat_history` (P3 — 24K/market/haul **belum tashih, provisional**) | PKGF |
+| 6020 | Aset Wakaf (memo) | **AKTIF** (revisi F3.3 #14 — keputusan #7 di-revisi; booking via §8) | APL |
+| 6030 | Zakat Tijarah Dibayar | jembatan dari `zakat_history` (P3 — 24K/market/haul **final via F3.3 #2, 30 Sep**; badge "provisional" sampai switch jembatan, R6) | PKGF |
 
 **Total: 12 + 10 + 7 + 10 + 10 + 3 = 52 akun** (di rentang 40–60,
 keputusan #4).
@@ -790,7 +801,7 @@ keputusan #4).
 | W3.2 | `lib/akad.ts` (per event, §6.4) + `scripts/test-akad.ts` (golden: murabahah & mudharabah) |
 | W3.3 | UI `/admin/akad` (form per tipe + simulasi §6.3 + timeline event + jurnal terkait) |
 | W3.4 | Bridge wakalah: jurnal utk settlement/ujrah `consignments` (aktifkan bila `gl_enabled=1`) |
-| W3.5 | Denda (bila skema aktif post-PKGF §13.6): input denda → 5050 → 1100 + test |
+| W3.5 | Wakaf aktif (revisi F3.3 #14, 30 Sep): input `zis` `kind='wakaf'` + jurnal 1120/4100/6020 + test (skema denda dihapus — F3.3 #6; ak. 5050 `status=closed`) |
 
 ### Wave 4 — Koperasi (mgg 5–6, 5 commit)
 
@@ -822,7 +833,8 @@ keputusan #4).
 | W6.4 | Docs closing: update `README.md` (seksi GL) + `TODO.md` (F3.4–F3.6 done) + label F3.6 |
 
 **Total: 5+7+5+5+5+4 = 32 commit** (rentang 28–32; dapat
-dipadatkan 28 bila W5.3 digabung W5.4 & W3.5 ditunda).
+dipadatkan 28 bila W5.3 digabung W5.4). Pasca-F3.3: W3.5 kini =
+wakaf aktif (#14); skema denda dihapus (#6) — total tetap.
 
 ### Gate antar-wave
 
@@ -837,27 +849,28 @@ dipadatkan 28 bila W5.3 digabung W5.4 & W3.5 ditunda).
 
 ---
 
-## 13. Poin Keputusan Tersisa (F3.3 — semua = PERLU KEPUTUSAN
-GUS FI; pengasuh mengikuti, tidak ada forum terpisah)
+## 13. 14 Poin Keputusan F3.3 — **SEMUA TERJAWAB 30 SEP 2026**
 
-> Cline TIDAK memutuskan fiqih/standar. Daftar final utk F3.3:
+> Jawaban tashih Gus Fi: **12 Setuju, 0 Ora Setuju, 2 Koreksi
+> (#6 & #14)**. Ter-rekam: `docs/akuntansi-keputusan.md`;
+> rincian perubahan: §15.
 
-| # | Item | Opsi / bentuk keputusan | Rujukan proposal |
-|---|---|---|---|
-| 1 | **Nisbah** mudharabah & musyarakah | % per akad (input manual) — tetapkan rentang/referensi yg dipakai | §6.5 |
-| 2 | **Rate zakat** (mal/tijarah/fitrah) + mustahik | angka + daftar mustahik sah (finalkan P3: 24K/market/haul) | §8.3 |
-| 3 | **Margin murabahah** | % / nominal per akad; basis pengakuan (cash vs accrual) | §6.5 |
-| 4 | **Rasio distribusi SHU** (cadangan umum / khusus / jasa anggota / dibagi) | % per komponen + periodik distribusi | §7.2 |
-| 5 | **Rate ijarah** | nominal per periode per akad | §6.5 |
-| 6 | **Denda keterlambatan** | ada/tidak; nominal/rasio; wajib ke kas sosial (CHECKLIST B) | §6.4 |
-| 7 | **Penerima LK formal** (CALK/LK 5) | siapa (pengurus? pengasuh? BKK? rapat anggota) & frekuensi | §5.5 |
-| 8 | **Tanggal N buku pembuka** + angka saldo pembuka | tanggal + nilai 1050 aset tetap | §10 |
-| 9 | **Sumber teks PAP** (+ status ED SAK Koperasi) | BI / MUI / salinan pengurus; bila tak dapat = fallback SAK Syariah+SAK EP | §9 |
-| 10 | **Simpanan wajib** (jumlah & jadwal per anggota) + ketentuan tarik sukarela | nominal/jadwal + aturan tarik | §7.2 |
-| 11 | **Periode closing jurnal** (tahunan / bulanan) + metode penyusutan & umur aset (1050/1060) | periodik + metode/umur | §3.2.6 |
-| 12 | **Pola pencairan mudharabah/musyarakah** (1080 vs 2040, §6.4) | pilih pola booking | §6.4 |
-| 13 | **Switch label entitas** ("Kopontren (dalam proses)" → resmi) | kapan `coop_registered=1` | §1.1 |
-| 14 | **Revisi keputusan #7 (wakaf)** — bila wakaf tidak lagi ditunda | scope tambahan (PSAK 112) | §8.2 |
+| # | Item | Opsi / bentuk keputusan | Rujukan | Jawaban 30 Sep |
+|---|---|---|---|---|
+| 1 | **Nisbah** mudharabah & musyarakah | % per akad (input manual) — tetapkan rentang/referensi yg dipakai | §6.5 | Setuju |
+| 2 | **Rate zakat** (mal/tijarah/fitrah) + mustahik | angka + daftar mustahik sah (finalkan P3: 24K/market/haul) | §8.3 | Setuju |
+| 3 | **Margin murabahah** | % / nominal per akad; basis pengakuan (cash vs accrual) | §6.5 | Setuju |
+| 4 | **Rasio distribusi SHU** (cadangan umum / khusus / jasa anggota / dibagi) | % per komponen + periodik distribusi | §7.2 | Setuju |
+| 5 | **Rate ijarah** | nominal per periode per akad | §6.5 | Setuju |
+| 6 | **Denda keterlambatan** | ada/tidak; nominal/rasio; wajib ke kas sosial (CHECKLIST B) | §6.4 | **KOREKSI: tidak ada denda** |
+| 7 | **Penerima LK formal** (CALK/LK 5) | siapa (pengurus? pengasuh? BKK? rapat anggota) & frekuensi | §5.5 | Setuju |
+| 8 | **Tanggal N buku pembuka** + angka saldo pembuka | tanggal + nilai 1050 aset tetap | §10 | Setuju |
+| 9 | **Sumber teks PAP** (+ status ED SAK Koperasi) | BI / MUI / salinan pengurus; bila tak dapat = fallback SAK Syariah+SAK EP | §9 | Setuju |
+| 10 | **Simpanan wajib** (jumlah & jadwal per anggota) + ketentuan tarik sukarela | nominal/jadwal + aturan tarik | §7.2 | Setuju |
+| 11 | **Periode closing jurnal** (tahunan / bulanan) + metode penyusutan & umur aset (1050/1060) | periodik + metode/umur | §3.2.6 | Setuju |
+| 12 | **Pola pencairan mudharabah/musyarakah** (1080 vs 2040, §6.4) | pilih pola booking | §6.4 | Setuju |
+| 13 | **Switch label entitas** ("Kopontren (dalam proses)" → resmi) | kapan `coop_registered=1` | §1.1 | Setuju |
+| 14 | **Revisi keputusan #7 (wakaf)** — bila wakaf tidak lagi ditunda | scope tambahan (PSAK 112) | §8.2 | **KOREKSI: wakaf AKTIF** |
 
 **Aturan F3.3 (alur baru):** Cline presentasi dokumen ini →
 Gus Fi tinjau + putuskan item 1–14 → (pengasuh mengikuti
@@ -882,8 +895,56 @@ F3.4+ mulai.
   tulis).
 - **Syariah first, features second**; Cline mengusulkan, Gus Fi
   memutuskan.
-- Larangan prabatasih (P3/P4): jangan finalkan angka zakat/konsinyasi
-  & jangan ubah mapping P4 diam-diam sampai tashih turun.
+- Larangan prabatasih (P3/P4): P3 angka zakat **sudah turun via
+  F3.3 #2 (30 Sep)** — boleh di-switch saat implementasi (R6);
+  P4 (konsinyasi) tetap jangan finalkan angka & jangan ubah
+  mapping diam-diam sampai tashih P4 turun.
+
+---
+
+## 15. Revisi pasca-F3.3 (keputusan 30 Sep 2026)
+
+> Teks jawaban tashih + dampak teknis lengkap:
+> `docs/akuntansi-keputusan.md` (commit terpisah sesuai aturan
+> F3.3). Ringkas: 12 item Setuju, 2 koreksi (#6 & #14).
+
+### 15.1 #6 — Denda keterlambatan: TIDAK ADA
+- Skema denda keterlambatan **dihapus** ("ini tidak usah, bisa
+  dengan yang lain. tidak denda."). Penanganan keterlambatan
+  alternatif (mis. perpanjangan jadwal) = **di luar scope
+  proposal ini** — diputuskan terpisah bila diperlukan.
+- Akun 5050 tetap di-seed dgn `status=closed` (aturan §2.7:
+  "hapus = TIDAK ADA"); tidak ada fitur input denda.
+- Baris "Denda diterima" (§6.4) = tidak dibangun; parameter
+  denda (§6.5) dihapus.
+- `zis.kind` = `'zakat'|'infak'|'sedekah'|'wakaf'` ('denda'
+  keluar; 'wakaf' masuk — lihat 15.2).
+- LKA/CALK: sebutan denda dihapus ("Laba Sebelum ZIS";
+  baris ZIS = 5090+5100+6030).
+- Roadmap: W3.5 dialokasikan ulang → wakaf (15.2); total
+  commit 32 / 6 minggu TIDAK berubah.
+
+### 15.2 #14 — Wakaf: AKTIF (revisi keputusan #7)
+- Keputusan #7 (29 Sep: "B — Belum sekarang") **di-revisi**:
+  wakaf aktif → scope tambahan PSAK 112 berlaku.
+- Akun 1120 / 4100 / 6020 = **aktif** (APL, bukan placeholder
+  ditunda).
+- Booking = input `kind='wakaf'` via UI `/admin/zis` + jurnal
+  manual ke 1120/4100/6020 — build = **W3.5** (+ test).
+- Invarian anti-campur tetap berlaku (rekon #16: 1010+1020 =
+  kas V1; 1100 terpisah; wakaf tidak dicampur kas usaha).
+
+### 15.3 Yang dikunci 12 item Setuju
+- Bentuk keputusan §13 menjadi ketentuan: nisbah/margin/rate =
+  input manual per akad; penerima LK formal; tanggal N + saldo
+  pembuka; sumber teks PAP; simpanan wajib/sukarela; periode
+  closing + penyusutan; pola pencairan akad; label entitas.
+- **#2 = angka P3 final** (zakat 24K/market/haul + daftar
+  mustahik sah) → R6: jembatan `zakat_history` boleh di-switch
+  + badge "provisional" dihapus **saat implementasi F3.4+**
+  (commit terpisah).
+- **F3.4+ siap mulai** sesuai roadmap §12 (Wave 1, ±32 commit,
+  6 minggu).
 - Tiap commit implementasi (F3.4+): test golden + `next build`
   EXIT 0 + backup DB sebelum migrasi skema baru (v21/v22/v23).
 - Visual check oleh Gus Fi: ongoing, TIDAK blocking.
