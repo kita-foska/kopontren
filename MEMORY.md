@@ -1,5 +1,33 @@
 # MEMORY
 
+## 2026-09-30
+### Interface tashih AKUNTANSI-PROPOSAL.html + exception gate sync (3 commit, dual-push master+main)
+- **Keputusan (Gus Fi, 30 Sep, via sesi DeepSeek)**: §13
+  `docs/AKUNTANSI-PROPOSAL.html` dari snapshot centang (14 kartu,
+  H1 `c3ade14`) jadi UI tashih interaktif: radio
+  (Setuju / Ora Setuju / Koreksi) + textarea catatan per 14 poin;
+  tombol "Copy Jawaban" + preview live (format output: "JAWABAN
+  TASHIH - PROPOSAL AKUNTANSI KOPERASI AL-ITTIHAD" + tanggal + 14
+  keputusan + ringkasan + perlu-ditindaklanjuti) — JS vanilla
+  inline (clipboard API + fallback execCommand, zero library).
+- **Fix struktural (commit `b2d822b`)**: HTML H1 asli punya
+  content stray (tabel 7.2/7.3 di luar `<section>`, langsung di
+  `<main>`) — direlokasi ke badan §7 + tag tutup konsisten.
+- **Exception gate (commit `ef01d0d`)**: `sync-tutorial.mjs`
+  ketambah `SCRIPT_ALLOW` ('AKUNTANSI-PROPOSAL.html') — file itu
+  saja boleh berisi script; docs lain tetap 0-script hard gate
+  (viewer iframe `sandbox="allow-same-origin"` tanpa
+  allow-scripts -> di dalam app <script> tetap TIDAK jalan;
+  copy public/tutorial = salinan byte, exception konsisten di
+  dua sisi). Keputusan tercatat di komentar source.
+- **Print/aksesibilitas**: `@media print` sembunyikan tombol +
+  preview (cetak tetap bersih = 14 poin + kolom isian); radio
+  hit-area 44px; tema maroon tanpa ubah CSS dokumen.
+- **Sisa**: F3.3 = jawaban tashih GUS FI (12/14 poin sudah via
+  roadmap 29 Sep) -> F3.4+ implementasi. Pola sama utk
+  `P3-TASHIH-ZAKAT.html` + `P4-PROPOSAL-KONSINYASI.html`
+  (commit terpisah).
+
 ## 2026-09-29
 ### Tutorial / dokumentasi in-app (T1-T3) - SELESAI 28-29 Sep
 - **Perintah (ACC Gus Fi, 28-29 Sep)**: fitur dokumentasi in-app —

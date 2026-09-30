@@ -1330,9 +1330,11 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
    mitigasi; roadmap 32 commit 6 wave; §13 = 14 poin keputusan).
    Snapshot HTML bacaan (H1 `c3ade14`, 29 Sep):
    `docs/AKUNTANSI-PROPOSAL.html` + route `/tutorial/akuntansi-proposal`
-   (0-script; tema maroon SOP-ADMIN; §13 = 14 kartu amber + checkbox,
-   print A4 utk rekam centang). Pasca-F3.3 (keputusan turun) ->
-   regenerate HTML + re-sync (1 commit kecil).
+   (script exception terdokumentasi di `sync-tutorial.mjs`, ACC
+   30 Sep; iframe in-app tetap tanpa allow-scripts; tema maroon
+   SOP-ADMIN; §13 = 14 poin interaktif: radio
+   Setuju/Ora Setuju/Koreksi + catatan + tombol Copy jawaban).
+   Pasca-F3.3 (keputusan turun) -> regenerate + re-sync.
    12 keputusan Gus Fi: badan = koperasi resmi; standar hybrid
    PRIORITAS SYARIAH (SAK Syariah -> PAP -> SAK EP); Level C;
    COA B; ZIS A; SHU A; wakaf B (ditunda); auto-posting B
@@ -1340,7 +1342,11 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
    fondasi); timeline B (6 minggu). Next: **F3.3 = review +
    keputusan GUS FI langsung** (14 poin §13 via
    `/tutorial/akuntansi-proposal`; pengasuh mengikuti;
-   TIDAK ada forum terpisah) -> F3.4+ implementasi.
+   TIDAK ada forum terpisah). **F3.3 PENDING = jawaban tashih
+   GUS FI** (Copy dari §13 interaktif; 12/14 poin sudah jelas via
+   roadmap 29 Sep, sisanya koreksi/klarifikasi) -> F3.4+
+   implementasi. Pola interface tashih sama utk P3-TASHIH-ZAKAT
+   + P4-PROPOSAL-KONSINYASI (commit terpisah).
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
   loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,
