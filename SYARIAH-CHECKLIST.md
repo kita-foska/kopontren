@@ -72,6 +72,20 @@
     menunggu pengasuh]" (nomor belum terverifikasi).
   - Step 3 (P4 dokumen hanya) + revisi hasil tashih pengasuh =
     komit terpisah.
+- **STATUS TASHIH (30 Sep 2026 — DITERIMA, GUS FI)**: tashih
+  dok. P3 (`P3-TASHIH-ZAKAT`) terjawab: 1 Setujuan, 0 Ora,
+  1 Koreksi; Soal 3 belum dipilih (catatan B). (1) HAUL
+  KOREKSI: anchor `haul_start_date = 2025-10-22` (toko
+  koperasi berjalan/niat berdagang); haul pertama jatuh
+  22 Okt 2026; ta'jil boleh diputuskan musyawarah; nilai zakat
+  selalu tampil "seolah sudah haul" + keterangan "belum wajib
+  karena belum nishab" bila < nisab. (2) HARGA EMAS SETUJU:
+  dasar nisab = harga emas TERENDAH (min. log
+  `zakat_gold_standards` periode haul). (3) MODAL belum
+  dipilih → `valuation_mode` tetap provisional. Standar
+  normatif: manut rumusan Nahdliyin ulama + hasil bahtsul
+  masail pondok pesantren. Rekam: `docs/akuntansi-keputusan.md`
+  (seksi "Keputusan P3") + `docs/akuntansi-proposal.md` §15.4.
 
 ## G. Tashih
 - [ ] Perlu tashih ulama?

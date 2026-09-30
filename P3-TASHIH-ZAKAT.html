@@ -84,9 +84,9 @@
       <legend>Pilih satu (tashih) — Setuju = posisi aplikasi sah · Koreksi = tulis posisi pengganti di catatan</legend>
       <label class="tashih-opt"><input type="radio" name="soal1" value="Setuju"> <span><b>Setuju</b> — posisi aplikasi saat ini sah</span></label>
       <label class="tashih-opt"><input type="radio" name="soal1" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
-      <label class="tashih-opt"><input type="radio" name="soal1" value="Koreksi"> <span><b>Koreksi</b> — tulis posisi lain di catatan (bisa mengutip opsi A/B atau lain)</span></label>
+      <label class="tashih-opt"><input type="radio" name="soal1" value="Koreksi" checked> <span><b>Koreksi</b> — tulis posisi lain di catatan (bisa mengutip opsi A/B atau lain)</span></label>
     </fieldset>
-    <textarea class="tashih-note" data-note="soal1" placeholder="Catatan (wajib bila Ora Setuju / Koreksi)"></textarea>
+    <textarea class="tashih-note" data-note="soal1" placeholder="Catatan (wajib bila Ora Setuju / Koreksi)">zakat dihitung haul mulai toko koperasi berjalan (niat berdagang), yaitu 22 Oktober 2025. dan musyawarah bisa memutuskan untuk ta'jil zakat. walaupun nilai perhitungan zakat sebenarnya muncul saat haul 22 Oktober 2026. jadi haul tidak dihitung dari pembayaran zakat terakhir. kami hanya pengin tiap waktu bisa melihat berapa zakat yang harus dibayar saat itu juga (dibayangkan sudah haul, walaupun belum). dan perhitungan zakat ini tetap muncul dengan mengesampingkan nishab. maaf, bukan kami mengabaikan. tapi tetap ada keterangan belum wajib zakat karena belum nishab, misal.</textarea>
 
     <div class="q">
       <b>Soal 2 — Harga emas (nisab).</b><br>
@@ -95,11 +95,11 @@
     </div>
     <fieldset class="tashih">
       <legend>Pilih satu (tashih) — sub-jawaban ditulis di catatan (a/b/c)</legend>
-      <label class="tashih-opt"><input type="radio" name="soal2" value="Setuju"> <span><b>Setuju</b> — posisi aplikasi (standar 24K provisional + log verifikasi append-only) diterima</span></label>
+      <label class="tashih-opt"><input type="radio" name="soal2" value="Setuju" checked> <span><b>Setuju</b> — posisi aplikasi (standar 24K provisional + log verifikasi append-only) diterima</span></label>
       <label class="tashih-opt"><input type="radio" name="soal2" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
       <label class="tashih-opt"><input type="radio" name="soal2" value="Koreksi"> <span><b>Koreksi</b> — tulis koreksi di catatan (a/b/c)</span></label>
     </fieldset>
-    <textarea class="tashih-note" data-note="soal2" placeholder="Catatan: a) sumber harga (mis. Antam / Pegadaian / harga daerah) · b) frekuensi + tempat catat (mis. tiap hari kerja, /admin/zakat) · c) opsi hati-hati bila ragu (mis. pakai harga tertinggi / tunda zakat)"></textarea>
+    <textarea class="tashih-note" data-note="soal2" placeholder="Catatan: a) sumber harga (mis. Antam / Pegadaian / harga daerah) · b) frekuensi + tempat catat (mis. tiap hari kerja, /admin/zakat) · c) opsi hati-hati bila ragu (mis. pakai harga tertinggi / tunda zakat)">harga emas terendah</textarea>
 
     <div class="q">
       <b>Soal 3 — Modal (barang dagangan dinilai berapa).</b><br>
@@ -110,10 +110,11 @@
     <fieldset class="tashih">
       <legend>Pilih satu (tashih) — Setuju = jawaban provisional aplikasi (mode market / hpp fallback) sah</legend>
       <label class="tashih-opt"><input type="radio" name="soal3" value="Setuju"> <span><b>Setuju</b> — jawaban provisional aplikasi sah</span></label>
+      <!-- Jawaban 30 Sep: soal3 BELUM DIPILIH (catatan B) -->
       <label class="tashih-opt"><input type="radio" name="soal3" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
       <label class="tashih-opt"><input type="radio" name="soal3" value="Koreksi"> <span><b>Koreksi</b> — tulis pendekatan lain di catatan (bisa mengutip A/B/C atau lain)</span></label>
     </fieldset>
-    <textarea class="tashih-note" data-note="soal3" placeholder="Catatan (wajib bila Ora Setuju / Koreksi)"></textarea>
+    <textarea class="tashih-note" data-note="soal3" placeholder="Catatan (wajib bila Ora Setuju / Koreksi)">B</textarea>
   </div>
 
   <div class="card">
@@ -121,11 +122,11 @@
     <fieldset class="tashih">
       <legend>Pilih satu (keputusan final)</legend>
       <label class="tashih-opt"><input type="radio" name="keputusan" value="DITERIMA DENGAN CATATAN"> <span><b>Diterima dengan catatan</b> — tulis catatan di bawah</span></label>
-      <label class="tashih-opt"><input type="radio" name="keputusan" value="DITERIMA"> <span><b>Diterima</b> (rumus aplikasi dipakai apa adanya)</span></label>
+      <label class="tashih-opt"><input type="radio" name="keputusan" value="DITERIMA" checked> <span><b>Diterima</b> (rumus aplikasi dipakai apa adanya)</span></label>
       <label class="tashih-opt"><input type="radio" name="keputusan" value="PERLU REVISI"> <span><b>Perlu revisi rumus</b> — tulis keterangan di bawah</span></label>
       <label class="tashih-opt"><input type="radio" name="keputusan" value="DITOLAK"> <span><b>Ditolak</b> — zakat cukup dihitung manual</span></label>
     </fieldset>
-    <textarea class="tashih-note" data-note="keputusan" placeholder="Catatan / keterangan (wajib bila Diterima dengan catatan / Perlu revisi / Ditolak)"></textarea>
+    <textarea class="tashih-note" data-note="keputusan" placeholder="Catatan / keterangan (wajib bila Diterima dengan catatan / Perlu revisi / Ditolak)">yang penting manut rumusan Nahdliyin ulama lan hasil bahtsul masail pondok pesantren</textarea>
     <h3>Identitas panel &amp; tanggal</h3>
     <div class="row">
       <div><label class="meta">Nama panel / lembaga<br><input type="text"></label></div>
@@ -164,6 +165,29 @@ saat presentasi.</pre>
     <p class="meta"><b>Koreksi sitasi (riset 26 Sep 2026):</b> baris 3 semula tertulis "DSN-MUI Fatwa No. 8/2008" — keliru: No. 08/DSN-MUI/IV/2000 = fatwa pembiayaan musyarakah, bukan zakat; DSN-MUI (Sharia Board MUI) berdomain muamalah/keuangan syariah, bukan fatwa zakat (domain Komisi Fatwa MUI). Nomor "78/2023" diberikan tim &amp; BELUM TERVERIFIKASI — judul &amp; substansi diverifikasi pengasuh sebelum dokumen ini jadi dasar tashih.</p>
     <p class="meta">Halaman spesifik silakan dilengkapi panel. Dokumen sumber: P3-TASHIH-ZAKAT.md (repo kopontren).</p>
   </details>
+
+  <div class="card" style="border:2px solid #2e7d40;background:#f0faf3">
+    <h2 style="color:#2e7d40">Jawaban Tashih — DITERIMA (30 Sep 2026, GUS FI)</h2>
+    <p><b>Ringkasan: 1 Setujuan · 0 Ora Setujuan · 1 Koreksi (Soal 1).</b>
+      Soal 3 belum dipilih (catatan: B).</p>
+    <div class="q"><b>Soal 1 — Haul → KOREKSI.</b> Zakat dihitung haul
+      mulai toko koperasi berjalan (niat berdagang), yaitu
+      <b>22 Oktober 2025</b>. Musyawarah bisa memutuskan ta'jil zakat.
+      Nilai perhitungan zakat sebenarnya muncul saat haul
+      <b>22 Oktober 2026</b>; haul tidak dihitung dari pembayaran zakat
+      terakhir. Nilai zakat selalu bisa dilihat saat itu juga
+      (dibayangkan sudah haul), tetap tampil dengan keterangan
+      <i>"belum wajib zakat karena belum nishab"</i> bila di bawah nisab.</div>
+    <div class="q"><b>Soal 2 — Harga emas → SETUJU.</b> Harga emas
+      <b>terendah</b> (dasar nisab).</div>
+    <div class="q"><b>Soal 3 — Modal → BELUM DIPILIH</b> (catatan: B).</div>
+    <div class="q"><b>Keputusan Tashih → DITERIMA.</b> Catatan: yang
+      penting manut rumusan Nahdliyin ulama lan hasil bahtsul masail
+      pondok pesantren.</div>
+    <p class="meta">Rekam keputusan: <code>docs/akuntansi-keputusan.md</code>
+      (seksi "Keputusan P3") + revisi <code>docs/akuntansi-proposal.md</code>
+      §15.4 — commit terpisah. Open: Soal 3 (modal).</p>
+  </div>
 
   <div class="card">
     <h2>Copy Jawaban Tashih</h2>

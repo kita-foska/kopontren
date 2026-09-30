@@ -13,6 +13,19 @@
   `valuation_mode` market/hpp). Semua posisi — termasuk koreksi sitasi
   DSN-MUI 8/2008 → MUI Fatwa No. 78/2023 [judul: menunggu pengasuh] —
   menunggu tashih pengasuh; subject to correction.
+- **STATUS (30 Sep 2026): TASHIH TERJAWAB — DITERIMA (GUS FI).**
+  Soal 1 **KOREKSI**: anchor haul = **22 Okt 2025** (mulai toko
+  koperasi berjalan / niat berdagang); haul pertama jatuh **22 Okt
+  2026**; musyawarah boleh memutuskan **ta'jil**; nilai zakat selalu
+  bisa dilihat "seolah sudah haul", dengan keterangan "belum wajib
+  zakat karena belum nishab" bila harta di bawah nisab. Soal 2
+  **SETUJU**: harga emas **terendah** (dasar nisab). Soal 3
+  **BELUM DIPILIH** (catatan: B — nilai pasar saat jatuh haul).
+  Keputusan tashih **DITERIMA** — manut rumusan Nahdliyin ulama &
+  hasil bahtsul masail pondok pesantren. Ter-rekam:
+  `docs/akuntansi-keputusan.md` + revisi `docs/akuntansi-proposal.md`
+  §15.4 (commit terpisah). Open: Soal 3 (modal) + verifikasi judul
+  MUI Fatwa No. 78/2023.
 
 ### A. Latar Belakang
 Modul zakat tijarah berfungsi: menghitung harta dagang
@@ -197,3 +210,46 @@ dokumen ini dipakai dasar tashih.
 | [ ] Perlu revisi formula (sebutkan) | [ ] Ditolak —
 zakat hanya manual
 Catat: nama panel/lembaga + tanggal → `MEMORY.md`.
+
+### G. Jawaban Tashih (30 Sep 2026 — Gus Fi)
+
+```
+JAWABAN TASHIH — P3 ZAKAT TIJARAH
+Tanggal: 30 September 2026
+Oleh: Gus Fi (Ali Makfi)
+
+1. Soal 1 — Haul (masa zakat) → KOREKSI
+   Catatan: zakat dihitung haul mulai toko koperasi berjalan (niat
+   berdagang), yaitu 22 Oktober 2025. dan musyawarah bisa
+   memutuskan untuk ta'jil zakat. walaupun nilai perhitungan zakat
+   sebenarnya muncul saat haul 22 Oktober 2026. jadi haul tidak
+   dihitung dari pembayaran zakat terakhir. kami hanya pengin tiap
+   waktu bisa melihat berapa zakat yang harus dibayar saat itu
+   juga (dibayangkan sudah haul, walaupun belum). dan perhitungan
+   zakat ini tetap muncul dengan mengesampingkan nishab. maaf,
+   bukan kami mengabaikan. tapi tetap ada keterangan belum wajib
+   zakat karena belum nishab, misal.
+2. Soal 2 — Harga emas (nisab) → SETUJU
+   Catatan: harga emas terendah
+3. Soal 3 — Modal (barang dagangan dinilai berapa) → (BELUM
+   DIPILIH)
+   Catatan: B
+4. Keputusan Tashih → DITERIMA
+   Catatan: yang penting manut rumusan Nahdliyin ulama lan hasil
+   bahtsul masail pondok pesantren
+
+Ringkasan: 1 Setuju, 0 Ora Setuju, 1 Koreksi
+Perlu ditindaklanjuti: 1
+```
+
+**Tindak lanjut (tim aplikasi):**
+- Soal 1: seed `haul_start_date` = `2025-10-22`; haul pertama
+  jatuh `2026-10-22`; penampang "seolah sudah haul" + keterangan
+  nishab di UI `/admin/zakat`.
+- Soal 2: `harga_efektif` = minimum harga tercatat di
+  `zakat_gold_standards` (periode haul).
+- Soal 3: tunggu jawaban lanjutan (opsi B tercatat;
+  `valuation_mode` tetap provisional).
+- Rekam keputusan: `docs/akuntansi-keputusan.md` (seksi "Keputusan
+  P3") + revisi `docs/akuntansi-proposal.md` §15.4 — commit
+  terpisah; implementasi spesifikasi = komit F3.4+.
