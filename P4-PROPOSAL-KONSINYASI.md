@@ -17,6 +17,10 @@
   pengurus + tashih sisa ke ulama)
   · 26 Sep: +mapping akuntansi PROVISIONAL (menunggu tashih
     pengasuh; lihat seksi I)
+  · 30 Sep: jawaban tashih P4 TURUN (Gus Fi) — 3 Setujuan
+    (seksi F tercentang; lihat seksi J); A1.1 LEPAS (komit
+    terpisah, F3.4+); sisa open = dasar hitung ujrah V1 →
+    konfirmasi ulama
 
 ### A. Latar Belakang
 Pengurus berkeputusan: toko mengambil komisi 20% dari harga jual
@@ -97,16 +101,16 @@ barang dikembalikan → ujrah 0, tagihan tidak berubah.
    yang mengikat = nilai yg disepakati saat input (antardhin),
    tercatat per baris + audit `commission_source` (bukti utuh).
 
-### F. Permohonan Keputusan Pengurus
-1. [ ] Setujui skema komisi (wakalah bil ujrah, ujrah saat terjual) **sesuai
+### F. Permohonan Keputusan Pengurus — **TERJAWAB 30 SEP 2026 (Gus Fi: 3 Setujuan — detail di seksi J)**
+1. [x] Setujui skema komisi (wakalah bil ujrah, ujrah saat terjual) **sesuai
    implementasi** commit `4f12818` + P4-B fleksibel (commit P4-B,
    lihat git log).
-2. [ ] Setujui: komisi boleh **berbeda-beda per kesepakatan
+2. [x] Setujui: komisi boleh **berbeda-beda per kesepakatan
    (antardhin)** — input per titipan + default per-pemilik
    (`konsinyasi_owner_rates`); default global 20; hak admin ubah
    parameter utk titipan baru; titipan berjalan tetap snapshot
    (tidak bisa diubah sepihak).
-3. [ ] Setujui meneruskan pertanyaan sisa ke ulama (lihat
+3. [x] Setujui meneruskan pertanyaan sisa ke ulama (lihat
    E.1 + lampiran P3 bila relevan).
 
 Keputusan dicatat di `MEMORY.md` + `SYARIAH-CHECKLIST.md`
@@ -153,8 +157,49 @@ Dokumen only (FASE 2 Step 3), tanpa perubahan kode:
    tagihan neto komisi (harga jual − ujrah) adalah kewajiban
    toko.
 
-**Status:** Provisional — implemented based on strongest available
-fiqh position. Pending tashih by pengasuh. Subject to correction.
-(26 Sep 2026; tercatat di SYARIAH-CHECKLIST.md item P4 + TODO
-A1.1; versi html: P4-PROPOSAL-KONSINYASI.html seksi "Mapping
-akuntansi".)
+**Status:** Tashih P4 TURUN 30 Sep 2026 (Gus Fi — 3 Setujuan,
+lihat seksi J): mapping boleh diterapkan; ujrah → pendapatan
+(A1.1) dieksekusi di commit terpisah saat F3.4+; dasar hitung
+ujrah V1 (persentase harga PERJANJIAN) tetap menunggu konfirmasi
+ulama (bila ada koreksi = komit terpisah, pola F3.3).
+
+### J. Jawaban Tashih P4 (30 Sep 2026 — GUS FI, DITERIMA)
+
+> Teks jawaban (copy dari `P4-PROPOSAL-KONSINYASI.html`, blok
+> "Copy Jawaban Tashih"):
+
+```
+JAWABAN TASHIH — P4 KONSINYASI
+Tanggal: 30 September 2026
+Oleh: Gus Fi (Ali Makfi)
+
+1. Skema wakalah bil ujrah → Setuju
+   Catatan: -
+2. Komisi per kesepakatan + titipan terkunci → Setuju
+   Catatan: -
+3. Meneruskan dasar hitung ujrah ke ulama → Setuju
+   Catatan: -
+
+Ringkasan: 3 Setuju, 0 Ora Setuju, 0 Koreksi
+Perlu ditindaklanjuti: -
+```
+
+- **(1) Skema wakalah bil ujrah = DISETUJUI** — akad & mekanik
+  implementasi (`4f12818` + P4-B fleksibel) dikonfirmasi:
+  ujrah tercatat otomatis SAAT terjual; tagihan pemilik neto
+  komisi; rate snapshot per titipan (tanpa perubahan sepihak).
+- **(2) Komisi per kesepakatan (antardhin) + titipan terkunci
+  = DISETUJUI** — titipan berjalan tetap snapshot; rate baru
+  hanya utk titipan baru; `konsinyasi_commission` (default 20)
+  = preset operasional aplikasi, BUKAN ketentuan syariah.
+- **(3) Dasar hitung ujrah V1 → DITERUSKAN KE ULAMA** — V1
+  (persentase harga PERJANJIAN, ma'lum) tetap posisi berjalan;
+  konfirmasi ulama menyusul; alternatif = ujrah mitsli
+  (tercatat di seksi H).
+- **Dampak larangan prabatasih (R6 proposal akuntansi):**
+  aspek P4 terjawab LEPAS — **A1.1 LEPAS**: ujrah konsinyasi
+  dipindahkan dari off-P&L (memo, baris "Ujrah Konsinyasi") ke
+  pendapatan (4040 PKGF) + tagihan pemilik = settlement payable
+  (2020 APL) — eksekusi = commit terpisah saat F3.4+; mapping
+  seksi I TIDAK diubah diam-diam (tetap via commit tercatat).
+- Tindak lanjut: -

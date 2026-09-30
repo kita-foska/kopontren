@@ -185,14 +185,17 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       memo V1 → pendapatan setelah tashih; hak supplier =
       settlement payable) + item A1.1 + sinkron md & html
       (keputusan user 26 Sep: md sumber ikut di-update).
-      Tunggu keputusan `P3-TASHIH-ZAKAT.md` (pengasuh); terapkan
-      revisi hasil tashih = komit terpisah. Lihat SYARIAH-CHECKLIST.md
-      seksi F.
-- [ ] **A1.1 (koreksi keuangan pascataashih P4)**: pindahkan ujrah
-      konsinyasi dari off-P&L (memo, baris "Ujrah Konsinyasi") ke
-      pendapatan setelah tashih pengasuh + klasifikasi tagihan
-      pemilik = settlement payable (kewajiban toko). Eksekusi =
-      komit terpisah setelah hasil tashih turun (bukan sekarang).
+      **30 Sep:** tashih P3 TERJAWAB (1 Setujuan, 0 Ora, 1 Koreksi;
+      Soal 3 modal pending) & tashih P4 TERJAWAB (3 Setujuan, 0-0)
+      — keputusan tercatat nang SYARIAH-CHECKLIST.md seksi F/G +
+      `docs/akuntansi-keputusan.md` (seksi "Keputusan P3"/"Keputusan P4")
+      + `akuntansi-proposal` §15.4/§15.5.
+- [ ] **A1.1 (koreksi keuangan pascataashih P4 — LEPAS: tashih turun
+      30 Sep, 3 Setujuan, 0-0; eksekusi = komit terpisah saat F3.4+)**:
+      pindahkan ujrah konsinyasi dari off-P&L (memo, baris "Ujrah
+      Konsinyasi") ke pendapatan (4040) + klasifikasi tagihan
+      pemilik = settlement payable (2020). Eksekusi = komit terpisah
+      saat F3.4+ (setelah implementasi spesifikasi koreksi P3, R6).
 - [ ] **sw.js refactor template-generate (FOLLOW-UP terpisah,
       BUKAN sekarang)** — ubah `scripts/inject-sw-version.mjs`
       dari in-place stamp menjadi MEN-GENERATE: template ter-track
@@ -863,8 +866,10 @@ konsistensi.
   panel) & `P4-PROPOSAL-KONSINYASI.html` (proposal pengurus konsinyasi:
   tabel skema + 3 checkbox persetujuan + tanda tangan). Standalone,
   mobile-friendly, print-ready, basa-awam, tag balance terverif.
-  **Sisa:** kirim ke ulama (P3) & pengurus (P4) → catat keputusan
-    nang MEMORY.md + SYARIAH-CHECKLIST.md.
+  **SELESAI (30 Sep):** jawaban tashih P3 & P4 turun (Gus Fi) — P3:
+    1 Setujuan, 0 Ora, 1 Koreksi (Soal 3 modal pending); P4: 3
+    Setujuan, 0 Ora, 0 Koreksi. Keputusan tercatat nang MEMORY.md +
+    SYARIAH-CHECKLIST.md (seksi F/G) + `docs/akuntansi-keputusan.md`.
 - [x] **UX-2: EmptyState CTA + PanduanKasir (26 Sep, ACC Gus Fi) —
   SELESAI (2 commit, dual-push master+main):** acuan goal document
   (3 file, 95 usulan, 8 fase UX-2→UX-8); UX-2 = R2 + R4.
@@ -1136,7 +1141,7 @@ backup aman, offline tetap percaya diri.
 | UX-2  | EmptyState CTA + Panduan Kasir                                      | ✅ selesai 26 Sep (@ `32d0538` + `e7130c3`) |
 | UX-3  | TermTip + StatusBadge + rename `.grad-hero`                        | ✅ selesai 26 Sep (detail: MEMORY.md seksi "UX-3") |
 | UX-4  | **DESIGN SYSTEM**: warna, tipografi, spacing, token, komponen seragam (audit data sdh dikumpulkam 26 Sep; FASE A–E SELESAI 27 Sep; next FASE F: Typography scale cleanup) | ✅ A–E selesai 27 Sep: A @ `5698b74` · B @ `592b230` · C @ `3a59c9a` · D @ `0637ee7`+`9a20a1b`+`5ac6080` · E card+pill @ `05c65aa`(E1)+`06cbe8b`(E2)+`4572b3f`(E3), E4 = docs + resync kp-zip3; sisa: pixel-check real device (4 hal. admin + halaman E2/E3); FASE F SELESAI 27 Sep (F0 `d1f7574` + F1 `2ff5091` token map 61 situs + F2 `ce7e0cd` .card-label 10 situs + F3 docs+resync kp-zip3); sisa: pixel-check HP 8 item; FASE G1+G2 SELESAI 27 Sep (G1 `99a3b20` Modal size + G2 `0ffb072` Toast tone 54 tag); G3 = docs + resync kp-zip3; G4 = pixel-check 5 item; G2-full = ternary `pos-client:714/892/901` |
-| UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat (audit + ACC Q1-Q4 27 Sep; plan H0-H6: MEMORY.md § UX-5 FASE H) | ✅ SELESAI H0–H6 27 Sep: H1 `c41ddfd` · H3 `b5b4927` · H2 (+fix `faf4849`) · H4 `33ce3f4` · H5 `a0b9f79` · H6 (commit H6); sisa = pixel-check H4+H5 (list: MEMORY § UX-5 H4/H5) + P3/P4 tashih |
+| UX-5  | **Information Architecture**: role-based UX, dashboard berbeda per role, alur penting lebih kuat (audit + ACC Q1-Q4 27 Sep; plan H0-H6: MEMORY.md § UX-5 FASE H) | ✅ SELESAI H0–H6 27 Sep: H1 `c41ddfd` · H3 `b5b4927` · H2 (+fix `faf4849`) · H4 `33ce3f4` · H5 `a0b9f79` · H6 (commit H6); sisa = pixel-check H4+H5 (list: MEMORY § UX-5 H4/H5); P3 & P4 tashih terjawab 30 Sep (P3 Soal 3 modal pending) |
 | UX-5.5 | **Multi-role (M1)** — siji akun multi-role; **ACC eksekusi 27 Sep (sadurunge P0 Production Certification)** — doc `docs/m1-multirole.md`, liha Kelompok M | ▶ in progress (commit plan M1-1…M1-6) |
 | UX-6  | **Attention System + komunikatif**: angka penting, status jelas, peringatan penting, "Explain This Number" | 🚀 FASE I ACC 27 Sep: I-1 done · I-3 done (`e484cbb`) · I-4 done (`6222bc70`) · I-5 done (`99c973c`) · I-2 done (`8d585f4`) · I-6 done (`4de83fd`) · I-8 done (commit I-8, hash backfill docs) · **I-7 ditunda** (daftar alasan = pengurus) — liha § FASE I di atas |
 | UX-7  | **Power User / Productivity**: Ctrl+K global search, saved views, deep link, advanced reports, keyboard | 📋 rancang |
@@ -1211,7 +1216,7 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
 - [ ] E22 Dark mode palette — bukan inverte buta; dark = tenang, high contrast, bukan menyilaukan.
 - [ ] E23 Contextual help — "?", panel bantuan per halaman, jawaban pendek.
 - [ ] E24 Istilah syariah dua lapis — "zakat perdagangan" + tooltip "pengelolaan harta dagang…"; jangan tebar istilah tanpa konteks.
-- [ ] E25 Tandai provisional — label "Menunggu tashih" utk keputusan belum final (P3/P4).
+- [ ] E25 Tandai provisional — label "Menunggu tashih" utk keputusan belum final (P3 Soal 3 modal + P4 dasar hitung ujrah V1 — aspek lain terjawab 30 Sep; badge "provisional" tetap di UI zakat modal & ujrah kon.).
 - [ ] E26 Audit trail komunikatif — "SIAPA melakukan APA KAPAN"; log filter + timeline.
 - [ ] E27 Mode Pengurus — view ringkas: kas, stok, piutang, hutang, performa; bukan dashboard teknis.
 - [ ] E28 Sidebar grouping — Kelola / Keuangan / Laporan / Sistem; jangan semua rata.
@@ -1439,12 +1444,16 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
 
 ## Hal yang TIDAK boleh dilakukan dulu (dari Bagian 35 laporan)
 
-Sampai tashih selesai: jangan anggap 24K final, jangan anggap market
-valuation final, jangan ubah haul berdasar asumsi sendiri, jangan
-anggap ta'jil menggeser haul, jangan anggap 20% ketentuan syariah,
-jangan masukkan seluruh penjualan konsinyasi sebagai revenue, jangan
+Tashih P3 & P4 TERJAWAB 30 Sep (P3: 1 Setujuan, 0 Ora, 1 Koreksi —
+Soal 3 modal pending; P4: 3 Setujuan, 0 Ora, 0 Koreksi). Masih
+berlaku sampai tashih final: jangan anggap 24K final, jangan anggap
+market valuation final (P3 Soal 3), jangan ubah haul berdasar
+asumsi sendiri, jangan anggap ta'jil menggeser haul, jangan anggap
+20% ketentuan syariah, jangan masukkan seluruh penjualan
+konsinyasi sebagai revenue (sampai A1.1 dieksekusi), jangan
 treat settlement pemilik sebagai expense, jangan ubah mapping akuntansi
-P4 diam-diam, jangan bikin keputusan fiqih baru demi kebutuhan coding.
+P4 diam-diam (eksekusi A1.1 = commit tercatat saat F3.4+), jangan
+bikin keputusan fiqih baru demi kebutuhan coding.
 
 ## Checklist tambahan utk verifikasi manual HP (usulan, masuk daftar Gus)
 

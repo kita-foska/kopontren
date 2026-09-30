@@ -57,12 +57,14 @@
 <header>
   <div class="wrap">
     <h1>Proposal Pengurus — Komisi Konsinyasi Fleksibel (Akad Wakalah bil Ujrah)</h1>
-    <p class="sub">Kopontren Al Ittihad · 24 Sep 2026 · teknis SELESAI, menunggu persetujuan pengurus · <b>26 Sep: +mapping akuntansi PROVISIONAL (menunggu tashih pengasuh)</b></p>
+    <p class="sub">Kopontren Al Ittihad · 24 Sep 2026 · teknis SELESAI · <b>26 Sep: +mapping akuntansi PROVISIONAL</b> · <b>30 Sep: jawaban tashih P4 turun (Gus Fi) — 3 Setujuan, tashih DITERIMA</b></p>
   </div>
 </header>
 <div class="wrap">
 
   <div class="note"><b>Penting:</b> dokumen ini <b>materi musyawarah pengurus, BUKAN fatwa</b>. Bagian teknis sudah diimplementasi &amp; teruji di aplikasi; dokumen ini meminta <b>persetujuan resmi pengurus</b> atas skema + parameter yang dipilih.</div>
+
+  <div class="note" style="background:#eef7ee;border-color:#a8cfa8;color:#14532d"><b>TERJAWAB 30 SEP 2026 — TASHIH P4 DITERIMA (Gus Fi): 3 Setujuan, 0 Ora Setujuan, 0 Koreksi.</b> (1) Skema wakalah bil ujrah SETUJU — ujrah otomatis saat terjual, tagihan pemilik neto komisi; (2) komisi per kesepakatan (antardhin) + titipan terkunci (snapshot, tanpa perubahan sepihak) SETUJU; (3) dasar hitung ujrah V1 (% harga PERJANJIAN) SETUJU DITERUSKAN KE ULAMA — konfirmasi menyusul. <b>A1.1 LEPAS</b>: ujrah konsinyasi → pendapatan (4040) + tagihan pemilik = settlement payable (2020), dieksekusi commit terpisah saat F3.4+. Rekam: <code>P4-PROPOSAL-KONSINYASI.md</code> seksi J · <code>docs/akuntansi-keputusan.md</code> (seksi "Keputusan P4") · <code>docs/akuntansi-proposal.md</code> §15.5.</div>
 
   <div class="card">
     <h2>1. Latar Belakang (pendek)</h2>
@@ -91,21 +93,21 @@
     <h2>4. Permohonan Keputusan Pengurus (pilih satu per poin)</h2>
     <fieldset class="tashih">
       <legend>Poin 1 — skema komisi wakalah bil ujrah</legend>
-      <label class="tashih-opt"><input type="radio" name="p4-p1" value="Setuju"> <span><b>Setuju</b> skema komisi wakalah bil ujrah (ujrah tercatat saat barang terjual) sesuai implementasi di aplikasi.</span></label>
+      <label class="tashih-opt"><input type="radio" name="p4-p1" value="Setuju" checked> <span><b>Setuju</b> skema komisi wakalah bil ujrah (ujrah tercatat saat barang terjual) sesuai implementasi di aplikasi.</span></label>
       <label class="tashih-opt"><input type="radio" name="p4-p1" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
       <label class="tashih-opt"><input type="radio" name="p4-p1" value="Koreksi"> <span><b>Koreksi</b> — tulis koreksi / perubahan di catatan</span></label>
     </fieldset>
     <textarea class="tashih-note" data-note="p4-p1" placeholder="Catatan poin 1 (wajib bila Ora Setuju / Koreksi)"></textarea>
     <fieldset class="tashih">
       <legend>Poin 2 — komisi berbeda per kesepakatan + titipan berjalan terkunci</legend>
-      <label class="tashih-opt"><input type="radio" name="p4-p2" value="Setuju"> <span><b>Setuju</b> komisi boleh <b>berbeda-beda per kesepakatan</b> dengan pemilik (input per titipan + default per pemilik); titipan yang sedang berjalan tetap terkunci (tidak diubah sepihak).</span></label>
+      <label class="tashih-opt"><input type="radio" name="p4-p2" value="Setuju" checked> <span><b>Setuju</b> komisi boleh <b>berbeda-beda per kesepakatan</b> dengan pemilik (input per titipan + default per pemilik); titipan yang sedang berjalan tetap terkunci (tidak diubah sepihak).</span></label>
       <label class="tashih-opt"><input type="radio" name="p4-p2" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
       <label class="tashih-opt"><input type="radio" name="p4-p2" value="Koreksi"> <span><b>Koreksi</b> — tulis koreksi / perubahan di catatan</span></label>
     </fieldset>
     <textarea class="tashih-note" data-note="p4-p2" placeholder="Catatan poin 2 (wajib bila Ora Setuju / Koreksi)"></textarea>
     <fieldset class="tashih">
       <legend>Poin 3 — meneruskan sisa pertanyaan ke ulama (dasar hitung ujrah)</legend>
-      <label class="tashih-opt"><input type="radio" name="p4-p3" value="Setuju"> <span><b>Setuju</b> meneruskan sisa pertanyaan ke ulama: dasar hitung ujrah memakai persentase harga perjanjian (bukan harga jual aktual) — alternatif bila diperlukan = ujrah mitsli (lihat lampiran).</span></label>
+      <label class="tashih-opt"><input type="radio" name="p4-p3" value="Setuju" checked> <span><b>Setuju</b> meneruskan sisa pertanyaan ke ulama: dasar hitung ujrah memakai persentase harga perjanjian (bukan harga jual aktual) — alternatif bila diperlukan = ujrah mitsli (lihat lampiran).</span></label>
       <label class="tashih-opt"><input type="radio" name="p4-p3" value="Ora Setuju"> <span><b>Ora Setuju</b> — tolak; tulis alasan di catatan</span></label>
       <label class="tashih-opt"><input type="radio" name="p4-p3" value="Koreksi"> <span><b>Koreksi</b> — tulis koreksi / perubahan di catatan</span></label>
     </fieldset>
@@ -135,8 +137,19 @@
     <div class="note">
       <b>Posisi akuntansi P4:</b> (1) <b>barang supplier (pemilik titipan) ≠ revenue Kopontren</b> — hasil bersih penjualan titipan adalah hak pemilik, bukan pendapatan toko; (2) <b>ujrah Kopontren = revenue</b> — di V1 dicatat <b>off-P&L (memo)</b>, baris "Ujrah Konsinyasi" pada laporan P&amp;L; <b>dipindahkan ke pendapatan setelah tashih pengasuh</b>; (3) <b>hak supplier (pemilik titipan) = settlement payable</b> — tagihan neto komisi (harga jual − ujrah) adalah kewajiban toko.
     </div>
-    <p class="meta"><b>Status:</b> Provisional — implemented based on strongest available fiqh position. Pending tashih by pengasuh. Subject to correction. (26 Sep 2026; dokumen hanya — tanpa perubahan kode; tercatat di SYARIAH-CHECKLIST.md item P4 + TODO A1.1.)</p>
+    <p class="meta"><b>Status:</b> Tashih P4 TURUN 30 Sep 2026 (Gus Fi — 3 Setujuan, seksi J): mapping boleh diterapkan; ujrah → pendapatan (A1.1) dieksekusi commit terpisah saat F3.4+; dasar hitung ujrah V1 (persentase harga PERJANJIAN) tetap menunggu konfirmasi ulama. (26 Sep 2026; dokumen hanya — tanpa perubahan kode; tercatat di SYARIAH-CHECKLIST.md item P4 + TODO A1.1.)</p>
   </details>
+
+  <div class="card">
+    <h2>5. Jawaban Tashih P4 (30 Sep 2026 — DITERIMA, GUS FI)</h2>
+    <p><b>3 Setujuan, 0 Ora Setujuan, 0 Koreksi; perlu ditindaklanjuti: -</b></p>
+    <ol class="dec">
+      <li><b>Skema wakalah bil ujrah → Setuju</b> — akad &amp; mekanik implementasi (<code>4f12818</code> + P4-B) dikonfirmasi: ujrah otomatis saat terjual; tagihan pemilik neto komisi; rate snapshot per titipan.</li>
+      <li><b>Komisi per kesepakatan + titipan terkunci → Setuju</b> — antardhin (input per titipan + default per-pemilik); titipan berjalan tetap snapshot (tidak diubah sepihak); <code>konsinyasi_commission</code> 20% = preset operasional, BUKAN ketentuan syariah.</li>
+      <li><b>Meneruskan dasar hitung ujrah ke ulama → Setuju</b> — V1 = % harga PERJANJIAN (ma'lum) tetap berjalan sampai konfirmasi ulama; alternatif = ujrah mitsli.</li>
+    </ol>
+    <p><b>Dampak (R6 proposal akuntansi): aspek P4 terjawab LEPAS — A1.1 LEPAS:</b> ujrah konsinyasi dipindah dari off-P&amp;L (memo, baris "Ujrah Konsinyasi") ke pendapatan (4040 PKGF) + tagihan pemilik = settlement payable (2020 APL) — eksekusi = commit terpisah saat F3.4+; mapping seksi "Mapping akuntansi" TIDAK diubah diam-diam. Rekam: <code>P4-PROPOSAL-KONSINYASI.md</code> seksi J · <code>docs/akuntansi-keputusan.md</code> (seksi "Keputusan P4") · <code>docs/akuntansi-proposal.md</code> §15.5.</p>
+  </div>
 
   <div class="card">
     <h2>Copy Jawaban Tashih</h2>
