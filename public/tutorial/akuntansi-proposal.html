@@ -94,7 +94,7 @@ section:target h2 .n{background:var(--maroon)}
 <a href="#s0">§0 Keputusan</a><a href="#s1">§1 Konteks</a><a href="#s2">§2 COA</a><a href="#s3">§3 Jurnal</a><a href="#s4">§4 Auto-posting</a><a href="#s5">§5 Laporan</a><a href="#s6">§6 Akad</a><a href="#s7">§7 Koperasi</a><a href="#s8">§8 ZIS</a><a href="#s9">§9 PAP</a><a href="#s10">§10 Migrasi</a><a href="#s11">§11 Risiko</a><a href="#s12">§12 Roadmap</a><a class="hot" href="#s13">§13 14 Keputusan</a><a href="#s14">§14 Aturan</a>
 </div>
 </div>
-<div class="note"><b>Aturan syariah first:</b> semua nilai fiqih/standar (nisbah, rate zakat, margin, rasio SHU, denda, penyusutan, amil) = <b>PERLU KEPUTUSAN GUS FI</b> <span class="tag a">PKGF</span>. Tidak ada default angka fiqih di aplikasi — field input tanpa nilai awal. Halaman ini = <b>snapshot bacaan</b>; sumber kebenaran tetap <code>docs/akuntansi-proposal.md</code> @ <code>e3cfd30</code> (F3.2). §13 kini ada antarmuka tashih interaktif (radio Setuju/Ora Setuju/Koreksi + catatan + tombol copy; exception JS terdokumentasi 30 Sep 2026) — tombol copy bekerja saat file dibuka langsung di browser; di viewer in-app (iframe 0-script) pilihan tidak tersimpan, keputusan tetap dicatat di chat / <code>docs/akuntansi-keputusan.md</code>; versi PDF/cetak menampilkan daftar item bersih. <b>UPDATE 30 SEP 2026:</b> F3.3 TELAH TERJAWAB — 12 Setuju, 0 Ora Setuju, 2 Koreksi (#6 denda tidak ada; #14 wakaf aktif); ter-rekam <code>docs/akuntansi-keputusan.md</code>; revisi snapshot @ <code>3af7250</code>. <b>UPDATE TASHIH P3 (30 SEP 2026):</b> tashih dok. P3 zakat <code>P3-TASHIH-ZAKAT</code> TERJAWAB–DITERIMA (1 Setujuan, 0 Ora, 1 Koreksi; Soal 3 modal belum dipilih, catatan B) — haul koreksi (anchor 22 Okt 2025) + harga emas terendah = final; ter-rekam <code>docs/akuntansi-keputusan.md</code> + md §15.4; revisi snapshot @ commit tashih P3 (seksi 15 di bawah).</div>
+<div class="note"><b>Aturan syariah first:</b> semua nilai fiqih/standar (nisbah, rate zakat, margin, rasio SHU, denda, penyusutan, amil) = <b>PERLU KEPUTUSAN GUS FI</b> <span class="tag a">PKGF</span>. Tidak ada default angka fiqih di aplikasi — field input tanpa nilai awal. Halaman ini = <b>snapshot bacaan</b>; sumber kebenaran tetap <code>docs/akuntansi-proposal.md</code> @ <code>e3cfd30</code> (F3.2). §13 kini ada antarmuka tashih interaktif (radio Setuju/Ora Setuju/Koreksi + catatan + tombol copy; exception JS terdokumentasi 30 Sep 2026) — tombol copy bekerja saat file dibuka langsung di browser; di viewer in-app (iframe 0-script) pilihan tidak tersimpan, keputusan tetap dicatat di chat / <code>docs/akuntansi-keputusan.md</code>; versi PDF/cetak menampilkan daftar item bersih. <b>UPDATE 30 SEP 2026:</b> F3.3 TELAH TERJAWAB — 12 Setuju, 0 Ora Setuju, 2 Koreksi (#6 denda tidak ada; #14 wakaf aktif); ter-rekam <code>docs/akuntansi-keputusan.md</code>; revisi snapshot @ <code>3af7250</code>. <b>UPDATE TASHIH P3 (30 SEP 2026):</b> tashih dok. P3 zakat <code>P3-TASHIH-ZAKAT</code> TERJAWAB–DITERIMA (1 Setujuan, 0 Ora, 1 Koreksi; Soal 3 modal belum dipilih, catatan B) — haul koreksi (anchor 22 Okt 2025) + harga emas terendah = final; ter-rekam <code>docs/akuntansi-keputusan.md</code> + md §15.4; revisi snapshot @ commit tashih P3 (seksi 15 di bawah). <b>UPDATE TASHIH P4 (30 SEP 2026):</b> tashih dok. P4 konsinyasi <code>P4-PROPOSAL-KONSINYASI</code> TERJAWAB (3 Setujuan, 0 Ora, 0 Koreksi) — A1.1 LEPAS (ujrah → pendapatan 4040, eksekusi commit F3.4+); dasar hitung V1 menunggu ulama; ter-rekam <code>docs/akuntansi-keputusan.md</code> (seksi "Keputusan P4") + md §15.5 (seksi 15 di bawah).</div>
 
 <section id="s0">
 <h2><span class="n">0</span>Ringkasan Eksekutif + 12 Catatan Keputusan</h2>
@@ -116,7 +116,7 @@ section:target h2 .n{background:var(--maroon)}
 <tr><td>11</td><td>Modul akad</td><td><b>A — Bareng fondasi</b> (Wave 3, §6)</td></tr>
 <tr><td>12</td><td>Timeline</td><td><b>B — Menengah, 6 minggu</b> (±30 commit, §12)</td></tr>
 </table></div>
-<p>Estimasi total: <b>28–32 commit, 6 wave, 6 minggu</b> (rincian §12). Semua angka syariah di dokumen ini = <b>placeholder teknis</b>, bukan ketentuan — keputusan nilai = <b>Gus Fi</b> (§13). <b>PASCA-F3.3 (30 Sep 2026): semua 14 poin §13 terjawab</b> (12 Setuju, 2 Koreksi #6 &amp; #14 — lihat §15 + <code>docs/akuntansi-keputusan.md</code>).</p>
+<p>Estimasi total: <b>28–32 commit, 6 wave, 6 minggu</b> (rincian §12). Semua angka syariah di dokumen ini = <b>placeholder teknis</b>, bukan ketentuan — keputusan nilai = <b>Gus Fi</b> (§13). <b>PASCA-F3.3 (30 Sep 2026): semua 14 poin §13 terjawab</b> (12 Setuju, 2 Koreksi #6 &amp; #14 — lihat §15 + <code>docs/akuntansi-keputusan.md</code>). <b>UPDATE TASHIH P4 (30 Sep 2026): tashih P4 konsinyasi TERJAWAB</b> (Gus Fi — 3 Setujuan, 0-0; A1.1 LEPAS — lihat §15.5 + <code>docs/akuntansi-keputusan.md</code>).</p>
 </div>
 </section>
 
@@ -167,7 +167,7 @@ section:target h2 .n{background:var(--maroon)}
 <div class="tbl"><table>
 <tr><th>Kode</th><th>Nama</th><th>Sumber data / deskripsi</th><th>Status</th></tr>
 <tr><td>2010</td><td>Hutang Pembelianan</td><td><code>payables</code> (remaining open)</td><td><span class="tag g">APL</span></td></tr>
-<tr><td>2020</td><td>Hutang Ujrah Konsinyasi</td><td>settlement neto komisi pemilik (P4, default 20% = <b>provisional, P4 belum tashih</b>)</td><td><span class="tag g">APL</span></td></tr>
+<tr><td>2020</td><td>Hutang Ujrah Konsinyasi</td><td>settlement neto komisi pemilik (P4 — TASHIH TERJAWAB 30 Sep; rate via <code>konsinyasi_commission</code>, A1.1 LEPAS §15.5)</td><td><span class="tag g">APL</span></td></tr>
 <tr><td>2030</td><td>Utang Cashback Member</td><td><code>members.cashback_balance</code> (kewajiban, bukan beban — A1)</td><td><span class="tag g">APL</span></td></tr>
 <tr><td>2040</td><td>Kewajiban Akad (jika koperasi = pihak pembeli)</td><td>murabahah/musyarakah dari pihak ketiga</td><td><span class="tag a">PKGF</span></td></tr>
 <tr><td>2050</td><td>Simpanan Pokok</td><td>per anggota, <b>boleh dijamin, kembali saat keluar</b></td><td><span class="tag g">APL</span></td></tr>
@@ -193,7 +193,7 @@ section:target h2 .n{background:var(--maroon)}
 <tr><td>4010</td><td>Pendapatan Penjualan</td><td>Σ<code>sales.total</code> bruto</td><td><span class="tag g">APL</span></td></tr>
 <tr><td>4020</td><td>Potongan &amp; Diskon</td><td>diskon manual + member + redeem poin (loyalty = diskon/hibah, CHECKLIST B)</td><td><span class="tag g">APL</span></td></tr>
 <tr><td>4030</td><td>Retur Penjualan</td><td>Σ<code>returns</code></td><td><span class="tag g">APL</span></td></tr>
-<tr><td>4040</td><td>Ujrah Konsinyasi</td><td><code>cash_entries</code> income "Ujrah Kon…" (P4 — 20% <b>provisional</b>)</td><td><span class="tag a">PKGF</span></td></tr>
+<tr><td>4040</td><td>Ujrah Konsinyasi</td><td><code>cash_entries</code> income "Ujrah Kon…" (P4 — TASHIH TERJAWAB 30 Sep: ujrah → pendapatan, A1.1 LEPAS; dasar hitung V1 menunggu ulama, §15.5)</td><td><span class="tag a">PKGF</span></td></tr>
 <tr><td>4050</td><td>Pendapatan Ijarah</td><td>sewa aset/ruang (akad, §6)</td><td><span class="tag a">PKGF</span></td></tr>
 <tr><td>4060</td><td>Laba Murabahah</td><td>margin tetap per akad (diakui saat penerimaan, pola IFRS/Syariah — rincian = PKGF)</td><td><span class="tag a">PKGF</span></td></tr>
 <tr><td>4070</td><td>Bagi Hasil Mudharabah</td><td>porsi koperasi sebagai shahib al-mal</td><td><span class="tag a">PKGF</span></td></tr>
@@ -305,7 +305,7 @@ CREATE INDEX IF NOT EXISTS idx_je_date ON journal_entries(entry_date);</pre>
 <tr><td><code>debts</code></td><td>bayar % (UPDATE)</td><td>Debit 1010 → Kredit 1030 (sebesar nominal bayar)</td></tr>
 <tr><td><code>payables</code></td><td>bayar (UPDATE)</td><td>Debit 2010 → Kredit 1010</td></tr>
 <tr><td><code>returns</code></td><td>INSERT</td><td>Debit 4030 + Debit 1040 (stok kembali @<code>cogs</code>) → Kredit 1030/1010; netting HPP: Debit 5020 / Kredit 5010 (V2-2)</td></tr>
-<tr><td><code>consignments</code></td><td>SETTLEMENT</td><td>Debit 1010 (bruto) · split: Kredit 2020 (komisi pemilik, % = <code>konsinyasi_commission</code> <b>provisional 20% P4</b>) + Kredit 4010 (sisa = pendapatan koperasi). Ujrah diterima: Debit 1010 → Kredit 4040. <b>Mapping P4 TIDAK diubah diam-diam (R6)</b></td></tr>
+<tr><td><code>consignments</code></td><td>SETTLEMENT</td><td>Debit 1010 (bruto) · split: Kredit 2020 (komisi pemilik, % = <code>konsinyasi_commission</code>; P4 TASHIH TERJAWAB 30 Sep — A1.1 LEPAS §15.5) + Kredit 4010 (sisa = pendapatan koperasi). Ujrah diterima: Debit 1010 → Kredit 4040 (V1 off-P&amp;L s.d. eksekusi A1.1, commit F3.4+). <b>Mapping P4 TIDAK diubah diam-diam (R6)</b></td></tr>
 </table></div>
 <h3>4.3 Wave 3 (mgg 4–5) — akad / koperasi / ZIS</h3>
 <div class="tbl"><table>
@@ -349,7 +349,7 @@ CREATE INDEX IF NOT EXISTS idx_je_date ON journal_entries(entry_date);</pre>
 <li>(−) HPP: (5010 − 5020) = <b>Laba Kotor</b>.</li>
 <li>(−) Beban operasi: 5030+5040+5060+5070+5080 → Laba Sebelum ZIS.</li>
 <li>(−) ZIS: 5090+5100+6030 → <b>Laba Bersih</b> (5050 tidak aktif — F3.3 #6).</li>
-<li>MEMO (tidak digabung): ujrah konsinyasi (P4), cashback (kewajiban, bukan beban — keputusan A1), SHU (di LPE/CALK).</li>
+<li>MEMO (tidak digabung): ujrah konsinyasi (P4 — TASHIH TERJAWAB 30 Sep: V1 off-P&amp;L s.d. A1.1 dieksekusi F3.4+, §15.5), cashback (kewajiban, bukan beban — keputusan A1), SHU (di LPE/CALK).</li>
 <li>Struktur baris netting = V1 <code>keuangan.ts</code> (V2-2 <code>hppRetur</code>) dipetakan ke akun COA.</li>
 </ul>
 <h3>5.3 Laporan Perubahan Ekuitas (LPE)</h3>
@@ -373,7 +373,7 @@ CREATE INDEX IF NOT EXISTS idx_je_date ON journal_entries(entry_date);</pre>
 <ol>
 <li>Informasi umum entitas + <b>status koperasi</b> (flag §1.1, "dalam proses" s/d registrasi tuntas) + dasar penyusunan (hybrid SAK Syariah–PAP–SAK EP, §1.2) + tanggal N buku pembuka (§10).</li>
 <li>Ikhtiar &amp; struktur: unit usaha toko POS + dana pesantren (memo 6010), multi-store siap.</li>
-<li>Kebijakan akuntansi utama: HPP (RNB snapshot V2-2), penyusutan (metode/umur <b>PKGF §13.8</b>), komisi konsinyasi (provisional P4), zakat (P3 final via F3.3 #2, 30 Sep — switch jembatan belum, R6), nisbah &amp; margin akad (<b>PKGF §13.1/3/5</b>), kurs: n/a (IDR).</li>
+<li>Kebijakan akuntansi utama: HPP (RNB snapshot V2-2), penyusutan (metode/umur <b>PKGF §13.8</b>), komisi konsinyasi (P4 TASHIH TERJAWAB 30 Sep — A1.1 LEPAS; V1 menunggu ulama), zakat (P3 final via F3.3 #2, 30 Sep — switch jembatan belum, R6), nisbah &amp; margin akad (<b>PKGF §13.1/3/5</b>), kurs: n/a (IDR).</li>
 <li>Komponen kas: 1010/1020/1100 terpisah.</li>
 <li>Piutang &amp; hutang per lawan transaksi (ringkasan).</li>
 <li>Ekuitas: modal, simpanan, SHU + rasio distribusi (<b>PKGF</b>).</li>
@@ -426,7 +426,7 @@ CREATE TABLE IF NOT EXISTS akad_events(
 <tr><td>mudharabah</td><td>pencairan (dana), kontribusi, bagi hasil (per periode), settlement</td><td>nisbah = PKGF; pembagian di event <code>bagi_hasil</code></td></tr>
 <tr><td>musyarakah</td><td>pencairan (kontribusi), bagi hasil, settlement</td><td>rasio = PKGF</td></tr>
 <tr><td>ijarah</td><td>pencairan (imbalan awal, jika ada), ijarah periodik, settlement</td><td>rate sewa = PKGF</td></tr>
-<tr><td>wakalah</td><td>(bridge ke konsinyasi P4: ujrah + settlement neto)</td><td>komisi = <code>konsinyasi_commission</code> (P4 provisional)</td></tr>
+<tr><td>wakalah</td><td>(bridge ke konsinyasi P4: ujrah + settlement neto)</td><td>komisi = <code>konsinyasi_commission</code> (P4 TASHIH TERJAWAB 30 Sep)</td></tr>
 </table></div>
 <h3>6.3 Simulasi</h3>
 <p>Form akad menampilkan <b>simulasi</b> (tanpa booking): total kewajiban, jadwal, porsi bagi hasil per skenario — semua angka dari input user (nisbah/margin), bukan asumsi app.</p>
@@ -630,7 +630,7 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 <tr><td>R3</td><td>Tidak ada saldo awal ("Modal Setara" ≠ ekuitas)</td><td>Buku pembuka @ N (§10): 3010 dihitung sebagai <b>selisih</b> agar D=K; nilai 1050 aset tetap = input + keputusan</td></tr>
 <tr><td>R4</td><td>Konflik label fase (A1–A3 lama vs plan)</td><td>Label F3.x konsisten (audit §10); proposal &amp; commit pakai F3.x; label V1 report tetap "V1"</td></tr>
 <tr><td>R5</td><td>Turso Rows-Read (agregat global = termahal)</td><td><code>balance_running</code> + index <code>idx_jl_acct</code> (§3.1) → saldo = 1 akses terindeks; trial balance per akun; cache <code>gl:</code> 60 dtk; batch per transaksi</td></tr>
-<tr><td>R6</td><td>Tashih P3/P4 terbuka (larangan prabatasih) — <b>P3 (zakat): tashih turun 30 Sep (dok. P3: DITERIMA; Soal 3 modal belum dipilih); P4: tetap terbuka</b></td><td><b>TIDAK</b> refactor <code>zakat-*</code>/<code>konsinyasi</code> sampai tashih turun — untuk P3 LEPAS sebatas aspek terjawab (haul/nisab/kadar/mustahik): spesifikasi koreksi §15.4 diimplementasi + jembatan di-switch saat commit F3.4+; aspek modal (<code>valuation_mode</code>) tetap provisional sampai Soal 3 terjawab; P4 <code>konsinyasi</code> tetap menunggu tashih; komisi 20% tetap via <code>konsinyasi_commission</code> (setting, ubah tanpa code); badge "provisional" di UI zakat (aspek modal) &amp; ujrah kon.</td></tr>
+<tr><td>R6</td><td>Tashih P3/P4 terbuka (larangan prabatasih) — <b>P3 (zakat): tashih turun 30 Sep (dok. P3: DITERIMA; Soal 3 modal belum dipilih); P4 (konsinyasi): TASHIH TERJAWAB 30 Sep (Gus Fi — 3 Setujuan; §15.5)</b></td><td><b>TIDAK</b> refactor <code>zakat-*</code>/<code>konsinyasi</code> sampai tashih turun — untuk P3 LEPAS sebatas aspek terjawab (haul/nisab/kadar/mustahik): spesifikasi koreksi §15.4 diimplementasi + jembatan di-switch saat commit F3.4+; aspek modal (<code>valuation_mode</code>) tetap provisional sampai Soal 3 terjawab; P4 <code>konsinyasi</code> TASHIH TERJAWAB — larangan prabatasih LEPAS, <b>A1.1 released</b> (ujrah → pendapatan 4040 + tagihan → settlement payable 2020; eksekusi commit terpisah F3.4+, §15.5); komisi tetap via <code>konsinyasi_commission</code> (setting, ubah tanpa code); dasar hitung ujrah V1 (persentase harga PERJANJIAN) menunggu konfirmasi ulama; badge "provisional" di UI zakat (aspek modal) &amp; ujrah kon. (dasar hitung V1)</td></tr>
 <tr><td>R7</td><td>Pola test bebas-import + in-memory</td><td><code>lib/jurnal.ts</code>, <code>lib/gl.ts</code>, <code>lib/zis.ts</code>, <code>lib/coop.ts</code> bebas-import; test <code>test-jurnal/gl/zis/coop</code> (in-memory, tanpa import Next)</td></tr>
 <tr><td>R8</td><td><code>kp-zip3</code> beku, tak ada GL</td><td>Tidak ada pinjam desain; lapisan GL = desain baru di repo ini (proposal ini = blueprint); referensi hanya utk pola modul &amp; backup</td></tr>
 </table></div>
@@ -658,7 +658,7 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 <h3>Wave 2 — Laporan formal + ZIS (mgg 3–4, 7 commit)</h3>
 <div class="tbl"><table>
 <tr><th>#</th><th>Scope</th></tr>
-<tr><td>W2.1</td><td>Auto-posting Wave 2: pembayaran <code>debts</code>/<code>payables</code>, <code>returns</code> (netting V2-2), <code>consignments</code> (bridge P4; mapping TIDAK diubah, R6)</td></tr>
+<tr><td>W2.1</td><td>Auto-posting Wave 2: pembayaran <code>debts</code>/<code>payables</code>, <code>returns</code> (netting V2-2), <code>consignments</code> (bridge P4 — TASHIH TERJAWAB 30 Sep: A1.1 LEPAS, ujrah → 4040 via commit tercatat F3.4+; R6)</td></tr>
 <tr><td>W2.2</td><td>Laporan Posisi Keuangan formal (<code>lib/laporan/posisi.ts</code> + API + UI tab)</td></tr>
 <tr><td>W2.3</td><td>Laba-Rugi formal (<code>lib/laporan/lka.ts</code>) — struktur V1 → COA (netting <code>hppRetur</code> utuh)</td></tr>
 <tr><td>W2.4</td><td>LPE (<code>lib/laporan/lpe.ts</code>)</td></tr>
@@ -881,27 +881,31 @@ CREATE TABLE IF NOT EXISTS coop_shu(
 <li><b><code>public/sw.js</code> TIDAK pernah di-commit</b> (diabaikan, disiplin lama).</li>
 <li><code>D:\Ngudi Susilo\kopontren-app</code> = D write/commit; <code>D:\Ngudi Susilo\kp-zip3</code> = reference-only (baca, jangan tulis).</li>
 <li><b>Syariah first, features second</b>; Cline mengusulkan, Gus Fi memutuskan.</li>
-<li>Larangan prabatasih (P3/P4): <b>P3 zakat = tashih SUDAH TURUN (30 Sep: F3.3 #2 + tashih dok. P3 <code>P3-TASHIH-ZAKAT</code> — DITERIMA; rinci §15.4)</b> — spesifikasi koreksi (haul anchor 22 Okt 2025 + penampang "seolah sudah haul" + keterangan nishab; harga emas terendah) boleh diimplementasi + jembatan di-switch saat commit F3.4+; <b>kecuali aspek modal (Soal 3, belum dipilih)</b> tetap provisional. P4 (konsinyasi) tetap jangan finalkan angka &amp; jangan ubah mapping diam-diam sampai tashih P4 turun.</li>
+<li>Larangan prabatasih (P3/P4): <b>P3 zakat = tashih SUDAH TURUN (30 Sep: F3.3 #2 + tashih dok. P3 <code>P3-TASHIH-ZAKAT</code> — DITERIMA; rinci §15.4)</b> — spesifikasi koreksi (haul anchor 22 Okt 2025 + penampang "seolah sudah haul" + keterangan nishab; harga emas terendah) boleh diimplementasi + jembatan di-switch saat commit F3.4+; <b>kecuali aspek modal (Soal 3, belum dipilih)</b> tetap provisional. <b>P4 (konsinyasi) = TASHIH TERJAWAB 30 Sep (Gus Fi — 3 Setujuan; rinci §15.5)</b> — larangan prabatasih LEPAS: A1.1 released (ujrah konsinyasi → pendapatan 4040 PKGF + tagihan pemilik → 2020 APL), eksekusi = commit tercatat saat F3.4+ (mapping TIDAK diubah diam-diam); dasar hitung ujrah V1 tetap menunggu konfirmasi ulama.</li>
 <li>Tiap commit implementasi (F3.4+): test golden + <code>next build</code> EXIT 0 + backup DB sebelum migrasi skema baru (v21/v22/v23).</li>
 <li>Visual check oleh Gus Fi: ongoing, TIDAK blocking.</li>
 </ul>
 </div>
 
 <section id="s15">
-<h2><span class="n">15</span>Tashih P3 zakat (30 Sep 2026 — DITERIMA, GUS FI)</h2>
+<h2><span class="n">15</span>Tashih 30 Sep 2026 — P3 zakat (DITERIMA) + P4 konsinyasi (TERJAWAB, GUS FI)</h2>
 <div class="card">
 <p>Tashih dok. <code>P3-TASHIH-ZAKAT</code>: <b>1 Setujuan, 0 Ora Setujuan, 1 Koreksi; Soal 3 belum dipilih (catatan B)</b>. Keputusan tashih <b>DITERIMA</b> — "yang penting manut rumusan Nahdliyin ulama lan hasil bahtsul masail pondok pesantren." Ter-rekam <code>docs/akuntansi-keputusan.md</code> (seksi "Keputusan P3") + md §15.4.</p>
 <ul>
 <li><b>Soal 1 — Haul: KOREKSI.</b> Anchor haul = <code>2025-10-22</code> (toko koperasi berjalan / niat berdagang), bukan sejak pembayaran terakhir &amp; bukan auto-awal-bulan → seed <code>zakat_settings.haul_start_date = 2025-10-22</code>; haul pertama jatuh <b>22 Okt 2026</b>. Musyawarah boleh memutuskan ta'jil; pembayaran tetap TIDAK me-reset anchor. Penampang UI baru: nilai zakat (total harta × 2,5%, basis haul penuh) selalu tampil "seolah sudah haul", + keterangan "belum wajib zakat karena belum nishab" bila &lt; nisab (nishab tidak memblokir tampilan).</li>
 <li><b>Soal 2 — Harga emas: SETUJU (terendah).</b> Nisab = 85 g × harga emas TERENDAH (minimum harga tercatat <code>zakat_gold_standards</code> dalam jendela/periode haul, bukan entri terbaru).</li>
 <li><b>Soal 3 — Modal: BELUM DIPILIH (catatan B).</b> B = nilai pasar saat jatuh haul (modal + untung); <code>valuation_mode</code> (default market, fallback hpp) tetap provisional sampai jawaban final turun.</li>
-<li><b>Dampak pada proposal:</b> R6 (baris risiko), §8.3, §14 di atas diperbarui di snapshot ini + md. <b>P4 tetap open</b> (tidak terpengaruh). Implementasi spesifikasi = commit F3.4+ sesuai roadmap §12. Open item: jawaban final Soal 3 + verifikasi judul MUI Fatwa No. 78/2023.</li>
+<li><b>Dampak pada proposal:</b> R6 (baris risiko), §8.3, §14 di atas diperbarui di snapshot ini + md. <b>P4 terjawab 30 Sep (TERJAWAB — §15.5)</b> (tidak terpengaruh koreksi P3). Implementasi spesifikasi = commit F3.4+ sesuai roadmap §12. Open item: jawaban final Soal 3 + verifikasi judul MUI Fatwa No. 78/2023.</li>
 </ul>
+<h3 style="margin-top:18px">15.5 Tashih P4 konsinyasi / wakalah bil ujrah (30 Sep 2026 — GUS FI, TERJAWAB)</h3>
+<div class="card">
+<p>Tashih dok. <code>P4-PROPOSAL-KONSINYASI</code>: <b>3 Setujuan, 0 Ora Setujuan, 0 Koreksi</b>. (1) Skema <b>wakalah bil ujrah</b> DISETUJUI (ujrah tercatat SAAT terjual; tagihan pemilik neto komisi; rate snapshot per titipan). (2) Komisi <b>per kesepakatan (antardhin) + titipan terkunci</b> DISETUJUI (<code>konsinyasi_commission</code> default 20 = preset operasional aplikasi, BUKAN ketentuan syariah). (3) Dasar hitung ujrah V1 DITERUSKAN KE ULAMA (V1 = persentase harga PERJANJIAN, ma'lum; alternatif = ujrah mitsli). <b>R6 (aspek P4) LEPAS — A1.1 LEPAS</b>: ujrah konsinyasi → pendapatan (4040 PKGF) + tagihan pemilik → settlement payable (2020 APL); eksekusi = commit terpisah saat F3.4+ (mapping TIDAK diubah diam-diam). Ter-rekam <code>docs/akuntansi-keputusan.md</code> (seksi "Keputusan P4") + md §15.5. Open item: dasar hitung V1 menunggu ulama (E25).</p>
+</div>
 </div>
 </section>
 
 <div class="fnote">
-<b>Sumber kebenaran:</b> <code>docs/akuntansi-proposal.md</code> (snapshot F3.2 awal = <code>e3cfd30</code>; revisi F3.3 @ <code>3af7250</code>). Revisi snapshot tashih P3 (30 Sep): banner, R6, §8.3, §14 + seksi 15 baru (di atas). <b>Cetak / PDF: Ctrl+P.</b>
+<b>Sumber kebenaran:</b> <code>docs/akuntansi-proposal.md</code> (snapshot F3.2 awal = <code>e3cfd30</code>; revisi F3.3 @ <code>3af7250</code>). Revisi snapshot tashih P3 (30 Sep): banner, R6, §8.3, §14 + seksi 15 baru. Revisi snapshot tashih P4 (30 Sep): banner §0, baris 2020/4040, §4.2, §6.2, R6, W2.1, §14 + seksi 15.5 (di atas) + re-sync <code>public/tutorial</code>. <b>Cetak / PDF: Ctrl+P.</b>
 </div>
 </div>
 <script>

@@ -57,6 +57,8 @@ Semua angka syariah di dokumen ini = **placeholder teknis**,
 bukan ketentuan — keputusan nilai = **Gus Fi** (§13).
 **PASCA-F3.3 (30 Sep 2026): semua 14 poin §13 terjawab** (12 Setuju,
 2 Koreksi #6 & #14 — lihat §15 + `docs/akuntansi-keputusan.md`).
+**UPDATE TASHIH P4 (30 Sep 2026): tashih P4 konsinyasi TERJAWAB**
+(Gus Fi — 3 Setujuan, 0-0; A1.1 LEPAS — lihat §15.5 + `docs/akuntansi-keputusan.md`).
 
 ---
 
@@ -121,7 +123,7 @@ Grup 6xx = syariah/pesantren (SAK Syariah/PAP).
 | Kode | Nama | Sumber data / deskripsi | Status |
 |---|---|---|---|
 | 2010 | Hutang Pembelianan | `payables` (remaining open) | APL |
-| 2020 | Hutang Ujrah Konsinyasi | settlement neto komisi pemilik (P4, default 20% = **provisional, P4 belum tashih**) | APL |
+| 2020 | Hutang Ujrah Konsinyasi | settlement neto komisi pemilik (P4 — TASHIH TERJAWAB 30 Sep; rate via `konsinyasi_commission`, A1.1 LEPAS §15.5) | APL |
 | 2030 | Utang Cashback Member | `members.cashback_balance` (kewajiban, bukan beban — A1) | APL |
 | 2040 | Kewajiban Akad (jika koperasi = pihak pembeli) | murabahah/musyarakah dari pihak ketiga | PKGF |
 | 2050 | Simpanan Pokok | per anggota, **boleh dijamin, kembali saat keluar** | APL |
@@ -149,7 +151,7 @@ Grup 6xx = syariah/pesantren (SAK Syariah/PAP).
 | 4010 | Pendapatan Penjualan | Σ`sales.total` bruto | APL |
 | 4020 | Potongan & Diskon | diskon manual + member + redeem poin (loyalty = diskon/hibah, CHECKLIST B) | APL |
 | 4030 | Retur Penjualan | Σ`returns` | APL |
-| 4040 | Ujrah Konsinyasi | `cash_entries` income "Ujrah Kon…" (P4 — 20% **provisional**) | PKGF |
+| 4040 | Ujrah Konsinyasi | `cash_entries` income "Ujrah Kon…" (P4 — TASHIH TERJAWAB 30 Sep: ujrah → pendapatan, A1.1 LEPAS; dasar hitung V1 menunggu ulama, §15.5) | PKGF |
 | 4050 | Pendapatan Ijarah | sewa aset/ruang (akad, §6) | PKGF |
 | 4060 | Laba Murabahah | margin tetap per akad (diakui saat penerimaan, pola IFRS/Syariah — rincian = PKGF) | PKGF |
 | 4070 | Bagi Hasil Mudharabah | porsi koperasi sebagai shahib al-mal | PKGF |
@@ -281,7 +283,7 @@ cache `'kas:'`/`'keuangan:'`/`'neraca:'`/`'gl:'`.
 | `debts` | bayar % (UPDATE) | Debit 1010 → Kredit 1030 (sebesar nominal bayar) |
 | `payables` | bayar (UPDATE) | Debit 2010 → Kredit 1010 |
 | `returns` | INSERT | Debit 4030 + Debit 1040 (stok kembali @`cogs`) → Kredit 1030/1010; netting HPP: Debit 5020 / Kredit 5010 (V2-2) |
-| `consignments` | SETTLEMENT | Debit 1010 (bruto) · split: Kredit 2020 (komisi pemilik, % = `konsinyasi_commission` **provisional 20% P4**) + Kredit 4010 (sisa = pendapatan koperasi). Ujrah diterima: Debit 1010 → Kredit 4040. **Mapping P4 TIDAK diubah diam-diam (R6)** |
+| `consignments` | SETTLEMENT | Debit 1010 (bruto) · split: Kredit 2020 (komisi pemilik, % = `konsinyasi_commission`; P4 TASHIH TERJAWAB 30 Sep — A1.1 LEPAS §15.5) + Kredit 4010 (sisa = pendapatan koperasi). Ujrah diterima: Debit 1010 → Kredit 4040 (V1 off-P&L s.d. eksekusi A1.1, commit F3.4+). **Mapping P4 TIDAK diubah diam-diam (R6)** |
 
 ### 4.3 Wave 3 (mgg 4–5) — akad / koperasi / ZIS
 
@@ -344,7 +346,8 @@ paralel s/d rekonsiliasi F3.5 green).
   ZIS.
 - (−) ZIS: 5090+5100+6030 → **Laba Bersih** (5050 tidak aktif —
   F3.3 #6: tidak ada skema denda).
-- MEMO (tidak digabung): ujrah konsinyasi (P4), cashback
+- MEMO (tidak digabung): ujrah konsinyasi (P4 — TASHIH TERJAWAB
+  30 Sep: V1 off-P&L s.d. A1.1 dieksekusi F3.4+, §15.5), cashback
   (kewajiban, bukan beban — keputusan A1), SHU (di LPE/CALK).
 - Struktur baris netting = V1 `keuangan.ts` (V2-2 `hppRetur`)
   dipetakan ke akun COA.
@@ -384,7 +387,7 @@ Per akun kas (1010 toko / 1020 bank / 1100 ZIS):
    (memo 6010), multi-store siap.
 3. Kebijakan akuntansi utama: HPP (RNB snapshot V2-2),
    penyusutan (metode/umur **PKGF §13.8**), komisi konsinyasi
-   (provisional P4), zakat (P3 final via F3.3 #2, 30 Sep — bridge belum di-switch, R6), nisbah & margin akad
+   (P4 TASHIH TERJAWAB 30 Sep — A1.1 LEPAS; V1 menunggu ulama), zakat (P3 final via F3.3 #2, 30 Sep — bridge belum di-switch, R6), nisbah & margin akad
    (**PKGF §13.1/3/5**), kurs: n/a (IDR).
 4. Komponen kas: 1010/1020/1100 terpisah.
 5. Piutang & hutang per lawan transaksi (ringkasan).
@@ -455,7 +458,7 @@ mencatat jurnalnya (bridge), **bukan** duplikat fitur.
 | mudharabah | pencairan (dana), kontribusi, bagi hasil (per periode), settlement | nisbah = PKGF; pembagian di event `bagi_hasil` |
 | musyarakah | pencairan (kontribusi), bagi hasil, settlement | rasio = PKGF |
 | ijarah | pencairan (imbalan awal, jika ada), ijarah periodik, settlement | rate sewa = PKGF |
-| wakalah | (bridge ke konsinyasi P4: ujrah + settlement neto) | komisi = `konsinyasi_commission` (P4 provisional) |
+| wakalah | (bridge ke konsinyasi P4: ujrah + settlement neto) | komisi = `konsinyasi_commission` (P4 TASHIH TERJAWAB 30 Sep) |
 
 ### 6.3 Simulasi
 
@@ -766,7 +769,7 @@ keputusan #4).
 | R3 | Tidak ada saldo awal ("Modal Setara" ≠ ekuitas) | Buku pembuka @ N (§10): 3010 dihitung sebagai **selisih** agar D=K; nilai 1050 aset tetap = input + keputusan |
 | R4 | Konflik label fase (A1–A3 lama vs plan) | Label F3.x konsisten (audit §10); proposal & commit pakai F3.x; label V1 report tetap "V1" |
 | R5 | Turso Rows-Read (agregat global = termahal) | `balance_running` + index `idx_jl_acct` (§3.1) → saldo = 1 akses terindeks; trial balance per akun; cache `gl:` 60 dtk; batch per transaksi |
-| R6 | Tashih P3/P4 terbuka (larangan prabatasih) — **P3 (zakat): tashih turun 30 Sep (dok. P3: DITERIMA; Soal 3 modal belum dipilih); P4: tetap terbuka** | **TIDAK** refactor `zakat-*`/`konsinyasi` sampai tashih turun — untuk P3 LEPAS sebatas aspek terjawab (haul/nisab/kadar/mustahik): spesifikasi koreksi §15.4 diimplementasi + jembatan di-switch saat commit F3.4+; aspek modal (`valuation_mode`) tetap provisional sampai Soal 3 terjawab; P4 `konsinyasi` tetap menunggu tashih; komisi 20% tetap via `konsinyasi_commission` (setting, ubah tanpa code); badge "provisional" di UI zakat (aspek modal) & ujrah kon. |
+| R6 | Tashih P3/P4 terbuka (larangan prabatasih) — **P3 (zakat): tashih turun 30 Sep (dok. P3: DITERIMA; Soal 3 modal belum dipilih); P4 (konsinyasi): TASHIH TERJAWAB 30 Sep (Gus Fi — 3 Setujuan; §15.5)** | **TIDAK** refactor `zakat-*`/`konsinyasi` sampai tashih turun — untuk P3 LEPAS sebatas aspek terjawab (haul/nisab/kadar/mustahik): spesifikasi koreksi §15.4 diimplementasi + jembatan di-switch saat commit F3.4+; aspek modal (`valuation_mode`) tetap provisional sampai Soal 3 terjawab; P4 `konsinyasi` TASHIH TERJAWAB — larangan prabatasih LEPAS, **A1.1 released** (ujrah → pendapatan 4040 + tagihan → settlement payable 2020; eksekusi commit terpisah F3.4+, §15.5); komisi tetap via `konsinyasi_commission` (setting, ubah tanpa code); dasar hitung ujrah V1 (persentase harga PERJANJIAN) menunggu konfirmasi ulama; badge "provisional" di UI zakat (aspek modal) & ujrah kon. (dasar hitung V1) |
 | R7 | Pola test bebas-import + in-memory | `lib/jurnal.ts`, `lib/gl.ts`, `lib/zis.ts`, `lib/coop.ts` bebas-import; test `test-jurnal/gl/zis/coop` (in-memory, tanpa import Next) |
 | R8 | `kp-zip3` beku, tak ada GL | Tidak ada pinjam desain; lapisan GL = desain baru di repo ini (proposal ini = blueprint); referensi hanya utk pola modul & backup |
 
@@ -801,7 +804,7 @@ keputusan #4).
 
 | # | Scope |
 |---|---|
-| W2.1 | Auto-posting Wave 2: pembayaran `debts`/`payables`, `returns` (netting V2-2), `consignments` (bridge P4; mapping TIDAK diubah, R6) |
+| W2.1 | Auto-posting Wave 2: pembayaran `debts`/`payables`, `returns` (netting V2-2), `consignments` (bridge P4 — TASHIH TERJAWAB 30 Sep: A1.1 LEPAS, ujrah → 4040 via commit tercatat F3.4+; R6) |
 | W2.2 | Laporan Posisi Keuangan formal (`lib/laporan/posisi.ts` + API + UI tab) |
 | W2.3 | Laba-Rugi formal (`lib/laporan/lka.ts`) — struktur V1 → COA (netting `hppRetur` utuh) |
 | W2.4 | LPE (`lib/laporan/lpe.ts`) |
@@ -917,8 +920,12 @@ F3.4+ mulai.
   penampang "seolah sudah haul" + keterangan nishab; harga emas
   terendah) boleh diimplementasi + jembatan di-switch saat commit
   F3.4+; **kecuali aspek modal (Soal 3, belum dipilih)** tetap
-  provisional. P4 (konsinyasi) tetap jangan finalkan angka &
-  jangan ubah mapping diam-diam sampai tashih P4 turun.
+  provisional. **P4 (konsinyasi) = TASHIH TERJAWAB 30 Sep (Gus Fi
+  — 3 Setujuan; rinci §15.5)** — larangan prabatasih LEPAS: A1.1
+  released (ujrah konsinyasi → pendapatan 4040 PKGF + tagihan
+  pemilik → 2020 APL), eksekusi = commit tercatat saat F3.4+
+  (mapping TIDAK diubah diam-diam); dasar hitung ujrah V1 tetap
+  menunggu konfirmasi ulama.
 - Tiap commit implementasi (F3.4+): test golden + `next build`
   EXIT 0 + backup DB sebelum migrasi skema baru (v21/v22/v23).
 - Visual check oleh Gus Fi: ongoing, TIDAK blocking.
@@ -999,7 +1006,37 @@ F3.4+ mulai.
   jawaban final.
 - **Dampak pada proposal**: §0 (note revisi P3), §8.2/§8.3
   (jembatan + rate/mustahik), R6 (baris risiko), §14 (prabatasih
-  P3 = sudah turun, kecuali modal). **P4 tetap open** — tidak
-  terpengaruh. Implementasi spesifikasi = commit F3.4+ (sesuai
+  P3 = sudah turun, kecuali modal). **P4 terjawab 30 Sep
+  (TERJAWAB — §15.5)** — tidak terpengaruh koreksi P3.
+  Implementasi spesifikasi = commit F3.4+ (sesuai
   roadmap §12); open item: Soal 3 + verifikasi judul MUI Fatwa
   No. 78/2023.
+
+### 15.5 Tashih P4 konsinyasi / wakalah bil ujrah (30 Sep 2026 — GUS FI, TERJAWAB)
+
+> Tashih `P4-PROPOSAL-KONSINYASI` (`P4-PROPOSAL-KONSINYASI.md/.html`):
+> **3 Setujuan, 0 Ora Setujuan, 0 Koreksi**. Keputusan tashih
+> **DITERIMA**. Rekam: `docs/akuntansi-keputusan.md` (seksi
+> "Keputusan P4").
+- **(1) Skema wakalah bil ujrah = DISETUJUI** — akad & mekanik
+  implementasi (`4f12818` + P4-B fleksibel) dikonfirmasi: ujrah
+  tercatat otomatis SAAT terjual; tagihan pemilik neto komisi;
+  rate snapshot per titipan (tanpa perubahan sepihak).
+- **(2) Komisi per kesepakatan (antardhin) + titipan terkunci
+  = DISETUJUI** — titipan berjalan tetap snapshot; rate baru
+  hanya utk titipan baru; `konsinyasi_commission` (default 20)
+  = preset operasional aplikasi, BUKAN ketentuan syariah.
+- **(3) Dasar hitung ujrah V1 → DITERUSKAN KE ULAMA** — V1
+  (persentase harga PERJANJIAN, ma'lum) tetap posisi berjalan;
+  konfirmasi menyusul; alternatif = ujrah mitsli.
+- **Dampak — R6 (aspek P4) LEPAS, A1.1 LEPAS**: ujrah konsinyasi
+  dipindahkan dari off-P&L (memo, baris "Ujrah Konsinyasi") ke
+  pendapatan (4040 PKGF) + tagihan pemilik = settlement payable
+  (2020 APL) — eksekusi = commit terpisah saat F3.4+; mapping
+  seksi I dokumen P4 TIDAK diubah diam-diam (via commit
+  tercatat).
+- **Dampak pada proposal**: §0 (note update P4), baris 2020 &
+  4040 (§2), §4.2/§5/§6 (catatan "provisional P4"), R6 (baris
+  risiko), W2.1, §14 (prabatasih) diperbarui di md + snapshot;
+  open item: dasar hitung ujrah V1 (menunggu ulama — E25);
+  eksekusi A1.1 = commit F3.4+.

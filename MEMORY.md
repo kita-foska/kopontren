@@ -1,6 +1,40 @@
 # MEMORY
 
 ## 2026-09-30
+### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
+- **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3
+  Setujuan, 0 Ora Setujuan, 0 Koreksi; **DITERIMA**.
+  (1) Skema **wakalah bil ujrah** DISETUJUI (ujrah tercatat
+  otomatis SAAT terjual; tagihan pemilik neto komisi; rate
+  snapshot per titipan, tanpa perubahan sepihak — `4f12818`
+  + P4-B fleksibel). (2) Komisi **per kesepakatan (antardhin)
+  + titipan terkunci** DISETUJUI (`konsinyasi_commission`
+  default 20 = preset operasional aplikasi, BUKAN ketentuan
+  syariah). (3) **Dasar hitung ujrah V1 DITERUSKAN KE ULAMA**
+  (V1 = persentase harga PERJANJIAN, ma'lum; alternatif =
+  ujrah mitsli; konfirmasi menyusul).
+- **Commit `109777d`**: P4 md/html (STATUS TERJAWAB + seksi J
+  lampiran jawaban + open items) + `SYARIAH-CHECKLIST.md`
+  (STATUS TASHIH P4) + TODO (A1.1 LEPAS, UX-5, E25, guardrails).
+- **C5 (commit ini)**: rekaman keputusan — `docs/akuntansi-keputusan.md`
+  (seksi baru "Keputusan P4": ringkasan + tindak lanjut + open
+  items + lampiran teks jawaban) + `docs/akuntansi-proposal.md`
+  (§0 note, baris 2020/4040 §2, §4.2, §5, §6, R6, W2.1, §14,
+  §15.4 + baru §15.5) + regenerate snapshot
+  `docs/AKUNTANSI-PROPOSAL.html` (banner §0, baris
+  2020/4040, §4.2, §6.2, R6, W2.1, §14 + seksi 15.5 + fnote)
+  + re-sync `public/tutorial/akuntansi-proposal.html` via
+  `node scripts/sync-tutorial.mjs` (SYNC-TUTORIAL-OK, 9 file).
+- **Dampak: R6 (aspek P4) LEPAS — A1.1 LEPAS**: ujrah
+  konsinyasi dipindahkan dari off-P&L (memo, baris "Ujrah
+  Konsinyasi") ke pendapatan (4040 PKGF) + tagihan pemilik =
+  settlement payable (2020 APL) — eksekusi = commit terpisah
+  saat F3.4+; mapping seksi I dokumen P4 TIDAK diubah diam-diam
+  (tetap via commit tercatat).
+- **Sisa/open P4**: (1) dasar hitung ujrah V1 (persentase harga
+  PERJANJIAN) menunggu konfirmasi ulama (E25; bila koreksi =
+  commit terpisah, pola F3.3); (2) eksekusi A1.1 = commit
+  F3.4+; badge "provisional" UI ujrah kon. s.d. terjawab.
 ### P3 TASHIH ZAKAT TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + revisi docs + snapshot (commit C2 + C3)
 - **Tashih dok. P3 (`P3-TASHIH-ZAKAT.md/.html`)**: 1 Setujuan, 0
   Ora Setujuan, 1 Koreksi; Soal 3 belum dipilih (catatan B);
