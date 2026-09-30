@@ -1334,19 +1334,28 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
    30 Sep; iframe in-app tetap tanpa allow-scripts; tema maroon
    SOP-ADMIN; §13 = 14 poin interaktif: radio
    Setuju/Ora Setuju/Koreksi + catatan + tombol Copy jawaban).
-   Pasca-F3.3 (keputusan turun) -> regenerate + re-sync.
+   Pasca-F3.3 (keputusan turun 30 Sep) -> regenerate + re-sync
+   — SELESAI: snapshot @ revisi `3af7250` + re-sync
+   public/tutorial via sync-tutorial (commit C3).
    12 keputusan Gus Fi: badan = koperasi resmi; standar hybrid
    PRIORITAS SYARIAH (SAK Syariah -> PAP -> SAK EP); Level C;
-   COA B; ZIS A; SHU A; wakaf B (ditunda); auto-posting B
+   COA B; ZIS A; SHU A; wakaf B (ditunda — direvisi AKTIF via
+   F3.3 #14, 30 Sep); auto-posting B
    (bertahap); saldo pembuka A; laporan A; akad A (bareng
    fondasi); timeline B (6 minggu). Next: **F3.3 = review +
    keputusan GUS FI langsung** (14 poin §13 via
    `/tutorial/akuntansi-proposal`; pengasuh mengikuti;
-   TIDAK ada forum terpisah). **F3.3 PENDING = jawaban tashih
-   GUS FI** (Copy dari §13 interaktif; 12/14 poin sudah jelas via
-   roadmap 29 Sep, sisanya koreksi/klarifikasi) -> F3.4+
-   implementasi. Pola interface tashih sama utk P3-TASHIH-ZAKAT
-   + P4-PROPOSAL-KONSINYASI (commit terpisah).
+   TIDAK ada forum terpisah). **F3.3 TERJAWAB 30 SEP 2026**
+   (jawaban tashih Gus Fi, Copy dari §13 interaktif): 12
+   Setuju, 0 Ora Setuju, 2 Koreksi — #6 (tidak ada denda
+   keterlambatan; ak. 5050 `status=closed`) & #14 (wakaf
+   AKTIF, revisi keputusan #7; 1120/4100/6020 aktif, W3.5).
+   Keputusan di-rekam `docs/akuntansi-keputusan.md` + revisi
+   proposal §15 + regenerate snapshot HTML + re-sync tutorial.
+   **F3.4+ = mulai implementasi** (Wave 1: v21 COA + jurnal
+   + auto-posting + rekon #15/#17 + golden test). Pola
+   interface tashih sama utk P3-TASHIH-ZAKAT +
+   P4-PROPOSAL-KONSINYASI (commit terpisah).
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
   loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,

@@ -1,6 +1,34 @@
 # MEMORY
 
 ## 2026-09-30
+### F3.3 TERJAWAB — jawaban tashih GUS FI + revisi + regenerate (3 commit, dual-push master+main)
+- **Jawaban tashih GUS FI (30 Sep)** atas §13
+  `docs/AKUNTANSI-PROPOSAL.html` (14 poin, via
+  `/tutorial/akuntansi-proposal`): 12 Setuju, 0 Ora Setuju,
+  2 Koreksi. #6: TIDAK ADA denda keterlambatan ("ini tidak
+  usah, bisa dengan yang lain. tidak denda.") -> ak. 5050
+  `status=closed`, skema denda dihapus dari §1.2/§5/§6/§8/§12.
+  #14: WAKAF AKTIF (revisi keputusan #7 "Belum sekarang") ->
+  ak. 1120/4100/6020 APL; booking = `zis kind='wakaf'` +
+  jurnal manual (PSAK 112); build = W3.5 (total 32 commit
+  tetap). Bonus: P3 zakat final via #2 (24K/market/haul +
+  mustahik) -> R6: switch jembatan + hapus badge "provisional"
+  saat F3.4+.
+- **C1 `5a9bcac`**: `docs/akuntansi-keputusan.md` (audit trail:
+  teks jawaban asli + ringkasan + dampak teknis) — commit
+  terpisah sesuai aturan F3.3.
+- **C2 `3af7250`**: revisi `docs/akuntansi-proposal.md`
+  (baru §15 "Revisi pasca-F3.3"; tabel §13 += kolom Jawaban;
+  COA/LKA/CALK/modul akad/§8/§9/§12 disesuaikan).
+- **C3 (commit ini)**: regenerate snapshot HTML (mirror §15 +
+  band §13 "TERJAWAB 30 SEP" + baris `.ans` per item + update
+  fnote @`3af7250`) + re-sync `public/tutorial` via
+  `node scripts/sync-tutorial.mjs` (SYNC-TUTORIAL-OK, 9 file;
+  copy = byte identik) + TODO.md + MEMORY.
+- **Sisa**: F3.4+ = mulai implementasi (Wave 1: skema v21
+  COA + jurnal double-entry + auto-posting + rekon #15/#17 +
+  golden test, roadmap §12). Tashih P4 konsinyasi tetap
+  pending (pola interface tashih sama, commit terpisah).
 ### Interface tashih AKUNTANSI-PROPOSAL.html + exception gate sync (3 commit, dual-push master+main)
 - **Keputusan (Gus Fi, 30 Sep, via sesi DeepSeek)**: §13
   `docs/AKUNTANSI-PROPOSAL.html` dari snapshot centang (14 kartu,
@@ -26,7 +54,8 @@
 - **Sisa**: F3.3 = jawaban tashih GUS FI (12/14 poin sudah via
   roadmap 29 Sep) -> F3.4+ implementasi. Pola sama utk
   `P3-TASHIH-ZAKAT.html` + `P4-PROPOSAL-KONSINYASI.html`
-  (commit terpisah).
+  (commit terpisah). [UPDATE 30 SEP: F3.3 TELAH TERJAWAB —
+  12 Setuju + 2 Koreksi; lihat entry F3.3 di atas.]
 
 ## 2026-09-29
 ### Tutorial / dokumentasi in-app (T1-T3) - SELESAI 28-29 Sep
