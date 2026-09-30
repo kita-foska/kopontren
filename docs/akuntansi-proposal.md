@@ -899,6 +899,9 @@ F3.4+ mulai.
   F3.3 #2 (30 Sep)** — boleh di-switch saat implementasi (R6);
   P4 (konsinyasi) tetap jangan finalkan angka & jangan ubah
   mapping diam-diam sampai tashih P4 turun.
+- Tiap commit implementasi (F3.4+): test golden + `next build`
+  EXIT 0 + backup DB sebelum migrasi skema baru (v21/v22/v23).
+- Visual check oleh Gus Fi: ongoing, TIDAK blocking.
 
 ---
 
@@ -945,6 +948,3 @@ F3.4+ mulai.
   (commit terpisah).
 - **F3.4+ siap mulai** sesuai roadmap §12 (Wave 1, ±32 commit,
   6 minggu).
-- Tiap commit implementasi (F3.4+): test golden + `next build`
-  EXIT 0 + backup DB sebelum migrasi skema baru (v21/v22/v23).
-- Visual check oleh Gus Fi: ongoing, TIDAK blocking.
