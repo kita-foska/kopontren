@@ -1375,10 +1375,22 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
    AKTIF, revisi keputusan #7; 1120/4100/6020 aktif, W3.5).
    Keputusan di-rekam `docs/akuntansi-keputusan.md` + revisi
    proposal §15 + regenerate snapshot HTML + re-sync tutorial.
-   **F3.4+ = mulai implementasi** (Wave 1: v21 COA + jurnal
+    **F3.4+ = implementasi berjalan** (Wave 1: v21 COA + jurnal
    + auto-posting + rekon #15/#17 + golden test). Pola
    interface tashih sama utk P3-TASHIH-ZAKAT +
-   P4-PROPOSAL-KONSINYASI (commit terpisah).
+   P4-PROPOSAL-KONSINYASI (commit terpisah). Progres Wave 1: W1.1 `3eaf906` (skema v21); W1.2 `105b04e` (GL read-side); W1.3 `2ef3002` (auto-posting); W1.4 `f28579a` (admin GL + Jurnal UI) - SEMUA LUPUT (dual-push master+main). Aktif: **W1.5 rekon #15/#17** - menunggu ACC Gus Fi.
+   - [ ] **F3.4+ W1.5** (1 Okt; rencana tersusun, belum
+         dimulai, menunggu ACC Gus Fi): rekon #15
+         `JOURNAL_BAL` (total debit = total credit per
+         entry + global; jurnal_lines orphan) + #17
+         `GL_TZ` (semua `entry_date` berakhiran +07:00;
+         mitigasi R1) di `lib/rekonsiliasi.ts` (14 -> 16
+         cek, flag-only read-only) + COLS 2 cek baru di
+         `rekonsiliasi-client.tsx` + fase 1-3
+         `test-rekonsiliasi.ts` (+ tabel jurnal di
+         SCHEMA; seed korup: entry tak seimbang & tanggal
+         UTC) + baris invariant di
+         `docs/qa/DATA-INVARIANTS.md`. #16 `GL_CASH` = W5.2.
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
   loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,

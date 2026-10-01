@@ -19,6 +19,24 @@
   implementasi spesifikasi F3.4+ (R6, commit terpisah); P4 konsinyasi
   tetap open (E25 dasar ujrah V1).
 
+### F3.4+ W1.4: admin GL + Jurnal UI - SELESAI 1 Okt 2026 (commit `f28579a`, dual-push master+main)
+- **8 file (+1147/-12; 6 baru + 2 ubah)**: pages
+  `/admin/gl` + `/admin/jurnal`, API routes `/api/gl` +
+  `/api/jurnal`, client `gl-client.tsx` + `jurnal-client.tsx`
+  (list, detail, manual, reversal helper) + `sidebar.tsx`
+  (menu baru). `src/lib/jurnal.ts` (engine W1.3) tak diubah.
+- **Gate pre-commit bersih**: `tsc --noEmit` exit 0;
+  `test:invariants` 0 gagal; 0 non-ASCII di 8 file;
+  `public/sw.js` + file V1 tak tersentuh; ref remote
+  `origin/master` + `origin/main` identik @ `f28579a`.
+- **Progres Wave 1 (roadmap §12 proposal)**: W1.1 `3eaf906`
+  (skema v21 coa 52 + jurnal); W1.2 `105b04e` (GL read-side
+  `lib/gl.ts`); W1.3 `2ef3002` (auto-posting Wave 1, gated
+  `gl_enabled`); W1.4 `f28579a` (UI) - **LEPAS**. Sisa
+  Wave 1 = **W1.5 rekon #15 `JOURNAL_BAL` + #17 `GL_TZ`**
+  (`lib/rekonsiliasi.ts` flag-only + test + UI flag; #16
+  `GL_CASH` tetap W5.2) - rencana W1.5 tersusun, menunggu
+  ACC Gus Fi.
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
 - **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3
