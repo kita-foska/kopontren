@@ -20,7 +20,7 @@
 >
 > **Revisi 30 Sep 2026 (tashih dok. P3 zakat):** jawaban Gus Fi
 > atas `P3-TASHIH-ZAKAT` — **DITERIMA** (1 Setujuan, 0 Ora, 1
-> Koreksi; Soal 3 belum dipilih, catatan B): koreksi mekanik
+> Koreksi; Soal 3 belum dipilih 30 Sep, catatan B → DIPUTUSKAN Opsi B 1 Okt, market FINAL): koreksi mekanik
 > haul (anchor **22 Okt 2025**, penampang "seolah sudah haul" +
 > keterangan nishab) & harga emas **terendah**. Ter-rekam
 > `docs/akuntansi-keputusan.md` (seksi "Keputusan P3"); rincian
@@ -601,8 +601,8 @@ CREATE TABLE IF NOT EXISTS zis(
   F3.2 tidak mengubah modul `zakat-*`. Tashih P3 **telah turun**
   (F3.3 #2 + tashih dok. P3 30 Sep — DITERIMA): jembatan boleh
   di-switch + spesifikasi koreksi (haul anchor 22 Okt 2025,
-  harga terendah) diimplementasi **saat commit F3.4+** (kecuali
-  aspek modal/Soal 3 — tunggu jawaban; §15.4).
+  harga terendah) diimplementasi **saat commit F3.4+** (aspek
+  modal/Soal 3 = Opsi B — market FINAL, 1 Okt; §15.4).
 - **Wakaf (AKTIF — revisi F3.3 #14, 30 Sep 2026)**: keputusan #7
   ("Belum sekarang") di-revisi. Akun 1120/4100/6020 **aktif**
   (bukan placeholder ditunda). Booking = hook §8.2: input
@@ -618,9 +618,9 @@ CREATE TABLE IF NOT EXISTS zis(
   nisab 24K (harga emas **terendah**) + haul (anchor 22 Okt 2025,
   penampang "seolah sudah haul" + keterangan nishab) + kadar 2,5%
   + daftar mustahik = **final**; `valuation_mode` (market/hpp)
-  = **masih provisional** (Soal 3 belum dipilih, catatan B) —
-  badge "provisional" di UI zakat untuk aspek modal tetap sampai
-  jawaban turun. Jembatan `zakat_history` boleh di-switch +
+  = **market FINAL** (Soal 3 = Opsi B, 1 Okt 2026; catatan B) —
+  badge "provisional" di UI zakat untuk aspek modal dapat dihapus
+  saat F3.4+. Jembatan `zakat_history` boleh di-switch +
   spesifikasi diimplementasi saat commit F3.4+ (R6).
 ---
 
@@ -769,7 +769,7 @@ keputusan #4).
 | R3 | Tidak ada saldo awal ("Modal Setara" ≠ ekuitas) | Buku pembuka @ N (§10): 3010 dihitung sebagai **selisih** agar D=K; nilai 1050 aset tetap = input + keputusan |
 | R4 | Konflik label fase (A1–A3 lama vs plan) | Label F3.x konsisten (audit §10); proposal & commit pakai F3.x; label V1 report tetap "V1" |
 | R5 | Turso Rows-Read (agregat global = termahal) | `balance_running` + index `idx_jl_acct` (§3.1) → saldo = 1 akses terindeks; trial balance per akun; cache `gl:` 60 dtk; batch per transaksi |
-| R6 | Tashih P3/P4 terbuka (larangan prabatasih) — **P3 (zakat): tashih turun 30 Sep (dok. P3: DITERIMA; Soal 3 modal belum dipilih); P4 (konsinyasi): TASHIH TERJAWAB 30 Sep (Gus Fi — 3 Setujuan; §15.5)** | **TIDAK** refactor `zakat-*`/`konsinyasi` sampai tashih turun — untuk P3 LEPAS sebatas aspek terjawab (haul/nisab/kadar/mustahik): spesifikasi koreksi §15.4 diimplementasi + jembatan di-switch saat commit F3.4+; aspek modal (`valuation_mode`) tetap provisional sampai Soal 3 terjawab; P4 `konsinyasi` TASHIH TERJAWAB — larangan prabatasih LEPAS, **A1.1 released** (ujrah → pendapatan 4040 + tagihan → settlement payable 2020; eksekusi commit terpisah F3.4+, §15.5); komisi tetap via `konsinyasi_commission` (setting, ubah tanpa code); dasar hitung ujrah V1 (persentase harga PERJANJIAN) menunggu konfirmasi ulama; badge "provisional" di UI zakat (aspek modal) & ujrah kon. (dasar hitung V1) |
+| R6 | Tashih P3/P4 terbuka (larangan prabatasih) — **P3 (zakat): tashih turun 30 Sep (dok. P3: DITERIMA; Soal 3 modal = Opsi B, market FINAL, 1 Okt); P4 (konsinyasi): TASHIH TERJAWAB 30 Sep (Gus Fi — 3 Setujuan; §15.5)** | **TIDAK** refactor `zakat-*`/`konsinyasi` sampai tashih turun — untuk P3 LEPAS PENUH (1 Okt; semua aspek final, termasuk modal Opsi B): spesifikasi koreksi §15.4 diimplementasi + jembatan di-switch saat commit F3.4+; aspek modal (`valuation_mode`) = market FINAL (Soal 3 = Opsi B, 1 Okt); P4 `konsinyasi` TASHIH TERJAWAB — larangan prabatasih LEPAS, **A1.1 released** (ujrah → pendapatan 4040 + tagihan → settlement payable 2020; eksekusi commit terpisah F3.4+, §15.5); komisi tetap via `konsinyasi_commission` (setting, ubah tanpa code); dasar hitung ujrah V1 (persentase harga PERJANJIAN) menunggu konfirmasi ulama; badge "provisional" UI zakat aspek modal DIHAPUS (market FINAL, hapus saat F3.4+) & ujrah kon. (dasar hitung V1) |
 | R7 | Pola test bebas-import + in-memory | `lib/jurnal.ts`, `lib/gl.ts`, `lib/zis.ts`, `lib/coop.ts` bebas-import; test `test-jurnal/gl/zis/coop` (in-memory, tanpa import Next) |
 | R8 | `kp-zip3` beku, tak ada GL | Tidak ada pinjam desain; lapisan GL = desain baru di repo ini (proposal ini = blueprint); referensi hanya utk pola modul & backup |
 
@@ -919,8 +919,8 @@ F3.4+ mulai.
   rinci §15.4)** — spesifikasi koreksi (haul anchor 22 Okt 2025 +
   penampang "seolah sudah haul" + keterangan nishab; harga emas
   terendah) boleh diimplementasi + jembatan di-switch saat commit
-  F3.4+; **kecuali aspek modal (Soal 3, belum dipilih)** tetap
-  provisional. **P4 (konsinyasi) = TASHIH TERJAWAB 30 Sep (Gus Fi
+  F3.4+; aspek modal (Soal 3) kini DIPUTUSKAN Opsi B (market FINAL, 1 Okt) — P3 LEPAS PENUH;
+  **P4 (konsinyasi) = TASHIH TERJAWAB 30 Sep (Gus Fi
   — 3 Setujuan; rinci §15.5)** — larangan prabatasih LEPAS: A1.1
   released (ujrah konsinyasi → pendapatan 4040 PKGF + tagihan
   pemilik → 2020 APL), eksekusi = commit tercatat saat F3.4+
@@ -976,10 +976,10 @@ F3.4+ mulai.
 - **F3.4+ siap mulai** sesuai roadmap §12 (Wave 1, ±32 commit,
   6 minggu).
 
-### 15.4 Tashih dok. P3 zakat (30 Sep 2026 — GUS FI, DITERIMA)
+### 15.4 Tashih dok. P3 zakat (30 Sep 2026 — GUS FI, DITERIMA; Soal 3 diputuskan 1 Okt)
 
 > Tashih `P3-TASHIH-ZAKAT` (`P3-TASHIH-ZAKAT.md/.html`): **1
-> Setujuan, 0 Ora Setujuan, 1 Koreksi; Soal 3 belum dipilih
+> Setujuan, 0 Ora Setujuan, 1 Koreksi; Soal 3 = Opsi B (market FINAL, 1 Okt)
 > (catatan B)**. Keputusan tashih **DITERIMA** — *"yang penting
 > manut rumusan Nahdliyin ulama lan hasil bahtsul masail pondok
 > pesantren."* Rekam: `docs/akuntansi-keputusan.md` (seksi
@@ -1000,16 +1000,16 @@ F3.4+ mulai.
   harga emas **terendah** (`harga_efektif` = minimum harga
   tercatat di `zakat_gold_standards` dalam jendela/periode haul,
   bukan entri terbaru).
-- **Soal 3 — Modal: BELUM DIPILIH (catatan B)** — B = nilai
-  pasar saat jatuh haul (modal + untung); `valuation_mode`
-  (default `market`, fallback `hpp`) tetap **provisional** sampai
-  jawaban final.
+- **Soal 3 — Modal: DIPUTUSKAN Opsi B (1 Okt 2026, GUS FI)** — B = nilai
+  pasar saat jatuh haul (modal + untung, mayoritas ulama: Syafi'i, Maliki, Hanbali); `valuation_mode`
+  (default `market` = proxy harga jual V1; `hpp` cadangan) = **market FINAL**
+  Bukan provisional lagi; implementasi spesifikasi + switch `valuation_mode` = commit F3.4+.
 - **Dampak pada proposal**: §0 (note revisi P3), §8.2/§8.3
   (jembatan + rate/mustahik), R6 (baris risiko), §14 (prabatasih
   P3 = sudah turun, kecuali modal). **P4 terjawab 30 Sep
   (TERJAWAB — §15.5)** — tidak terpengaruh koreksi P3.
   Implementasi spesifikasi = commit F3.4+ (sesuai
-  roadmap §12); open item: Soal 3 + verifikasi judul MUI Fatwa
+  roadmap §12); open item: verifikasi judul MUI Fatwa
   No. 78/2023.
 
 ### 15.5 Tashih P4 konsinyasi / wakalah bil ujrah (30 Sep 2026 — GUS FI, TERJAWAB)

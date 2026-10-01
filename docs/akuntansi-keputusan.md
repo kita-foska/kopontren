@@ -131,7 +131,8 @@ Perlu ditindaklanjuti: 6, 14
 > tombol "Copy Jawaban" di dokumen tersebut).
 >
 > **Ringkasan: 1 Setujuan · 0 Ora Setujuan · 1 Koreksi (Soal 1)**;
-> Soal 3 **BELUM DIPILIH** (catatan: opsi B).
+> Soal 3 **DIPUTUSKAN Opsi B** (1 Okt 2026: modal + untung, harga
+> pasar saat jatuh haul; `valuation_mode` market FINAL).
 > **Keputusan Tashih: DITERIMA** — catatan: *"yang penting manut
 > rumusan Nahdliyin ulama lan hasil bahtsul masail pondok
 > pesantren."*
@@ -186,14 +187,15 @@ Perlu ditindaklanjuti: item **1** (koreksi) & item **3** (belum dipilih).
   **terendah**) + UI keterangan "harga terendah periode ini =
   Rp …" — implementasi commit F3.4+.
 
-### Soal 3 — Modal: BELUM DIPILIH (catatan B)
+### Soal 3 — Modal: DIPUTUSKAN Opsi B (1 Okt 2026 — GUS FI) — market FINAL
 
 - Opsi **B = nilai pasar saat jatuh haul (modal + untung)** —
-  dicatat tapi **belum final**. `valuation_mode` tetap posisi
-  provisional (default `market` = proxy harga jual V1, yang paling
-  dekat dengan B; `hpp` = A) sampai jawaban turun. Aspek ini
-  tetap berlabel "provisional"; aspek lain (haul/nisab/kadar)
-  sudah final.
+  **DIPUTUSKAN 1 Okt 2026 (final)**, mayoritas ulama (Syafi'i,
+  Maliki, Hanbali). `valuation_mode` = **market FINAL** (default
+  `market` = proxy harga jual V1; `hpp` = cadangan A). Aspek modal
+  kini final; aspek lain (haul/nisab/kadar) sudah final sejak 30
+  Sep. Implementasi spesifikasi + switch `valuation_mode` = commit
+  F3.4+.
 
 ### Yang dikunci (Soal 2 + keputusan DITERIMA)
 
@@ -203,15 +205,15 @@ Perlu ditindaklanjuti: item **1** (koreksi) & item **3** (belum dipilih).
   zakat (nisab 85 g · kadar 2,5% · haul 1 tahun).
 - Soal 2 + kadar 2,5% + nisab 85 g = **final**. Haul 1 tahun
   tetap = **final** (mekanik anchor: koreksi Soal 1 di atas).
-- **Larangan prabatasih (R6) utk modul zakat LEPAS sebatas aspek
-  yang terjawab**: jembatan `zakat_history` boleh di-switch +
+- **Larangan prabatasih (R6) utk modul zakat LEPAS PENUH (1 Okt 2026)
+  **: jembatan `zakat_history` boleh di-switch +
   badge "provisional" dihapus saat commit implementasi F3.4+
-  (**kecuali aspek modal/Soal 3** yang masih menunggu).
+  (Soal 3 modal kini DIPUTUSKAN Opsi B; seluruh aspek P3 final).
 
 ## Open Items
 
-1. **Soal 3 (modal)**: jawaban final (A: HPP / B: nilai pasar /
-   hanya-untung) — menunggu tashih lanjutan (pola commit
+1. **Soal 3 (modal)**: RESOLVED 1 Okt 2026 — dipilih Opsi B (modal + untung, harga pasar saat jatuh haul); `valuation_mode` = market FINAL. (Opsi yang dipertimbangkan: A: HPP / B: nilai pasar /
+   hanya-untung; jawaban sebelumnya menunggu tashih lanjutan; pola commit
    terpisah, seperti F3.3).
 2. **Verifikasi judul MUI Fatwa No. 78/2023** utk pengasuh
    (TODO lama — tetap terbuka; koreksi sitasi §D dokumen P3).

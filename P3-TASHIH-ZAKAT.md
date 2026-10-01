@@ -27,6 +27,16 @@
   §15.4 (commit terpisah). Open: Soal 3 (modal) + verifikasi judul
   MUI Fatwa No. 78/2023.
 
+- **STATUS (1 Okt 2026): TASHIH LEPAS PENUH (GUS FI).** Soal 3
+  (modal) **DIPUTUSKAN Opsi B = modal + untung, harga pasar saat
+  jatuh haul**; `valuation_mode` = **market FINAL** (bukan
+  provisional lagi). Ke-3 soal P3 kini terjawab: Soal 1 (koreksi,
+  30 Sep) + Soal 2 (setuju, 30 Sep) + Soal 3 (Opsi B, 1 Okt).
+  Standar tetap: manut rumusan Nahdliyin ulama & hasil bahtsul
+  masail pondok pesantren. Ter-rekam:
+  `docs/akuntansi-keputusan.md` (seksi "Keputusan P3" — Soal 3) +
+  `docs/akuntansi-proposal.md` §15.4.
+
 ### A. Latar Belakang
 Modul zakat tijarah berfungsi: menghitung harta dagang
 (modal + laba + piutang − hutang), menilai "wajib/belum" vs nisab
@@ -118,6 +128,12 @@ pertanyaan terbuka untuk ulama.
   selaras opsi (b); bila pengasuh menilai modal-untung (a),
   cukup ganti default + kurangi basis (revisi rumus, bukan
   migrasi data).
+- **Jawaban FINAL (1 Okt 2026, GUS FI — Opsi B):** modal + untung,
+  persediaan dinilai pada **harga pasar saat jatuh haul**;
+  `valuation_mode` = **market FINAL** (default harga jual V1;
+  ledger harga pasar menyusul P4). Opsi (b) terpilih = mayoritas
+  ulama (Syafi'i, Maliki, Hanbali). Aspek modal kini **final** —
+  bukan provisional lagi.
 - **Referensi fiqh:** Mughni, kitab zakaat, bab zakat al-budhl
   (barang dagangan dinilai berapa); 'Umdah al-Ahkam, bab
   nishab al-tijarah.
@@ -190,6 +206,8 @@ dokumen ini dipakai dasar tashih.
    pendekatan hanya-untung?
    *Provisional aplikasi: `valuation_mode` market (default) | hpp
    (fallback); V1 market = proxy harga jual.*
+   *FINAL (1 Okt 2026, GUS FI): Opsi B — modal + untung, harga
+   pasar saat jatuh haul; `valuation_mode` = market FINAL.*
 
 ### F. Lampiran
 - `src/app/api/zakat/route.ts` (formula), `src/db.ts`
@@ -248,8 +266,24 @@ Perlu ditindaklanjuti: 1
   nishab di UI `/admin/zakat`.
 - Soal 2: `harga_efektif` = minimum harga tercatat di
   `zakat_gold_standards` (periode haul).
-- Soal 3: tunggu jawaban lanjutan (opsi B tercatat;
-  `valuation_mode` tetap provisional).
+- Soal 3: DIPUTUSKAN 1 Okt 2026 (GUS FI): Opsi B = modal + untung, harga pasar saat jatuh haul;
+  `valuation_mode` = market FINAL (switch implementasi di commit F3.4+; default sudah `market`).
 - Rekam keputusan: `docs/akuntansi-keputusan.md` (seksi "Keputusan
   P3") + revisi `docs/akuntansi-proposal.md` §15.4 — commit
   terpisah; implementasi spesifikasi = komit F3.4+.
+
+### H. Jawaban Tashih Suplemen (1 Okt 2026 — Gus Fi)
+
+```
+JAWABAN SUPLEMEN — P3 ZAKAT TIJARAH (Soal 3)
+Tanggal: 1 Oktober 2026
+Oleh: Gus Fi (Ali Makfi)
+
+3. Soal 3 — Modal (barang dagangan dinilai berapa) → Opsi B (FINAL)
+   Catatan: modal + untung (mayoritas ulama: Syafi'i, Maliki,
+   Hanbali); persediaan dinilai pada harga pasar saat jatuh haul.
+   `valuation_mode` = market FINAL (default harga jual V1).
+```
+
+**Catatan teknis:** aspek modal kini final (bukan provisional);
+implementasi spesifikasi + switch `valuation_mode` = commit F3.4+.
