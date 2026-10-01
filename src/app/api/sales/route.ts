@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { db, tx, getMemberSettings } from '@/db';
+import { db, getSettings, getMemberSettings, tx } from '@/db';
 import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { startOfDayJakarta } from '@/lib/format';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { journalForSale, postJournalInTx } from '@/lib/jurnal';
 import { notifyLargeTransaction, notifyMarginClamp, notifyStockAfterSale } from '@/lib/notify';
 import { computePerks, marginGuard, parsePerkConfig, type PerkResult } from '@/lib/perks';
 import { parsePaySplit } from '@/lib/pay-methods';
@@ -214,6 +215,10 @@ export async function POST(req: Request) {
       });
     }
   }
+  // W1.3 auto-posting GL: saklar gl_enabled (default '0' -> perilaku V1
+  // TIDAK berubah). Dibaca sekali sebelum transaksi; bila '1', entry
+  // jurnal ditulis di dalam tx yang sama dgn write penjualan (atomik).
+  const glOn = (await getSettings()).gl_enabled === '1';
   try {
     const out = await tx(d, async () => {
       let subtotal = 0;
@@ -425,6 +430,26 @@ export async function POST(req: Request) {
       );
       for (const [qty, name, pid, unit, price, sub, lineDisc, cost] of insertItems) {
         await insItem.run(sid, pid, name, qty, unit, price, sub, lineDisc, cost);
+      }
+      // W1.3 auto-posting GL (gated: settings gl_enabled, default off ->
+      // no-op). Entry 'JE-sale-<id>' ditulis DI DALAM tx yang sama dgn
+      // penjualan: commit/rollback atomik; idempoten (UNIQUE
+      // sales,ref_id,'auto') -> aman utk retry. `discount` = total diskon
+      // manual + diskon member + redeem (kontrak mapper W1.2); cogs =
+      // snapshot HPP produk saat transaksi.
+      if (glOn) {
+        await postJournalInTx(
+          d,
+          journalForSale({
+            id: sid,
+            total,
+            discount: lineDiscSum + txDisc + memberDiscount + redeem,
+            pay_method: method,
+            cogs: totalCost,
+            customer,
+            created_at,
+          })
+        );
       }
       if (memberId) {
         if (redeem > 0) {

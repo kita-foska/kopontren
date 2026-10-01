@@ -11,6 +11,9 @@
  * W1.2: Phase 2 (engine jurnal: postJournal idempoten+tx, reversi, mapper
  * Wave-1) + Phase 3 (gl read: accountBalance/trialBalance/accountStatement
  * + openingBalance). Phase 2/3 db terpisah agar saldo tetap seimbang.
+ * W1.3: Phase 4 (postJournalInTx -- varian async TxDb lapisan API:
+ * posting seimbang tercatat di dalam "transaksi" pemanggil, idempoten
+ * no-op, jurnal tak seimbang ditolak SEBELUM ada write).
  */
 import {
   postJournal,
@@ -23,8 +26,9 @@ import {
   journalForPurchase,
   journalForExpense,
   journalForCashEntry,
+  postJournalInTx,
 } from '../src/lib/jurnal.ts';
-import type { JdB } from '../src/lib/jurnal.ts';
+import type { JdB, TxDb } from '../src/lib/jurnal.ts';
 import { accountBalance, trialBalance, accountStatement } from '../src/lib/gl.ts';
 import type { QueryDb } from '../src/lib/keuangan.ts';
 let passes = 0;
@@ -333,8 +337,67 @@ async function main(): Promise<void> {
   eq('G4: opening 4010 < D2 = -100000', ob['4010'], -100000);
   eq('G4: opening 5010 < D2 = 40000', ob['5010'], 40000);
 
+  // ===== Phase 4 (W1.3): postJournalInTx (varian async TxDb lapisan API) =====
+  // TxDb palsu meng-wrap node:sqlite in-memory (db4 terpisah; pola sama
+  // dgn QueryDb palsu Phase 3): semua method return Promise, TANPA
+  // BEGIN/COMMIT sendiri (postJournalInTx tidak buka tx).
+  const db4 = new mod2.DatabaseSync(':memory:');
+  db4.exec('CREATE TABLE journal_entries (id TEXT PRIMARY KEY, ref_table TEXT NOT NULL, ref_id TEXT, entry_date TEXT NOT NULL, type TEXT NOT NULL DEFAULT \'normal\', desc TEXT NOT NULL DEFAULT \'\', created_by TEXT, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')), reversed_by TEXT, UNIQUE(ref_table, ref_id, type))');
+  db4.exec('CREATE TABLE journal_lines (entry_id TEXT NOT NULL, account_code TEXT NOT NULL, debit INTEGER NOT NULL DEFAULT 0, credit INTEGER NOT NULL DEFAULT 0, balance_running INTEGER, source TEXT NOT NULL DEFAULT \'\', PRIMARY KEY(entry_id, account_code, source))');
+  const txdb: TxDb = {
+    prepare: (sql: string) => {
+      const st = db4.prepare(sql);
+      return {
+        get: (...a: unknown[]) => Promise.resolve(st.get(...(a as never[]))),
+        all: (...a: unknown[]) => Promise.resolve(st.all(...(a as never[]))),
+        run: async (...a: unknown[]) => {
+          const r = st.run(...(a as never[]));
+          // TxDb mendeklarasikan changes/lastInsertRowid: number, padahal
+          // node:sqlite bisa bigint -> normalisasi.
+          return { changes: Number(r.changes), lastInsertRowid: Number(r.lastInsertRowid) };
+        },
+      };
+    },
+  };
+  const TZ4 = '2026-10-10T00:00:00.000+07:00';
+  const saleSpec = () =>
+    journalForSale({ id: 7, total: 50000, discount: 5000, pay_method: 'tf', cogs: 20000, created_at: TZ4 });
+  // T1: posting seimbang tercatat (entry + 5 baris: dgn discount>0 &
+  // cogs>0 -> kaki kas D, 4010 C bruto, 4020 D diskon, 5010 D HPP, 1040
+  // C persediaan).
+  eq('T1: posting sale -> id', await postJournalInTx(txdb, saleSpec()), 'JE-sale-7');
+  eq('T1: 1 entry tercatat', cnt('SELECT COUNT(*) c FROM journal_entries WHERE id=\'JE-sale-7\'', db4), 1);
+  eq('T1: 5 baris tercatat', cnt('SELECT COUNT(*) c FROM journal_lines WHERE entry_id=\'JE-sale-7\'', db4), 5);
+  // T2: idempoten -- (sales, 7, auto) sudah ada -> no-op, id lama.
+  eq('T2: posting ulang -> no-op id lama', await postJournalInTx(txdb, saleSpec()), 'JE-sale-7');
+  eq('T2: baris tetap 5', cnt('SELECT COUNT(*) c FROM journal_lines WHERE entry_id=\'JE-sale-7\'', db4), 5);
+  // T3: jurnal tak seimbang ditolak SEBELUM ada write (JOURNAL_BAL).
+  let aThrew = false;
+  try {
+    await postJournalInTx(txdb, {
+      id: 'JE-bad-1',
+      ref_table: 'sales',
+      ref_id: 900,
+      entry_date: TZ4,
+      type: 'auto',
+      lines: [
+        { account_code: '1010', debit: 10, credit: 0, source: 's' },
+        { account_code: '4010', debit: 0, credit: 20, source: 's' },
+      ],
+    });
+  } catch {
+    aThrew = true;
+  }
+  ok('T3: jurnal tak seimbang ditolak', aThrew);
+  eq('T3: tak ada sisa entry', cnt('SELECT COUNT(*) c FROM journal_entries WHERE id=\'JE-bad-1\'', db4), 0);
+  // T4: mapper lainnya jalan di TxDb (purchase/expense/cash).
+  eq('T4: purchase posting tercatat', await postJournalInTx(txdb, journalForPurchase({ id: 8, qty: 2, unit_cost: 25000, created_at: TZ4 })), 'JE-purchase-8');
+  eq('T4: expense posting tercatat', await postJournalInTx(txdb, journalForExpense({ id: 4, amount: 30000, created_at: TZ4 })), 'JE-expense-4');
+  eq('T4: cash posting tercatat', await postJournalInTx(txdb, journalForCashEntry({ id: 11, type: 'income', label: 'Ujrah Konsinyasi', amount: 150000, created_at: TZ4 })), 'JE-cash-11');
+  eq('T4: 4 entry total di db4', cnt('SELECT COUNT(*) c FROM journal_entries', db4), 4);
+
   console.log('');
-  console.log('test:gl (W1.2) - ' + passes + ' ok, ' + failures + ' fail');
+  console.log('test:gl (W1.3) - ' + passes + ' ok, ' + failures + ' fail');
   if (failures > 0) process.exit(1);
 }
 

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { db, tx } from '@/db';
+import { db, getSettings, tx } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { journalForPurchase, postJournalInTx } from '@/lib/jurnal';
 import { notifyCashBalance, notifyNewBelanja } from '@/lib/notify';
 
 export async function POST(req: Request) {
@@ -29,6 +30,11 @@ export async function POST(req: Request) {
   // (mis. 4500.5) akan membuat purchases.qty*unit_cost bukan bilangan bulat
   // sehingga agregat kas/laporan & harga modal jadi tidak konsisten.
   const cost = Math.max(0, Math.floor(Number(b.unit_cost) || 0));
+  // W1.3 auto-posting GL (gated: settings gl_enabled, default off ->
+  // no-op). Dibaca sekali sebelum tx; bila '1', jurnal ditulis di
+  // dalam tx yang sama dgn pembelian (atomik).
+  const glOn = (await getSettings()).gl_enabled === '1';
+  const created_at = new Date().toISOString();
   const info = await tx(d, async () => {
     const ins = await d
       .prepare(
@@ -45,6 +51,21 @@ export async function POST(req: Request) {
     await d.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(qty, prod.id);
     if (cost > 0)
       await d.prepare('UPDATE products SET cost_price = ? WHERE id = ?').run(cost, prod.id);
+    if (glOn) {
+      // Entry 'JE-purchase-<id>': Debit 1040 Persediaan / Kredit 1010
+      // Kas (lunas; rute ini tidak punya opsi tempo/on_account).
+      // Idempoten (UNIQUE purchases,ref_id,'auto').
+      await postJournalInTx(
+        d,
+        journalForPurchase({
+          id: Number(ins.lastInsertRowid),
+          qty,
+          unit_cost: cost,
+          supplier: String(b.supplier || '').trim() || undefined,
+          created_at,
+        })
+      );
+    }
     return ins;
   });
   const stockRow = (await d.prepare('SELECT stock FROM products WHERE id = ?').get(prod.id)) as {

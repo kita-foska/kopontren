@@ -111,6 +111,32 @@ export function cashEntryCashAccount(label: string, explicit?: string): string {
   return ACCT.KAS_TOKO;
 }
 
+/**
+ * Permukaan DB tulis-lintas transaksi: `tx` dari db.ts TIDAK menambah
+ * argumen ke closure (fn tetap memakai `d` asal; TxDb dipetakan ke
+ * transaksi di balik layar). `d` di dalam tx() TIDAK bisa dipergunakan
+ * untuk `postJournal` (permukaan sync) -- jadi varian ini menerima TxDb
+ * (async) + `d` sama. Semua statement berjalan DI DALAM transaksi yang
+ * sama dgn write bisnis pemanggil (atomik), tanpa buka/commit sendiri.
+ */
+export type TxDb = {
+  prepare(sql: string): {
+    run(...args: unknown[]): Promise<{ changes: number; lastInsertRowid: number }>;
+    get(...args: unknown[]): Promise<unknown>;
+    all(...args: unknown[]): Promise<unknown[]>;
+  };
+};
+
+/** Normalisasi baris (Rupiah integer; source default ''). */
+function normLines(lines: JLine[]): JLine[] {
+  return lines.map((l) => ({
+    account_code: String(l.account_code),
+    debit: round(l.debit),
+    credit: round(l.credit),
+    source: l.source ? String(l.source) : '',
+  }));
+}
+
 /** Saldo (debit - credit) tiap akun di `codes` SEBELUM `before`. */
 function priorBalances(db: JdB, codes: string[], before: string): Map<string, number> {
   const map = new Map<string, number>();
@@ -126,6 +152,29 @@ function priorBalances(db: JdB, codes: string[], before: string): Map<string, nu
        GROUP BY account_code`
     )
     .all(before, ...codes) as { account_code: string; d: number; c: number }[];
+  for (const r of rows) map.set(r.account_code, round(r.d) - round(r.c));
+  return map;
+}
+
+/** Async mirror dari priorBalances (dipakai postJournalInTx, TxDb). */
+async function priorBalancesTx(
+  db: TxDb,
+  codes: string[],
+  before: string
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  for (const c of codes) map.set(c, 0);
+  if (codes.length === 0) return map;
+  const inList = codes.map(() => '?').join(',');
+  const rows = (await db
+    .prepare(
+      `SELECT account_code, COALESCE(SUM(debit),0) d, COALESCE(SUM(credit),0) c
+       FROM journal_lines jl
+       JOIN journal_entries je ON je.id = jl.entry_id
+       WHERE je.entry_date < ? AND jl.account_code IN (${inList})
+       GROUP BY account_code`
+    )
+    .all(before, ...codes)) as { account_code: string; d: number; c: number }[];
   for (const r of rows) map.set(r.account_code, round(r.d) - round(r.c));
   return map;
 }
@@ -198,6 +247,59 @@ export function postJournal(db: JdB, input: JSpec): string {
     }
     throw e;
   }
+}
+
+/**
+ * W1.3 auto-posting: varian ASINKRON (lapisan API) dari postJournal, utk
+ * dijalankan DI DALAM transaksi pemanggil (route API, TxDb dari db.ts):
+ * TIDAK membuka BEGIN/COMMIT sendiri, jadi write GL ikut commit/rollback
+ * atomik dgn write bisnis. Semantik sama dgn postJournal: tolak jurnal
+ * tak seimbang (JOURNAL_BAL), idempoten via UNIQUE(ref_table, ref_id,
+ * type) -- posting ulang = no-op (kembalikan id yang ada).
+ */
+export async function postJournalInTx(db: TxDb, input: JSpec): Promise<string> {
+  const lines = normLines(input.lines);
+  if (lines.length === 0) throw new Error('postJournalInTx: no lines');
+  if (!isBalanced(lines)) {
+    throw new Error('postJournalInTx: journal not balanced (SUM debit != SUM credit)');
+  }
+  const codes = Array.from(new Set(lines.map((l) => l.account_code)));
+  const prior = await priorBalancesTx(db, codes, input.entry_date);
+
+  if (input.ref_id !== null && input.ref_id !== undefined) {
+    const ex = (await db
+      .prepare(
+        'SELECT id FROM journal_entries WHERE ref_table = ? AND ref_id = ? AND type = ?'
+      )
+      .get(input.ref_table, String(input.ref_id), input.type)) as
+      | { id: string }
+      | undefined;
+    if (ex && ex.id) return ex.id;
+  }
+
+  await db
+    .prepare(
+      'INSERT INTO journal_entries (id, ref_table, ref_id, entry_date, type, desc, created_by, reversed_by) ' +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, '')"
+    )
+    .run(
+      input.id,
+      input.ref_table,
+      input.ref_id === null ? null : String(input.ref_id),
+      input.entry_date,
+      input.type,
+      input.desc ?? '',
+      input.created_by ?? null
+    );
+  const ins = db.prepare(
+    'INSERT INTO journal_lines (entry_id, account_code, debit, credit, balance_running, source) ' +
+      'VALUES (?, ?, ?, ?, ?, ?)'
+  );
+  for (const l of lines) {
+    const bal = (prior.get(l.account_code) ?? 0) + round(l.debit) - round(l.credit);
+    await ins.run(input.id, l.account_code, round(l.debit), round(l.credit), bal, l.source ?? '');
+  }
+  return input.id;
 }
 
 /**

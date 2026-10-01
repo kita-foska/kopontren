@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, getSettings, tx } from '@/db';
 import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
+import { journalForCashEntry, postJournalInTx } from '@/lib/jurnal';
 import { notifyCashBalance } from '@/lib/notify';
 import { parsePaySplit } from '@/lib/pay-methods';
 
@@ -138,11 +139,31 @@ export async function POST(req: Request) {
   if (!String(b.label || '').trim() || amount <= 0)
     return NextResponse.json({ error: 'Uraian & nominal wajib' }, { status: 400 });
   const d = await db();
-  const info = await d
-    .prepare('INSERT INTO cash_entries (type, label, amount, created_by) VALUES (?, ?, ?, ?)')
-    .run(type, String(b.label).trim(), amount, user.id);
+  // W1.3 auto-posting GL (gated: settings gl_enabled, default off ->
+  // no-op). Insert + jurnal sekarang dalam SATU tx: atomik.
+  const glOn = (await getSettings()).gl_enabled === '1';
+  const label = String(b.label).trim();
+  const created_at = new Date().toISOString();
+  const info = await tx(d, async () => {
+    const r = await d
+      .prepare('INSERT INTO cash_entries (type, label, amount, created_by) VALUES (?, ?, ?, ?)')
+      .run(type, label, amount, user.id);
+    if (glOn) {
+      await postJournalInTx(
+        d,
+        journalForCashEntry({
+          id: Number(r.lastInsertRowid),
+          type,
+          label,
+          amount,
+          created_at,
+        })
+      );
+    }
+    return r;
+  });
   await logAudit(user, 'kas:' + type, 'cash_entries', Number(info.lastInsertRowid), undefined, {
-    label: String(b.label).trim(),
+    label,
     amount,
   }, req);
   invalidate('kas:');
