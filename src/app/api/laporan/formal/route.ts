@@ -28,7 +28,7 @@ export const FORMAL_NOTES: string[] = [
   'D=K (rekon #15 JOURNAL_BAL): bila flag_rekon15=true, angka formal TIDAK dianggap otoritatif -- periksa cek JOURNAL_BAL di /admin/rekonsiliasi.',
   'Laba/rugi berjalan (SUM 4xxx - SUM 5xxx) belum ditutup ke 3020; penutupan manual periodik (jurnal closing, Sek.3.2.6).',
   'Wakaf (1120 + 6020) bersifat memo dan TIDAK dijumlahkan ke total aset.',
-  'Cache 60 detik (prefix lapformal:); tombol Muat ulang dapat data maks 60 dtk basi, mutasi GL langsung meng-invalidate gl:.',
+  'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate laporan -- tunggu TTL (60 dtk) atau tekan Muat ulang.',
 ];
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -55,10 +55,13 @@ export async function GET(req: Request) {
     );
 
   let asOf = (url.searchParams.get('as_of') ?? '').trim();
-  if (!DATE_RE.test(asOf)) asOf = wibToday();
-  const at = nextDay(asOf);
+  if (!DATE_RE.test(asOf) || Number.isNaN(Date.parse(asOf + 'T00:00:00Z')))
+    asOf = wibToday();
 
   try {
+    // `at` dihitung di dalam try: nextDay() dapat melempar RangeError pada
+    // tanggal invalid; selalu tertangkap -> balas JSON 500, bukan HTML 500.
+    const at = nextDay(asOf);
     const payload = await cached('lapformal:' + report + ':' + at, async () => {
       const d = await db();
       const posisi = await buildPosisi(d, at);

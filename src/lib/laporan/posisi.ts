@@ -215,6 +215,14 @@ export async function buildPosisi(db: QueryDb, at: string): Promise<PosisiPayloa
       balanced,
       gap,
     },
+    // B4 (audit W2.2): flag_rekon15 ini PROXY D=K GLOBAL -- SUM(debit) =
+    // SUM(credit) seluruh journal_lines s.d. `at` (lihat journalTotals),
+    // BUKAN cek per-entry + orphan JOURNAL_BAL yang otoritatif (rekon #15
+    // di /admin/rekonsiliasi). Karena journalTotals JOIN journal_entries,
+    // journal_lines orphan (entry_id tak terdaftar di journal_entries) TIDAK
+    // ikut dijumlahkan di sini, dan imbangan per-entry yang saling
+    // net-zero global juga lolos. Untuk validasi penuh, arahkan ke
+    // /admin/rekonsiliasi (#15 JOURNAL_BAL: per-entry + orphan).
     flag_rekon15: !balanced,
   };
 }

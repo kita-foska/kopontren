@@ -214,6 +214,10 @@ function PosisiStatement({ p }: { p: FormalResp }) {
   const t = p.totals;
   const nameMap = new Map(p.coa.map((c) => [c.code, c.name]));
   const names = (code: string) => nameMap.get(code) ?? code;
+  // Wakaf (1120+6020) memo: TIDAK dijumlahkan ke total_aset, tapi dipakai di
+  // rekon (aset + wakaf = kewajib + ekuitas_menutup) agar selisih = 0 saat
+  // D=K seimbang (invariant test A: total_aset + wakafTotal === ...).
+  const wakafTotal = s.wakaf_memo.reduce((a, r) => a + r.value, 0);
 
   return (
     <div className="grid gap-3 md:grid-cols-2">
@@ -264,22 +268,26 @@ function PosisiStatement({ p }: { p: FormalResp }) {
         </div>
       </div>
 
-      {/* Rekon D=K: aset vs (kewajiban + ekuitas menutup). */}
+      {/* Rekon D=K: aset (+ wakaf memo) vs (kewajiban + ekuitas menutup). */}
       <div className="card p-4 md:col-span-2">
         <p className="mb-2 text-sm font-bold">Rekonsiliasi posisi</p>
         <Line label="Total aset" value={t.total_aset} />
+        <Line label="Wakaf memo (1120+6020, tak dijumlahkan ke aset)" value={wakafTotal} />
         <Line
           label="Kewajiban + ekuitas menutup"
           value={t.total_kewajiban + t.total_ekuitas_menutup}
         />
         <Line
           label="Selisih"
-          value={t.total_aset - (t.total_kewajiban + t.total_ekuitas_menutup)}
+          value={t.total_aset + wakafTotal - (t.total_kewajiban + t.total_ekuitas_menutup)}
           strong
         />
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          Selisih tak nol wajar sebelum jurnal closing memindahkan laba/rugi berjalan ke
-          3020 (Sek.3.2.6); selisihnya = laba/rugi berjalan yang belum ditutup.
+          Wakaf (1120+6020) memo TIDAK dijumlahkan ke total aset; di rekon ini aset
+          ditambah kembali wakaf memo sehingga selisih = 0 saat D=K seimbang. Laba/rugi
+          berjalan (4xx - 5xx) sudah termuat dalam ekuitas menutup -- bukan sumber
+          selisih. Jurnal closing memindahkan laba/rugi berjalan ke 3020 (Sek.3.2.6)
+          untuk neraca setelah penutupan.
         </p>
       </div>
     </div>
