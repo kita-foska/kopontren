@@ -177,10 +177,10 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       + `public/tutorial/akuntansi-proposal.html` re-sync (commit tashih P3).
       Implementasi spesifikasi koreksi + switch jembatan `zakat_history` =
       commit F3.4+ (R6).
-- [ ] **P3 Soal 3 (modal zakat / `valuation_mode`) — jawaban final pengasuh
-      belum turun** (catatan B = nilai pasar saat jatuh haul, modal + untung;
-      opsi A = HPP modal tetap di kaki). `valuation_mode` tetap provisional
-      sampai jawaban; terapkan saat turun (komit terpisah).
+- [x] **P3 Soal 3 (modal zakat / `valuation_mode`) — RESOLVED 1 Okt 2026: Opsi B (modal + untung, harga pasar saat jatuh haul); `valuation_mode` = market FINAL.**
+      (commit `66a619b` C1 + `ddd35e1` C2; sitasi MUI dihapus, basis = mayoritas ulama
+      Syafi'i/Maliki/Hanbali + Muktamar NU ke-35; `P3-TASHIH-ZAKAT.md` §D).
+      implementasi spesifikasi = commit terpisah (F3.4+, R6) (komit terpisah).
 - [x] FASE 2 — Step 3 (dokumen P4 hanya) — SELESAI (26 Sep,
       commit 3, dual-push master+main): mapping akuntansi P4
       (supplier ≠ revenue Kopontren; ujrah = revenue — off-P&L

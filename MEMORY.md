@@ -1,5 +1,24 @@
 # MEMORY
 
+## 2026-10-01
+### P3 ZAKAT TIJARAH LEPAS (1 Okt 2026) — Soal 3 final + sitasi MUI dihapus
+- **P3 Soal 3 (modal / `valuation_mode`) = RESOLVED → Opsi B FINAL**
+  (commit `66a619b`, C1): modal + untung, harga pasar saat jatuh haul;
+  `valuation_mode` = market FINAL.
+- **Sitasi fatwa MUI dihapus dari semua dokumentasi** (commit `ddd35e1`, C2):
+  fatwa MUI TIDAK DICANTUMKAN (nomor MUI utk zakat belum
+  terverifikasi; no. lama = fatwa musyarakah, domain DSN-MUI, tak berlaku
+  utk zakat). Basis tashih kini = mayoritas ulama (Syafi'i / Maliki /
+  Hanbali) + Muktamar NU ke-35 (nisab 85 g emas murni 24K). grep
+  grep nomor fatwa MUI = 0 di semua file.
+- **Snapshot + mirror ter-regenerate** (C3): `docs/AKUNTANSI-PROPOSAL.html`
+  + re-sync `public/tutorial/akuntansi-proposal.html` via
+  `node scripts/sync-tutorial.mjs` (SYNC-TUTORIAL-OK, 9 file), 0 MUI.
+- **P3 LEPAS / SELESAI**: semua open item P3 TERJAWAB — Soal 3 = Opsi B;
+  verifikasi MUI = RESOLVED-removed (jadi catatan basis). Sisa P3 =
+  implementasi spesifikasi F3.4+ (R6, commit terpisah); P4 konsinyasi
+  tetap open (E25 dasar ujrah V1).
+
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
 - **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3
