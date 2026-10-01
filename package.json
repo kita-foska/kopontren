@@ -28,7 +28,8 @@
     "test:roles": "node scripts/test-roles.ts",
     "test:golden": "node scripts/test-golden.ts",
     "test:invariants": "node scripts/test-invariants.ts",
-    "test:rekon": "node scripts/test-rekonsiliasi.ts"
+    "test:rekon": "node scripts/test-rekonsiliasi.ts",
+    "test:gl": "node scripts/test-gl.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.0",

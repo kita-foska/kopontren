@@ -577,6 +577,130 @@ async function migrate(d: Db) {
       ")"
   );
   await d.exec("CREATE INDEX IF NOT EXISTS idx_notif_logs_notif ON notification_logs(notification_id)");
+
+  // F3.4+ GL (skema v21): Chart of Accounts (52 akun) + tabel jurnal.
+  // Akuntansi F3.4+ (docs/AKUNTANSI-PROPOSAL, seksi 2 dan 3):
+  // coa = COA (APL open; PKGF pending + needs_decision=1; 5050 closed).
+  // journal_entries: id uuid (uuidv4 client-side), UNIQUE(ref_table,ref_id,
+  // type) utk idempotensi auto-posting (ulang posting transaksi yang sama
+  // = NO-OP karena ref_id sudah tercatat). journal_lines: composite PK
+  // (entry_id,account_code,source); source NOT NULL karena bagian dari PK.
+  // "group" di-quote karena reserved word SQL.
+  // Purely additive: CREATE TABLE IF NOT EXISTS + INSERT ON CONFLICT DO
+  // NOTHING -> DB existing aman, tanpa ubah data lama. BACKUP DB WAJIB
+  // sebelum deploy (skema baru).
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS coa(' +
+      'code TEXT PRIMARY KEY, ' +
+      'name TEXT NOT NULL, ' +
+      '"group" TEXT NOT NULL, ' +
+      'kind TEXT NOT NULL, ' +
+      "status TEXT NOT NULL DEFAULT 'open', " +
+      'pap_ref TEXT, ' +
+      'needs_decision INTEGER NOT NULL DEFAULT 0, ' +
+      'created_by TEXT, ' +
+      "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))" +
+      ')'
+  );
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS journal_entries(' +
+      'id TEXT PRIMARY KEY, ' +
+      'ref_table TEXT NOT NULL, ' +
+      'ref_id TEXT, ' +
+      'entry_date TEXT NOT NULL, ' +
+      "type TEXT NOT NULL DEFAULT 'normal', " +
+      "desc TEXT NOT NULL DEFAULT '', " +
+      'created_by TEXT, ' +
+      "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), " +
+      'reversed_by TEXT, ' +
+      'UNIQUE(ref_table, ref_id, type)' +
+      ')'
+  );
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS journal_lines(' +
+      'entry_id TEXT NOT NULL, ' +
+      'account_code TEXT NOT NULL, ' +
+      'debit INTEGER NOT NULL DEFAULT 0, ' +
+      'credit INTEGER NOT NULL DEFAULT 0, ' +
+      'balance_running INTEGER, ' +
+      "source TEXT NOT NULL DEFAULT '', " +
+      'PRIMARY KEY(entry_id, account_code, source)' +
+      ')'
+  );
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_jl_acct ON journal_lines(account_code, entry_id)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_je_date ON journal_entries(entry_date)');
+  // COA seed: 52 akun. pap_ref dibiarkan NULL sampai teks PAP final.
+  // ON CONFLICT(code) DO NOTHING -> non-destruktif: akun yang sudah ada
+  // (mis. ditambahkan admin) tidak ditimpa.
+  {
+    const coaSeed: Array<[string, string, string, string, string, number]> = [
+      // 10xx aset
+      ['1010', 'Kas Toko', '10xx', 'aset', 'open', 0],
+      ['1020', 'Kas Bank', '10xx', 'aset', 'open', 0],
+      ['1030', 'Piutang Penjualan', '10xx', 'aset', 'open', 0],
+      ['1040', 'Persediaan', '10xx', 'aset', 'open', 0],
+      ['1050', 'Aset Tetap', '10xx', 'aset', 'open', 0],
+      ['1060', 'Akumulasi Penyusutan', '10xx', 'aset', 'pending', 1],
+      ['1070', 'Piutang Murabahah', '10xx', 'aset', 'pending', 1],
+      ['1080', 'Investasi Mudharabah', '10xx', 'aset', 'pending', 1],
+      ['1090', 'Investasi Musyarakah', '10xx', 'aset', 'pending', 1],
+      ['1100', 'Kas ZIS', '10xx', 'aset', 'open', 0],
+      ['1110', 'Piutang Zakat', '10xx', 'aset', 'pending', 1],
+      ['1120', 'Aset Wakaf', '10xx', 'aset', 'open', 0],
+      // 20xx kewajiban
+      ['2010', 'Hutang Pembelianan', '20xx', 'kewajiban', 'open', 0],
+      ['2020', 'Hutang Ujrah Konsinyasi', '20xx', 'kewajiban', 'open', 0],
+      ['2030', 'Utang Cashback Member', '20xx', 'kewajiban', 'open', 0],
+      ['2040', 'Kewajiban Akad (Ujrah/Tijarah/Mudharabah)', '20xx', 'kewajiban', 'pending', 1],
+      ['2050', 'Simpanan Pokok', '20xx', 'kewajiban', 'open', 0],
+      ['2060', 'Simpanan Wajib', '20xx', 'kewajiban', 'open', 0],
+      ['2070', 'Simpanan Sukarela', '20xx', 'kewajiban', 'open', 0],
+      ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'pending', 1],
+      ['2090', 'ZIS Terkumpul Belum Disalurkan', '20xx', 'kewajiban', 'pending', 1],
+      ['2100', 'Kewajiban Lain-lain', '20xx', 'kewajiban', 'pending', 1],
+      // 30xx ekuitas
+      ['3010', 'Modal Penyertaan', '30xx', 'ekuitas', 'open', 0],
+      ['3020', 'SHU Ditahan', '30xx', 'ekuitas', 'pending', 1],
+      ['3030', 'SHU Cadangan Umum', '30xx', 'ekuitas', 'pending', 1],
+      ['3040', 'SHU Cadangan Khusus', '30xx', 'ekuitas', 'pending', 1],
+      ['3050', 'SHU Jasa Anggota', '30xx', 'ekuitas', 'pending', 1],
+      ['3060', 'SHU Dibagi', '30xx', 'ekuitas', 'pending', 1],
+      ['3070', 'Koreksi Saldo', '30xx', 'ekuitas', 'open', 0],
+      // 40xx pendapatan
+      ['4010', 'Pendapatan Penjualan', '40xx', 'pendapatan', 'open', 0],
+      ['4020', 'Potongan & Diskon (kontra pendapatan)', '40xx', 'pendapatan', 'open', 0],
+      ['4030', 'Retur Penjualan', '40xx', 'pendapatan', 'open', 0],
+      ['4040', 'Ujrah Konsinyasi', '40xx', 'pendapatan', 'pending', 1],
+      ['4050', 'Pendapatan Ijarah', '40xx', 'pendapatan', 'pending', 1],
+      ['4060', 'Laba Murabahah', '40xx', 'pendapatan', 'pending', 1],
+      ['4070', 'Bagi Hasil Mudharabah', '40xx', 'pendapatan', 'pending', 1],
+      ['4080', 'Bagi Hasil Musyarakah', '40xx', 'pendapatan', 'pending', 1],
+      ['4090', 'ZIS Masuk', '40xx', 'pendapatan', 'open', 0],
+      ['4100', 'Wakaf Masuk', '40xx', 'pendapatan', 'open', 0],
+      // 50xx beban
+      ['5010', 'HPP (Beban Persediaan)', '50xx', 'beban', 'open', 0],
+      ['5020', 'Retur COGS (reversal)', '50xx', 'beban', 'open', 0],
+      ['5030', 'Beban Operasional', '50xx', 'beban', 'open', 0],
+      ['5040', 'Beban Penyusutan Aset Tetap', '50xx', 'beban', 'pending', 1],
+      ['5050', 'Denda/Keterlambatan (clearing)', '50xx', 'beban', 'closed', 0],
+      ['5060', 'Bagi Hasil Partner Mudharabah', '50xx', 'beban', 'pending', 1],
+      ['5070', 'Beban Ijarah', '50xx', 'beban', 'pending', 1],
+      ['5080', 'Distribusi SHU', '50xx', 'beban', 'pending', 1],
+      ['5090', 'Zakat Keluar', '50xx', 'beban', 'pending', 1],
+      ['5100', 'Infak/Sedekah Keluar', '50xx', 'beban', 'open', 0],
+      // 60xx syariah/PAP
+      ['6010', 'Dana Pesantren (memo)', '60xx', 'syariah', 'pending', 1],
+      ['6020', 'Aset Wakaf (memo)', '60xx', 'syariah', 'open', 0],
+      ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'pending', 1],
+    ];
+    for (const [code, name, grp, kind, status, nd] of coaSeed) {
+      await d
+        .prepare(
+          'INSERT INTO coa (code, name, "group", kind, status, needs_decision) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(code) DO NOTHING'
+        )
+        .run(code, name, grp, kind, status, nd);
+    }
+  }
 }
 
 
@@ -635,6 +759,13 @@ export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
   // zero-change). Tanpa row di DB, getSettings tetap mengembalikan default
   // ini (tidak perlu migrasi/schema baru — tabel settings key-value).
   theme: 'maroon',
+  // F3.4+ GL (skema v21): saklar General Ledger. '0' = auto-posting TIDAK
+  // aktif (zero behavior change pada V1). '1' = transaksi keuangan
+  // (sales/kas/expenses/purchases) membuat jurnal GL.
+  gl_enabled: '0',
+  // F3.4+: penanda koperasi tercatat/notaris (status). Default '0';
+  // dipakai laporan GL / ekuitas koperasi.
+  coop_registered: '0',
 };
 
 export async function getSettings(): Promise<Record<string, string>> {
@@ -848,7 +979,15 @@ export async function saveZakatSettings(
 // lihat KEUANGAN_NOTES di lib/keuangan.ts). Purely additive (execColumn
 // idempoten, tanpa ubah data); DB stempel v19 menjalankan fullInit sekali
 // lagi saat cold start berikutnya (~15-20 s, satu kali).
-const SCHEMA_VERSION = 20;
+// Bump v21 (2026-10-01, F3.4+ W1.1): skema GL - tabel coa (52 akun COA;
+// APL open, PKGF pending + needs_decision=1, 5050 closed), journal_entries
+// (id uuid, UNIQUE(ref_table,ref_id,type) utk idempotensi auto-posting) +
+// journal_lines (composite PK; source NOT NULL) + idx_jl_acct/idx_je_date;
+// settings gl_enabled/coop_registered (default '0', tanpa ubah perilaku V1).
+// Purely additive (CREATE TABLE IF NOT EXISTS + INSERT ON CONFLICT DO
+// NOTHING); DB stempel v20 menjalankan fullInit sekali lagi saat cold
+// start berikutnya. BACKUP DB WAJIB sebelum deploy.
+const SCHEMA_VERSION = 21;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
