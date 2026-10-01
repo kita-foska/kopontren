@@ -215,8 +215,10 @@ Perlu ditindaklanjuti: item **1** (koreksi) & item **3** (belum dipilih).
 1. **Soal 3 (modal)**: RESOLVED 1 Okt 2026 — dipilih Opsi B (modal + untung, harga pasar saat jatuh haul); `valuation_mode` = market FINAL. (Opsi yang dipertimbangkan: A: HPP / B: nilai pasar /
    hanya-untung; jawaban sebelumnya menunggu tashih lanjutan; pola commit
    terpisah, seperti F3.3).
-2. **Verifikasi judul MUI Fatwa No. 78/2023** utk pengasuh
-   (TODO lama — tetap terbuka; koreksi sitasi §D dokumen P3).
+2. **Verifikasi judul MUI fatwa utk zakat** — RESOLVED-removed
+   1 Okt 2026 (nomor fatwa MUI utk zakat belum terverifikasi; dasar
+   diganti konsensus ulama Syafi'i/Maliki/Hanbali + Muktamar NU ke-35;
+   lihat §D dokumen P3).
 
 ## Lampiran — Teks Jawaban Tashih (asli, copy dari `P3-TASHIH-ZAKAT.html`)
 

@@ -139,7 +139,7 @@ Yang ADA dan relevan:
 | Akad (murabahah, mudharabah, musyarakah, ijarah, wakalah) | Hanya wakalah bil ujrah (konsinyasi, PROVISIONAL) | Akad lain: masuk lingkup sekarang/tidak? Detail aturan = PERLU TASHIH |
 | Bagi hasil | Tidak ada | Mudharabah/musyarakah belum dimodelkan |
 | Riba | Tidak ditemukan mekanisme bunga/denda-ke-pendapatan (SYARIAH-CHECKLIST B: loyalty = potongan/hibah, [x]) | Pertahankan; verifikasi ulang saat tashih |
-| Fatwa DSN-MUI (mis. zakat, wakaf) | Referensi zakat sudah dikoreksi (MUI Fatwa 78/2023, judul menunggu pengasuh; koreksi sitasi 26 Sep di P3-TASHIH-ZAKAT §D) | Tashih P3 masih terbuka → jangan finalkan zakat sebelum Fase 3 selesai |
+| Fatwa DSN-MUI (mis. zakat, wakaf) | Referensi zakat: sitasi fatwa MUI utk zakat DILEMAHKAN 1 Okt 2026 (no. belum terverifikasi); dasar = konsensus ulama Syafi'i/Maliki/Hanbali + Muktamar NU ke-35; lihat P3-TASHIH-ZAKAT §D | Tashih P3 masih terbuka → jangan finalkan zakat sebelum Fase 3 selesai |
 
 ### 4.3 PAP (Pedoman Akuntansi Pesantren, BI + MUI)
 | Aspek | Posisi app | Gap / pertanyaan tashih |

@@ -65,7 +65,7 @@
 
   <div class="note"><b>Penting:</b> dokumen ini adalah <b>materi musyawarah/review ulama, BUKAN fatwa</b>. Semua rumus di bawah hanya OPSI TEKNIS aplikasi — hukum tiap opsi diputuskan ulama. Prinsip: "Syariah nomer 1, fitur nomer 2."</div>
 
-  <div class="note"><b>Status (26 Sep 2026): PROVISIONAL.</b> Implementasi P3 Step 2 sudah berjalan di aplikasi: haul tetap 1 tahun (anchor <code>haul_start_date</code>; pembayaran = ta'jil, tidak me-reset), log verifikasi harga emas <code>zakat_gold_standards</code> (append-only), dan mode penilaian <code>valuation_mode</code> (market default / hpp fallback). Semua posisi — termasuk koreksi sitasi "DSN-MUI Fatwa No. 8/2008" → "MUI Fatwa No. 78/2023 [judul: menunggu pengasuh]" — menunggu tashih pengasuh; subject to correction.</div>
+  <div class="note"><b>Status (26 Sep 2026): PROVISIONAL.</b> Implementasi P3 Step 2 sudah berjalan di aplikasi: haul tetap 1 tahun (anchor <code>haul_start_date</code>; pembayaran = ta'jil, tidak me-reset), log verifikasi harga emas <code>zakat_gold_standards</code> (append-only), dan mode penilaian <code>valuation_mode</code> (market default / hpp fallback). Semua posisi menunggu tashih pengasuh; subject to correction. (1 Okt 2026: sitasi fatwa MUI yg belum terverifikasi dihapus; basis zakat = mayoritas ulama Syafi'i/Maliki/Hanbali + Muktamar NU ke-35 utk nisab 85 g.)</div>
 
   <div class="card">
     <h2>1. Latar Belakang (pendek)</h2>
@@ -103,7 +103,7 @@
 
     <div class="q">
       <b>Soal 3 — Modal (barang dagangan dinilai berapa).</b><br>
-      <span class="meta">Kondisi aplikasi (sejak 26 Sep): modal = stok × (mode <code>valuation_mode</code> "market": harga jual produk — V1 proxy harga pasar | mode "hpp": harga perolehan). Ada dua pendekatan baku: (a) modal murni — hanya untung yang dizakati (sebagian ulama Hanafi); (b) modal + untung (mayoritas &amp; MUI Fatwa No. 78/2023 [judul: menunggu pengasuh]) — dan bila (b), persediaan dinilai pada HPP atau harga jual saat jatuh haul? Jawaban provisional aplikasi: mode market (default) | hpp (fallback).</span><br>
+      <span class="meta">Kondisi aplikasi (sejak 26 Sep): modal = stok × (mode <code>valuation_mode</code> "market": harga jual produk — V1 proxy harga pasar | mode "hpp": harga perolehan). Ada dua pendekatan baku: (a) modal murni — hanya untung yang dizakati (sebagian ulama Hanafi); (b) modal + untung — mayoritas ulama (Syafi'i, Maliki, Hanbali) — dan bila (b), persediaan dinilai pada HPP atau harga jual saat jatuh haul? Jawaban provisional aplikasi: mode market (default) | hpp (fallback).</span><br>
       <b>Mengapa?</b> Memakai modal HPP sekarang (angka terendah, hati-hati terhadap harta) sudah cukup, atau harus ke nilai pasar / pendekatan hanya-untung?
     </div>
     <p class="tashih-hint"><b>Referensi pendekatan:</b> A — Modal HPP (kondisi saat ini) sah · B — Nilai pasar saat jatuh haul (modal + untung) · C — Pendekatan hanya-untung.</p>
@@ -159,10 +159,10 @@ saat presentasi.</pre>
       <tr><th>No</th><th>Kitab / rujukan</th><th>Bab / topik</th></tr>
       <tr><td>1</td><td>Mughni (Ibnu Qudamah)</td><td>Kitab Zakaat, bab zakat al-tijarah &amp; haul</td></tr>
       <tr><td>2</td><td>'Umdah al-Ahkam (Muwaffaqi)</td><td>Bab nisab al-tijarah &amp; penilaian harta</td></tr>
-      <tr><td>3</td><td>MUI Fatwa No. 78/2023 [judul: menunggu pengasuh]</td><td>Nisab 85 g, kadar 2,5%, haul 1 tahun, harta = total aset dagang</td></tr>
+      <tr><td>3</td><td>Mayoritas ulama (Syafi'i / Maliki / Hanbali)</td><td>Nisab 85 g, kadar 2,5%, haul 1 tahun, harta = total aset dagang</td></tr>
       <tr><td>4</td><td>(opsi) Al-Hawi / Kasyaf al-Qina'</td><td>Nilai budhl: perolehan vs pasar saat jatuh haul</td></tr>
     </table>
-    <p class="meta"><b>Koreksi sitasi (riset 26 Sep 2026):</b> baris 3 semula tertulis "DSN-MUI Fatwa No. 8/2008" — keliru: No. 08/DSN-MUI/IV/2000 = fatwa pembiayaan musyarakah, bukan zakat; DSN-MUI (Sharia Board MUI) berdomain muamalah/keuangan syariah, bukan fatwa zakat (domain Komisi Fatwa MUI). Nomor "78/2023" diberikan tim &amp; BELUM TERVERIFIKASI — judul &amp; substansi diverifikasi pengasuh sebelum dokumen ini jadi dasar tashih.</p>
+    <p class="meta"><b>Catatan sitasi (1 Okt 2026):</b> referensi fatwa MUI utk zakat yg dahulu dicantumkan DILEMAHKAN — nomor fatwa MUI utk zakat tijarah belum terverifikasi, dan no. lama (fatwa pembiayaan musyarakah, domain DSN-MUI muamalah) tidak berlaku utk zakat. Dasar tashih kini memakai konsensus ulama (Syafi'i / Maliki / Hanbali) + Muktamar NU ke-35 (nisab 85 g emas murni 24K).</p>
     <p class="meta">Halaman spesifik silakan dilengkapi panel. Dokumen sumber: P3-TASHIH-ZAKAT.md (repo kopontren).</p>
   </details>
 

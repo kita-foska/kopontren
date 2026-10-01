@@ -56,7 +56,9 @@
   `public/tutorial/akuntansi-proposal.html` + TODO.md (item P3
   terjawab + open item baru: jawaban final Soal 3) + MEMORY.
 - **Sisa/open**: (1) jawaban final Soal 3 (modal) dari pengasuh;
-  (2) verifikasi judul MUI Fatwa No. 78/2023; (3) implementasi
+  (2) verifikasi judul MUI fatwa utk zakat — RESOLVED-removed 1
+  Okt 2026 (no. belum terverifikasi; dasar = konsensus ulama
+  Syafi'i/Maliki/Hanbali + Muktamar NU ke-35); (3) implementasi
   spesifikasi koreksi + switch `zakat_history` = commit F3.4+
   (R6); P4 konsinyasi tetap open.
 ### F3.3 TERJAWAB — jawaban tashih GUS FI + revisi + regenerate (3 commit, dual-push master+main)
@@ -1343,11 +1345,12 @@
   masa depan = 0), settlement balance, fallback anchor. SEMUA PASS.
 - **Verifikasi**: `npm run test:zakat` 37/37 ALL_PASS;
   `npx tsc --noEmit` EXIT 0; `next build` EXIT 0.
-- **Koreksi sitasi P3 (riset 26 Sep)**: "DSN-MUI Fatwa No.
-  8/2008" keliru (No. 08/DSN-MUI/IV/2000 = musyarakah, bukan
-  zakat; DSN-MUI berdomain muamalah) → "MUI Fatwa No. 78/2023
-  [judul: menunggu pengasuh]" (nomor dari tim, BELUM TERVERIFIKASI
-  — placeholder sampai pengasuh verifikasi). Tersimpan di
+- **Catatan sitasi P3 (1 Okt 2026)**: referensi fatwa MUI utk zakat
+  yg dahulu dicantumkan DILEMAHKAN — nomor fatwa MUI utk zakat
+  tijarah belum terverifikasi, dan no. lama (fatwa pembiayaan
+  musyarakah, domain DSN-MUI muamalah) tidak berlaku utk zakat.
+  Dasar tashih kini memakai konsensus ulama (Syafi'i / Maliki /
+  Hanbali) + Muktamar NU ke-35 (nisab 85 g emas murni 24K). Tersimpan di
   `P3-TASHIH-ZAKAT.md` §D (md+html), SYARIAH-CHECKLIST §F, TODO.
 - **Catatan**: skema v18 add-ops — DB turunan (Vercel Turso)
   butuh migration/PRAGMA saat cold start; jangan rewrite data.

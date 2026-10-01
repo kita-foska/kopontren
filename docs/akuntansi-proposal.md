@@ -1009,8 +1009,9 @@ F3.4+ mulai.
   P3 = sudah turun, kecuali modal). **P4 terjawab 30 Sep
   (TERJAWAB — §15.5)** — tidak terpengaruh koreksi P3.
   Implementasi spesifikasi = commit F3.4+ (sesuai
-  roadmap §12); open item: verifikasi judul MUI Fatwa
-  No. 78/2023.
+  roadmap §12); open item: verifikasi judul MUI fatwa utk zakat
+  RESOLVED-removed 1 Okt 2026 (nomor belum terverifikasi; dasar =
+  konsensus ulama Syafi'i/Maliki/Hanbali + Muktamar NU ke-35).
 
 ### 15.5 Tashih P4 konsinyasi / wakalah bil ujrah (30 Sep 2026 — GUS FI, TERJAWAB)
 

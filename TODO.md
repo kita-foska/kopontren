@@ -160,9 +160,11 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       `/api/zakat` & `/api/zakat/gold-standards` + UI `/admin/zakat`
       + `test:zakat` (37 kasus). **Status: Provisional — menunggu
       tashih pengasuh. Subject to correction.**
-- [ ] Diverifikasi: judul MUI Fatwa No. 78/2023 (untuk pengasuh) —
-      referensi lama "DSN-MUI 8/2008" keliru (riset 26 Sep; lihat
-      P3-TASHIH-ZAKAT.md §D footnote koreksi sitasi).
+- [x] Diverifikasi judul MUI fatwa utk zakat — RESOLVED-removed
+      1 Okt 2026 (nomor fatwa MUI utk zakat belum terverifikasi;
+      dasar diganti konsensus ulama Syafi'i/Maliki/Hanbali + Muktamar
+      NU ke-35 utk nisab 85 g emas murni 24K; lihat P3-TASHIH-ZAKAT.md
+      §D).
 - [x] FASE 2 — **P3 tashih zakat TERJAWAB (30 Sep 2026, GUS FI — DITERIMA,
       `P3-TASHIH-ZAKAT`)**: 1 Setujuan, 0 Ora, 1 Koreksi; Soal 3 belum dipilih
       (catatan B). (1) Haul KOREKSI: anchor `2025-10-22` (toko koperasi
