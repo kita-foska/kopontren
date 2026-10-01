@@ -1414,6 +1414,23 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
        layer tak join COA status -> posting tetap tampil di trial
        balance; flip = governance-only).
 
+   - [x] **F3.4+ W2.2 LEPAS 1 Okt** (`d91dbd0`; ACC Gus Fi; semua
+          gate lulus): Laporan Posisi Keuangan formal (Neraca) +
+          API `?report=posisi` + shell tab `/admin/laporan`. 6 file
+          (+779/-12): `lib/laporan/posisi.ts` (buildPosisi
+          kumulatif; aset neto 1050-1060 sign fix; wakaf memo tak
+          dijumlahkan; D=K -> flag_rekon15 proxy rekon #15 tanpa
+          import rekonsiliasi.ts) + `api/laporan/formal/route.ts`
+          (tier laporan; batas nextDay; cache 60 dtk lapformal:;
+          try/catch JSON 500) + `laporan-formal-client.tsx` (shell
+          tab Posisi + V1 lazy; warning merah D!=K + link
+          /admin/rekonsiliasi; file V1 tak diubah) +
+          `scripts/test-laporan.ts` (node:sqlite in-memory, 4 fase,
+          37 assert) + `page.tsx` (+5/-11) + `package.json`
+          (test:laporan). **Progres Wave 2: WAVE 2 = 2/7.**
+          Standing rule: audit pasca-wave W2.2 (bug+UX+UI) WAJIB
+          sebelum W2.3.
+
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
   loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,

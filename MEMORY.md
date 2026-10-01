@@ -83,6 +83,44 @@
   - W3/W4 (konsinyasi end-to-end, OQ-7 Option C): goods-receipt
     D1040/K2020 + settlement D2020/K1010 (re-introduce tipe
     `consignment_settle` + builder + hook aksi pay).
+
+### F3.4+ W2.2: Laporan Posisi formal (Neraca) + API + shell tab /admin/laporan - SELESAI
+1 Okt 2026 (commit `d91dbd0`, dual-push master+main)
+- **6 file (+779/-12)**: 4 baru + 2 ubah:
+  `src/lib/laporan/posisi.ts` (modul import-free `buildPosisi(db,at)`:
+  neraca kumulatif s.d. `at`; aset lancar 1010..1110; aset tetap neto
+  = 1050 - 1060 (akumulasi kredit-normal, sign fix 1060 = kredit-debit);
+  investasi syariah 1080/1090; wakaf memo 1120/6020 TIDAK dijumlahkan
+  ke total; kewajiban lancar/anggota/ZIS; ekuitas 3010-3070;
+  laba/rugi berjalan = SUM 4xx - SUM 5xx; total_ekuitas_menutup =
+  total_ekuitas + laba_rugi_berjalan; D=K = SUM(debit)=SUM(credit) s.d.
+  `at` -> `flag_rekon15` (proxy rekon #15 JOURNAL_BAL TANPA import
+  rekonsiliasi.ts)) + `src/app/api/laporan/formal/route.ts` (GET
+  `?report=posisi&as_of=YYYY-MM-DD`; guard tier `laporan`; batas
+  kumulatif `at = nextDay(asOf)` (entry_date < at); cache 60 dtk prefix
+  `lapformal:`; `as_of` default hari ini WIB via `wibToday()`;
+  try/catch -> JSON 500 tak bocor HTML; `FORMAL_NOTES` 5 item;
+  dispatch report lain (laba-rugi/LPE/LAK/CALK) menyusul)
+  + `src/components/admin/laporan-formal-client.tsx` (shell tab
+  "Laporan Posisi" + "Laporan V1 (arsip)"; panel neraca + badge D=K +
+  auto-posting + kopontren; warning merah bila D!=K + link
+  /admin/rekonsiliasi; V1 di-lazy via `dynamic()`, file V1 tak diubah)
+  + `scripts/test-laporan.ts` (harness `node:sqlite` in-memory, 4 fase:
+  (A) seimbang (B) batas periode kumulatif (C) tak seimbang flag
+  (D) DB kosong; 37 assert) + `page.tsx` (+5/-11 ->
+  `LaporanFormalClient`, V1 di-impor lazy) + `package.json` (+2/-1:
+  `test:laporan` + `test:all`).
+- **Gate bersih**: `tsc --noEmit` exit 0; `test:laporan` 37/37 ok;
+  0 non-ASCII di 6 file; `public/sw.js` + V1
+  `laporan-admin-client.tsx` tak tersentuh; ref remote `origin/master`
+  + `origin/main` identik @ `d91dbd0`.
+- **Progres Wave 2 (roadmap 12)**: W2.1 `ca0f39f`; W2.2 `d91dbd0`.
+  **WAVE 2 = 2/7**.
+  - W2.3+ (menyusul): report lain di dispatch `?report=` (laba-rugi,
+    LPE, LAK, CALK); penutupan jurnal closing (4xx/5xx -> 3020).
+  - **Standing rule**: audit pasca-wave W2.2 (bug + UX + UI) WAJIB
+    sebelum mulai W2.3.
+
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
 - **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3
