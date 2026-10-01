@@ -8,8 +8,25 @@
  * (3) jurnal UNIQUE(ref_table,ref_id,type) + composite PK.
  * (settings gl_enabled/coop_registered default '0' diverifikasi tsc+diff,
  *  bukan di harness ini agar tetap import-free / strip-only safe.)
- * Phase 2/3 (post/reverse + gl reads) menyusul di W1.2.
+ * W1.2: Phase 2 (engine jurnal: postJournal idempoten+tx, reversi, mapper
+ * Wave-1) + Phase 3 (gl read: accountBalance/trialBalance/accountStatement
+ * + openingBalance). Phase 2/3 db terpisah agar saldo tetap seimbang.
  */
+import {
+  postJournal,
+  reverseJournal,
+  isBalanced,
+  openingBalance,
+  saleCashAccount,
+  cashEntryCounterpart,
+  journalForSale,
+  journalForPurchase,
+  journalForExpense,
+  journalForCashEntry,
+} from '../src/lib/jurnal.ts';
+import type { JdB } from '../src/lib/jurnal.ts';
+import { accountBalance, trialBalance, accountStatement } from '../src/lib/gl.ts';
+import type { QueryDb } from '../src/lib/keuangan.ts';
 let passes = 0;
 let failures = 0;
 function ok(name: string, cond: boolean, detail = ''): void {
@@ -108,7 +125,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const cnt = (q: string): number => (db!.prepare(q).get() as { c: number } | undefined)?.c ?? 0;
+  const cnt = (q: string, d?: typeof db): number => ((d ?? db!)!.prepare(q).get() as { c: number } | undefined)?.c ?? 0;
 
   // 2. seed + idempoten (ON CONFLICT DO NOTHING -> seed ulang tetap 52).
   const insCoa = db!.prepare(
@@ -153,8 +170,171 @@ async function main(): Promise<void> {
   }
   ok('journal_lines composite PK tolak duplikat', pkRejected);
 
+  // ===== Phase 2 (W1.2): engine jurnal (postJournal/reverseJournal) =====
+  // db2: in-memory baru + tabel jurnal saja -> saldo bersih utk engine.
+  const mod2 = await import('node:sqlite');
+  const db2 = new mod2.DatabaseSync(':memory:');
+  db2.exec('CREATE TABLE journal_entries (id TEXT PRIMARY KEY, ref_table TEXT NOT NULL, ref_id TEXT, entry_date TEXT NOT NULL, type TEXT NOT NULL DEFAULT \'normal\', desc TEXT NOT NULL DEFAULT \'\', created_by TEXT, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')), reversed_by TEXT, UNIQUE(ref_table, ref_id, type))');
+  db2.exec('CREATE TABLE journal_lines (entry_id TEXT NOT NULL, account_code TEXT NOT NULL, debit INTEGER NOT NULL DEFAULT 0, credit INTEGER NOT NULL DEFAULT 0, balance_running INTEGER, source TEXT NOT NULL DEFAULT \'\', PRIMARY KEY(entry_id, account_code, source))');
+  const jdb = db2 as unknown as JdB;
+  // J1: posting seimbang 2 kaki (1010 D / 4010 C).
+  postJournal(jdb, {
+    id: 'j1', ref_table: 'sales', ref_id: '999', entry_date: TZ, type: 'auto', desc: 'uji',
+    lines: [
+      { account_code: '1010', debit: 50000, credit: 0, source: 's1' },
+      { account_code: '4010', debit: 0, credit: 50000, source: 's1' },
+    ],
+  });
+  eq('j1: 1 entry tercatat', cnt('SELECT COUNT(*) c FROM journal_entries WHERE id = \'j1\'', db2), 1);
+  eq('j1: 2 baris tercatat', cnt('SELECT COUNT(*) c FROM journal_lines WHERE entry_id = \'j1\'', db2), 2);
+  eq(
+    'j1: balance_running 1010 = 50000',
+    Number((db2.prepare('SELECT balance_running b FROM journal_lines WHERE entry_id=\'j1\' AND account_code=\'1010\'').get() as { b: number | null }).b ?? -1),
+    50000
+  );
+  // J2: tak seimbang -> tolak + rollback (entry tak tersisa).
+  let threw = false;
+  try {
+    postJournal(jdb, {
+      id: 'j2', ref_table: 'sales', ref_id: '998', entry_date: TZ, type: 'auto',
+      lines: [
+        { account_code: '1010', debit: 10, credit: 0, source: 'a' },
+        { account_code: '4010', debit: 0, credit: 20, source: 'a' },
+      ],
+    });
+  } catch {
+    threw = true;
+  }
+  ok('j2: jurnal tak seimbang ditolak', threw);
+  eq('j2: tak ada sisa entry setelah rollback', cnt('SELECT COUNT(*) c FROM journal_entries WHERE id = \'j2\'', db2), 0);
+  // J3: idempoten -- posting ulang (ref_table,ref_id,type) sama = no-op.
+  const r3 = postJournal(jdb, {
+    id: 'j1', ref_table: 'sales', ref_id: '999', entry_date: TZ, type: 'auto',
+    lines: [
+      { account_code: '1010', debit: 50000, credit: 0, source: 's1' },
+      { account_code: '4010', debit: 0, credit: 50000, source: 's1' },
+    ],
+  });
+  eq('j3: post ulang -> no-op, id lama', r3, 'j1');
+  eq('j3: baris tetap 2', cnt('SELECT COUNT(*) c FROM journal_lines WHERE entry_id = \'j1\'', db2), 2);
+  // J4: balance_running akumulasi LINTAS HARI (saldo pembuka hari + mutasi).
+  // Catatan semantik: baris sehari tak kumulatif satu sama lain (prior =
+  // entry_date < hari ini); saldo berjalan intraday dijamin accountStatement
+  // (gl.ts) dari debit/credit mentah.
+  const TZ2 = '2026-10-02T00:00:00.000+07:00';
+  postJournal(jdb, {
+    id: 'j1b', ref_table: 'sales', ref_id: '997', entry_date: TZ2, type: 'auto',
+    lines: [
+      { account_code: '1010', debit: 10000, credit: 0, source: 's2' },
+      { account_code: '4010', debit: 0, credit: 10000, source: 's2' },
+    ],
+  });
+  eq(
+    'j4: balance_running 1010 akumulasi = 60000',
+    Number((db2.prepare('SELECT balance_running b FROM journal_lines WHERE entry_id=\'j1b\' AND account_code=\'1010\'').get() as { b: number | null }).b ?? -1),
+    60000
+  );
+  // J5: reversi (koreksi) -- reversed_by dua arah + kaki terbalik + ref baru.
+  const revId = reverseJournal(jdb, 'j1', 'koreksi uji', 'tester');
+  eq('j5: id pembalikan = j1#rev1', revId, 'j1#rev1');
+  eq(
+    'j5: reversed_by di entry asli',
+    String((db2.prepare('SELECT reversed_by v FROM journal_entries WHERE id=\'j1\'').get() as { v: string | null }).v ?? ''),
+    'j1#rev1'
+  );
+  eq(
+    'j5: kaki pembalik 1010 = credit 50000',
+    Number((db2.prepare('SELECT credit c FROM journal_lines WHERE entry_id=\'j1#rev1\' AND account_code=\'1010\'').get() as { c: number }).c ?? -1),
+    50000
+  );
+  eq('j5: ref_id baru ...#rev1', String((db2.prepare('SELECT ref_id v FROM journal_entries WHERE id=\'j1#rev1\'').get() as { v: string }).v), '999#rev1');
+  eq('j5: reversi ulang idempoten', reverseJournal(jdb, 'j1', 'ulang', 'tester'), 'j1#rev1');
+  // J6: posting pasca-reversal = ref_id baru (pola #rev1) -> entry baru.
+  eq('j6: posting ulang pasca-reversal tercatat baru', postJournal(jdb, {
+    id: 'j1r', ref_table: 'sales', ref_id: '999#rev1', entry_date: TZ, type: 'auto',
+    lines: [
+      { account_code: '1010', debit: 50000, credit: 0, source: 's1r' },
+      { account_code: '4010', debit: 0, credit: 50000, source: 's1r' },
+    ],
+  }), 'j1r');
+
+  // ===== Phase 2b (W1.2): mapper Wave-1 (murni, tanpa DB) =====
+  const s1 = journalForSale({ id: 5, total: 100000, discount: 10000, pay_method: 'cash', cogs: 40000 });
+  ok('M1: mapper sale seimbang', isBalanced(s1.lines));
+  eq('M1: sale bruto 4010 = 110000', s1.lines.find((l) => l.account_code === '4010')?.credit ?? -1, 110000);
+  eq('M1: sale potongan 4020 D = 10000', s1.lines.find((l) => l.account_code === '4020')?.debit ?? -1, 10000);
+  eq('M1: sale HPP 5010 D = 40000', s1.lines.find((l) => l.account_code === '5010')?.debit ?? -1, 40000);
+  eq('M1: sale persediaan 1040 C = 40000', s1.lines.find((l) => l.account_code === '1040')?.credit ?? -1, 40000);
+  eq('M1: sale cash -> 1010', s1.lines[0].account_code, '1010');
+  eq('M2: tf -> 1020', saleCashAccount('tf'), '1020');
+  eq('M2: qris -> 1010', saleCashAccount('qris'), '1010');
+  eq('M2: credit -> 1030', saleCashAccount('credit'), '1030');
+  const p1 = journalForPurchase({ id: 2, qty: 2, unit_cost: 50000 });
+  ok('M3: mapper purchase seimbang', isBalanced(p1.lines));
+  eq('M3: purchase 1040 D = 100000', p1.lines[0].debit, 100000);
+  eq('M3: purchase lunas -> 1010 C', p1.lines[1].account_code, '1010');
+  eq('M3: purchase tempo -> 2010 C', journalForPurchase({ id: 3, qty: 1, unit_cost: 99999, on_account: true }).lines[1].account_code, '2010');
+  const e1 = journalForExpense({ id: 1, amount: 50000 });
+  ok('M4: mapper expense seimbang', isBalanced(e1.lines));
+  eq('M4: expense 5030 D', e1.lines[0].account_code, '5030');
+  eq('M4: expense default 1010 C', e1.lines[1].account_code, '1010');
+  eq('M4: expense pay_acct 1020', journalForExpense({ id: 2, amount: 1000, pay_acct: '1020' }).lines[1].account_code, '1020');
+  eq('M5: cash Ujrah -> 4040', cashEntryCounterpart('income', 'Ujrah Kon. #7'), '4040');
+  eq('M5: cash ZIS -> 4090', cashEntryCounterpart('income', 'Zakat emas haul'), '4090');
+  eq('M5: cash modal -> 3010', cashEntryCounterpart('income', 'Modal awal'), '3010');
+  eq('M5: cash retur -> 4030', cashEntryCounterpart('expense', 'Retur #3 - biskuit'), '4030');
+  eq('M5: cash beban -> 5030', cashEntryCounterpart('expense', 'Belanja air'), '5030');
+  const c1 = journalForCashEntry({ id: 9, type: 'income', label: 'Modal awal', amount: 200000 });
+  ok('M5: mapper cash seimbang', isBalanced(c1.lines));
+  eq('M5: cash income -> 1010 D', c1.lines[0].account_code, '1010');
+
+  // ===== Phase 3 (W1.2): GL read-side (gl.ts + openingBalance) =====
+  // db3 sendiri (state bersih): hanya lewat postJournal -> jurnal
+  // selamanya seimbang -> trial balance totalDiff = 0 (JOURNAL_BAL).
+  const db3 = new mod2.DatabaseSync(':memory:');
+  for (const s of DDL) db3.exec(s);
+  const jdb3 = db3 as unknown as JdB;
+  const D1 = '2026-10-05T00:00:00.000+07:00';
+  const D2 = '2026-10-06T00:00:00.000+07:00';
+  const D3 = '2026-10-07T00:00:00.000+07:00';
+  const D4 = '2026-10-08T00:00:00.000+07:00';
+  postJournal(jdb3, { ...journalForSale({ id: 5, total: 100000, discount: 0, pay_method: 'cash', cogs: 40000 }), entry_date: D1 });
+  postJournal(jdb3, { ...journalForPurchase({ id: 2, qty: 2, unit_cost: 50000, on_account: true }), entry_date: D2 });
+  postJournal(jdb3, { ...journalForExpense({ id: 1, amount: 30000 }), entry_date: D3 });
+  postJournal(jdb3, { ...journalForCashEntry({ id: 9, type: 'income', label: 'Modal awal', amount: 200000 }), entry_date: D3 });
+
+  const qdb3: QueryDb = {
+    prepare: (sql: string) => {
+      const st = db3.prepare(sql);
+      return {
+        get: (...a: unknown[]) => Promise.resolve(st.get(...(a as never[]))),
+        all: (...a: unknown[]) => Promise.resolve(st.all(...(a as never[]))),
+      };
+    },
+  };
+  // G1: accountBalance (saldo normal per jenis akun).
+  eq('G1: 1010 saldo < D4 = 270000', await accountBalance(qdb3, '1010', D4), 270000);
+  eq('G1: 4010 saldo normal-credit = 100000', await accountBalance(qdb3, '4010', D4), 100000);
+  eq('G1: akun kosong = 0', await accountBalance(qdb3, '1120', D4), 0);
+  // G2: trialBalance total selamanya seimbang (posting seimbang).
+  const tb = await trialBalance(qdb3, D4);
+  eq('G2: trial totalDiff = 0', tb.reduce((n, r) => n + r.debit - r.credit, 0), 0);
+  eq('G2: trial baris 4010 credit = 100000', tb.find((r) => r.account_code === '4010')?.credit ?? -1, 100000);
+  // G3: accountStatement (mutasi + saldo berjalan).
+  const stt = await accountStatement(qdb3, '1010', D2, '2026-10-09T00:00:00.000+07:00');
+  eq('G3: 1010 2 mutasi di interval', stt.length, 2);
+  eq('G3: saldo akhir berjalan = 270000', stt[stt.length - 1].balance, 270000);
+  eq('G3: debit interval = 200000', stt.reduce((n, r) => n + r.debit, 0), 200000);
+  eq('G3: credit interval = 30000', stt.reduce((n, r) => n + r.credit, 0), 30000);
+  // G4: openingBalance (jurnal.ts, QueryDb) -- saldo MENTAH (debit - credit).
+  const ob = await openingBalance(qdb3, D2);
+  eq('G4: opening 1010 < D2 = 100000', ob['1010'], 100000);
+  eq('G4: opening 1040 < D2 = -40000', ob['1040'], -40000);
+  eq('G4: opening 4010 < D2 = -100000', ob['4010'], -100000);
+  eq('G4: opening 5010 < D2 = 40000', ob['5010'], 40000);
+
   console.log('');
-  console.log('test:gl (W1.1) - ' + passes + ' ok, ' + failures + ' fail');
+  console.log('test:gl (W1.2) - ' + passes + ' ok, ' + failures + ' fail');
   if (failures > 0) process.exit(1);
 }
 
