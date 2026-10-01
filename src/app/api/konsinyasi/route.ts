@@ -10,6 +10,10 @@ import {
   resolveCommissionRate,
   splitConsignment,
 } from '@/lib/konsinyasi';
+import {
+  journalForConsignmentUjrah,
+  postJournalInTx,
+} from '@/lib/jurnal';
 
 type Row = {
   id: number;
@@ -181,6 +185,9 @@ export async function POST(req: Request) {
       case 'reopen': {
         const id = Number(b.id) || 0;
         if (!id) return NextResponse.json({ error: 'id tidak valid' }, { status: 400 });
+        // W2.1 auto-posting GL (gated: settings gl_enabled, default '0' ->
+        // nol perubahan perilaku V1; hanya tambah jurnal bila '1').
+        const glOn = (await getSettings()).gl_enabled === '1';
         const out = await tx(d, async () => {
           const row = (
             await d.prepare(`SELECT ${COLS} FROM consignments WHERE id = ?`).get(id)
@@ -231,6 +238,20 @@ export async function POST(req: Request) {
                     "Komisi konsinyasi #" + id + " (akad ju'alah, otomatis saat terjual)",
                     user.id
                   );
+                // W2.1: post GL ujrah (atomik dgn write V1, sama tx).
+                // D1010 kas masuk / K4040 ujrah (pendapatan jasa, P4);
+                // OQ-4 ref_id komposit kons:<id>:sell:<qtySoldAfter>.
+                if (glOn) {
+                  await postJournalInTx(
+                    d,
+                    journalForConsignmentUjrah({
+                      consId: id,
+                      qtySoldAfter: row.qty_sold + n,
+                      ujrah,
+                      owner: row.owner,
+                    })
+                  );
+                }
               }
               invalidate('kas:');
               invalidate('reports:');
@@ -276,6 +297,10 @@ export async function POST(req: Request) {
                 'Pembayaran konsinyasi #' + id,
                 user.id
               );
+            // OQ-7 Option C (1 Okt 2026): GL settlement (D2020/K1010)
+            // DITUNDA ke W3/W4 bersama goods-receipt (D1040/K2020). V1
+            // cash_entries 'Kon. ...' (baris di atas) tetap tercatat;
+            // baris GL 2020-nya baru dipost di wave konsinyasi lengkap.
             // Uang keluar kas -> saldo kas & agregat laporan basi (cache).
             invalidate('kas:');
             invalidate('reports:');

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { db, tx } from '@/db';
+import { db, getSettings, tx } from '@/db';
 import { canAccess, currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { journalForDebtPayment, postJournalInTx } from '@/lib/jurnal';
 
 type DebtRow = {
   id: number;
@@ -45,6 +46,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const paid = row.paid + add;
     const remaining = Math.max(0, row.remaining - add);
     const status = remaining === 0 ? 'settled' : row.status;
+    // W2.1 auto-posting GL (gated: settings gl_enabled, default '0' ->
+    // nol perubahan perilaku V1; hanya tambah jurnal bila '1').
+    const glOn = (await getSettings()).gl_enabled === '1';
     try {
       await tx(d, async () => {
         // Guarded update: atomik di level SQL — cegah overpay (double-submit
@@ -65,6 +69,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             "INSERT INTO cash_entries (type, label, amount, note, created_by) VALUES ('income', ?, ?, ?, ?)"
           )
           .run('Bayar piutang · ' + row.customer_name, add, 'debts#' + row.id, user.id);
+        // W2.1: post GL (atomik dgn write V1 di atas, sama tx).
+        // D1010 Kas / K1030 Piutang; OQ-4 ref_id komposit debts:<id>:<cumPaid>.
+        if (glOn) {
+          await postJournalInTx(
+            d,
+            journalForDebtPayment({
+              debtId: row.id,
+              cumPaid: paid,
+              amount: add,
+              customer: row.customer_name,
+            })
+          );
+        }
       });
     } catch (e) {
       if (e instanceof Error && /muat ulang/.test(e.message))

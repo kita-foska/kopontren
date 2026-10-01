@@ -33,7 +33,9 @@ export const ACCT = {
   UJRAH: '4040',
   ZIS_MASUK: '4090',
   HUTANG_PEMBELIAN: '2010',
+  HUTANG_KONSINYASI: '2020', // W3/W4 (OQ-7 Option C): goods-receipt + settlement; idle di W2.1
   MODAL: '3010',
+  RETUR_HPP: '5020',
 } as const;
 
 /** Satu baris jurnal (debit XOR credit; source = bagian PK journal_lines). */
@@ -50,7 +52,21 @@ export type JSpec = {
   ref_table: string;
   ref_id: string | number | null;
   entry_date: string;
-  type: 'auto' | 'manual' | 'reversal' | 'opening' | 'closing';
+  type:
+    | 'auto'
+    | 'manual'
+    | 'reversal'
+    | 'opening'
+    | 'closing'
+    // W2.1 (F3.4+): tipe jurnal auto Wave 2 (OQ-4 + struktur OQ-3).
+    // OQ-7 Option C (1 Okt 2026): settlement konsinyasi DITUNDA ke W3/W4
+    // (dipost bersama goods-receipt D1040/K2020 agar 2020 rekonsiliasi);
+    // tipe 'consignment_settle' & builder-nya dihapus dari W2.1.
+    | 'debt_payment'
+    | 'payable_payment'
+    | 'sales_return'
+    | 'purchase_return'
+    | 'consignment_ujrah';
   desc?: string;
   created_by?: string;
   lines: JLine[];
@@ -595,4 +611,194 @@ export function journalForCashEntry(inp: {
     lines,
   };
 }
+
+/**
+ * W2.1 (F3.4+) -- builder auto-posting Wave 2 (proposal Sek.4.2, OQ-3/OQ-4):
+ * pembayaran piutang/hutang, retur penjualan/pembelian, konsinyasi
+ * (ujrah + settlement). Dipanggil route DI DALAM tx V1, hanya jika
+ * settings.gl_enabled='1' (flag off -> nol perubahan V1).
+ *
+ * Catatan arsitektur (tidak ada double-booking kas): V1 menulis baris
+ * cash_entries label "Bayar piutang" / "Bayar hutang" / "Retur #.." /
+ * "Ujrah Kon." / "Kon." LANGSUNG ke tabel cash_entries (bukan lewat
+ * POST /api/kas) -- jadi auto-poster cash_entries W1.3 TIDAK pernah
+ * mem-posting label-label itu. Jurnal di atas adalah satu-satunya
+ * pencatatan GL dari peristiwa-peristiwa tersebut.
+ */
+
+/** Stempel saat ini zona WIB (+07:00) utk entry_date (rekon #17). */
+export function nowWib(): string {
+  return new Date(Date.now() + 7 * 3600 * 1000).toISOString().replace('Z', '+07:00');
+}
+
+/**
+ * Sek.4.2 (3): pembayaran piutang customer (cicilan debts/[id] pay).
+ *   Debit 1010 Kas -> Kredit 1030 Piutang Penjualan.
+ * OQ-4: ref_id komposit 'debts:<id>:<cumPaid>' (cumPaid = total `paid`
+ * SAAT event; UNIQUE(ref_table,ref_id,type) = idempoten per cicilan;
+ * double-submit -> ref sama -> no-op).
+ */
+export function journalForDebtPayment(inp: {
+  debtId: number;
+  cumPaid: number;
+  amount: number;
+  customer?: string;
+  entry_date?: string;
+}): JSpec {
+  const a = round(inp.amount);
+  if (a <= 0) throw new Error('journalForDebtPayment: amount harus > 0');
+  return {
+    id: 'JE-debtpay-' + inp.debtId + '-' + inp.cumPaid,
+    ref_table: 'debts',
+    ref_id: 'debts:' + inp.debtId + ':' + inp.cumPaid,
+    entry_date: inp.entry_date ?? nowWib(),
+    type: 'debt_payment',
+    desc: 'Pembayaran piutang #' + inp.debtId + (inp.customer ? ' - ' + inp.customer : ''),
+    lines: [
+      { account_code: ACCT.KAS_TOKO, debit: a, credit: 0, source: 'debt_payment' },
+      { account_code: ACCT.PIUTANG, debit: 0, credit: a, source: 'debt_payment' },
+    ],
+  };
+}
+
+/**
+ * Sek.4.2 (2): pembayaran hutang supplier (cicilan payables/[id] pay).
+ *   Debit 2010 Hutang Pembelianan -> Kredit 1010 Kas.
+ * OQ-4: ref_id komposit 'payables:<id>:<cumPaid>'.
+ */
+export function journalForPayablePayment(inp: {
+  payableId: number;
+  cumPaid: number;
+  amount: number;
+  supplier?: string;
+  entry_date?: string;
+}): JSpec {
+  const a = round(inp.amount);
+  if (a <= 0) throw new Error('journalForPayablePayment: amount harus > 0');
+  return {
+    id: 'JE-payablepay-' + inp.payableId + '-' + inp.cumPaid,
+    ref_table: 'payables',
+    ref_id: 'payables:' + inp.payableId + ':' + inp.cumPaid,
+    entry_date: inp.entry_date ?? nowWib(),
+    type: 'payable_payment',
+    desc: 'Pembayaran hutang #' + inp.payableId + (inp.supplier ? ' - ' + inp.supplier : ''),
+    lines: [
+      { account_code: ACCT.HUTANG_PEMBELIAN, debit: a, credit: 0, source: 'payable_payment' },
+      { account_code: ACCT.KAS_TOKO, debit: 0, credit: a, source: 'payable_payment' },
+    ],
+  };
+}
+
+/**
+ * OQ-3 (sales return, struktur APPROVED): baris returns POST.
+ *   D4030 (retur harga) X  +  D1040 (stok kembali) C
+ *   K(cashAcct) X (1010 = refund tunai / 1030 = offset piutang)
+ *   +  K5020 (HPP reversal) C.
+ * cogs = snapshot HPP jumlah diretur (0/kurang -> kaki HPP di-skip,
+ * 2 kaki sisanya tetap seimbang).
+ */
+export function journalForSalesReturn(inp: {
+  returnId: number;
+  saleId: number;
+  amount: number;
+  cogs: number;
+  cashAcct: '1010' | '1030';
+  product?: string;
+  entry_date?: string;
+}): JSpec {
+  const a = round(inp.amount);
+  const c = round(inp.cogs);
+  const lines: JLine[] = [
+    { account_code: ACCT.RETUR_PENJUALAN, debit: a, credit: 0, source: 'sales_return' },
+    { account_code: inp.cashAcct, debit: 0, credit: a, source: 'sales_return' },
+  ];
+  if (c > 0) {
+    lines.push({ account_code: ACCT.PERSEDIAAN, debit: c, credit: 0, source: 'sales_return' });
+    lines.push({ account_code: ACCT.RETUR_HPP, debit: 0, credit: c, source: 'sales_return' });
+  }
+  return {
+    id: 'JE-salesretur-' + inp.returnId,
+    ref_table: 'returns',
+    ref_id: String(inp.returnId),
+    entry_date: inp.entry_date ?? nowWib(),
+    type: 'sales_return',
+    desc:
+      'Retur #' + inp.returnId + ' (transaksi #' + inp.saleId + ')' +
+      (inp.product ? ' - ' + inp.product : ''),
+    lines,
+  };
+}
+
+/**
+ * OQ-3 RULING (purchase return): 1 entry, refund DI HARGA POKOK,
+ * tanpa dampak P&L (nada kaki 5xxx):
+ *   Debit 2010 Hutang Pembelianan -> Kredit 1040 Persediaan.
+ * V1 belum punya fitur retur pembelian -> builder utk posting manual
+ * / penutupan periode (W5); tidak ada hook route di W2.1.
+ */
+export function journalForPurchaseReturn(inp: {
+  returnRef: string;
+  cost: number;
+  supplier?: string;
+  entry_date?: string;
+}): JSpec {
+  const a = round(inp.cost);
+  if (a <= 0) throw new Error('journalForPurchaseReturn: cost harus > 0');
+  return {
+    id: 'JE-purchretur-' + inp.returnRef,
+    ref_table: 'purchase_returns',
+    ref_id: String(inp.returnRef),
+    entry_date: inp.entry_date ?? nowWib(),
+    type: 'purchase_return',
+    desc: 'Retur pembelian (harga pokok)' + (inp.supplier ? ' - ' + inp.supplier : ''),
+    lines: [
+      { account_code: ACCT.HUTANG_PEMBELIAN, debit: a, credit: 0, source: 'purchase_return' },
+      { account_code: ACCT.PERSEDIAAN, debit: 0, credit: a, source: 'purchase_return' },
+    ],
+  };
+}
+
+/**
+ * Sek.4.2 + COA 154: ujrah konsinyasi (aksi sell, akad ju'alah --
+ * P4 tashih 30 Sep: ujrah -> pendapatan 4040; V1 kas masuk "Ujrah
+ * Kon."). Debit 1010 -> Kredit 4040 (ujrah = n x unit komisi;
+ * dipanggil HANYA bila > 0). OQ-4: ref_id komposit
+ * 'kons:<id>:sell:<qtySoldAfter>'.
+ *
+ * OQ-7 Option C (1 Okt 2026): settlement (aksi pay, D2020/K1010)
+ * DITUNDA ke W3/W4 bersama goods-receipt (D1040/K2020) agar 2020
+ * rekonsiliasi. W2.1 HANYA post ujrah (builder ini).
+ */
+export function journalForConsignmentUjrah(inp: {
+  consId: number;
+  qtySoldAfter: number;
+  ujrah: number;
+  owner?: string;
+  entry_date?: string;
+}): JSpec {
+  const a = round(inp.ujrah);
+  if (a <= 0) throw new Error('journalForConsignmentUjrah: ujrah harus > 0');
+  return {
+    id: 'JE-konsujrah-' + inp.consId + '-' + inp.qtySoldAfter,
+    ref_table: 'konsinyasi',
+    ref_id: 'kons:' + inp.consId + ':sell:' + inp.qtySoldAfter,
+    entry_date: inp.entry_date ?? nowWib(),
+    type: 'consignment_ujrah',
+    desc: 'Ujrah konsinyasi #' + inp.consId + (inp.owner ? ' - ' + inp.owner : ''),
+    lines: [
+      { account_code: ACCT.KAS_TOKO, debit: a, credit: 0, source: 'consignment_ujrah' },
+      { account_code: ACCT.UJRAH, debit: 0, credit: a, source: 'consignment_ujrah' },
+    ],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// OQ-7 Option C (1 Okt 2026) -- journalForConsignmentSettlement DIHAPUS
+// dari W2.1. Settlement konsinyasi (aksi pay) D2020/K1010 DITUNDA ke
+// W3/W4 agar dipost BERSAMA goods-receipt (D1040/K2020): posting
+// settlement saja (tanpa kredit 2020 dari goods-receipt) membuat 2020
+// tak rekonsiliasi -> drift JOURNAL_BAL (#15) ke depan.
+// W3/W4: re-introduce tipe 'consignment_settle' + builder, lalu wire hook
+// di api/konsinyasi/route.ts (aksi pay). ACCT.HUTANG_KONSINYASI ('2020')
+// sudah tersedia di COA.
 

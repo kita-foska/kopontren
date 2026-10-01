@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { db, tx } from '@/db';
+import { db, getSettings, tx } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { notifyNewRetur } from '@/lib/notify';
+import { journalForSalesReturn, postJournalInTx } from '@/lib/jurnal';
 
 type ReturnRow = {
   id: number;
@@ -150,6 +151,9 @@ export async function POST(req: Request) {
   );
   const now = new Date().toISOString();
 
+  // W2.1 auto-posting GL (gated: settings gl_enabled, default '0' ->
+  // nol perubahan perilaku V1; hanya tambah jurnal bila '1').
+  const glOn = (await getSettings()).gl_enabled === '1';
   let newId = 0;
   let revNote = '';
   try {
@@ -209,6 +213,22 @@ export async function POST(req: Request) {
         await d
           .prepare("INSERT INTO cash_entries (type, label, amount, created_by) VALUES ('expense', ?, ?, ?)")
           .run('Retur #' + saleId + ' · ' + item.product_name, amount, user.id);
+      }
+      // W2.1: post GL retur (atomik dgn write V1, sama tx). OQ-3:
+      // D4030 + D1040(cogs) / K(1010 refund tunai|1030 offset piutang)
+      // + K5020(cogs). Idempoten per baris retur (UNIQUE returns,newId).
+      if (glOn) {
+        await postJournalInTx(
+          d,
+          journalForSalesReturn({
+            returnId: newId,
+            saleId,
+            amount,
+            cogs,
+            cashAcct: refund ? '1010' : '1030',
+            product: item.product_name,
+          })
+        );
       }
       // SYARIAH P2 (audit 24 Sep 2026): bila transaksi ini kini 100% diretur
       // (setiap baris: qty terjual == qty diretur), batalkan reward yang

@@ -26,6 +26,11 @@ import {
   journalForPurchase,
   journalForExpense,
   journalForCashEntry,
+  journalForDebtPayment,
+  journalForPayablePayment,
+  journalForSalesReturn,
+  journalForPurchaseReturn,
+  journalForConsignmentUjrah,
   postJournalInTx,
 } from '../src/lib/jurnal.ts';
 import type { JdB, TxDb } from '../src/lib/jurnal.ts';
@@ -396,8 +401,62 @@ async function main(): Promise<void> {
   eq('T4: cash posting tercatat', await postJournalInTx(txdb, journalForCashEntry({ id: 11, type: 'income', label: 'Ujrah Konsinyasi', amount: 150000, created_at: TZ4 })), 'JE-cash-11');
   eq('T4: 4 entry total di db4', cnt('SELECT COUNT(*) c FROM journal_entries', db4), 4);
 
+  // ===== Phase W2.1: builder auto-posting Wave 2 (OQ-3/OQ-4) =====
+  // Murni: tiap builder seimbang + ref_id komposit OQ-4 + akun benar;
+  // posting via TxDb idempoten. db4/txdb dari Phase 4 (in-memory).
+  const dline = (id: string, acct: string, col: 'debit' | 'credit'): number =>
+    Number((db4.prepare('SELECT ' + col + ' ' + col + ' FROM journal_lines WHERE entry_id=? AND account_code=?').get(id, acct) as Record<string, number | null>)?.[col] ?? -1);
+  // W1: debt payment D1010 / K1030, ref debts:<id>:<cumPaid>.
+  const dp = journalForDebtPayment({ debtId: 5, cumPaid: 150000, amount: 50000, customer: 'Budi' });
+  ok('W1: debt payment seimbang', isBalanced(dp.lines));
+  eq('W1: ref komposit debts:5:150000', dp.ref_id, 'debts:5:150000');
+  eq('W1: post debt payment', await postJournalInTx(txdb, dp), 'JE-debtpay-5-150000');
+  eq('W1: K1030 = 50000', dline('JE-debtpay-5-150000', '1030', 'credit'), 50000);
+  eq('W1: debt payment idempoten (ref sama -> no-op)', await postJournalInTx(txdb, dp), 'JE-debtpay-5-150000');
+  // W2: payable payment D2010 / K1010, ref payables:<id>:<cumPaid>.
+  const pp = journalForPayablePayment({ payableId: 9, cumPaid: 80000, amount: 30000, supplier: 'Makmur' });
+  ok('W2: payable payment seimbang', isBalanced(pp.lines));
+  eq('W2: ref payables:9:80000', pp.ref_id, 'payables:9:80000');
+  eq('W2: post payable payment', await postJournalInTx(txdb, pp), 'JE-payablepay-9-80000');
+  eq('W2: D2010 = 30000', dline('JE-payablepay-9-80000', '2010', 'debit'), 30000);
+  // W3: sales return OQ-3 (cogs>0 -> 4 kaki: D4030+D1040 / K(cash)+K5020).
+  const sr = journalForSalesReturn({ returnId: 31, saleId: 5, amount: 44000, cogs: 16000, cashAcct: '1010', product: 'Ayam' });
+  ok('W3: sales return seimbang', isBalanced(sr.lines));
+  eq('W3: 4 baris (cogs>0)', sr.lines.length, 4);
+  eq('W3: post sales return', await postJournalInTx(txdb, sr), 'JE-salesretur-31');
+  eq('W3: D4030 = 44000', dline('JE-salesretur-31', '4030', 'debit'), 44000);
+  eq('W3: K5020 = 16000', dline('JE-salesretur-31', '5020', 'credit'), 16000);
+  // W3b: cogs=0 -> 2 kaki (refund piutang K1030), tetap seimbang.
+  const sr2 = journalForSalesReturn({ returnId: 32, saleId: 6, amount: 10000, cogs: 0, cashAcct: '1030', product: 'Ayam' });
+  ok('W3b: sales return cogs=0 seimbang', isBalanced(sr2.lines));
+  eq('W3b: 2 baris (cogs=0)', sr2.lines.length, 2);
+  // W4: purchase return OQ-3 RULING (harga pokok, 1 entry, D2010/K1040).
+  const pr = journalForPurchaseReturn({ returnRef: 'PRT-1', cost: 60000, supplier: 'Makmur' });
+  ok('W4: purchase return seimbang', isBalanced(pr.lines));
+  eq('W4: ref PRT-1', pr.ref_id, 'PRT-1');
+  eq('W4: post purchase return', await postJournalInTx(txdb, pr), 'JE-purchretur-PRT-1');
+  eq('W4: D2010 = 60000', dline('JE-purchretur-PRT-1', '2010', 'debit'), 60000);
+  eq('W4: K1040 = 60000', dline('JE-purchretur-PRT-1', '1040', 'credit'), 60000);
+  // W5: ujrah konsinyasi D1010 / K4040, ref kons:<id>:sell:<qtySoldAfter>.
+  const cu = journalForConsignmentUjrah({ consId: 2, qtySoldAfter: 5, ujrah: 25000, owner: 'Ibu Sitti' });
+  ok('W5: ujrah seimbang', isBalanced(cu.lines));
+  eq('W5: ref kons:2:sell:5', cu.ref_id, 'kons:2:sell:5');
+  eq('W5: post ujrah', await postJournalInTx(txdb, cu), 'JE-konsujrah-2-5');
+  eq('W5: K4040 = 25000', dline('JE-konsujrah-2-5', '4040', 'credit'), 25000);
+  // W6 (OQ-7 Option C, 1 Okt 2026): settlement konsinyasi D2020/K1010
+  // DITUNDA ke W3/W4 bersama goods-receipt (D1040/K2020). Builder &
+  // hook W2.1-nya dihapus; ujrah (W5) tetap di-test di atas.
+  // W7: guard nominal <= 0 ditolak.
+  let wThrew = false;
+  try {
+    journalForDebtPayment({ debtId: 5, cumPaid: 0, amount: 0 });
+  } catch {
+    wThrew = true;
+  }
+  ok('W7: nominal 0 ditolak (amount>0 wajib)', wThrew);
+
   console.log('');
-  console.log('test:gl (W1.3) - ' + passes + ' ok, ' + failures + ' fail');
+  console.log('test:gl (W2.1) - ' + passes + ' ok, ' + failures + ' fail');
   if (failures > 0) process.exit(1);
 }
 
