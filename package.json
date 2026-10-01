@@ -30,7 +30,8 @@
     "test:invariants": "node scripts/test-invariants.ts",
     "test:rekon": "node scripts/test-rekonsiliasi.ts",
     "test:gl": "node scripts/test-gl.ts",
-    "test:all": "node scripts/test-margin.ts && node scripts/test-split.ts && node scripts/test-members-phone.ts && node scripts/test-client-ip.ts && node scripts/test-konsinyasi.ts && node scripts/test-neraca.ts && node scripts/test-points.ts && node scripts/test-zakat.ts && node scripts/test-rekap.ts && node scripts/test-wholesale.ts && node scripts/test-qris.ts && node scripts/test-fetch-util.ts && node scripts/test-roles.ts && node scripts/test-golden.ts && node scripts/test-invariants.ts && node scripts/test-rekonsiliasi.ts && node scripts/test-gl.ts"
+    "test:laporan": "node scripts/test-laporan.ts",
+    "test:all": "node scripts/test-margin.ts && node scripts/test-split.ts && node scripts/test-members-phone.ts && node scripts/test-client-ip.ts && node scripts/test-konsinyasi.ts && node scripts/test-neraca.ts && node scripts/test-points.ts && node scripts/test-zakat.ts && node scripts/test-rekap.ts && node scripts/test-wholesale.ts && node scripts/test-qris.ts && node scripts/test-fetch-util.ts && node scripts/test-roles.ts && node scripts/test-golden.ts && node scripts/test-invariants.ts && node scripts/test-rekonsiliasi.ts && node scripts/test-gl.ts && node scripts/test-laporan.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.15.0",
