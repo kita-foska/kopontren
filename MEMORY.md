@@ -32,11 +32,27 @@
 - **Progres Wave 1 (roadmap §12 proposal)**: W1.1 `3eaf906`
   (skema v21 coa 52 + jurnal); W1.2 `105b04e` (GL read-side
   `lib/gl.ts`); W1.3 `2ef3002` (auto-posting Wave 1, gated
-  `gl_enabled`); W1.4 `f28579a` (UI) - **LEPAS**. Sisa
-  Wave 1 = **W1.5 rekon #15 `JOURNAL_BAL` + #17 `GL_TZ`**
-  (`lib/rekonsiliasi.ts` flag-only + test + UI flag; #16
-  `GL_CASH` tetap W5.2) - rencana W1.5 tersusun, menunggu
-  ACC Gus Fi.
+  `gl_enabled`); W1.4 `f28579a` (UI); W1.5 `6d23e91` (rekon #15
+  `JOURNAL_BAL` + #17 `GL_TZ`; #16 `GL_CASH` tetap W5.2)
+  - **WAVE 1 = 5/5 LEPAS**.
+
+### F3.4+ W1.5: rekon #15 JOURNAL_BAL + #17 GL_TZ - SELESAI
+1 Okt 2026 (commit `6d23e91`, dual-push master+main)
+- **4 file (+185/-17)**: `lib/rekonsiliasi.ts` (#15:
+  per-entry `SUM(debit)=SUM(credit)` + orphan `journal_lines`
+  + global D-K = 0; #17: semua `journal_entries.entry_date`
+  berakhiran +07:00; 14 -> 16 cek, flag-only read-only) +
+  `test-rekonsiliasi.ts` (SCHEMA + tabel journal_entries/
+  journal_lines; seed sehat 2 entry seimbang +07:00; fase
+  korup: entry tak seimbang + entry tanggal UTC;
+  drift_total 16 -> 19) + `rekonsiliasi-client.tsx` (COLS 2
+  cek baru) + `docs/qa/DATA-INVARIANTS.md` (invariant GL-1/
+  GL-2; celah nomor #16 = `GL_CASH` ditunda W5.2).
+- **Gate bersih**: `tsc --noEmit` exit 0; `test:rekon` +
+  `test:gl` lulus; `test:all` semua 17 suite lulus (incl.
+  golden + invariants E2E); 0 non-ASCII di 4 file; `public/
+  sw.js` + file V1 tak tersentuh; ref remote `origin/master`
+  + `origin/main` identik @ `6d23e91`.
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
 - **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3

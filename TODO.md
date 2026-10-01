@@ -1378,9 +1378,9 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
     **F3.4+ = implementasi berjalan** (Wave 1: v21 COA + jurnal
    + auto-posting + rekon #15/#17 + golden test). Pola
    interface tashih sama utk P3-TASHIH-ZAKAT +
-   P4-PROPOSAL-KONSINYASI (commit terpisah). Progres Wave 1: W1.1 `3eaf906` (skema v21); W1.2 `105b04e` (GL read-side); W1.3 `2ef3002` (auto-posting); W1.4 `f28579a` (admin GL + Jurnal UI) - SEMUA LUPUT (dual-push master+main). Aktif: **W1.5 rekon #15/#17** - menunggu ACC Gus Fi.
-   - [ ] **F3.4+ W1.5** (1 Okt; rencana tersusun, belum
-         dimulai, menunggu ACC Gus Fi): rekon #15
+   P4-PROPOSAL-KONSINYASI (commit terpisah). Progres Wave 1: W1.1 `3eaf906` (skema v21); W1.2 `105b04e` (GL read-side); W1.3 `2ef3002` (auto-posting); W1.4 `f28579a` (admin GL + Jurnal UI); W1.5 `6d23e91` (rekon #15/#17) - SEMUA LEPAS (5/5, dual-push master+main). **WAVE 1 SELESAI.**
+   - [x] **F3.4+ W1.5 LEPAS 1 Okt** (`6d23e91`; ACC Gus Fi;
+         semua gate lulus): rekon #15
          `JOURNAL_BAL` (total debit = total credit per
          entry + global; jurnal_lines orphan) + #17
          `GL_TZ` (semua `entry_date` berakhiran +07:00;
