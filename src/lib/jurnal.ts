@@ -303,6 +303,69 @@ export async function postJournalInTx(db: TxDb, input: JSpec): Promise<string> {
 }
 
 /**
+ * W1.4: mirror ASINKRON reverseJournal (JdB) utk lapisan API (TxDb):
+ * dijalankan DI DALAM transaksi pemanggil (route POST /api/jurnal).
+ * Semantik sama: entry tak ditemukan / tanpa baris -> null; sudah dibalik
+ * -> kembalikan id pembalik yang ada (idempoten); aksi lain: tandai
+ * reversed_by entry asal lalu tulis entry type='reversal' ber-kaki terbalik
+ * via postJournalInTx (UNIQUE(ref_table,ref_id+'#rev1',type) = backstop
+ * idempoten untuk ref_id non-null).
+ */
+export async function reverseJournalInTx(
+  db: TxDb,
+  entryId: string,
+  reason: string,
+  user: string
+): Promise<string | null> {
+  const original = (await db
+    .prepare('SELECT * FROM journal_entries WHERE id = ?')
+    .get(entryId)) as
+    | (Record<string, unknown> & {
+        ref_table: string;
+        ref_id: string | null;
+        entry_date: string;
+        reversed_by: string | null;
+      })
+    | undefined;
+  if (!original) return null;
+  if (original.reversed_by) return original.reversed_by;
+
+  const lines = (await db
+    .prepare('SELECT account_code, debit, credit, source FROM journal_lines WHERE entry_id = ?')
+    .all(entryId)) as {
+    account_code: string;
+    debit: number;
+    credit: number;
+    source: string;
+  }[];
+  if (lines.length === 0) return null;
+
+  const revId = entryId + '#rev1';
+  await db
+    .prepare('UPDATE journal_entries SET reversed_by = ? WHERE id = ?')
+    .run(revId, entryId);
+  await postJournalInTx(db, {
+    id: revId,
+    ref_table: original.ref_table,
+    ref_id:
+      original.ref_id === null || original.ref_id === undefined
+        ? null
+        : String(original.ref_id) + '#rev1',
+    entry_date: original.entry_date,
+    type: 'reversal',
+    desc: 'Reversal of ' + entryId + ' (alasan: ' + String(reason) + ')',
+    created_by: user,
+    lines: lines.map((l) => ({
+      account_code: l.account_code,
+      debit: round(l.credit),
+      credit: round(l.debit),
+      source: l.source,
+    })),
+  });
+  return revId;
+}
+
+/**
  * Jurnal pembalik (koreksi Sek.3.2.2): entry type='reversal' dgn kaki terbalik,
  * reversed_by dua arah, ref_id baru (...#rev1). Idempoten.
  */

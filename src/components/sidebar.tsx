@@ -8,6 +8,7 @@ import { LogOut, Menu, Moon, Sun, X } from 'lucide-react';
 import type { Feature, Role } from '@/lib/auth';
 import { FEATURE_MATRIX, normRole } from '@/lib/features';
 import { Avatar, Button, ROLE_LABEL } from './ui';
+import type { ReactNode } from 'react';
 
 // Prefetch selektif: menu utama + halaman admin yang paling sering dibuka.
 // Halaman jarang (kontrakan, piutang, retur, audit, data, dsb.) tidak di-prefetch
@@ -27,16 +28,16 @@ const PREFETCH_PATHS = new Set([
   '/tutorial',
 ]);
 
-type NavItem = { href: string; label: string };
+type NavItem = { href: string; label: string; icon?: ReactNode };
 type NavGroup = { title: string; items: NavItem[] };
 
 /**
  * UX-5 H1: SATU sumber menu (pengganti array role-specific lama).
- * `level` = visibilitas item — MIRROR guard halaman (sumber kebenaran
+ * `level` = visibilitas item - MIRROR guard halaman (sumber kebenaran
  * tetap FEATURE_MATRIX + guard; menu ini hanya display):
- *  · `Feature`  → matriks akses (admin selalu lolos, = `canAccess`)
- *  · `'ops'`    → isManager (guard Konsinyasi/Kas/QRIS = `isManager`)
- *  · `'admin'`  → admin-only (guard pengaturan-member/notifications/
+ *  - `Feature`  -> matriks akses (admin selalu lolos, = `canAccess`)
+ *  - `'ops'`    -> isManager (guard Konsinyasi/Kas/QRIS = `isManager`)
+ *  - `'admin'`  -> admin-only (guard pengaturan-member/notifications/
  *                  pengguna/data/migrate = `role === 'admin'`)
  * `roleLabel` = label khusus role (sisa kegunaan label per-role lama).
  */
@@ -47,7 +48,50 @@ interface MenuDef {
   label: string;
   level: MenuLevel;
   roleLabel?: Partial<Record<Role, string>>;
+  /** W1.4: ikon opsional (inline SVG: viewBox, aria-hidden, currentColor, 16px). */
+  icon?: ReactNode;
 }
+
+/**
+ * W1.4: ikon inline SVG (tanpa emoji/unicode/ikon-font) utk item GL + Jurnal.
+ * 16px, viewBox 24, stroke currentColor (mengikuti warna teks menu: putih
+ * saat item aktif, slate selainnya).
+ */
+const IconGL = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+  </svg>
+);
+const IconJurnal = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+);
 
 export function levelOk(role: Role, lv: MenuLevel): boolean {
   if (role === 'admin') return true; // mirror canAccess: admin selalu lolos
@@ -79,12 +123,15 @@ export const MENU_ITEMS: MenuDef[] = [
   { href: '/admin/notifications', label: 'Notifikasi', level: 'admin' }, // H5: buka untuk pengurus (read-only)
   { href: '/admin/audit', label: 'Audit', level: 'audit' },
   { href: '/admin/rekonsiliasi', label: 'Rekonsiliasi', level: 'laporan' },
+  // W1.4: GL (read-only, tier laporan) + Jurnal GL (tulis, tier admin).
+  { href: '/admin/gl', label: 'GL', icon: IconGL, level: 'laporan' },
+  { href: '/admin/jurnal', label: 'Jurnal GL', icon: IconJurnal, level: 'admin' },
   { href: '/admin/pengguna', label: 'Pengguna', level: 'admin' },
   { href: '/admin/data', label: 'Data & Backup', level: 'admin' },
   { href: '/admin/migrate', label: 'Import CSV', level: 'admin' },
 ];
 
-/** 4 grup (Q1 27 Sep: Loyalty fold ke OPERASIONAL — 4 grup, bukan 5). */
+/** 4 grup (Q1 27 Sep: Loyalty fold ke OPERASIONAL - 4 grup, bukan 5). */
 const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
   { title: 'Utama', hrefs: ['/', '/admin/dashboard', '/pengurus/dashboard', '/tutorial'] },
   {
@@ -118,6 +165,8 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
       '/admin/notifications',
       '/admin/audit',
       '/admin/rekonsiliasi',
+      '/admin/gl',
+      '/admin/jurnal',
       '/admin/pengguna',
       '/admin/data',
       '/admin/migrate',
@@ -223,7 +272,7 @@ export function Sidebar({
             onClick={onClose}
           />
         </div>
-        {/* M1-4: switcher peran (versi hamburger) — tampil hanya bila user punya
+        {/* M1-4: switcher peran (versi hamburger) - tampil hanya bila user punya
             >1 role; pilih -> onSwitchRole + drawer ditutup. */}
         {roles && roles.length > 1 && onSwitchRole && (
           <div className="shrink-0 border-b border-slate-200 px-3 pb-2 dark:border-navy-700">
@@ -270,13 +319,18 @@ export function Sidebar({
                         prefetch={PREFETCH_PATHS.has(it.href)}
                         onClick={onClose}
                         className={
-                          'block rounded-lg px-3 py-2 text-sm font-bold transition ' +
+                          'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-bold transition ' +
                           (active
                             ? 'bg-accent-500 text-white shadow-sm'
                             : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-700')
                         }
                       >
-                        {it.label}
+                        {it.icon && (
+                          <span aria-hidden="true" className="shrink-0">
+                            {it.icon}
+                          </span>
+                        )}
+                        <span>{it.label}</span>
                       </Link>
                     </li>
                   );
@@ -286,7 +340,7 @@ export function Sidebar({
           ))}
         </nav>
         {/* Aksi panel (dipindah dari header): ganti tema + keluar.
-            Ikon dinamis: dark → Sun (klik = ke light), light → Moon (klik = ke dark). */}
+            Ikon dinamis: dark -> Sun (klik = ke light), light -> Moon (klik = ke dark). */}
         <div className="mt-2 space-y-1 border-t border-slate-200 px-2 pb-2 pt-2 dark:border-navy-600">
           <Button
             variant="ghost"
@@ -325,11 +379,11 @@ export function Sidebar({
 }
 
 /**
- * Menu per role sesuai matriks permission (src/lib/auth.ts — FEATURE_MATRIX).
+ * Menu per role sesuai matriks permission (src/lib/auth.ts - FEATURE_MATRIX).
  * Guard API & halaman tetap berlaku; menu ini hanya display.
  */
 function groupsFor(role: Role): NavGroup[] {
-  const r = normRole(role); // 'owner' → 'admin' (sama dgn guard halaman)
+  const r = normRole(role); // 'owner' -> 'admin' (sama dgn guard halaman)
   const byHref = new Map(MENU_ITEMS.map((m) => [m.href, m]));
   const groups: NavGroup[] = ADMIN_GROUP_DEFS.map((g) => ({
     title: g.title,
@@ -339,6 +393,7 @@ function groupsFor(role: Role): NavGroup[] {
       .map((m) => ({
         href: m.href,
         label: m.roleLabel?.[r] ?? m.label,
+        icon: m.icon,
       })),
   })).filter((g) => g.items.length > 0);
   // member: dashboard pribadi saja (label grp "Pribadi", perilaku lama).
