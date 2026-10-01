@@ -114,12 +114,25 @@
   0 non-ASCII di 6 file; `public/sw.js` + V1
   `laporan-admin-client.tsx` tak tersentuh; ref remote `origin/master`
   + `origin/main` identik @ `d91dbd0`.
-- **Progres Wave 2 (roadmap 12)**: W2.1 `ca0f39f`; W2.2 `d91dbd0`.
+- **W2.2 hardening (2 Okt, commit `663876b`, dual-push master+main)**:
+  audit ruling B1-B4. (B1) card Rekonsiliasi sisi aset + `wakafTotal`
+  + koreksi caption (wakaf = memo, BUKAN laba/rugi berjalan); (B2)
+  route.ts: validasi `DATE_RE`+`Date.parse`, `nextDay` dipindah ke
+  dalam try -> `RangeError` tertangkap jadi JSON 500; (B3)
+  `FORMAL_NOTES` cache -> 'TTL backstop; mutasi GL tak
+  auto-invalidate, tunggu TTL 60 dtk / Muat ulang'; (B4) posisi.ts:
+  dokumentasi `flag_rekon15` = proxy D=K GLOBAL, bukan rekon #15
+  per-entry/orphan (orphan journal_lines ter-exclude oleh JOIN).
+  Gate: `tsc --noEmit` 0; `test:laporan` 37/37; 0 non-ASCII.
+  UX/UI (U1-U4, a11y) DITUNDA ke UX-5/UX-6.
+- **Progres Wave 2 (roadmap 12)**: W2.1 `ca0f39f`; W2.2 `d91dbd0`
+  (+ hardening `663876b`).
   **WAVE 2 = 2/7**.
   - W2.3+ (menyusul): report lain di dispatch `?report=` (laba-rugi,
     LPE, LAK, CALK); penutupan jurnal closing (4xx/5xx -> 3020).
-  - **Standing rule**: audit pasca-wave W2.2 (bug + UX + UI) WAJIB
-    sebelum mulai W2.3.
+  - **Standing rule**: audit pasca-wave W2.2 -> hardening bug
+    (B1-B4) SELESAI `663876b`; UX/UI (U1-U4, a11y) ditunda ke
+    UX-5/UX-6. W2.3 mulai setelah go Gus Fi.
 
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan

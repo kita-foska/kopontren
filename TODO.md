@@ -1428,8 +1428,16 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
           `scripts/test-laporan.ts` (node:sqlite in-memory, 4 fase,
           37 assert) + `page.tsx` (+5/-11) + `package.json`
           (test:laporan). **Progres Wave 2: WAVE 2 = 2/7.**
-          Standing rule: audit pasca-wave W2.2 (bug+UX+UI) WAJIB
-          sebelum W2.3.
+          Standing rule: audit pasca-wave W2.2 -> hardening bug
+          (B1-B4) SELESAI `663876b` (2 Okt); UX/UI (U1-U4, a11y)
+          DITUNDA ke UX-5/UX-6.
+   - [x] **W2.2 hardening B1-B4** (`663876b`, 2 Okt, dual-push):
+          (B1) card Rekonsiliasi sisi aset + `wakafTotal` + koreksi
+          caption (wakaf = memo, bukan laba/rugi berjalan); (B2)
+          validasi `DATE_RE`+`Date.parse` + `nextDay` di dalam try
+          (RangeError -> JSON 500); (B3) `FORMAL_NOTES` cache
+          'TTL backstop'; (B4) dokumentasi `flag_rekon15` proxy D=K
+          global. Gate: tsc 0; test:laporan 37/37.
 
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
