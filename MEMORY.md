@@ -53,6 +53,36 @@
   golden + invariants E2E); 0 non-ASCII di 4 file; `public/
   sw.js` + file V1 tak tersentuh; ref remote `origin/master`
   + `origin/main` identik @ `6d23e91`.
+
+### F3.4+ W2.1: auto-posting GL debt/payable/returns/ujrah - SELESAI
+1 Okt 2026 (commit `ca0f39f`, dual-push master+main)
+- **6 file (+350/-5)**: `src/lib/jurnal.ts` (5 builder auto:
+  `journalForDebtPayment` D1010/K1030; `journalForPayablePayment`
+  D2010/K1010; `journalForSalesReturn` D4030+D1040/K(cash|1030)+
+  K5020; `journalForPurchaseReturn` D2010/K1040 at cost
+  (builder-only, belum di-wire V1); `journalForConsignmentUjrah`
+  D1010/K4040; + konstanta ACCT `HUTANG_KONSINYASI` 2020 /
+  `RETUR_HPP` 5020; + helper `nowWib()` (rekon #17); + `JSpec.type`
+  6 tipe baru) + 4 route hook (gated `gl_enabled === '1'`,
+  `postJournalInTx` dalam tx V1): `api/debts/[id]` (PATCH pay),
+  `api/payables/[id]` (PATCH pay), `api/returns` (POST),
+  `api/konsinyasi` (aksi sell = ujrah) + `scripts/test-gl.ts`
+  (fase W1-W7, +37 assert).
+- **OQ-7 Option C (1 Okt, ruling Gus Fi)**: settlement konsinyasi
+  D2020/K1010 + goods-receipt D1040/K2020 DITUNDA ke W3/W4 (posting
+  settlement sendirian bikin 2020 tak rekonsiliasi -> drift
+  JOURNAL_BAL #15). W2.1 HANYA post ujrah saat sell;
+  `HUTANG_KONSINYASI` (2020) tetap di COA/ACCT, idle di W2.1.
+- **Gate bersih**: `tsc --noEmit` exit 0; `test:gl` 98 ok / 0 fail
+  (103 -> 98 = blok W6 settlement dihapus); 0 non-ASCII;
+  `public/sw.js` + file V1 tak tersentuh; ref remote
+  `origin/master` + `origin/main` identik @ `ca0f39f`.
+- **Progres Wave 2 (roadmap 12)**: W2.1 `ca0f39f` (auto-posting
+  debt/payable/returns/ujrah). **WAVE 2 = 1/7**.
+  - W2.7 (governance): flip COA `4040` (ujrah) `pending -> open`.
+  - W3/W4 (konsinyasi end-to-end, OQ-7 Option C): goods-receipt
+    D1040/K2020 + settlement D2020/K1010 (re-introduce tipe
+    `consignment_settle` + builder + hook aksi pay).
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
 - **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3

@@ -1391,6 +1391,29 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
          SCHEMA; seed korup: entry tak seimbang & tanggal
          UTC) + baris invariant di
          `docs/qa/DATA-INVARIANTS.md`. #16 `GL_CASH` = W5.2.
+
+   - [x] **F3.4+ W2.1 LEPAS 1 Okt** (`ca0f39f`; ACC Gus Fi; semua
+          gate lulus): auto-posting GL debt/payable/returns + ujrah
+          konsinyasi saat sell, gated `gl_enabled`. 6 file (+350/-5):
+          5 builder di `jurnal.ts` (debt D1010/K1030; payable
+          D2010/K1010; sales-return D4030+D1040/K(cash|1030)+K5020;
+          purchase-return D2010/K1040 at cost = builder-only, belum
+          di-wire V1; ujrah D1010/K4040) + 4 route hook (debts,
+          payables, returns, konsinyasi-sell) + `test-gl.ts` fase
+          W1-W7 (98 assert lulus). **OQ-7 Option C (ruling Gus Fi,
+          1 Okt)**: settlement konsinyasi D2020/K1010 + goods-receipt
+          D1040/K2020 DITUNDA ke W3/W4 (posting settlement sendirian
+          bikin 2020 tak rekonsiliasi -> drift JOURNAL_BAL #15).
+          Progres Wave 2 (roadmap 12): **WAVE 2 = 1/7**.
+     - [ ] **W3/W4 (konsinyasi end-to-end, OQ-7 Option C)**:
+       re-introduce tipe `consignment_settle` + builder + hook aksi
+       pay; post goods-receipt D1040/K2020 + settlement D2020/K1010
+       (akad ju'alah).
+     - [ ] **W2.7 (governance)**: flip COA `4040` (ujrah)
+       `pending -> open` (P4 tashih 30 Sep sudah approve; GL read
+       layer tak join COA status -> posting tetap tampil di trial
+       balance; flip = governance-only).
+
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
   loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,
