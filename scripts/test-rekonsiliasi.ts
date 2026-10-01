@@ -1,5 +1,5 @@
 /**
- * P0-C3 — test 14 cek rekonsiliasi (modul src/lib/rekonsiliasi.ts, flag-only).
+ * P0-C3 - test 16 cek rekonsiliasi (modul src/lib/rekonsiliasi.ts, flag-only).
  *
  * Dijalankan LANGSUNG oleh Node (type-stripping, Node >= 23.6 / v24):
  *     npm run test:rekon     (== node scripts/test-rekonsiliasi.ts)
@@ -8,10 +8,10 @@
  * scripts/test-neraca.ts.
  *
  * Alur:
- *   1. Seed sehat (selaras dgn guard tulis app) → SEMUA 14 cek 'ok',
+ *   1. Seed sehat (selaras dgn guard tulis app) - SEMUA 16 cek 'ok',
  *      clean=true, drift_total=0.
- *   2. Korup (edits manual/DB) → cek target drift dgn jumlah persis;
- *      drift_total=16, clean=false.
+ *   2. Korup (edits manual/DB) - cek target drift dgn jumlah persis;
+ *      drift_total=19, clean=false.
  *   3. DB kosong → semua cek 'ok' (nol), clean=true.
  */
 import { queryRekonsiliasi, REKONSILIASI_NOTES, type RekCheck, type RekPayload } from '../src/lib/rekonsiliasi.ts';
@@ -37,7 +37,7 @@ function find(p: RekPayload, id: string): RekCheck {
   return c;
 }
 
-/** Skema minimal: hanya kolom yang dibaca 13 cek. */
+/** Skema minimal: hanya kolom yang dibaca 16 cek. */
 const SCHEMA = `
 CREATE TABLE sales (
   id INTEGER PRIMARY KEY,
@@ -126,14 +126,30 @@ CREATE TABLE consignments (
   amount_paid INTEGER NOT NULL DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'active'
 );
+CREATE TABLE journal_entries (
+  id TEXT PRIMARY KEY,
+  ref_table TEXT NOT NULL,
+  ref_id TEXT,
+  entry_date TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'normal'
+);
+CREATE TABLE journal_lines (
+  entry_id TEXT NOT NULL,
+  account_code TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT '',
+  debit INTEGER NOT NULL DEFAULT 0,
+  credit INTEGER NOT NULL DEFAULT 0
+);
 `;
 
 /**
- * Seed sehat: setiap baris selaras dgn guard tulis app — 14 cek 'ok'.
+ * Seed sehat: setiap baris selaras dgn guard tulis app - 16 cek 'ok'.
  *  - Shif 1 (kasir 1, [06:00,09:00)): 2 sales (100.000 + 50.000), kas
  *    120.000 (sales tunai 100.000 + porsi split 20.000).
  *  - Konsinyasi: ujrah tercatat = 8.000 + 10.000 (rate 20%, floor/unit);
- *    settlement H. B = 40.000 lunas (settled ⇒ tagihan 40.000 = paid).
+ *    settlement H. B = 40.000 lunas (settled => tagihan 40.000 = paid).
+ *  - Jurnal GL: 2 entry seimbang D=K (100.000 & 50.000), semua
+ *    entry_date berakhiran +07:00.
  */
 const SEED = `
 INSERT INTO sales (id, kasir_id, pay_method, total, amount_paid, change, pay_split, created_at) VALUES
@@ -157,12 +173,21 @@ INSERT INTO cash_entries (type, label, amount) VALUES
   ('income', 'Ujrah Kon. H. A - Rendang', 8000),
   ('income', 'Ujrah Kon. H. B - Sambal', 10000),
   ('expense', 'Kon. H. B - Sambal', 40000);
+INSERT INTO journal_entries (id, ref_table, ref_id, entry_date, type) VALUES
+  ('je-1', 'sales', '1', '2026-09-27T07:00:00+07:00', 'normal'),
+  ('je-2', 'expenses', '1', '2026-09-27T08:00:00+07:00', 'normal');
+INSERT INTO journal_lines (entry_id, account_code, debit, credit) VALUES
+  ('je-1', '1010', 100000, 0),
+  ('je-1', '4010', 0, 100000),
+  ('je-2', '1010', 50000, 0),
+  ('je-2', '5010', 0, 50000);
 `;
 
 /**
- * Korup (simulasi edit manual/DB) — 14 target drift (RETURN_COGS: over-
- * retur baru cogs 0 ≠ 25.000); efek silang yg sengaja: total negatif
- * (sales 3) juga melanggar SALES_PAY.
+ * Korup (simulasi edit manual/DB) - 16 target drift (RETURN_COGS: over-
+ * retur baru cogs 0 != 25.000; JOURNAL_BAL: entry tak seimbang; GL_TZ:
+ * entry tanggal UTC/Z); efek silang yg sengaja: total negatif (sales 3)
+ * juga melanggar SALES_PAY.
  */
 const CORRUPT = `
 UPDATE sales SET amount_paid = 99000 WHERE id = 1;
@@ -177,6 +202,11 @@ UPDATE members SET points = points + 7;
 UPDATE members SET cashback_balance = 500;
 UPDATE consignments SET qty_sold = qty_sold + 99 WHERE owner = 'H. A';
 UPDATE consignments SET amount_paid = amount_paid - 1000 WHERE owner = 'H. B';
+INSERT INTO journal_entries (id, ref_table, ref_id, entry_date, type) VALUES
+  ('je-3', 'sales', '9', '2026-09-28T03:30:00.000Z', 'normal');
+INSERT INTO journal_lines (entry_id, account_code, debit, credit) VALUES
+  ('je-3', '1010', 100000, 0),
+  ('je-3', '4010', 0, 90000);
 `;
 
 /** node:sqlite sinkron → dibungkus Promise + spread args (QueryDb). */
@@ -203,9 +233,15 @@ async function main(): Promise<void> {
   db.exec(SCHEMA);
   db.exec(SEED);
 
-  // ── Fase 1: DB sehat → SEMUA 14 cek 'ok' ─────────────────────────
+  // ===== Fase 1: DB sehat - SEMUA 16 cek 'ok' ========================
   const p1 = await queryRekonsiliasi(makeShim(db));
-  eq('sehat: 14 cek', p1.checks.length, 14);
+  eq('sehat: 16 cek', p1.checks.length, 16);
+  eq(
+    'sehat: JOURNAL_BAL selaras',
+    find(p1, 'JOURNAL_BAL').detail,
+    '2 entry jurnal seimbang (D=K); 0 baris yatim; selisih global 0'
+  );
+  eq('sehat: GL_TZ selaras', find(p1, 'GL_TZ').detail, 'semua entry jurnal +07:00 (satu zona waktu)');
   eq('sehat: RETURN_COGS selaras', find(p1, 'RETURN_COGS').detail, 'semua cogs retur selaras dgn snapshot HPP item (V2-2)');
   eq('sehat: drift_total = 0', p1.drift_total, 0);
   eq('sehat: clean = true', p1.clean, true);
@@ -217,7 +253,7 @@ async function main(): Promise<void> {
   // ── Fase 2: DB korup → drift persis pada cek target ──────────────
   db.exec(CORRUPT);
   const p2 = await queryRekonsiliasi(makeShim(db));
-  eq('korup: drift_total = 17', p2.drift_total, 17);
+  eq('korup: drift_total = 19', p2.drift_total, 19);
   eq('korup: clean = false', p2.clean, false);
   eq('SALES_PAY = 2 (sales 1 & 3)', find(p2, 'SALES_PAY').drift_count, 2);
   eq('SALES_MONEY = 1 (total negatif)', find(p2, 'SALES_MONEY').drift_count, 1);
@@ -243,12 +279,17 @@ async function main(): Promise<void> {
     Number(find(p2, 'KONSIN_PAY').rows[0].expected) + '/' + Number(find(p2, 'KONSIN_PAY').rows[0].recorded),
     '39000/40000'
   );
+  eq('JOURNAL_BAL = 1 (1 entry tak seimbang)', find(p2, 'JOURNAL_BAL').drift_count, 1);
+  eq('JOURNAL_BAL selisih 10.000', Number(find(p2, 'JOURNAL_BAL').rows[0].selisih), 10000);
+  eq('GL_TZ = 1 (1 entry UTC/Z)', find(p2, 'GL_TZ').drift_count, 1);
+  eq('GL_TZ baris memuat tanggal Z', String(find(p2, 'GL_TZ').rows[0].entry_date), '2026-09-28T03:30:00.000Z');
   ok('korup: SETIAP cek drift memuat baris detail', p2.checks.every((c) => c.status === 'drift' && c.rows.length > 0));
 
   // ── Fase 3: DB kosong (skema saja) → semua nol, clean ─────────────
   const dbEmpty = new (await import('node:sqlite')).DatabaseSync(':memory:');
   dbEmpty.exec(SCHEMA);
   const p3 = await queryRekonsiliasi(makeShim(dbEmpty));
+  eq('kosong: 16 cek', p3.checks.length, 16);
   eq('kosong: clean = true', p3.clean, true);
   eq('kosong: drift_total = 0', p3.drift_total, 0);
   ok('kosong: semua cek ok + baris kosong', p3.checks.every((c) => c.status === 'ok' && c.rows.length === 0));

@@ -64,6 +64,21 @@ guard) — same as every other `scripts/test-*.ts`.
 
 Checked both **pre-loss** and **post-restore**.
 
+## GL invariants (F3.4+, skema v21)
+
+Not part of `test:invariants` (the P0-C2 harness seeds no journal data):
+checked at runtime by the flag-only reconciliation module
+(`/admin/rekonsiliasi`, `scripts/test-rekonsiliasi.ts`) -- rekon #15/#17
+(W1.5). Same report-only posture: drift is flagged, never auto-fixed.
+
+| # | Assertion | What it guards |
+|---|-----------|----------------|
+| GL-1 (rekon #15 `JOURNAL_BAL`) | per `journal_entries`: `SUM(journal_lines.debit) = SUM(journal_lines.credit)`; no orphan `journal_lines` row without a parent entry; global `SUM(debit) - SUM(credit) = 0` | double-entry balance (D=K) integrity |
+| GL-2 (rekon #17 `GL_TZ`) | every `journal_entries.entry_date` ends with `+07:00` | single-timezone bookkeeping (R1 mitigation) |
+
+Check #16 (`GL_CASH`: COA kas vs `cash_entries`) is intentionally deferred
+to W5.2 -- the numbering gap between #15 and #17 is expected.
+
 ## Bug found by the drill (P0-C2)
 
 The original backup (`GET`/`POST /api/backup`) omitted the **`point_history`**

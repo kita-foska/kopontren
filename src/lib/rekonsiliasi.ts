@@ -21,9 +21,11 @@
  *    'Kon. …'/'Ujrah Kon. …') bisa sah-saja memicu flag: modul ini
  *    MELAPORKAN, tidak memutuskan.
  *
- * 14 cek: SALES_PAY, SALES_MONEY, SPLIT, SHIFT, RETURN, STOCK, DEBTS,
+ * 16 cek: SALES_PAY, SALES_MONEY, SPLIT, SHIFT, RETURN, STOCK, DEBTS,
  * PAYABLES, POINTS, CASHBACK, KONSIN, KONSIN_UJRAH, KONSIN_PAY,
- * RETURN_COGS (V2-2).
+ * RETURN_COGS (V2-2), JOURNAL_BAL (GL rekon #15), GL_TZ (GL rekon #17).
+ * Cek #16 (GL_CASH) sengaja tidak ada: milik W5.2 (kas COA 10xx vs
+ * cash_entries) - gap penomoran disengaja.
  */
 
 import type { QueryDb } from './keuangan.ts';
@@ -43,7 +45,9 @@ export type RekCheckId =
   | 'KONSIN'
   | 'KONSIN_UJRAH'
   | 'KONSIN_PAY'
-  | 'RETURN_COGS';
+  | 'RETURN_COGS'
+  | 'JOURNAL_BAL'
+  | 'GL_TZ';
 
 export type RekCheck = {
   id: RekCheckId;
@@ -74,6 +78,8 @@ export const REKONSILIASI_NOTES: string[] = [
   "Data legacy (poin tanpa ledger, jurnal kas manual berlabel 'Kon. …'/'Ujrah Kon. …') bisa memicu flag sah-saja — modul melaporkan, tidak memutuskan.",
   'Dikenal (di luar cakupan C3): /api/neraca off-balance masih membaca tabel legacy consignment_items yang tak ada di skema saat ini (data P4 ada di consignments).',
   'COGS retur (V2-2): baris retur dgn snapshot HPP item > 0 (sale_items.cost_price) harus cogs = HPP item × qty retur; baris snapshot 0 (fallback harga beli produk saat write) tak dapat diverifikasi ulang, dikecualikan; baris pre-V2-2 cogs = 0 (konservatif).',
+  'Jurnal GL (F3.4+, rekon #15 JOURNAL_BAL): tiap journal_entries harus total debit = total credit (double-entry D=K); jurnal_lines yatim (tanpa entry induk) ikut flagged; cross-check global total debit - total credit seluruh jurnal_lines harus 0.',
+  'Zona waktu jurnal (F3.4+, rekon #17 GL_TZ): semua journal_entries.entry_date berakhiran +07:00 (satu zona waktu, mitigasi R1); tanggal UTC/Z atau offset lain adalah drift.',
 ];
 
 const TOP = 20;
@@ -534,6 +540,94 @@ export async function queryRekonsiliasi(d: QueryDb): Promise<RekPayload> {
                 JOIN sale_items si ON si.sale_id = r.sale_id AND si.product_id = r.product_id
                 WHERE (si.cost_price > 0 AND r.cogs != si.cost_price * r.qty) OR r.cogs < 0
                 ORDER BY r.id DESC LIMIT ${TOP}`
+            )
+          : []
+      )
+    );
+  }
+
+  // ==== 15. JOURNAL_BAL: keutuhan double-entry D=K (GL rekon #15) ====
+  // F3.4+ (skema v21): tiap journal_entries harus total debit = total
+  // credit baris jurnalnya. jurnal_lines yatim (tanpa entry induk) ikut
+  // mem-drift; cross-check global menutup celah lagi.
+  {
+    const nEntries = await num(d, 'SELECT COUNT(*) c FROM journal_entries');
+    const unbal = await num(
+      d,
+      `SELECT COUNT(*) c FROM (
+         SELECT e.id
+         FROM journal_entries e
+         LEFT JOIN journal_lines l ON l.entry_id = e.id
+         GROUP BY e.id
+         HAVING COALESCE(SUM(l.debit), 0) <> COALESCE(SUM(l.credit), 0)
+       )`
+    );
+    const orphans = await num(
+      d,
+      `SELECT COUNT(*) c FROM journal_lines jl
+       WHERE NOT EXISTS (SELECT 1 FROM journal_entries e WHERE e.id = jl.entry_id)`
+    );
+    const gdiff = await num(
+      d,
+      'SELECT COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) c FROM journal_lines'
+    );
+    const drift = unbal + orphans;
+    checks.push(
+      chk(
+        'JOURNAL_BAL',
+        'Jurnal GL seimbang D=K (rekon #15)',
+        drift,
+        drift
+          ? `${unbal} entry tak seimbang; ${orphans} baris yatim; selisih global ${gdiff}`
+          : `${nEntries} entry jurnal seimbang (D=K); 0 baris yatim; selisih global ${gdiff}`,
+        drift
+          ? await topRows(
+              d,
+              `SELECT e.id, e.ref_table, e.ref_id, e.type,
+                     COALESCE(SUM(l.debit), 0) AS debit,
+                     COALESCE(SUM(l.credit), 0) AS credit,
+                     COALESCE(SUM(l.debit), 0) - COALESCE(SUM(l.credit), 0) AS selisih
+               FROM journal_entries e
+               LEFT JOIN journal_lines l ON l.entry_id = e.id
+               GROUP BY e.id
+               HAVING COALESCE(SUM(l.debit), 0) <> COALESCE(SUM(l.credit), 0)
+               UNION ALL
+               SELECT jl.entry_id AS id, 'yatim' AS ref_table,
+                      jl.account_code || '/' || jl.source AS ref_id,
+                      'yatim' AS type,
+                      jl.debit, jl.credit, jl.debit - jl.credit AS selisih
+               FROM journal_lines jl
+               WHERE NOT EXISTS (SELECT 1 FROM journal_entries e WHERE e.id = jl.entry_id)
+               ORDER BY 1 DESC LIMIT ${TOP}`
+            )
+          : []
+      )
+    );
+  }
+
+  // ==== 16. GL_TZ: satu zona waktu +07:00 (GL rekon #17) ============
+  // Mitigasi R1 (F3.4+): semua entry_date jurnal GL berakhiran +07:00
+  // (WIB). Munculnya tanggal UTC (akhiran 'Z') atau offset lain
+  // menandakan bug timezone di auto-posting - drift.
+  {
+    const drift = await num(
+      d,
+      "SELECT COUNT(*) c FROM journal_entries WHERE entry_date NOT LIKE '%+07:00'"
+    );
+    checks.push(
+      chk(
+        'GL_TZ',
+        'Zona waktu jurnal GL (+07:00, rekon #17)',
+        drift,
+        drift
+          ? `${drift} entry jurnal ber-tanggal bukan +07:00`
+          : 'semua entry jurnal +07:00 (satu zona waktu)',
+        drift
+          ? await topRows(
+              d,
+              `SELECT id, ref_table, ref_id, entry_date
+               FROM journal_entries WHERE entry_date NOT LIKE '%+07:00'
+               ORDER BY id DESC LIMIT ${TOP}`
             )
           : []
       )
