@@ -3542,3 +3542,32 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   (test/diff/scan), explicit assumptions, accept corrections
   without defensiveness, ASK before coding when in doubt.
 
+## W3.1 Skema v23 modul akad (2 Okt 2026)
+- Skema v23 (commit `51b6db8`, ACC Gus Fi via DeepSeek, audit 0
+  must-fix): WAVE 3 = 1/5. SKEMA SAJA (tanpa lib/UI/API).
+- (a) DDL `akad` (Sek.6.1: id, type, counterparty, amount,
+  terms_json, status, opened_at, settled_at, note +
+  UNIQUE(type,counterparty,opened_at,amount)) + `akad_events`
+  (id, akad_id, kind, amount, event_date, posted_entry,
+  created_by, created_at) + `idx_akad_opened` +
+  `idx_akad_events(akad_id,event_date)`. CREATE IF NOT EXISTS
+  idempoten; DB v22 aman, murni additive.
+- (b) Flip 9 COA 1070/1080/1090/2040/4050/4060/4070/4080/5060
+  pending->open, 2 lapis (coaSeed + UPDATE eksplisit di migrate;
+  pola W2.7 lesson bug M2). SCHEMA_VERSION 22->23; BACKUP DB
+  WAJIB; cold start fullInit sekali (stempel v22 -> v23).
+- (c) `scripts/test-akad.ts` = suite #20: M1 fresh v23 (DDL +
+  seed v23 + per-kolom PRAGMA table_info + UNIQUE tolak duplikat
+  + 9 flip + kontrol + stamp 23); M2 upgrade v22->v23 (do-
+  nothing + flip + CREATE 2x + kontrol + stamp 22->23).
+- Gate: tsc 0; test:all 20 suite green; 0 non-ASCII line baru;
+  public/sw.js + V1 tak tersentuh.
+- Flag W3.2/W3.3: F1 ref_id per event = 'akad#<akad_id>:evt#
+  <akad_events.id>' (UNIQUE journal_entries); pesan error jelas
+  utk UNIQUE akad; Q3 (ui-ux-2) + CALK item 8 = W3.3.
+- terms_json: JSON bebas, 0 preset (Sek.6.5) -- validasi
+  akadValidateTerms di W3.2; denda di akad TIDAK dipost (
+  Sek.6.4).
+- NEXT: W3.2 = lib/akad.ts (akadValidateTerms + mapping jurnal
+  per tipe) + test-akad A1-A7 penuh.
+

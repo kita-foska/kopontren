@@ -1625,6 +1625,31 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
            UX + UI, W2.1-W2.7) WAJIB SEBELUM WAVE 3 (standing
            rule).**
 
+   - [x] **W3.1 LEPAS 2 Okt** (`51b6db8`; ACC Gus Fi via DeepSeek;
+          audit 0 must-fix): Skema v23 -- modul akad (SKEMA SAJA,
+          tanpa lib/UI/API; lib = W3.2, UI/CALK = W3.3):
+          (a) tabel akad (Sek.6.1: id, type, counterparty, amount,
+          terms_json, status, opened_at, settled_at, note +
+          UNIQUE(type,counterparty,opened_at,amount)) + akad_events
+          (id, akad_id, kind, amount, event_date, posted_entry,
+          created_by, created_at) + idx_akad_opened +
+          idx_akad_events(akad_id,event_date);
+          (b) flip 9 COA 1070/1080/1090/2040/4050/4060/4070/4080/
+          5060 pending->open, 2 lapis (coaSeed + UPDATE eksplisit
+          di migrate; pola W2.7, lesson bug M2) + SCHEMA_VERSION
+          22->23 (BACKUP DB WAJIB);
+          (c) test-akad = suite #20 (M1 fresh v23 per-kolom
+          PRAGMA table_info, M2 upgrade v22->v23: do-nothing + flip
+          + CREATE idempoten 2x + stamp 22->23).
+          Gate: tsc 0; test:all 20 suite green; 0 non-ASCII line
+          baru; sw.js + V1 tak tersentuh.
+          Catatan: F1 ref_id multi-event =
+          'akad#<akad_id>:evt#<akad_events.id>' (flag W3.2); UNIQUE
+          akad = pesan error jelas (flag W3.3); Q3/CALK item 8 =
+          W3.3.
+          **Progres Wave 3: 1/5 (W3.1 selesai; next W3.2 =
+          lib/akad.ts + test-akad A1-A7 penuh).**
+
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
   loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,
