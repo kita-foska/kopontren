@@ -1415,6 +1415,28 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
        pay; post goods-receipt D1040/K2020 + settlement D2020/K1010
        (akad ju'alah).
       - [x] **W2.7 (governance) -- SELESAI** (`488d679`, 2 Okt): flip COA `4040` (ujrah) `pending -> open` SUDAH DILAKSANAKAN (P4 tashih 30 Sep approve; governance-only). Flip via UPDATE eksplisit di seed db.ts (skema v22) bareng `2090` + `5090`; `6030` sengaja tetap `pending` W5.1. Detail lengkap = entri W2.7 LEPAS di bawah.
+    - [ ] **AUDIT WAVE 2 (2 Okt 2026; ruling Gus Fi: SAFE,
+          0 must-fix) -- findings pasca-koreksi DeepSeek:**
+          **P1 (W3 housekeeping)**: a11y tablist shell laporan
+          formal (6 tab posisi/lka/lpe/lak/calk/v1) -- keyboard-nav
+          + role="tablist"/"tab"/aria-selected (basic a11y, bukan
+          optional; terkait UX-8B; est. 80-120 baris).
+          **P2 (W3 optional)**: rekonsiliasi fallback "Memuat..."
+          -> PageSkeleton (out-of-scope W2; pola lama; est.
+          10 baris).
+          **P3 (W5+ if needed)**: race double-POST auto-posting
+          -- aman by design (UNIQUE (ref_table,ref_id,type) +
+          rollback tx utuh); pola ON CONFLICT DO NOTHING +
+          re-check bila scale-up.
+          **DROP**: loading.tsx /admin/zis -- tak perlu
+          (page.tsx sudah `lazy {loading: PageSkeleton}`,
+          setara /admin/laporan).
+          Note: audit Wave 2 (2 Okt 2026): 0 must-fix; DeepSeek
+          independent audit corrected 3 findings. Item W3 lain
+          sudah tercatat: upgrade CALK/LAK zis-per-jenis dari
+          tabel zis (kolom `kind`) [note entri W2.6] + W3.1
+          modul akad.
+
 
    - [x] **F3.4+ W2.2 LEPAS 1 Okt** (`d91dbd0`; ACC Gus Fi; semua
           gate lulus): Laporan Posisi Keuangan formal (Neraca) +
