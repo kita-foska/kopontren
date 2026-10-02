@@ -4,7 +4,8 @@
  * Dispatch `?report=...` + tier `laporan` (admin/manajer/pengurus) +
  * cache 60 dtk + periode WIB. W2.2 menerbitkan report `posisi`
  * (Laporan Posisi Keuangan formal, Sek.5.1); W2.3 menambah report `lka`
- * (Laporan Laba-Rugi formal, Sek.5.2). Report lain (LPE, LAK, CALK)
+ * (Laporan Laba-Rugi formal, Sek.5.2); W2.4 menambah report `lpe`
+ * (Laporan Perubahan Ekuitas formal, Sek.5.3). Report lain (LAK, CALK)
  * menyusul wave berikutnya -- dispatch disiapkan.
  *
  * `?as_of=YYYY-MM-DD` = tanggal laporan WIB (default = hari ini WIB).
@@ -23,6 +24,7 @@ import { canAccess, currentUser } from '@/lib/auth';
 import { cached } from '@/lib/ref-cache';
 import { buildPosisi } from '@/lib/laporan/posisi';
 import { buildLka } from '@/lib/laporan/lka';
+import { buildLpe } from '@/lib/laporan/lpe';
 import { wibToday } from '@/lib/zakat-period';
 
 export const FORMAL_NOTES: string[] = [
@@ -39,6 +41,16 @@ const LKA_NOTES: string[] = [
   'Laba/rugi berjalan (SUM 4xxx - SUM 5xxx) belum ditutup ke 3020; penutupan manual periodik (jurnal closing, Sek.3.2.6).',
   'MEMO (ujrah konsinyasi 4040, cashback 2030, SHU 3020) TIDAK dijumlahkan ke laba bersih.',
   'Akun 5050 (denda) TIDAK AKTIF (F3.3 #6: tidak ada skema denda); tidak dihitung ke Beban.',
+  'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
+];
+
+const LPE_NOTES: string[] = [
+  'Laporan Perubahan Ekuitas kumulatif s.d. as_of (entry_date < batas), struktur Sek.5.3; kolom = 7 akun ekuitas 30xx (3010-3070).',
+  'D=K (rekon #15 JOURNAL_BAL): bila flag_rekon15=true, angka formal TIDAK dianggap otoritatif -- periksa cek JOURNAL_BAL di /admin/rekonsiliasi.',
+  'Alur: Saldo awal (opening) + SHU (closing ke 3020) + Alokasi SHU (coop: 3020 -> 3030/3040/3050/3060) - Distribusi = Saldo akhir.',
+  'Distribusi (SHU dibagi ke anggota) TERTANGGUNG pada Alokasi (3050 jasa anggota + 3060 dibagi, Sek.13.4); baris Distribusi sendiri = placeholder 0 (modul distribusi menyusul, W2.6).',
+  'Simpanan 2050/2060/2070 = kewajiban anggota, TIDAK ekuitas -- dipapar sebagai memo kaki, TIDAK dijumlahkan ke total ekuitas.',
+  'Nama kolom 30xx dikandung modul (LPE_COLUMNS); 3020-3070 masih status pending di COA (Kolom 1/2 Sek.4.2).',
   'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
 ];
 
@@ -59,7 +71,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const report = (url.searchParams.get('report') ?? 'posisi').trim();
-  const supported = ['posisi', 'lka'];
+  const supported = ['posisi', 'lka', 'lpe'];
   if (!supported.includes(report))
     return NextResponse.json(
       { error: 'report "' + report + '" belum tersedia', supported },
@@ -92,6 +104,11 @@ export async function GET(req: Request) {
         // as_of dikirim via ...lka (LkaPayload.as_of = at); tak perlu duplikat.
         return { ...common, ...lka, notes: LKA_NOTES };
       }
+      if (report === 'lpe') {
+        const lpe = await buildLpe(d, at);
+        // as_of dikirim via ...lpe (LpePayload.as_of = at); tak perlu duplikat.
+        return { ...common, ...lpe, notes: LPE_NOTES };
+      }
       const posisi = await buildPosisi(d, at);
       // as_of dikirim via ...posisi (PosisiPayload.as_of = at); tak perlu duplikat.
       return { ...common, ...posisi, notes: FORMAL_NOTES };
@@ -102,7 +119,7 @@ export async function GET(req: Request) {
     // 500; klien api() salah baca HTML tsb. Tangkap global balas JSON 500
     // (pola /api/gl); cache sukses terakhir tetap backstop.
     return NextResponse.json(
-      { error: 'Gagal memuat Laporan Posisi. Silakan coba lagi.' },
+      { error: 'Gagal memuat laporan formal. Silakan coba lagi.' },
       { status: 500 }
     );
   }

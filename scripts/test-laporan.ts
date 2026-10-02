@@ -9,9 +9,14 @@
  *   ZIS/bersih + netting 5010-5020 + MEMO tak dijumlahkan);
  *   (LB) batas periode; (LC) 5050 denda CLOSED tidak dihitung;
  *   (LD) MEMO eksplisit tak masuk laba_bersih.
+ * Cakupan LPE: (LP1) golden (pembuka opening + SHU closing ke 3020 +
+ *   alokasi coop 3020->3030/3050/3060 - distribusi placeholder 0 + D=K);
+ *   (LP2) simpanan 2050/2060 = memo kewajiban, TIDAK ke ekuitas;
+ *   (LP3) batas periode + flag_rekon15 bila tak seimbang; (LP4) DB kosong.
  */
 import { buildPosisi } from '../src/lib/laporan/posisi.ts';
 import { buildLka } from '../src/lib/laporan/lka.ts';
+import { buildLpe } from '../src/lib/laporan/lpe.ts';
 import type { QueryDb } from '../src/lib/keuangan.ts';
 
 let passes = 0;
@@ -65,6 +70,23 @@ function post(db: SyncDb, id: string, date: string, da: string, ca: string, amt:
 function postUnbalanced(db: SyncDb, id: string, date: string, acct: string, amt: number): void {
   db.prepare("INSERT INTO journal_entries (id, ref_table, ref_id, entry_date) VALUES (?, 'pos', ?, ?)").run(id, id, date);
   db.prepare("INSERT INTO journal_lines (entry_id, account_code, debit, credit, source) VALUES (?, ?, ?, 0, 't')").run(id, acct, amt);
+}
+
+/** Jurnal seimbang 2 kaki dengan type & ref_table eksplisit (untuk bucket LPE:
+ *  pembuka=opening, SHU=closing, alokasi=normal+coop). */
+function postX(
+  db: SyncDb,
+  id: string,
+  date: string,
+  type: string,
+  refTable: string,
+  da: string,
+  ca: string,
+  amt: number
+): void {
+  db.prepare("INSERT INTO journal_entries (id, ref_table, ref_id, entry_date, type) VALUES (?, ?, ?, ?, ?)").run(id, refTable, id, date, type);
+  db.prepare("INSERT INTO journal_lines (entry_id, account_code, debit, credit, source) VALUES (?, ?, ?, 0, 't')").run(id, da, amt);
+  db.prepare("INSERT INTO journal_lines (entry_id, account_code, debit, credit, source) VALUES (?, ?, 0, ?, 't')").run(id, ca, amt);
 }
 
 async function main(): Promise<void> {
@@ -254,8 +276,90 @@ async function main(): Promise<void> {
     );
   }
 
+  // (LP1) LPE golden: pembuka (opening) + SHU (closing ke 3020) + Alokasi
+  // (coop normal: 3020 -> 3030/3050/3060) - distribusi (placeholder 0).
+  {
+    const db = await freshDb();
+    const D = '2026-08-15';
+    // Pembuka (opening): 3010 modal anggota = 10.000.000 (kredit).
+    postX(db, 'P1', D, 'opening', 'coop', '1010', '3010', 10_000_000);
+    // SHU (closing): 3020 = 900.000 (kredit).
+    postX(db, 'P2', D, 'closing', 'pos', '1010', '3020', 900_000);
+    // Alokasi SHU (coop normal): 3020 turun, 3030/3050/3060 naik.
+    postX(db, 'P3', D, 'normal', 'coop', '3020', '3030', 400_000);
+    postX(db, 'P4', D, 'normal', 'coop', '3020', '3050', 300_000);
+    postX(db, 'P5', D, 'normal', 'coop', '3020', '3060', 200_000);
+    const p = await buildLpe(makeShim(db), '2026-10-01');
+    const c3010 = p.columns.find((c) => c.code === '3010')!;
+    const c3020 = p.columns.find((c) => c.code === '3020')!;
+    const c3030 = p.columns.find((c) => c.code === '3030')!;
+    const c3050 = p.columns.find((c) => c.code === '3050')!;
+    const c3060 = p.columns.find((c) => c.code === '3060')!;
+    eq('LP1: 3010 pembuka = 10.000.000', c3010.pembuka, 10_000_000);
+    eq('LP1: 3010 penutup = 10.000.000', c3010.penutup, 10_000_000);
+    eq('LP1: 3020 shu = 900.000', c3020.shu, 900_000);
+    eq('LP1: 3020 alokasi = -900.000 (turun)', c3020.alokasi, -900_000);
+    eq('LP1: 3020 penutup = 0 (SHU seluruhnya dialokasikan)', c3020.penutup, 0);
+    eq('LP1: 3030 penutup = 400.000', c3030.penutup, 400_000);
+    eq('LP1: 3050 penutup = 300.000', c3050.penutup, 300_000);
+    eq('LP1: 3060 penutup = 200.000', c3060.penutup, 200_000);
+    eq('LP1: totals.pembuka = 10.000.000', p.totals.pembuka, 10_000_000);
+    eq('LP1: totals.shu = 900.000', p.totals.shu, 900_000);
+    eq('LP1: totals.alokasi = 0 (wash antar akun ekuitas)', p.totals.alokasi, 0);
+    eq('LP1: totals.distribusi = 0 (placeholder)', p.totals.distribusi, 0);
+    eq('LP1: totals.penutup = 10.900.000 (pembuka + SHU)', p.totals.penutup, 10_900_000);
+    ok(
+      'LP1: full_balance_ekuitas = totals.penutup = 10.900.000 (SHU naik ekuitas)',
+      p.full_balance_ekuitas === p.totals.penutup && p.full_balance_ekuitas === 10_900_000,
+      p.full_balance_ekuitas + ' vs ' + p.totals.penutup
+    );
+    ok('LP1: distribusi semua kolom = 0 (placeholder)', p.columns.every((c) => c.distribusi === 0));
+    ok('LP1: D=K seimbang, flag_rekon15 = false', p.d_k.balanced === true && p.flag_rekon15 === false);
+  }
+
+  // (LP2) LPE: simpanan 2050/2060 = kewajiban -> memo saja, TIDAK ke ekuitas.
+  {
+    const db = await freshDb();
+    const D = '2026-08-15';
+    post(db, 'M1', D, '1010', '2050', 500_000); // CR 2050
+    post(db, 'M2', D, '1010', '2060', 200_000); // CR 2060
+    const p = await buildLpe(makeShim(db), '2026-10-01');
+    eq('LP2: memo simpanan 2050 = 500.000', p.memos.simpanan.find((s) => s.code === '2050')?.value, 500_000);
+    eq('LP2: memo simpanan 2060 = 200.000', p.memos.simpanan.find((s) => s.code === '2060')?.value, 200_000);
+    eq('LP2: memo simpanan 2070 = 0', p.memos.simpanan.find((s) => s.code === '2070')?.value, 0);
+    eq('LP2: simpanan_total = 700.000', p.memos.simpanan_total, 700_000);
+    eq('LP2: totals.penutup ekuitas = 0 (simpanan bukan ekuitas)', p.totals.penutup, 0);
+    eq('LP2: full_balance_ekuitas = 0', p.full_balance_ekuitas, 0);
+    ok('LP2: 7 kolom ekuitas (30xx) di LPE', p.columns.length === 7);
+  }
+
+  // (LP3) LPE batas periode (entry_date < at) + rekon #15 (flag_rekon15).
+  {
+    const db = await freshDb();
+    postX(db, 'B1', '2026-09-30', 'opening', 'coop', '1010', '3010', 100_000); // IN (< at)
+    postX(db, 'B2', '2026-10-01', 'opening', 'coop', '1010', '3010', 500_000); // OUT (= at)
+    let p = await buildLpe(makeShim(db), '2026-10-01');
+    eq('LP3: 3010 pembuka hanya B1 = 100.000', p.columns.find((c) => c.code === '3010')!.pembuka, 100_000);
+    ok('LP3: D=K seimbang', p.d_k.balanced === true && p.flag_rekon15 === false);
+    // Tak seimbang -> flag_rekon15.
+    postUnbalanced(db, 'U1', '2026-08-02', '1030', 250_000);
+    p = await buildLpe(makeShim(db), '2026-10-01');
+    eq('LP3: gap = 250.000', p.d_k.gap, 250_000);
+    ok('LP3: D=K TIDAK seimbang, flag_rekon15 = true', p.d_k.balanced === false && p.flag_rekon15 === true);
+  }
+
+  // (LP4) LPE DB kosong -> semua kolom 0, balanced true (0=0).
+  {
+    const db = await freshDb();
+    const p = await buildLpe(makeShim(db), '2026-10-01');
+    eq('LP4: 7 kolom', p.columns.length, 7);
+    ok('LP4: semua penutup 0', p.columns.every((c) => c.penutup === 0));
+    eq('LP4: simpanan_total = 0', p.memos.simpanan_total, 0);
+    ok('LP4: 0=0 seimbang, flag_rekon15 = false', p.d_k.balanced === true && p.flag_rekon15 === false && p.d_k.total_debit === 0);
+  }
+
   console.log('');
-  console.log('test:laporan (W2.2+W2.3) - ' + passes + ' ok, ' + failures + ' fail');
+  console.log('test:laporan (W2.2+W2.3+W2.4) - ' + passes + ' ok, ' + failures + ' fail');
   process.exit(failures > 0 ? 1 : 0);
 }
 
