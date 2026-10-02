@@ -1460,6 +1460,38 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
           ke mirror live GL. Gate: tsc 0; test:laporan 60/60;
           test:all 18 suite; 0 non-ASCII; sw.js + V1 tak tersentuh.
           **Progres Wave 2: WAVE 2 = 3/7.**
+    - [x] **F3.4+ W2.4 LEPAS 2 Okt** (`a4d90c7`; ACC Gus Fi; semua
+          gate lulus): Laporan Perubahan Ekuitas formal (LPE) +
+          API `?report=lpe` + shell tab `/admin/laporan` "Laporan
+          Perubahan Ekuitas". 4 file (+560/-6):
+          `lib/laporan/lpe.ts` (BARU, modul data murni
+          import-free `buildLpe`; 7 kolom ekuitas 30xx
+          pembuka/shu/alokasi/distribusi/penutup; distribusi = 0
+          placeholder W2.6 (coop sudah memuat); cBal kredit-debit
+          sama dgn `posisi.ts` SAK-EP; simpanan 2050-2070 =
+          kewajiban -> memo kaki TIDAK ekuitas; D=K global
+          `flag_rekon15` proxy, engine rekon = W2.7; nama kolom
+          bawa modul krn 3020-3070 pending di COA) +
+          `api/laporan/formal/route.ts` (dispatch `?report=lpe` +
+          guard tier `laporan` + `nextDay` + `lpe_notes`) +
+          `laporan-formal-client.tsx` (tab LPE: tabel 7 kolom +
+          total, kaki memo simpanan, banner warning rekon-15,
+          badge D=K; shell posisi+V1 tak berubah; 0 new dep) +
+          `scripts/test-laporan.ts` (LP1-LP4: wash antar-akun,
+          simpanan non-ekuitas, D=K rusak flag, DB kosong;
+          60 -> 91 assert). **Fix COA label pre-commit**:
+          2050/2060/2070 = Simpanan Pokok/Wajib/Sukarela per seed
+          `src/db.ts` baris 655-657 -- LPE mulanya
+          "Wajib/Sukarela/Dhuafa" (off-by-one); TIDAK ada
+          perubahan COA (db seed sudah benar, cocok dgn
+          `docs/akuntansi-proposal.md`). Residu non-ASCII
+          (Section/times/minus) di lpe.ts + client diganti ASCII
+          (per-line check 4/4 file clean). **Lesson W2.4**:
+          label COA wajib diverifikasi terhadap seed
+          `src/db.ts`, BUKAN teks proposal / asumsi. Gate: tsc 0;
+          test:laporan 91/91; test:all 18 suite; 0 non-ASCII;
+          sw.js + V1 tak tersentuh.
+          **Progres Wave 2: WAVE 2 = 4/7.**
 
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga

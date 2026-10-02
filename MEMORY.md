@@ -170,6 +170,54 @@
   - **Standing rule**: audit pasca-wave W2.3 -> hardening bila ada
     bug (pola B1-B4 W2.2); mulai setelah go Gus Fi.
 
+### F3.4+ W2.4: Laporan Perubahan Ekuitas formal (LPE) + API + client tab - SELESAI
+2 Okt 2026 (commit `a4d90c7`, dual-push master+main)
+- **4 file (+560/-6)**: `src/lib/laporan/lpe.ts` (BARU, modul data
+  murni import-free `buildLpe(db,at)`; 7 kolom ekuitas 30xx
+  (3010-3070) dgn pembuka (type=opening) + shu (type=closing) +
+  alokasi (coop, 1 SQL pass byType/triple/byCode) - distribusi
+  (=0 placeholder, real di W2.6, coop sudah memuat) = penutup;
+  `cBal` kredit-debit sesuai SAK-EP, sama dgn `posisi.ts`;
+  nama kolom bawa modul krn 3020-3070 status pending di COA;
+  simpanan 2050/2060/2070 = KEWAJIBAN anggota -> memo kaki saja,
+  TIDAK dijumlahkan ke total ekuitas; `d_k` global +
+  `flag_rekon15` proxy (engine rekon asli = W2.7)) +
+  `src/app/api/laporan/formal/route.ts` (dispatch `?report=lpe`
+  -> buildLpe; guard tier `laporan` + `nextDay` + `lpe_notes`) +
+  `src/components/admin/laporan-formal-client.tsx` (tab baru
+  "Laporan Perubahan Ekuitas": tabel 7 kolom
+  pembuka/shu/alokasi/distribusi/penutup + total, kaki memo
+  simpanan, banner warning rekon-15, badge D=K; shell posisi +
+  V1 tak berubah) + `scripts/test-laporan.ts` (LP1-LP4: happy
+  path wash antar-akun, simpanan memo non-ekuitas, D=K rusak
+  flag_rekon15=true, DB kosong; 60 -> 91 assert; 0 new dep).
+- **Fix pre-commit (di-ACC Gus Fi)**:
+  (1) Residu non-ASCII di lpe.ts + client (`Sek.` (Section
+  symbol), `dgn` (times), `-` (minus)) -> diganti ASCII
+  (per-line check 4/4 file clean).
+  (2) Mismatch label COA 2050-2070: LPE mulanya
+  "Simpanan Wajib/Sukarela/Dhuafa" (off-by-one) -> dikoreksi
+  ke seed COA resmi `src/db.ts` baris 655-657 = 2050 Simpanan
+  Pokok / 2060 Simpanan Wajib / 2070 Simpanan Sukarela
+  (TIDAK ada perubahan COA; db seed sudah benar, cocok dgn
+  `docs/akuntansi-proposal.md`).
+- **Lesson W2.4: When using COA labels, verify against src/db.ts
+  COA seed -- do NOT rely on proposal text or assumptions. The
+  2050-2070 mismatch (Pokok/Wajib/Sukarela, not Wajib/Sukarela/
+  Dhuafa) was caught pre-commit and fixed.**
+- **Gate bersih**: `tsc --noEmit` exit 0; `test:laporan` 91/91;
+  `test:all` 18 suite lulus; 0 non-ASCII di 4 file (per-line
+  check); `public/sw.js` + V1 `laporan-admin-client.tsx` tak
+  tersentuh; ref remote `origin/master` + `origin/main` identik
+  @ `a4d90c7`.
+- **Progres Wave 2 (roadmap 12)**: W2.1 `ca0f39f`; W2.2 `d91dbd0`
+  (+ hardening `663876b`); W2.3 `6d8d5b7`; W2.4 `a4d90c7`.
+  **WAVE 2 = 4/7**.
+  - W2.5+ (menyusul): LAK, CALK; penutupan jurnal closing
+    (4xx/5xx -> 3020).
+  - **Standing rule**: audit pasca-wave W2.4 -> hardening bila ada
+    bug (pola B1-B4 W2.2); mulai setelah go Gus Fi.
+
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
 - **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3
