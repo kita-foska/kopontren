@@ -1,12 +1,17 @@
 /**
- * F3.4+ W2.2 - test Laporan Posisi formal (src/lib/laporan/posisi.ts).
- * Node langsung (type-stripping, Node >= 23.6/v24): npm run test:laporan.
- * Harness in-memory node:sqlite, pola test-neraca.ts/test-gl.ts.
- * Cakupan: (A) ledger seimbang + invariant aset+wakaf=kewajib+ekuitas_menutup;
- * (B) batas periode entry_date < at (strict); (C) tak seimbang -> flag_rekon15;
- * (D) DB kosong -> semua 0, 0=0 seimbang.
+ * F3.4+ W2.2/W2.3 - test Laporan Posisi formal (posisi.ts) + Laba-Rugi
+ * (lka.ts). Node langsung (type-stripping, Node >= 23.6/v24):
+ * npm run test:laporan. Harness in-memory node:sqlite, pola
+ * test-neraca.ts/test-gl.ts.
+ * Cakupan Posisi: (A) ledger seimbang + invariant; (B) batas periode;
+ * (C) tak seimbang -> flag_rekon15; (D) DB kosong.
+ * Cakupan LKA: (LA) golden seimbang (neto/HPP/kotor/beban/sebelum ZIS/
+ *   ZIS/bersih + netting 5010-5020 + MEMO tak dijumlahkan);
+ *   (LB) batas periode; (LC) 5050 denda CLOSED tidak dihitung;
+ *   (LD) MEMO eksplisit tak masuk laba_bersih.
  */
 import { buildPosisi } from '../src/lib/laporan/posisi.ts';
+import { buildLka } from '../src/lib/laporan/lka.ts';
 import type { QueryDb } from '../src/lib/keuangan.ts';
 
 let passes = 0;
@@ -152,8 +157,105 @@ async function main(): Promise<void> {
     ok('D: 0=0 seimbang, flag_rekon15 = false', p.d_k.balanced === true && p.flag_rekon15 === false && p.d_k.total_debit === 0);
   }
 
+  // (LA) LKA golden: ledger seimbang -> semua garis P&L Sek.5.2 benar,
+  // netting HPP (5010 gross - 5020) benar, dan MEMO tidak ikut dijumlahkan.
+  {
+    const db = await freshDb();
+    const D = '2026-08-15';
+    // PENDAPATAN: 4010 bruto (kredit), 4020 diskon + 4030 retur (debit).
+    post(db, 'LR1', D, '1010', '4010', 8_000_000); // CR 4010 = 8.000.000
+    post(db, 'LR2', D, '4020', '1010', 500_000); // DR 4020 = 500.000
+    post(db, 'LR3', D, '4030', '1010', 300_000); // DR 4030 = 300.000
+    // HPP: 5010 gross (debit) + 5020 retur COGS (credit, RETUR_HPP; netting V2-2).
+    // LC2 mirror live GL: journalForSalesReturn = DR 1040 / CR 5020.
+    post(db, 'LC1', D, '5010', '1010', 4_000_000); // DR 5010 = 4.000.000 (gross)
+    post(db, 'LC2', D, '1040', '5020', 400_000); // DR 1040 / CR 5020 (live GL)
+    // BEBAN: 5030+5040+5060+5070+5080 (5050 denda sengaja TIDAK ada).
+    post(db, 'LB1', D, '5030', '1010', 600_000);
+    post(db, 'LB2', D, '5040', '1010', 350_000);
+    post(db, 'LB3', D, '5060', '1010', 150_000);
+    post(db, 'LB4', D, '5070', '1010', 50_000);
+    post(db, 'LB5', D, '5080', '1010', 200_000);
+    // ZIS: 5090+5100+6030.
+    post(db, 'LZ1', D, '5090', '1010', 250_000);
+    post(db, 'LZ2', D, '5100', '1010', 100_000);
+    post(db, 'LZ3', D, '6030', '1010', 200_000);
+    // MEMO (TIDAK dijumlahkan ke laba bersih): 4040 ujrah, 2030 cashback, 3020 SHU.
+    post(db, 'LM1', D, '1010', '4040', 120_000); // CR 4040
+    post(db, 'LM2', D, '1010', '2030', 80_000); // CR 2030
+    post(db, 'LM3', D, '1010', '3020', 900_000); // CR 3020
+
+    const p = await buildLka(makeShim(db), '2026-10-01');
+
+    eq('LA: pendapatan.neto = 7.200.000', p.pendapatan.neto, 7_200_000);
+    eq('LA: hpp.bruto (5010) = 4.000.000', p.hpp.bruto, 4_000_000);
+    eq('LA: hpp.retur (5020) = 400.000', p.hpp.retur, 400_000);
+    eq('LA: hpp.neto = 5010 - 5020 = 3.600.000', p.hpp.neto, 3_600_000);
+    eq('LA: laba_kotor = 7.200.000 - 3.600.000', p.laba_kotor, 3_600_000);
+    eq('LA: beban = 1.350.000', p.beban, 1_350_000);
+    eq('LA: laba_sebelum_zis = 2.250.000', p.laba_sebelum_zis, 2_250_000);
+    eq('LA: zis = 550.000', p.zis, 550_000);
+    eq('LA: laba_bersih = 1.700.000', p.laba_bersih, 1_700_000);
+
+    // MEMO tampil dengan nilainya TAPI tidak masuk pendapatan/laba_bersih.
+    const memo4040 = p.memo.find((r) => r.code === '4040');
+    const memo2030 = p.memo.find((r) => r.code === '2030');
+    const memo3020 = p.memo.find((r) => r.code === '3020');
+    eq('LA: memo 4040 (ujrah) = 120.000', memo4040?.value, 120_000);
+    eq('LA: memo 2030 (cashback) = 80.000', memo2030?.value, 80_000);
+    eq('LA: memo 3020 (SHU) = 900.000', memo3020?.value, 900_000);
+    // Pendapatan neto TIDAK menambah ujrah 4040 (harus tetap 7.200.000).
+    ok(
+      'LA: memo TIDAK masuk pendapatan neto (bukan 7.320.000)',
+      p.pendapatan.neto === 7_200_000 && p.laba_bersih === 1_700_000
+    );
+    ok('LA: D=K seimbang, flag_rekon15 = false', p.d_k.balanced === true && p.flag_rekon15 === false);
+  }
+
+  // (LB) LKA batas periode: entry_date < at (strict), sama dgn posisi.
+  {
+    const db = await freshDb();
+    post(db, 'L1', '2026-09-30', '1010', '4010', 1_000_000); // IN (< at)
+    post(db, 'L2', '2026-10-01', '1010', '4010', 5_000_000); // OUT (= at)
+    const p = await buildLka(makeShim(db), '2026-10-01');
+    eq('LB: pendapatan.neto hanya L1 = 1.000.000', p.pendapatan.neto, 1_000_000);
+    eq('LB: laba_bersih hanya L1 = 1.000.000', p.laba_bersih, 1_000_000);
+    ok('LB: D=K tetap seimbang', p.d_k.balanced === true && p.flag_rekon15 === false);
+  }
+
+  // (LC) LKA: 5050 (denda) CLOSED -> tercatat di jurnal, TIDAK masuk Beban.
+  {
+    const db = await freshDb();
+    post(db, 'LD1', '2026-08-15', '1010', '4010', 2_000_000); // pendapatan
+    post(db, 'LD2', '2026-08-15', '5030', '1010', 300_000); // beban aktif
+    post(db, 'LD3', '2026-08-15', '5050', '1010', 700_000); // denda CLOSED
+    const p = await buildLka(makeShim(db), '2026-10-01');
+    eq('LC: beban hanya 5030 = 300.000 (5050 tidak dihitung)', p.beban, 300_000);
+    eq('LC: laba_bersih = 2.000.000 - 300.000 = 1.700.000 (5050 tidak mengurangi)', p.laba_bersih, 1_700_000);
+    ok('LC: D=K tetap seimbang (5050 di-posting seimbang)', p.d_k.balanced === true);
+  }
+
+  // (LD) LKA: MEMO eksplisit -- laba_bersih tidak berubah walau ada memo.
+  {
+    const db = await freshDb();
+    const D = '2026-08-15';
+    post(db, 'LE1', D, '1010', '4010', 5_000_000); // neto 5.000.000
+    const tanpaMemo = await buildLka(makeShim(db), '2026-10-01');
+    eq('LD: laba_bersih tanpa memo = 5.000.000', tanpaMemo.laba_bersih, 5_000_000);
+    // Tambahkan MEMO besar (4040 ujrah + 3020 SHU) -> laba_bersih TETAP.
+    post(db, 'LE2', D, '1010', '4040', 1_000_000);
+    post(db, 'LE3', D, '1010', '3020', 1_000_000);
+    const denganMemo = await buildLka(makeShim(db), '2026-10-01');
+    eq('LD: laba_bersih TETAP 5.000.000 setelah memo ditambah', denganMemo.laba_bersih, 5_000_000);
+    ok(
+      'LD: memo bertambah (4040=1.000.000, 3020=1.000.000) tapi tidak mengubah laba_bersih',
+      denganMemo.memo.find((r) => r.code === '4040')?.value === 1_000_000 &&
+        denganMemo.memo.find((r) => r.code === '3020')?.value === 1_000_000
+    );
+  }
+
   console.log('');
-  console.log('test:laporan (W2.2) - ' + passes + ' ok, ' + failures + ' fail');
+  console.log('test:laporan (W2.2+W2.3) - ' + passes + ' ok, ' + failures + ' fail');
   process.exit(failures > 0 ? 1 : 0);
 }
 

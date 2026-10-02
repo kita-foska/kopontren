@@ -12,6 +12,7 @@ import dynamic from 'next/dynamic';
 import { api, Badge, Button, ErrorState, PageSkeleton, Td, Table, Th, Trow } from '@/components/ui';
 import { rp, todayWibStr } from '@/lib/format';
 import type { PosisiPayload } from '@/lib/laporan/posisi';
+import type { LkaPayload } from '@/lib/laporan/lka';
 
 /** V1 (laba/rugi simplifikasi) di-lazy-load -- datanya berat. */
 const V1Client = dynamic(
@@ -20,10 +21,19 @@ const V1Client = dynamic(
   { ssr: false, loading: () => <PageSkeleton /> },
 );
 
-type TabId = 'posisi' | 'v1';
+type TabId = 'posisi' | 'lka' | 'v1';
 
 /** Bentuk respons GET /api/laporan/formal?report=posisi (route W2.2). */
 type FormalResp = PosisiPayload & {
+  ok: true;
+  gl_enabled: boolean;
+  coop_registered: boolean;
+  coa: { code: string; name: string; group: string }[];
+  notes: string[];
+};
+
+/** Bentuk respons GET /api/laporan/formal?report=lka (route W2.3). */
+type LkaResp = LkaPayload & {
   ok: true;
   gl_enabled: boolean;
   coop_registered: boolean;
@@ -41,6 +51,7 @@ export function LaporanFormalClient() {
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'posisi', label: 'Laporan Posisi (Neraca)' },
+    { id: 'lka', label: 'Laba-Rugi' },
     { id: 'v1', label: 'Laporan V1' },
   ];
 
@@ -66,7 +77,7 @@ export function LaporanFormalClient() {
         </div>
       </div>
 
-      {tab === 'posisi' ? <PositionPanel /> : <V1Client />}
+      {tab === 'posisi' ? <PositionPanel /> : tab === 'lka' ? <LkaPanel /> : <V1Client />}
     </div>
   );
 }
@@ -288,6 +299,162 @@ function PosisiStatement({ p }: { p: FormalResp }) {
           berjalan (4xx - 5xx) sudah termuat dalam ekuitas menutup -- bukan sumber
           selisih. Jurnal closing memindahkan laba/rugi berjalan ke 3020 (Sek.3.2.6)
           untuk neraca setelah penutupan.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** W2.3 -- panel Laba-Rugi: pilih as_of, muat ?report=lka, render P&L Sek.5.2. */
+function LkaPanel() {
+  const [asOf, setAsOf] = useState(todayWibStr);
+  const [data, setData] = useState<LkaResp | null>(null);
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr('');
+    const r = await api<LkaResp>('/api/laporan/formal?report=lka&as_of=' + asOf);
+    if (r.ok && r.data) {
+      setData(r.data);
+    } else {
+      setData(null);
+      setErr(r.error || 'Gagal memuat Laporan Laba-Rugi.');
+    }
+    setLoading(false);
+  }, [asOf]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading && !data) return <PageSkeleton />;
+
+  return (
+    <div className="space-y-3">
+      {/* Bar atas: as_of + status D=K + auto-posting + kopontren. */}
+      <div className="card flex flex-wrap items-center justify-between gap-3 p-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            as_of
+          </label>
+          <input
+            type="date"
+            value={asOf}
+            onChange={(e) => e.target.value && setAsOf(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-navy-600 dark:bg-navy-800"
+          />
+          <Button variant="ghost" onClick={() => load()}>
+            Muat ulang
+          </Button>
+        </div>
+        {data && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone={data.d_k.balanced ? 'green' : 'red'}>
+              {data.d_k.balanced ? 'D=K seimbang' : 'Tidak seimbang'}
+            </Badge>
+            {data.gl_enabled ? (
+              <Badge tone="blue">auto-posting</Badge>
+            ) : (
+              <Badge tone="gray">auto-posting off</Badge>
+            )}
+            {data.coop_registered && <Badge tone="amber">kopontren reg.</Badge>}
+          </div>
+        )}
+      </div>
+
+      {err && !loading && (
+        <div className="card p-4">
+          <ErrorState text={err} onRetry={() => load()} />
+        </div>
+      )}
+
+      {/* D=K gagal (rekon #15 JOURNAL_BAL): tolak angka formal. */}
+      {data && !data.d_k.balanced && (
+        <div className="card border-rose-200 bg-rose-50 p-4 dark:border-rose-900 dark:bg-rose-950/30">
+          <p className="text-sm font-bold text-rose-700 dark:text-rose-300">
+            Debit tak sama Kredit s.d. {data.as_of} (selisih {rp(data.d_k.gap)}). Angka
+            formal TIDAK otoritatif.
+          </p>
+          <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+            Perbaiki mutasi jurnal, atau cek JOURNAL_BAL di{' '}
+            <a href="/admin/rekonsiliasi" className="font-bold underline">
+              /admin/rekonsiliasi
+            </a>
+            .
+          </p>
+        </div>
+      )}
+
+      {data && <LkaStatement p={data} />}
+      {data && data.notes.length > 0 && <NotesList notes={data.notes} />}
+    </div>
+  );
+}
+
+/** LKA s.d. as_of -- struktur Sek.5.2 (NETO - HPP = KOTOR - BEBAN = SEBELUM ZIS - ZIS = BERSIH). */
+function LkaStatement({ p }: { p: LkaResp }) {
+  const pd = p.pendapatan;
+  const hp = p.hpp;
+  return (
+    <div className="space-y-3">
+      <div className="card p-4">
+        <h3 className="mb-2 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+          PENDAPATAN
+        </h3>
+        <Line label="Pendapatan bruto (4010)" value={pd.bruto} />
+        <Line label="Potongan & diskon (4020)" value={pd.diskon} />
+        <Line label="Retur penjualan (4030)" value={pd.retur_penjualan} />
+        <Line label="Pendapatan neto (4010 - 4020 - 4030)" value={pd.neto} strong />
+
+        <div className="mt-3">
+          <h3 className="mb-2 text-sm font-bold text-rose-700 dark:text-rose-400">HPP</h3>
+          <Line label="HPP bruto (5010)" value={hp.bruto} />
+          <Line label="Retur COGS (5020, netting V2-2)" value={hp.retur} />
+          <Line label="HPP neto (5010 - 5020)" value={hp.neto} strong />
+        </div>
+      </div>
+
+      <div className="card p-4">
+        <Line label="Laba Kotor (neto - HPP)" value={p.laba_kotor} strong />
+        <Line
+          label="Beban (5030+5040+5060+5070+5080; 5050 denda tidak aktif)"
+          value={p.beban}
+        />
+        <Line label="Laba Sebelum ZIS (kotor - beban)" value={p.laba_sebelum_zis} strong />
+        <Line label="ZIS (5090+5100+6030)" value={p.zis} />
+        <Line label="Laba Bersih (sebelum ZIS - ZIS)" value={p.laba_bersih} strong />
+      </div>
+
+      {/* MEMO: ujrah konsinyasi (4040), cashback (2030), SHU (3020) -- TIDAK dijumlahkan. */}
+      <div className="card p-4">
+        <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+          MEMO (tidak dijumlahkan ke laba bersih)
+        </h3>
+        <div className="overflow-x-auto">
+          <Table minW="min-w-[30rem]">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-navy-700">
+                <Th>Baris</Th>
+                <Th>Kode</Th>
+                <Th>Nilai</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {p.memo.map((r) => (
+                <Trow key={r.code}>
+                  <Td>{r.label}</Td>
+                  <Td className="font-mono text-xs">{r.code}</Td>
+                  <Td className="tabular-nums">{rp(r.value)}</Td>
+                </Trow>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Ujrah konsinyasi (4040), cashback (2030), dan SHU (3020) ditampilkan sebagai
+          memo saja; TIDAK masuk perhitungan laba bersih.
         </p>
       </div>
     </div>

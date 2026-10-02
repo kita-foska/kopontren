@@ -3,8 +3,9 @@
  *
  * Dispatch `?report=...` + tier `laporan` (admin/manajer/pengurus) +
  * cache 60 dtk + periode WIB. W2.2 menerbitkan report `posisi`
- * (Laporan Posisi Keuangan formal, Sek.5.1). Report lain (laba-rugi,
- * LPE, LAK, CALK) menyusul wave berikutnya -- dispatch disiapkan.
+ * (Laporan Posisi Keuangan formal, Sek.5.1); W2.3 menambah report `lka`
+ * (Laporan Laba-Rugi formal, Sek.5.2). Report lain (LPE, LAK, CALK)
+ * menyusul wave berikutnya -- dispatch disiapkan.
  *
  * `?as_of=YYYY-MM-DD` = tanggal laporan WIB (default = hari ini WIB).
  * Batas kumulatif `at` = akhir hari `as_of` (entry_date < at).
@@ -21,6 +22,7 @@ import { db, getSettings } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { cached } from '@/lib/ref-cache';
 import { buildPosisi } from '@/lib/laporan/posisi';
+import { buildLka } from '@/lib/laporan/lka';
 import { wibToday } from '@/lib/zakat-period';
 
 export const FORMAL_NOTES: string[] = [
@@ -29,6 +31,15 @@ export const FORMAL_NOTES: string[] = [
   'Laba/rugi berjalan (SUM 4xxx - SUM 5xxx) belum ditutup ke 3020; penutupan manual periodik (jurnal closing, Sek.3.2.6).',
   'Wakaf (1120 + 6020) bersifat memo dan TIDAK dijumlahkan ke total aset.',
   'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate laporan -- tunggu TTL (60 dtk) atau tekan Muat ulang.',
+];
+
+const LKA_NOTES: string[] = [
+  'Laporan Laba-Rugi kumulatif s.d. as_of (entry_date < batas), struktur Sek.5.2.',
+  'D=K (rekon #15 JOURNAL_BAL): bila flag_rekon15=true, angka formal TIDAK dianggap otoritatif -- periksa cek JOURNAL_BAL di /admin/rekonsiliasi.',
+  'Laba/rugi berjalan (SUM 4xxx - SUM 5xxx) belum ditutup ke 3020; penutupan manual periodik (jurnal closing, Sek.3.2.6).',
+  'MEMO (ujrah konsinyasi 4040, cashback 2030, SHU 3020) TIDAK dijumlahkan ke laba bersih.',
+  'Akun 5050 (denda) TIDAK AKTIF (F3.3 #6: tidak ada skema denda); tidak dihitung ke Beban.',
+  'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
 ];
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -48,9 +59,10 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const report = (url.searchParams.get('report') ?? 'posisi').trim();
-  if (report !== 'posisi')
+  const supported = ['posisi', 'lka'];
+  if (!supported.includes(report))
     return NextResponse.json(
-      { error: 'report "' + report + '" belum tersedia di W2.2', supported: ['posisi'] },
+      { error: 'report "' + report + '" belum tersedia', supported },
       { status: 400 }
     );
 
@@ -64,21 +76,25 @@ export async function GET(req: Request) {
     const at = nextDay(asOf);
     const payload = await cached('lapformal:' + report + ':' + at, async () => {
       const d = await db();
-      const posisi = await buildPosisi(d, at);
       const coa = (await d
         .prepare('SELECT code, name, "group" FROM coa WHERE status = ? ORDER BY code')
         .all('open')) as { code: string; name: string; group: string }[];
       const s = await getSettings();
-      return {
+      const common = {
         ok: true,
         report,
-        // as_of dikirim via ...posisi (PosisiPayload.as_of = at); tak perlu duplikat.
-        ...posisi,
         gl_enabled: s.gl_enabled === '1',
         coop_registered: s.coop_registered === '1',
         coa,
-        notes: FORMAL_NOTES,
       };
+      if (report === 'lka') {
+        const lka = await buildLka(d, at);
+        // as_of dikirim via ...lka (LkaPayload.as_of = at); tak perlu duplikat.
+        return { ...common, ...lka, notes: LKA_NOTES };
+      }
+      const posisi = await buildPosisi(d, at);
+      // as_of dikirim via ...posisi (PosisiPayload.as_of = at); tak perlu duplikat.
+      return { ...common, ...posisi, notes: FORMAL_NOTES };
     });
     return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } });
   } catch {
