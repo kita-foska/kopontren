@@ -17,11 +17,18 @@
  *   transfer antar-kas + pergeseran kas sosial + identitas footer +
  *   rincian ZIS terpisah); (L2) batas periode; (L3) tak seimbang ->
  *   flag_rekon15; (L4) DB kosong; (L5) jurnal pembalik offset arus.
+ * Cakupan CALK (W2.6, Sek.5.5): (C1) golden GL-only (item 4-8:
+ *   piutang/hutang per akun, ekuitas + simpanan memo TIDAK ikut total,
+ *   ZIS per jenis + per periode + memo wakaf 1120/6020, akad berjalan);
+ *   (C2) batas periode; (C3) tak seimbang -> flag_rekon15; (C4) DB kosong.
+ *   (Item 1-3 = teks statis panel klien; item 9 = input manual -- tak di
+ *   payload, tak diuji di sini.)
  */
 import { buildPosisi } from '../src/lib/laporan/posisi.ts';
 import { buildLka } from '../src/lib/laporan/lka.ts';
 import { buildLpe } from '../src/lib/laporan/lpe.ts';
 import { buildLak } from '../src/lib/laporan/lak.ts';
+import { buildCalk } from '../src/lib/laporan/calk.ts';
 import type { QueryDb } from '../src/lib/keuangan.ts';
 
 let passes = 0;
@@ -473,8 +480,91 @@ async function main(): Promise<void> {
     ok('L5: D=K seimbang, flag_rekon15 = false', l.d_k.balanced === true && l.flag_rekon15 === false);
   }
 
+  // (C1) CALK golden GL-only s.d. at (Sek.5.5 item 4-8) + D=K.
+  {
+    const db = await freshDb();
+    const D = '2026-08-15';
+    // Pembuka (type='opening') -> saldo, BUKAN aliran.
+    postX(db, 'C-O1', '2026-08-01', 'opening', 'coop', '1010', '3010', 10_000_000);
+    postX(db, 'C-O2', '2026-08-01', 'opening', 'coop', '1100', '2090', 200_000);
+    // ZIS (GL-only): infak masuk 4090, zakat keluar 5090, wakaf masuk 4100 + aset 1120.
+    post(db, 'C-Z1', D, '1100', '4090', 300_000); // infak diterima
+    post(db, 'C-Z2', D, '5090', '1100', 150_000); // zakat disalurkan
+    post(db, 'C-W1', D, '1120', '4100', 500_000); // wakaf booking (aset + pendapatan)
+    // Simpanan (kewajiban anggota, BUKAN ekuitas).
+    post(db, 'C-S1', D, '1010', '2050', 100_000);
+    // Akad berjalan (per akun COA).
+    post(db, 'C-A1', D, '1070', '1010', 800_000); // piutang murabahah
+    const c = await buildCalk(makeShim(db), '2026-10-01');
+    // Item 4: komponen kas (saldo penutup wajar-debit).
+    eq('C1: kas 1010 penutup = 10.000.000 + 100.000 (setor simpanan) - 800.000 (akad)', c.kas.find((k) => k.code === '1010')?.value, 9_300_000);
+    eq('C1: kas 1020 penutup = 0', c.kas.find((k) => k.code === '1020')?.value, 0);
+    eq('C1: kas 1100 penutup = 200.000 + 300.000 - 150.000', c.kas.find((k) => k.code === '1100')?.value, 350_000);
+    // Item 5: piutang & hutang per akun.
+    eq('C1: piutang 1070 = 800.000', c.piutang.find((r) => r.code === '1070')?.value, 800_000);
+    eq('C1: piutang 1030 = 0', c.piutang.find((r) => r.code === '1030')?.value, 0);
+    eq('C1: hutang 2090 = 200.000 (pembuka)', c.hutang.find((r) => r.code === '2090')?.value, 200_000);
+    // Item 6: ekuitas + simpanan memo TIDAK ikut total.
+    eq('C1: ekuitas total = 10.000.000 (3010)', c.ekuitas_total, 10_000_000);
+    eq('C1: simpanan memo 2050 = 100.000', c.ekuitas_memo.find((r) => r.code === '2050')?.value, 100_000);
+    ok('C1: simpanan TIDAK dihitung ke ekuitas_total', c.ekuitas_total === 10_000_000);
+    // Item 7: ZIS per jenis (GL-only) + memo wakaf.
+    eq('C1: zis = 4 baris jenis', c.zis.length, 4);
+    eq('C1: zakat disalurkan = 150.000 (5090)', c.zis.find((z) => z.jenis === 'zakat')?.disalurkan, 150_000);
+    eq('C1: zakat diterima = 0 (tak ada akun penerimaan zakat)', c.zis.find((z) => z.jenis === 'zakat')?.diterima, 0);
+    eq('C1: infak diterima = 300.000 (4090)', c.zis.find((z) => z.jenis === 'infak')?.diterima, 300_000);
+    eq('C1: infak disalurkan = 0 (5100)', c.zis.find((z) => z.jenis === 'infak')?.disalurkan, 0);
+    eq('C1: sedekah lumps -> 0/0', (c.zis.find((z) => z.jenis === 'sedekah')?.diterima ?? 0) + (c.zis.find((z) => z.jenis === 'sedekah')?.disalurkan ?? 0), 0);
+    eq('C1: wakaf diterima = 500.000 (4100)', c.zis.find((z) => z.jenis === 'wakaf')?.diterima, 500_000);
+    eq('C1: zis_memo aset_wakaf_1120 = 500.000', c.zis_memo.aset_wakaf_1120, 500_000);
+    eq('C1: zis_memo memo_6020 = 0', c.zis_memo.memo_6020, 0);
+    // Item 7 (periode): aliran non-pembuka per bulan.
+    eq('C1: zis_periode = 1 bulan (2026-08)', c.zis_periode.length === 1 && c.zis_periode[0].periode, '2026-08');
+    eq('C1: zis_periode 2026-08 diterima = 800.000 (4090 300.000 + 4100 500.000)', c.zis_periode[0].diterima, 800_000);
+    eq('C1: zis_periode 2026-08 disalurkan = 150.000 (5090)', c.zis_periode[0].disalurkan, 150_000);
+    // Item 8: akad berjalan per akun.
+    eq('C1: akad 1070 = 800.000', c.akad_berjalan.find((r) => r.code === '1070')?.value, 800_000);
+    eq('C1: akad 1080 = 0', c.akad_berjalan.find((r) => r.code === '1080')?.value, 0);
+    ok('C1: D=K seimbang, flag_rekon15 = false', c.d_k.balanced === true && c.flag_rekon15 === false);
+  }
+
+  // (C2) CALK batas periode: entry_date < at (strict) -- saldo & aliran.
+  {
+    const db = await freshDb();
+    post(db, 'C-B1', '2026-09-30', '1100', '4090', 100_000); // IN (< at)
+    post(db, 'C-B2', '2026-10-01', '1100', '4090', 900_000); // OUT (= at)
+    const c = await buildCalk(makeShim(db), '2026-10-01');
+    eq('C2: infak diterima hanya B1 = 100.000', c.zis.find((z) => z.jenis === 'infak')?.diterima, 100_000);
+    ok('C2: zis_periode = [2026-09] saja', c.zis_periode.length === 1 && c.zis_periode[0].periode === '2026-09');
+    eq('C2: zis_periode 2026-09 diterima = 100.000', c.zis_periode[0].diterima, 100_000);
+    eq('C2: kas 1100 penutup = 100.000', c.kas.find((k) => k.code === '1100')?.value, 100_000);
+  }
+
+  // (C3) CALK tak seimbang -> flag_rekon15 (nilai akun ikut, gap terlihat).
+  {
+    const db = await freshDb();
+    post(db, 'C-K1', '2026-08-01', '1010', '3010', 1_000_000); // seimbang
+    postUnbalanced(db, 'C-U1', '2026-08-02', '1030', 250_000); // kaki debit saja
+    const c = await buildCalk(makeShim(db), '2026-10-01');
+    eq('C3: piutang 1030 = 250.000 (kaki debit)', c.piutang.find((r) => r.code === '1030')?.value, 250_000);
+    eq('C3: D=K gap = 250.000', c.d_k.gap, 250_000);
+    ok('C3: D=K TIDAK seimbang, flag_rekon15 = true', c.d_k.balanced === false && c.flag_rekon15 === true);
+  }
+
+  // (C4) CALK DB kosong -> semua nol, zis 4 baris jenis, zis_periode kosong.
+  {
+    const db = await freshDb();
+    const c = await buildCalk(makeShim(db), '2026-10-01');
+    eq('C4: 4 baris zis jenis', c.zis.length, 4);
+    ok('C4: zis_periode kosong', c.zis_periode.length === 0);
+    ok('C4: semua kas 0', c.kas.every((k) => k.value === 0));
+    eq('C4: ekuitas_total = 0', c.ekuitas_total, 0);
+    eq('C4: zis_memo semua 0', c.zis_memo.aset_wakaf_1120 + c.zis_memo.memo_6020, 0);
+    ok('C4: 0=0 seimbang, flag_rekon15 = false', c.d_k.balanced === true && c.flag_rekon15 === false && c.d_k.total_debit === 0);
+  }
+
   console.log('');
-  console.log('test:laporan (W2.2+W2.3+W2.4+W2.5) - ' + passes + ' ok, ' + failures + ' fail');
+  console.log('test:laporan (W2.2+W2.3+W2.4+W2.5+W2.6) - ' + passes + ' ok, ' + failures + ' fail');
   process.exit(failures > 0 ? 1 : 0);
 }
 

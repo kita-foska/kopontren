@@ -15,6 +15,7 @@ import type { PosisiPayload } from '@/lib/laporan/posisi';
 import type { LkaPayload } from '@/lib/laporan/lka';
 import type { LpePayload } from '@/lib/laporan/lpe';
 import type { LakPayload, LakActivity } from '@/lib/laporan/lak';
+import type { CalkPayload } from '@/lib/laporan/calk';
 
 /** V1 (laba/rugi simplifikasi) di-lazy-load -- datanya berat. */
 const V1Client = dynamic(
@@ -23,7 +24,7 @@ const V1Client = dynamic(
   { ssr: false, loading: () => <PageSkeleton /> },
 );
 
-type TabId = 'posisi' | 'lka' | 'lpe' | 'lak' | 'v1';
+type TabId = 'posisi' | 'lka' | 'lpe' | 'lak' | 'calk' | 'v1';
 
 /** Bentuk respons GET /api/laporan/formal?report=posisi (route W2.2). */
 type FormalResp = PosisiPayload & {
@@ -61,6 +62,15 @@ type LakResp = LakPayload & {
   notes: string[];
 };
 
+/** Bentuk respons GET /api/laporan/formal?report=calk (route W2.6). */
+type CalkResp = CalkPayload & {
+  ok: true;
+  gl_enabled: boolean;
+  coop_registered: boolean;
+  coa: { code: string; name: string; group: string }[];
+  notes: string[];
+};
+
 /**
  * /admin/laporan: shell tab. 'posisi' = Laporan Posisi W2.2 (formal,
  * Sek.5.1); 'v1' = laporan V1 simplifikasi (lazy). Laporan V2 menyusul
@@ -74,6 +84,7 @@ export function LaporanFormalClient() {
     { id: 'lka', label: 'Laba-Rugi' },
     { id: 'lpe', label: 'Perubahan Ekuitas' },
     { id: 'lak', label: 'Arus Kas' },
+    { id: 'calk', label: 'Catatan LK (CALK)' },
     { id: 'v1', label: 'Laporan V1' },
   ];
 
@@ -99,7 +110,7 @@ export function LaporanFormalClient() {
         </div>
       </div>
 
-      {tab === 'posisi' ? <PositionPanel /> : tab === 'lka' ? <LkaPanel /> : tab === 'lpe' ? <LpePanel /> : tab === 'lak' ? <LakPanel /> : <V1Client />}
+      {tab === 'posisi' ? <PositionPanel /> : tab === 'lka' ? <LkaPanel /> : tab === 'lpe' ? <LpePanel /> : tab === 'lak' ? <LakPanel /> : tab === 'calk' ? <CalkPanel /> : <V1Client />}
     </div>
   );
 }
@@ -926,8 +937,369 @@ function LakStatement({ p }: { p: LakResp }) {
   );
 }
 
+/** Item 9 (Sek.5.5): peristiwa pasca-periode -- input manual, draft LOKAL
+ *  per as_of (localStorage perangkat ini), TIDAK tersimpan di server. */
+function CalkPeristiwa({ asOf }: { asOf: string }) {
+  const key = 'calk:peristiwa:' + asOf;
+  const [text, setText] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setText(window.localStorage.getItem(key) ?? '');
+    setSaved(false);
+  }, [key]);
+
+  return (
+    <div className="card p-4">
+      <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+        9. Peristiwa pasca-periode s.d. {asOf} (input manual, Sek.5.5)
+      </h3>
+      <textarea
+        rows={3}
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          setSaved(false);
+        }}
+        placeholder="Catat peristiwa pasca-periode (mis. sengkut, komitmen, sengketa) yang wajib diungkap..."
+        className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm dark:border-navy-600 dark:bg-navy-800"
+      />
+      <div className="mt-2 flex items-center gap-2">
+        <Button
+          variant="ghost"
+          onClick={() => {
+            window.localStorage.setItem(key, text);
+            setSaved(true);
+          }}
+        >
+          Simpan draft
+        </Button>
+        {saved && <span className="text-xs text-slate-500 dark:text-slate-400">tersimpan lokal (perangkat ini)</span>}
+      </div>
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Draft per as_of, disimpan di perangkat ini (localStorage) -- TIDAK ke server/DB (API formal read-only).
+      </p>
+    </div>
+  );
+}
+
+/** Panel W2.6: CALK template Sek.5.5 -- as_of + item 1-3 kebijakan +
+ *  item 4-8 dari GL + item 9 input manual. Baca GET /api/laporan/formal?report=calk. */
+function CalkPanel() {
+  const [asOf, setAsOf] = useState(todayWibStr);
+  const [data, setData] = useState<CalkResp | null>(null);
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr('');
+    const r = await api<CalkResp>('/api/laporan/formal?report=calk&as_of=' + asOf);
+    if (r.ok && r.data) {
+      setData(r.data);
+    } else {
+      setData(null);
+      setErr(r.error || 'Gagal memuat Catatan LK (CALK).');
+    }
+    setLoading(false);
+  }, [asOf]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading && !data) return <PageSkeleton />;
+
+  return (
+    <div className="space-y-3">
+      {/* Bar atas: as_of + status D=K + auto-posting + kopontren (pola LakPanel). */}
+      <div className="card flex flex-wrap items-center justify-between gap-3 p-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            as_of
+          </label>
+          <input
+            type="date"
+            value={asOf}
+            onChange={(e) => e.target.value && setAsOf(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-navy-600 dark:bg-navy-800"
+          />
+          <Button variant="ghost" onClick={() => load()}>
+            Muat ulang
+          </Button>
+        </div>
+        {data && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone={data.d_k.balanced ? 'green' : 'red'}>
+              {data.d_k.balanced ? 'D=K seimbang' : 'Tidak seimbang'}
+            </Badge>
+            {data.gl_enabled ? (
+              <Badge tone="blue">auto-posting</Badge>
+            ) : (
+              <Badge tone="gray">auto-posting off</Badge>
+            )}
+            {data.coop_registered && <Badge tone="amber">kopontren reg.</Badge>}
+          </div>
+        )}
+      </div>
+
+      {err && !loading && (
+        <div className="card p-4">
+          <ErrorState text={err} onRetry={() => load()} />
+        </div>
+      )}
+
+      {/* D=K gagal (rekon #15 JOURNAL_BAL): angka formal tidak otoritatif. */}
+      {data && !data.d_k.balanced && (
+        <div className="card border-rose-200 bg-rose-50 p-4 dark:border-rose-900 dark:bg-rose-950/30">
+          <p className="text-sm font-bold text-rose-700 dark:text-rose-300">
+            Debit tak sama Kredit s.d. {data.as_of} (selisih {rp(data.d_k.gap)}). Angka
+            formal TIDAK otoritatif.
+          </p>
+          <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+            Perbaiki mutasi jurnal, atau cek JOURNAL_BAL di{' '}
+            <a href="/admin/rekonsiliasi" className="font-bold underline">
+              /admin/rekonsiliasi
+            </a>
+            .
+          </p>
+        </div>
+      )}
+
+      {data && <CalkKebijakan p={data} />}
+      {data && <CalkStatement p={data} />}
+      {data && <CalkPeristiwa asOf={asOf} />}
+      {data && data.notes.length > 0 && <NotesList notes={data.notes} />}
+    </div>
+  );
+}
+
+/** Item 1-3 (Sek.5.5): info entitas + status koperasi (flag Sek.1.1), dasar
+ *  penyusunan hybrid (Sek.1.2), struktur, kebijakan akuntansi + badge
+ *  item belum-diputuskan/PKGF/wave. */
+function CalkKebijakan({ p }: { p: CalkResp }) {
+  return (
+    <div className="card p-4">
+      <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+        1-3. Informasi umum entitas, struktur &amp; kebijakan akuntansi (Sek.5.5)
+      </h3>
+      <dl className="space-y-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">Entitas:</dt>
+          <Badge tone={p.coop_registered ? 'green' : 'amber'}>
+            {p.coop_registered ? 'Kopontren (tercatat/notaris)' : 'Kopontren (dalam proses -- menunggu registrasi, Sek.1.1)'}
+          </Badge>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">Dasar penyusunan:</dt>
+          <dd>
+            Hybrid SAK Syariah -- PAP -- SAK EP (hierarki Sek.1.2); mata uang IDR (kurs n/a).
+          </dd>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">Tanggal N buku pembuka (Sek.10):</dt>
+          <Badge tone="gray">menunggu migrasi Wave 6 -- belum di aplikasi</Badge>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">Ikhtiar &amp; struktur:</dt>
+          <dd>Unit usaha toko POS + dana pesantren (memo 6010); multi-store siap.</dd>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">HPP:</dt>
+          <dd>Metode RNB snapshot (V2-2), dipetakan ke akun COA.</dd>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">Penyusutan (1050/1060):</dt>
+          <dd>Metode &amp; umur aset per Sek.13.11 (SETUJU); periode closing periodik (Sek.3.2.6).</dd>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">Konsinyasi (P4, Sek.15.5):</dt>
+          <dd>
+            Ujrah = pendapatan 4040 + tagihan pemilik = settlement payable 2020 (A1.1 LEPAS, SETUJU);
+            dasar hitung ujrah V1 <Badge tone="amber">menunggu ulama (E25)</Badge>
+          </dd>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">Zakat (P3, Sek.15.4):</dt>
+          <dd>
+            24K / market (Opsi B FINAL) / haul anchor 2025-10-22;
+            jembatan zakat_history <Badge tone="amber">belum di-switch (R6 -- modul zakat masih provisional)</Badge>
+          </dd>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">Nisbah &amp; margin akad (Sek.13.1/3/5):</dt>
+          <dd>Per akad, input manual -- app TIDAK mengisi default angka.</dd>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <dt className="font-bold text-slate-600 dark:text-slate-300">Rasio distribusi SHU (Sek.13.4):</dt>
+          <dd>
+            Jurnal alokasi 3020 &rarr; 3030/3040/3050/3060;
+            angka rasio <Badge tone="gray">per catatan keputusan -- tidak di aplikasi (W3.2)</Badge>
+          </dd>
+        </div>
+      </dl>
+      <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+        Penerima LK formal = pengurus + pengasuh, triwulan &amp; tahunan, via app
+        (penerima &amp; frekuensi: Sek.13.13 SETUJU).
+      </p>
+    </div>
+  );
+}
+
+/** Item 4-8 (Sek.5.5): kas, piutang/hutang, ekuitas, ZIS, akad --
+ *  angka GL s.d. as_of (entry_date &lt; batas). */
+function CalkStatement({ p }: { p: CalkResp }) {
+  /** Sel numerik: 0 -> '-' agar ringkas (tabel CALK). */
+  const nz = (v: number) => (v === 0 ? '-' : rp(v));
+  const accTable = (title: string, rows: { code: string; name: string; value: number }[], badge?: string) => (
+    <div className="card p-4">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">{title}</h3>
+        {badge && <Badge tone="gray">{badge}</Badge>}
+      </div>
+      <Table minW="min-w-[30rem]">
+        <thead>
+          <tr className="border-b border-slate-200 dark:border-navy-700">
+            <Th>Akun</Th>
+            <Th>Saldo wajar</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <Trow key={r.code}>
+              <Td>
+                {r.code} {r.name}
+              </Td>
+              <Td className="tabular-nums">{nz(r.value)}</Td>
+            </Trow>
+          ))}
+        </tbody>
+      </Table>
+    </div>
+  );
+  return (
+    <div className="space-y-3">
+      {accTable('4. Komponen kas -- saldo penutup (1010/1020/1100, terpisah, rekon #16)', p.kas)}
+
+      {accTable(
+        '5. Piutang per lawan transaksi (ringkasan)',
+        p.piutang,
+        'ringkasan per akun -- detail per lawan transaksi menyusul modul'
+      )}
+      {accTable(
+        '5. Hutang per lawan transaksi (ringkasan)',
+        p.hutang,
+        'ringkasan per akun -- detail per lawan transaksi menyusul modul'
+      )}
+
+      <div className="card p-4">
+        <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+          6. Ekuitas (modal, SHU + rasio distribusi Sek.13.4)
+        </h3>
+        <Table minW="min-w-[30rem]">
+          <thead>
+            <tr className="border-b border-slate-200 dark:border-navy-700">
+              <Th>Akun</Th>
+              <Th>Saldo wajar</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {p.ekuitas.map((r) => (
+              <Trow key={r.code}>
+                <Td>
+                  {r.code} {r.name}
+                </Td>
+                <Td className="tabular-nums">{nz(r.value)}</Td>
+              </Trow>
+            ))}
+            <Trow>
+              <Td className="font-bold">Total ekuitas (3010-3070)</Td>
+              <Td className="tabular-nums font-bold">{rp(p.ekuitas_total)}</Td>
+            </Trow>
+          </tbody>
+        </Table>
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Simpanan anggota 2050/2060/2070 = kewajiban, BUKAN ekuitas (memo, pola LPE W2.4):{' '}
+          {p.ekuitas_memo.filter((m) => m.value !== 0).map((m) => `${m.code} ${rp(m.value)}`).join(', ') || '-'}
+        </p>
+      </div>
+
+      <div className="card p-4">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">
+            7. ZIS -- diterima/disalurkan per jenis
+          </h3>
+          <Badge tone="amber">
+            GL-only: 4090/5100 menyatukan infak+sedekah -- pemisahan per jenis setelah W2.7 (kolom zis.kind)
+          </Badge>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div>
+            <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Per jenis (kumulatif s.d. {p.as_of})
+            </p>
+            <Table minW="min-w-[26rem]">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-navy-700">
+                  <Th>Jenis</Th>
+                  <Th>Diterima</Th>
+                  <Th>Disalurkan</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {p.zis.map((z) => (
+                  <Trow key={z.jenis}>
+                    <Td>{z.jenis}</Td>
+                    <Td className="tabular-nums">{nz(z.diterima)}</Td>
+                    <Td className="tabular-nums">{nz(z.disalurkan)}</Td>
+                  </Trow>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          <div>
+            <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Per periode (bulan entri)
+            </p>
+            {p.zis_periode.length > 0 ? (
+              <Table minW="min-w-[26rem]">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-navy-700">
+                    <Th>Periode</Th>
+                    <Th>ZIS masuk</Th>
+                    <Th>ZIS keluar</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {p.zis_periode.map((z) => (
+                    <Trow key={z.periode}>
+                      <Td>{z.periode}</Td>
+                      <Td className="tabular-nums">{nz(z.diterima)}</Td>
+                      <Td className="tabular-nums">{nz(z.disalurkan)}</Td>
+                    </Trow>
+                  ))}
+                </tbody>
+              </Table>
+            ) : (
+              <p className="text-xs text-slate-500 dark:text-slate-400">Belum ada aliran ZIS (non-pembuka).</p>
+            )}
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Wakaf (F3.3 #14 AKTIF, PSAK 112): aset wakaf 1120 = {rp(p.zis_memo.aset_wakaf_1120)} + syariah
+          memo 6020 = {rp(p.zis_memo.memo_6020)} -- memo, TIDAK masuk total aset.
+        </p>
+      </div>
+
+      {accTable('8. Akad berjalan per jenis', p.akad_berjalan, 'rincian saldo per akad menyusul W3.1 (modul akad)')}
+    </div>
+  );
+}
+
 /** Catatan formal (route FORMAL_NOTES). */
 function NotesList({ notes }: { notes: string[] }) {
+
+
   return (
     <div className="card p-4">
       <p className="mb-2 text-sm font-bold">Catatan</p>

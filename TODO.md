@@ -207,6 +207,11 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       SAMA + build lokal/Cloud. Detail: MEMORY.md seksi
       "PWA Installability" item guardrail.
 
+- [ ] **test:wakaf legacy (CLEANUP W5/W6)** -- `test:wakaf` in
+      package.json points to scripts/test-wakaf.ts
+      (does not exist). Legacy cleanup needed (W5 or W6).
+      Ditemukan saat W2.6 verify 2 Okt 2026 (out-of-scope, TIDAK
+      di-fix sekarang).
 - [x] **Phone duplicate guard format-insensitive** — SELESAI (commit
       `f2b398e`, 23 Sep 2026, dual-push master+main): helper bersama
       `phoneOwner` + `canonicalPhone` di `src/lib/phone.ts` — duplikat

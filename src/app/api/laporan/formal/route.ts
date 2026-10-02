@@ -6,8 +6,8 @@
  * (Laporan Posisi Keuangan formal, Sek.5.1); W2.3 menambah report `lka`
  * (Laporan Laba-Rugi formal, Sek.5.2); W2.4 menambah report `lpe`
  * (Laporan Perubahan Ekuitas formal, Sek.5.3); W2.5 menambah report
- * `lak` (Laporan Arus Kas formal, Sek.5.4). Report lain (CALK) menyusul
- * wave berikutnya -- dispatch disiapkan.
+ * `lak` (Laporan Arus Kas formal, Sek.5.4); W2.6 menambah report
+ * `calk` (CALK -- Catatan atas Laporan Keuangan, template Sek.5.5).
  *
  * `?as_of=YYYY-MM-DD` = tanggal laporan WIB (default = hari ini WIB).
  * Batas kumulatif `at` = akhir hari `as_of` (entry_date < at).
@@ -27,6 +27,7 @@ import { buildPosisi } from '@/lib/laporan/posisi';
 import { buildLka } from '@/lib/laporan/lka';
 import { buildLpe } from '@/lib/laporan/lpe';
 import { buildLak } from '@/lib/laporan/lak';
+import { buildCalk } from '@/lib/laporan/calk';
 import { wibToday } from '@/lib/zakat-period';
 
 export const FORMAL_NOTES: string[] = [
@@ -66,6 +67,15 @@ const LAK_NOTES: string[] = [
   'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
 ];
 
+const CALK_NOTES: string[] = [
+  'CALK (Catatan atas Laporan Keuangan) template Sek.5.5: item 1-3 (info entitas, struktur, kebijakan akuntansi) = teks panel + badge data; item 4-8 dari GL kumulatif s.d. as_of (entry_date < batas); item 9 (peristiwa pasca-periode) = input manual di panel, draft lokal (localStorage), TIDAK tersimpan di server.',
+  'W2.6 GL-only (skema v21): tabel zis/akad belum ada -- ZIS per jenis adalah aproksimasi akun COA (4090/5100 menyatukan infak+sedekah; 6030 = zakat tijarah, memo syariah); pemisahan per jenis & saldo per akad menyusul W2.7/W3.1.',
+  'Wakaf (1120 aset + 6020 memo) TIDAK dijumlahkan ke total aset; simpanan 2050/2060/2070 = kewajiban anggota, TIDAK ekuitas (memo).',
+  'Tanggal N buku pembuka (Sek.10) menunggu migrasi Wave 6 -- belum ada di aplikasi.',
+  'D=K (rekon #15 JOURNAL_BAL): bila flag_rekon15=true, angka formal TIDAK dianggap otoritatif -- periksa cek JOURNAL_BAL di /admin/rekonsiliasi.',
+  'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
+];
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** as_of 'YYYY-MM-DD' -> batas eksklusif akhir hari (YYYY-MM-DD + 1). */
@@ -83,7 +93,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const report = (url.searchParams.get('report') ?? 'posisi').trim();
-  const supported = ['posisi', 'lka', 'lpe', 'lak'];
+  const supported = ['posisi', 'lka', 'lpe', 'lak', 'calk'];
   if (!supported.includes(report))
     return NextResponse.json(
       { error: 'report "' + report + '" belum tersedia', supported },
@@ -120,6 +130,11 @@ export async function GET(req: Request) {
         const lak = await buildLak(d, at);
         // as_of dikirim via ...lak (LakPayload.as_of = at); tak perlu duplikat.
         return { ...common, ...lak, notes: LAK_NOTES };
+      }
+      if (report === 'calk') {
+        const calk = await buildCalk(d, at);
+        // as_of dikirim via ...calk (CalkPayload.as_of = at); tak perlu duplikat.
+        return { ...common, ...calk, notes: CALK_NOTES };
       }
       if (report === 'lpe') {
         const lpe = await buildLpe(d, at);
