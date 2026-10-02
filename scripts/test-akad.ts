@@ -1,19 +1,27 @@
 /**
- * W3.1 (skema v23) -- test modul akad: DDL akad + akad_events (Sek.6.1)
- * + index + flip 9 COA 'pending' -> 'open' + schema_version stamp.
+ * W3.1 (skema v23) + W3.2 (lib/akad.ts) -- test modul akad:
+ *  M1-M2: DDL akad + akad_events (Sek.6.1) + index + flip 9 COA
+ *         'pending' -> 'open' + schema_version stamp.
+ *  A1-A7: lib/akad.ts -- mapping jurnal Sek.6.4 (per tipe/kind) +
+ *         validasi terms Sek.6.5 + pencatatan pola recordZisInTx +
+ *         F1 ref_id per-event (bukti tabrakan pola docs ':evt#kind').
+ *         A1 murabahah golden; A2 mudharabah 4 sisi; A3 musyarakah;
+ *         A4 ijarah; A5 throw (wakalah/denda/kind di luar matrix);
+ *         A6 idempoten + F1; A7 edge (amount/term/gl-off/rounding).
  * Node langsung (type-stripping, Node >= 23.6/v24): npm run test:akad.
- * In-memory node:sqlite, DDL mirror src/db.ts (v23). Cakupan:
- *  - M1 (fresh install v23): seed v23 + CREATE tabel/index; kolom
- *    akad/akad_events persis Sek.6.1 (PRAGMA table_info, per kolom);
- *    UNIQUE(type, counterparty, opened_at, amount); idx_akad_opened +
- *    idx_akad_events; coa open=37/pending=14/closed=1, nd=14, COUNT=52;
- *    9 flip open; kontrol 6030/5050/1060/2080 & flip v22 tak berubah;
- *    schema_version stamp 23.
- *  - M2 (upgrade v22->v23): state coa v22 (9 akun pending) + seed v23
- *    (DO NOTHING, baris lama tak ter-impa) + UPDATE flip -> 9 akun
- *    open; DDL IF NOT EXISTS idempoten (jalankan 2x); 6030/5050/1060
- *    tak berubah; kontrol flip v22 (2090/4040) tetap open; stamp 22->23.
+ * In-memory node:sqlite, DDL mirror src/db.ts (v23 + journal W1.1).
+ * Cakupan M1/M2: kolom akad/akad_events persis Sek.6.1 (PRAGMA
+ * table_info, per kolom); UNIQUE(type, counterparty, opened_at,
+ * amount); idx_akad_opened + idx_akad_events; coa open=37/pending=14/
+ * closed=1, nd=14, COUNT=52; 9 flip open; kontrol 6030/5050/1060/
+ * 2080 & flip v22 tak berubah; stamp 22->23.
  */
+
+import { akadJournalFor, akadLines, akadValidateTerms, recordAkadEventInTx } from '../src/lib/akad.ts';
+import type { AkadEventRec } from '../src/lib/akad.ts';
+import { isBalanced, postJournalInTx } from '../src/lib/jurnal.ts';
+import type { JLine, JSpec, TxDb } from '../src/lib/jurnal.ts';
+
 
 let passes = 0;
 let failures = 0;
@@ -43,6 +51,41 @@ const DDL_IDX = [
 ];
 const STAMP_DDL =
   'CREATE TABLE IF NOT EXISTS schema_version(id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER NOT NULL)';
+
+// DDL journal mirror src/db.ts (skema v17 -- jurnal W1.1; tanpa index).
+// Dipakai A-suite utk postJournalInTx (lib/jurnal.ts) + bukti F1.
+const DDL_JE =
+  "CREATE TABLE journal_entries(id TEXT PRIMARY KEY, ref_table TEXT NOT NULL, ref_id TEXT, entry_date TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'normal', desc TEXT NOT NULL DEFAULT '', created_by TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), reversed_by TEXT, UNIQUE(ref_table, ref_id, type))";
+const DDL_JL =
+  "CREATE TABLE journal_lines(entry_id TEXT NOT NULL, account_code TEXT NOT NULL, debit INTEGER NOT NULL DEFAULT 0, credit INTEGER NOT NULL DEFAULT 0, balance_running INTEGER, source TEXT NOT NULL DEFAULT '', PRIMARY KEY(entry_id, account_code, source))";
+
+/** Adapter node:sqlite -> TxDb (permukaan async jurnal.ts; mirror test-zis). */
+function toTxDb(db: import('node:sqlite').DatabaseSync): TxDb {
+  const inVals = (a: unknown[]) => a as import('node:sqlite').SQLInputValue[];
+  return {
+    prepare: (sql: string) => ({
+      run: async (...a: unknown[]) => {
+        const r = db.prepare(sql).run(...inVals(a)) as unknown as { changes: number | bigint };
+        return { changes: Number(r.changes ?? 0), lastInsertRowid: 0 };
+      },
+      get: async (...a: unknown[]) => db.prepare(sql).get(...inVals(a)),
+      all: async (...a: unknown[]) => db.prepare(sql).all(...inVals(a)),
+    }),
+  };
+}
+
+/** Helper: nilai debit/credit akun tertentu pada entry (0 bila tak ada). */
+function lineVal(
+  db: import('node:sqlite').DatabaseSync,
+  entryId: string,
+  code: string,
+  what: 'debit' | 'credit'
+): number {
+  const r = db
+    .prepare('SELECT ' + what + ' v FROM journal_lines WHERE entry_id=? AND account_code=?')
+    .get(entryId, code) as { v: number } | undefined;
+  return r ? Number(r.v) : 0;
+}
 
 // Seed COA v22 (mirror COA_V22 test-zis.ts: 52 akun; 28 open /
 // 23 pending / 1 closed; flip W2.7 2090/5090/4040 sudah 'open').
@@ -231,6 +274,303 @@ async function main(): Promise<void> {
     eq('M2: stamp post-upgrade = 23', Number((db2.prepare('SELECT version v FROM schema_version').get() as { v: number }).v), 23);
     db2.close();
   }
+
+  // ===== A-suite (W3.2): lib/akad.ts -- DB in-memory ke-3 (akad + jurnal) =====
+  const db3 = new mod.DatabaseSync(':memory:');
+  db3.exec(DDL_AKAD);
+  db3.exec(DDL_AKAD_EV);
+  db3.exec(DDL_JE);
+  db3.exec(DDL_JL);
+  const tdb = toTxDb(db3);
+  const EV_D = '2026-10-03T09:00:00+07:00';
+  const seedAkad = (id: string, type: string, cp: string, amount: number, terms: string): void => {
+    db3.prepare('INSERT INTO akad(id, type, counterparty, amount, terms_json, opened_at) VALUES (?,?,?,?,?,?)')
+      .run(id, type, cp, amount, terms, '2026-10-02T00:00:00+07:00');
+  };
+  seedAkad('aM', 'murabahah', 'Nasabah M', 8000000, '{"margin":10}');
+  seedAkad('aP', 'mudharabah', 'Partner P', 50000000, '{"nisbah":40}');
+  seedAkad('aX', 'musyarakah', 'Partner X', 40000000, '{"nisbah":50}');
+  seedAkad('aI', 'ijarah', 'Nasabah I', 1000000, '{"rate":500000}');
+  // Post event (gl-on; terms_json diberikan) -> id entry (throw bila null).
+  const postEvt = async (
+    id: string,
+    akadId: string,
+    type: string,
+    kind: string,
+    amount: number,
+    termsJson: string
+  ): Promise<string> => {
+    const rec: AkadEventRec = {
+      id,
+      akadId,
+      type,
+      kind,
+      amount,
+      event_date: EV_D,
+      gl_enabled: true,
+      terms_json: termsJson,
+    };
+    const r = await recordAkadEventInTx(tdb, rec);
+    if (r.entryId == null) throw new Error('A: entryId null utk event ' + id);
+    return r.entryId;
+  };
+  const val = (lines: JLine[], code: string, what: 'debit' | 'credit'): number =>
+    (lines.find((l) => l.account_code === code) ?? { debit: 0, credit: 0 })[what];
+  const throwsWith = (fn: () => unknown, frag: string, label: string): void => {
+    try {
+      fn();
+      ok(label + ' -> throw', false, 'tak throw');
+    } catch (e) {
+      ok(label + ' -> throw', String(e).includes(frag), String(e));
+    }
+  };
+
+  // ===== A1: murabahah golden (pencairan -> angsuran -> settlement) =====
+  {
+    const L = akadLines('murabahah', 'pencairan', 3000000, { margin: 10 });
+    eq('A1: pencairan = 2 baris', L.length, 2);
+    eq('A1: D 1010', L[0].account_code, '1010');
+    eq('A1: D 1010 = 3jt', L[0].debit, 3000000);
+    eq('A1: C 2040 = 3jt', val(L, '2040', 'credit'), 3000000);
+    ok('A1: isBalanced pencairan', isBalanced(L));
+    const L2 = akadLines('murabahah', 'angsuran', 2000000, { margin: 10 });
+    eq('A1: angsuran C 2040 = 2jt', val(L2, '2040', 'credit'), 2000000);
+    ok('A1: isBalanced angsuran', isBalanced(L2));
+    const L3 = akadLines('murabahah', 'settlement', 5000000, { margin: 10 });
+    eq('A1: settlement D 2040 = 5jt', val(L3, '2040', 'debit'), 5000000);
+    eq('A1: settlement C 4060', L3[1].account_code, '4060');
+    ok('A1: isBalanced settlement', isBalanced(L3));
+    const LL = akadLines('murabahah', 'pencairan', 3000000, { margin: 10 }, { lunas: true });
+    eq('A1: lunas saat pencairan -> C 4060', val(LL, '4060', 'credit'), 3000000);
+    // DB (gl-on; posted_entry ter-update):
+    const e1 = await postEvt('eM1', 'aM', 'murabahah', 'pencairan', 3000000, '{"margin":10}');
+    eq('A1: DB D 1010', lineVal(db3, e1, '1010', 'debit'), 3000000);
+    eq('A1: DB C 2040', lineVal(db3, e1, '2040', 'credit'), 3000000);
+    const pe1 = db3.prepare('SELECT posted_entry p FROM akad_events WHERE id=?').get('eM1') as { p: string | null };
+    ok('A1: posted_entry ter-update', pe1.p === e1, String(pe1.p));
+  }
+
+  // ===== A2: mudharabah (pencairan + bagi hasil 4 sisi + settlement) =====
+  let e2 = ''; // (hoisted: dipakai A6 utk perbandingan F1)
+  {
+    const Lp = akadLines('mudharabah', 'pencairan', 50000000, { nisbah: 40 });
+    eq('A2: pencairan D 1010', Lp[0].account_code, '1010');
+    eq('A2: pencairan C 1080', Lp[1].account_code, '1080');
+    ok('A2: isBalanced pencairan', isBalanced(Lp));
+    const Lb = akadLines('mudharabah', 'bagi_hasil', 10000000, { nisbah: 40 });
+    eq('A2: bagi hasil = 1 entry 4 sisi', Lb.length, 4);
+    eq('A2: D 1080 (Pc) = 6jt', val(Lb, '1080', 'debit'), 6000000);
+    eq('A2: D 5060 (Pp) = 4jt', val(Lb, '5060', 'debit'), 4000000);
+    eq('A2: C 4070 (Pc) = 6jt', val(Lb, '4070', 'credit'), 6000000);
+    eq('A2: C 1010 (Pp) = 4jt', val(Lb, '1010', 'credit'), 4000000);
+    ok('A2: isBalanced 4 sisi', isBalanced(Lb));
+    const Lh = akadLines('mudharabah', 'bagi_hasil', 10000000, { nisbah: 40 }, { heldPp: true });
+    eq('A2: Pp ditahan -> C 2040', val(Lh, '2040', 'credit'), 4000000);
+    eq('A2: Pp ditahan tak C 1010', val(Lh, '1010', 'credit'), 0);
+    const Ls = akadLines('mudharabah', 'settlement', 50000000, { nisbah: 40 });
+    eq('A2: settlement D 1080', Ls[0].account_code, '1080');
+    eq('A2: settlement C 1010', Ls[1].account_code, '1010');
+    ok('A2: isBalanced settlement', isBalanced(Ls));
+    // DB: bagi hasil = 1 entry 4 baris; ref_id F1 per event.
+    e2 = await postEvt('eP1', 'aP', 'mudharabah', 'bagi_hasil', 10000000, '{"nisbah":40}');
+    eq('A2: DB 1 entry 4 baris', Number((db3.prepare('SELECT COUNT(*) c FROM journal_lines WHERE entry_id=?').get(e2) as { c: number }).c), 4);
+    eq('A2: ref_id F1', String((db3.prepare('SELECT ref_id r FROM journal_entries WHERE id=?').get(e2) as { r: string }).r), 'akad#aP:evt#eP1');
+  }
+
+  // ===== A3: musyarakah (mirror A2 dgn 1090/4080) =====
+  {
+    const Lb = akadLines('musyarakah', 'bagi_hasil', 20000000, { nisbah: 50 });
+    eq('A3: bagi hasil = 1 entry 4 sisi', Lb.length, 4);
+    eq('A3: D 1090 (Pc) = 10jt', val(Lb, '1090', 'debit'), 10000000);
+    eq('A3: D 5060 (Pp) = 10jt', val(Lb, '5060', 'debit'), 10000000);
+    eq('A3: C 4080 (Pc) = 10jt', val(Lb, '4080', 'credit'), 10000000);
+    eq('A3: C 1010 (Pp) = 10jt', val(Lb, '1010', 'credit'), 10000000);
+    ok('A3: isBalanced 4 sisi', isBalanced(Lb));
+    const Lp = akadLines('musyarakah', 'pencairan', 40000000, { nisbah: 50 });
+    eq('A3: pencairan D 1010 / C 1090', Lp[1].account_code, '1090');
+    ok('A3: isBalanced pencairan', isBalanced(Lp));
+    const Ls = akadLines('musyarakah', 'settlement', 40000000, { nisbah: 50 });
+    eq('A3: settlement D 1090 / C 1010', Ls[0].account_code + '/' + Ls[1].account_code, '1090/1010');
+    ok('A3: isBalanced settlement', isBalanced(Ls));
+    const e3 = await postEvt('eX1', 'aX', 'musyarakah', 'bagi_hasil', 20000000, '{"nisbah":50}');
+    eq('A3: DB 1 entry 4 baris', Number((db3.prepare('SELECT COUNT(*) c FROM journal_lines WHERE entry_id=?').get(e3) as { c: number }).c), 4);
+  }
+
+  // ===== A4: ijarah (pencairan imbalan awal + ijarah periodik) =====
+  {
+    const L1 = akadLines('ijarah', 'pencairan', 1000000, { rate: 500000 });
+    eq('A4: pencairan D 1010', L1[0].account_code, '1010');
+    eq('A4: pencairan C 4050', val(L1, '4050', 'credit'), 1000000);
+    ok('A4: isBalanced pencairan', isBalanced(L1));
+    const L2 = akadLines('ijarah', 'ijarah_periodik', 500000, { rate: 500000 });
+    eq('A4: periodik D 1010 = rate', L2[0].debit, 500000);
+    eq('A4: periodik C 4050', val(L2, '4050', 'credit'), 500000);
+    ok('A4: isBalanced periodik', isBalanced(L2));
+    const e4 = await postEvt('eI1', 'aI', 'ijarah', 'ijarah_periodik', 500000, '{"rate":500000}');
+    eq('A4: DB D 1010', lineVal(db3, e4, '1010', 'debit'), 500000);
+    eq('A4: DB C 4050', lineVal(db3, e4, '4050', 'credit'), 500000);
+  }
+
+  // ===== A5: throw (wakalah bridge W3.4; denda tak diangkat; matrix) =====
+  throwsWith(() => akadLines('wakalah', 'pencairan', 1000000), 'bridge W3.4', 'A5: wakalah pencairan');
+  throwsWith(() => akadLines('wakalah', 'settlement', 1000000), 'bridge W3.4', 'A5: wakalah settlement');
+  for (const t of ['murabahah', 'mudharabah', 'musyarakah', 'ijarah']) {
+    throwsWith(() => akadLines(t, 'denda', 10000), 'TIDAK DIANGKAT', 'A5: denda ' + t);
+  }
+  throwsWith(() => akadLines('murabahah', 'bagi_hasil', 1000000), 'tak mendukung', 'A5: bagi_hasil pad murabahah');
+  throwsWith(() => akadLines('ijarah', 'angsuran', 1000000), 'tak mendukung', 'A5: angsuran pad ijarah');
+  throwsWith(() => akadLines('ijarah', 'settlement', 1000000), 'belum ada mapping', 'A5: settlement ijarah (OQ-A3)');
+  throwsWith(() => akadLines('consignment', 'pencairan', 1000000), 'tidak dikenal', 'A5: type tak dikenal');
+  // gl-on + denda: event tercatat, TIDAK dipost (F3.3 #6; D1 aman).
+  {
+    const rd = await recordAkadEventInTx(tdb, {
+      id: 'eA5d',
+      akadId: 'aM',
+      type: 'murabahah',
+      kind: 'denda',
+      amount: 10000,
+      event_date: EV_D,
+      gl_enabled: true,
+    });
+    eq('A5: denda gl-on -> entryId null', rd.entryId, null);
+    const pe5 = db3.prepare('SELECT posted_entry p FROM akad_events WHERE id=?').get('eA5d') as { p: string | null };
+    ok('A5: event denda tercatat, posted_entry NULL', pe5.p === null, String(pe5.p));
+    // gl-on + wakalah: bridge W3.4 -- tercatat tanpa auto-posting.
+    const rw = await recordAkadEventInTx(tdb, {
+      id: 'eA5w',
+      akadId: 'aM',
+      type: 'wakalah',
+      kind: 'pencairan',
+      amount: 1000000,
+      event_date: EV_D,
+      gl_enabled: true,
+    });
+    eq('A5: wakalah gl-on -> entryId null (bridge W3.4)', rw.entryId, null);
+  }
+
+  // ===== A6: F1 ref_id per-event (bukti tabrakan) + idempoten =====
+  {
+    // 2 event same kind pada akad sama -> 2 entry berbeda (F1).
+    const e6a = await postEvt('eP2', 'aP', 'mudharabah', 'bagi_hasil', 10000000, '{"nisbah":40}');
+    ok('A6: event 2 = entry berbeda', e6a !== e2, e6a + ' vs ' + e2);
+    eq(
+      "A6: F1 -> COUNT entry 'akad#aP:evt#%' = 2",
+      Number((db3.prepare("SELECT COUNT(*) c FROM journal_entries WHERE ref_table='akad' AND ref_id LIKE 'akad#aP:evt#%'").get() as { c: number }).c),
+      2
+    );
+    // Bukti tabrakan pola docs ':evt#<kind>': 2 post ref_id sama ->
+    // 1 entry (no-op ke-2), 4 baris (bukan 8).
+    // NOTE: this proves the docs Sek.6.4 pattern ':evt#kind' would
+    // collide for recurring events. F1 (per-event id) is REQUIRED,
+    // not a preference. See W3.1 ruling.
+    const mkDocsSpec = (id: string): JSpec => ({
+      ...akadJournalFor(
+        {
+          id,
+          akadId: 'aP',
+          type: 'mudharabah',
+          kind: 'bagi_hasil',
+          amount: 10000000,
+          event_date: EV_D,
+          terms_json: '{"nisbah":40}',
+        },
+        { nisbah: 40 }
+      ),
+      ref_id: 'akad#aP:evt#bagi_hasil', // pola docs Sek.6.4 (per KIND)
+      id: 'JE-docs-' + id,
+    });
+    const c1 = await postJournalInTx(tdb, mkDocsSpec('d1'));
+    const c2 = await postJournalInTx(tdb, mkDocsSpec('d2'));
+    eq('A6: pola docs -> 2 post = 1 entry (TABRAKAN)', c2, c1);
+    eq(
+      'A6: pola docs -> 1 entry 4 baris (bukan 8)',
+      Number((db3.prepare('SELECT COUNT(*) c FROM journal_lines WHERE entry_id=?').get(c1) as { c: number }).c),
+      4
+    );
+    // Idempoten F1: post ulang event eP2 -> no-op, entry tak bertambah.
+    const specR: JSpec = akadJournalFor(
+      {
+        id: 'eP2',
+        akadId: 'aP',
+        type: 'mudharabah',
+        kind: 'bagi_hasil',
+        amount: 10000000,
+        event_date: EV_D,
+        terms_json: '{"nisbah":40}',
+      },
+      { nisbah: 40 }
+    );
+    eq('A6: post ulang = no-op (entry sama)', await postJournalInTx(tdb, specR), e6a);
+  }
+
+  // ===== A7: edge (amount; terms; gl-off; rounding NOTE 3) =====
+  throwsWith(() => akadLines('murabahah', 'pencairan', 0), 'positif', 'A7: amount=0 ditolak');
+  throwsWith(() => akadLines('murabahah', 'pencairan', -5), 'positif', 'A7: amount<0 ditolak');
+  for (const [j, frag] of [
+    ['{"nisbah":101}', 'integer 0-100'],
+    ['{"nisbah":-1}', 'integer 0-100'],
+    ['{"nisbah":33.5}', 'integer 0-100'],
+    ['{"margin":-5}', '>= 0'],
+    ['{"rate":-1}', '>= 0'],
+    ['{"nisbah":40', 'JSON valid'],
+    ['[1,2]', 'objek JSON'],
+    ['null', 'objek JSON'],
+  ] as [string, string][]) {
+    throwsWith(() => akadValidateTerms(j), frag, 'A7: terms ' + j);
+  }
+  eq('A7: terms null -> {} (0 preset Sek.6.5)', JSON.stringify(akadValidateTerms(null)), '{}');
+  eq('A7: terms {schedule:...} diabaikan', JSON.stringify(akadValidateTerms('{"schedule":"3 bulan"}')), '{}');
+  eq(
+    'A7: terms valid (nisbah+margin+rate)',
+    JSON.stringify(akadValidateTerms('{"nisbah":40,"margin":10,"rate":500000}')),
+    '{"nisbah":40,"margin":10,"rate":500000}'
+  );
+  // gl-off: event tercatat, TANPA jurnal (D1 zero behavior change).
+  {
+    const before = Number((db3.prepare('SELECT COUNT(*) c FROM journal_entries').get() as { c: number }).c);
+    const rg = await recordAkadEventInTx(tdb, {
+      id: 'eA7g',
+      akadId: 'aI',
+      type: 'ijarah',
+      kind: 'ijarah_periodik',
+      amount: 500000,
+      event_date: EV_D,
+      gl_enabled: false,
+    });
+    eq('A7: gl-off -> entryId null', rg.entryId, null);
+    eq(
+      'A7: gl-off -> journal tak bertambah',
+      Number((db3.prepare('SELECT COUNT(*) c FROM journal_entries').get() as { c: number }).c),
+      before
+    );
+    const pe7 = db3.prepare('SELECT posted_entry p FROM akad_events WHERE id=?').get('eA7g') as { p: string | null };
+    ok('A7: gl-off event tercatat, posted_entry NULL', pe7.p === null, String(pe7.p));
+    const ro = await recordAkadEventInTx(tdb, {
+      id: 'eA7o',
+      akadId: 'aI',
+      type: 'ijarah',
+      kind: 'ijarah_periodik',
+      amount: 500000,
+      event_date: EV_D,
+      gl_enabled: true,
+    });
+    ok('A7: gl-on -> entryId terisi', typeof ro.entryId === 'string' && ro.entryId.length > 0, String(ro.entryId));
+    eq('A7: gl-on baris D1010', lineVal(db3, ro.entryId as string, '1010', 'debit'), 500000);
+    eq('A7: gl-on baris C4050', lineVal(db3, ro.entryId as string, '4050', 'credit'), 500000);
+  }
+  // Rounding NOTE 3: T=10.000.001, nisbah 33 -> Pp=3.300.000, Pc=6.700.001.
+  {
+    const L = akadLines('mudharabah', 'bagi_hasil', 10000001, { nisbah: 33 });
+    eq('A7: Pp (D 5060) = 3.300.000', val(L, '5060', 'debit'), 3300000);
+    eq('A7: Pc (D 1080) = 6.700.001', val(L, '1080', 'debit'), 6700001);
+    eq(
+      'A7: D total = K total (D=K persis)',
+      L.reduce((s, l) => s + l.debit, 0),
+      L.reduce((s, l) => s + l.credit, 0)
+    );
+    ok('A7: isBalanced rounding', isBalanced(L));
+  }
+  db3.close();
 
   console.log(passes + ' passed, ' + failures + ' failed');
   if (failures > 0) {
