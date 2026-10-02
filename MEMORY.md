@@ -3497,6 +3497,36 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
     0 → build → push master+main. Cek visual 4 viewport (360/768/
     1024/1440) = Gus Fi, non-blocking.
 
-
-
-
+## W2.7 Modul ZIS LEPAS 2 Okt 2026 (`488d679`, dual-push master+main)
+- W2.7 = item ke-7: modul ZIS lengkap. WAVE 2 = 7/7 LENGKAP.
+- Commit `488d679` (11 file +1170/-16): (a) skema v22: tabel `zis`
+  (Sek.8.2: id, kind, direction, amount, payer, occurred_at,
+  posted_entry, created_by, created_at) + `idx_zis_occurred` + flip
+  COA 2090/5090/4040 `pending -> open` via UPDATE eksplisit di seed
+  (seed INSERT ON CONFLICT DO NOTHING tak menimpa baris v21; fresh
+  install = no-op; `6030` tetap `pending` = jembatan zakat P3, W5.1);
+  SCHEMA_VERSION 21->22 (lesson v16: backup db sebelum deploy).
+- (b) `lib/zis.ts`: mapping OQ-1 -- masuk D1100/C2090; keluar zakat
+  D5090/C1100; infak/sedekah D5100/C1100; wakaf = throw (jurnal
+  manual 1120/4100/6020 = W3.5, D3); anti-campur #16: builder hanya
+  menulis {1100,2090,5090,5100}, 1010/1020 tak pernah; D1: baris
+  selalu tercatat, auto-jurnal hanya saat gl_enabled=1; D6: baris
+  gl-off tanpa backfill; idempoten per zis.id.
+- (c) API `/api/zis`: GET riwayat + `?csv=1` + total per jenis;
+  POST = satu tx atomik (INSERT zis + postJournalInTx + audit); tier
+  D2 = admin/manajer (pengurus baca via CALK item 7); D5: CTA
+  dashboard pengurus.
+- (d) UI `/admin/zis`: form masuk/keluar per jenis + kartu total +
+  status GL + riwayat + export CSV (pola zakat-client).
+- (e) `scripts/test-zis.ts` = suite #19 (47 assert: M1 fresh v22,
+  M2 upgrade v21->v22, Z1-Z7). test-gl diperbarui D4 (open 28/
+  pending 23 / nd 23).
+- Gate lulus: tsc 0; test:all 19 suite green (test-zis 47/47,
+  test-gl 102/102, test-laporan 174/174); 0 non-ASCII di line baru;
+  public/sw.js + V1 tak tersentuh.
+- Utk W3: upgrade CALK/LAK zis-per-jenis dari tabel `zis` (kolom
+  `kind`) = item W3 (W2.6 masih aproksimasi akun COA).
+- DEPLOY: skema v22 sudah di repo; BACKUP DB WAJIB SEBELUM DEPLOY;
+  cold start menjalankan fullInit sekali (stempel v21 -> v22).
+- Standing rule: W2 FULL AUDIT (bug + UX + UI, W2.1-W2.7) WAJIB
+  SEBELUM mulai Wave 3.

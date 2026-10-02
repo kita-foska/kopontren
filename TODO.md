@@ -1414,10 +1414,7 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
        re-introduce tipe `consignment_settle` + builder + hook aksi
        pay; post goods-receipt D1040/K2020 + settlement D2020/K1010
        (akad ju'alah).
-     - [ ] **W2.7 (governance)**: flip COA `4040` (ujrah)
-       `pending -> open` (P4 tashih 30 Sep sudah approve; GL read
-       layer tak join COA status -> posting tetap tampil di trial
-       balance; flip = governance-only).
+      - [x] **W2.7 (governance) -- SELESAI** (`488d679`, 2 Okt): flip COA `4040` (ujrah) `pending -> open` SUDAH DILAKSANAKAN (P4 tashih 30 Sep approve; governance-only). Flip via UPDATE eksplisit di seed db.ts (skema v22) bareng `2090` + `5090`; `6030` sengaja tetap `pending` W5.1. Detail lengkap = entri W2.7 LEPAS di bawah.
 
    - [x] **F3.4+ W2.2 LEPAS 1 Okt** (`d91dbd0`; ACC Gus Fi; semua
           gate lulus): Laporan Posisi Keuangan formal (Neraca) +
@@ -1568,6 +1565,43 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
           test:laporan 174/174; test:zakat 37/37; 0 non-ASCII;
           sw.js + V1 tak tersentuh.
           **Progres Wave 2: WAVE 2 = 6/7.**
+
+    - [x] **F3.4+ W2.7 LEPAS 2 Okt** (`488d679`; ACC Gus Fi via DeepSeek;
+           semua gate lulus): Modul ZIS lengkap (11 file +1170/-16):
+           (a) skema v22: tabel zis (Sek.8.2: id, kind, direction,
+           amount, payer, occurred_at, posted_entry, created_by,
+           created_at) + idx_zis_occurred + flip COA
+           2090/5090/4040 pending->open via UPDATE eksplisit di seed
+           (INSERT ON CONFLICT DO NOTHING tak menimpa baris v21, fresh
+           install = no-op; 6030 tetap pending W5.1) + SCHEMA_VERSION
+           21->22 (lesson v16: bump + backup db);
+           (b) lib/zis.ts: mapping OQ-1 (masuk D1100/C2090; keluar
+           zakat D5090/C1100; infak+sedekah D5100/C1100), wakaf =
+           throw (jurnal manual 1120/4100/6020 = W3.5), anti-campur
+           #16 (builder hanya menulis {1100,2090,5090,5100}; 1010/1020
+           tak pernah), recordZisInTx (D1: baris selalu tercatat;
+           auto-jurnal hanya saat gl_enabled=1; D6: tanpa backfill;
+           idempoten UNIQUE(zis.id, type=auto));
+           (c) API /api/zis (GET riwayat + ?csv=1 + total per jenis;
+           POST catat, satu tx atomik zis + jurnal + audit; tier D2 =
+           admin/manajer; pengurus baca via CALK item 7);
+           (d) UI /admin/zis (form masuk/keluar per jenis + kartu total
+           + status GL + riwayat + export CSV; CTA dashboard pengurus
+           D5; sidebar + ikon inline SVG);
+           (e) test-zis = suite #19 (47 assert: M1 fresh v22, M2
+           upgrade v21->v22 (proof do-nothing + flip), Z1 mapping,
+           Z2 anti-campur, Z3 D=K, Z4 posting + idempoten, Z5 gl-off,
+           Z6 wakaf, Z7 edge) + test-gl diperbarui D4 (open 28/
+           pending 23 / nd 23).
+           Gate: tsc 0; test:all 19 suite green (test-zis 47/47,
+           test-gl 102/102, test-laporan 174/174); 0 non-ASCII di line
+           baru; sw.js + V1 tak tersentuh.
+           **Note: upgrade CALK/LAK zis-per-jenis dari tabel zis
+           (kolom `kind`) = item W3** (W2.6 memakai aproksimasi akun
+           COA 4090/5100/6030).
+           **Progres Wave 2: WAVE 2 = 7/7. W2 FULL AUDIT (bug +
+           UX + UI, W2.1-W2.7) WAJIB SEBELUM WAVE 3 (standing
+           rule).**
 
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
