@@ -14,6 +14,7 @@ import { rp, todayWibStr } from '@/lib/format';
 import type { PosisiPayload } from '@/lib/laporan/posisi';
 import type { LkaPayload } from '@/lib/laporan/lka';
 import type { LpePayload } from '@/lib/laporan/lpe';
+import type { LakPayload, LakActivity } from '@/lib/laporan/lak';
 
 /** V1 (laba/rugi simplifikasi) di-lazy-load -- datanya berat. */
 const V1Client = dynamic(
@@ -22,7 +23,7 @@ const V1Client = dynamic(
   { ssr: false, loading: () => <PageSkeleton /> },
 );
 
-type TabId = 'posisi' | 'lka' | 'lpe' | 'v1';
+type TabId = 'posisi' | 'lka' | 'lpe' | 'lak' | 'v1';
 
 /** Bentuk respons GET /api/laporan/formal?report=posisi (route W2.2). */
 type FormalResp = PosisiPayload & {
@@ -51,6 +52,15 @@ type LpeResp = LpePayload & {
   notes: string[];
 };
 
+/** Bentuk respons GET /api/laporan/formal?report=lak (route W2.5). */
+type LakResp = LakPayload & {
+  ok: true;
+  gl_enabled: boolean;
+  coop_registered: boolean;
+  coa: { code: string; name: string; group: string }[];
+  notes: string[];
+};
+
 /**
  * /admin/laporan: shell tab. 'posisi' = Laporan Posisi W2.2 (formal,
  * Sek.5.1); 'v1' = laporan V1 simplifikasi (lazy). Laporan V2 menyusul
@@ -63,6 +73,7 @@ export function LaporanFormalClient() {
     { id: 'posisi', label: 'Laporan Posisi (Neraca)' },
     { id: 'lka', label: 'Laba-Rugi' },
     { id: 'lpe', label: 'Perubahan Ekuitas' },
+    { id: 'lak', label: 'Arus Kas' },
     { id: 'v1', label: 'Laporan V1' },
   ];
 
@@ -88,7 +99,7 @@ export function LaporanFormalClient() {
         </div>
       </div>
 
-      {tab === 'posisi' ? <PositionPanel /> : tab === 'lka' ? <LkaPanel /> : tab === 'lpe' ? <LpePanel /> : <V1Client />}
+      {tab === 'posisi' ? <PositionPanel /> : tab === 'lka' ? <LkaPanel /> : tab === 'lpe' ? <LpePanel /> : tab === 'lak' ? <LakPanel /> : <V1Client />}
     </div>
   );
 }
@@ -650,6 +661,266 @@ function LpeStatement({ p }: { p: LpeResp }) {
           2050/2060/2070 (Simpanan Pokok/Wajib/Sukarela) adalah kewajiban kepada anggota
           (Kolom 1/2 Sek.4.2) -- TIDAK dijumlahkan ke total ekuitas di atas.
         </p>
+      </div>
+    </div>
+  );
+}
+
+/** W2.5 -- panel Arus Kas: pilih as_of, muat ?report=lak, render LAK Sek.5.4. */
+function LakPanel() {
+  const [asOf, setAsOf] = useState(todayWibStr);
+  const [data, setData] = useState<LakResp | null>(null);
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr('');
+    const r = await api<LakResp>('/api/laporan/formal?report=lak&as_of=' + asOf);
+    if (r.ok && r.data) {
+      setData(r.data);
+    } else {
+      setData(null);
+      setErr(r.error || 'Gagal memuat Laporan Arus Kas.');
+    }
+    setLoading(false);
+  }, [asOf]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading && !data) return <PageSkeleton />;
+
+  return (
+    <div className="space-y-3">
+      {/* Bar atas: as_of + status D=K + auto-posting + kopontren. */}
+      <div className="card flex flex-wrap items-center justify-between gap-3 p-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            as_of
+          </label>
+          <input
+            type="date"
+            value={asOf}
+            onChange={(e) => e.target.value && setAsOf(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-navy-600 dark:bg-navy-800"
+          />
+          <Button variant="ghost" onClick={() => load()}>
+            Muat ulang
+          </Button>
+        </div>
+        {data && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone={data.d_k.balanced ? 'green' : 'red'}>
+              {data.d_k.balanced ? 'D=K seimbang' : 'Tidak seimbang'}
+            </Badge>
+            {data.gl_enabled ? (
+              <Badge tone="blue">auto-posting</Badge>
+            ) : (
+              <Badge tone="gray">auto-posting off</Badge>
+            )}
+            {data.coop_registered && <Badge tone="amber">kopontren reg.</Badge>}
+          </div>
+        )}
+      </div>
+
+      {err && !loading && (
+        <div className="card p-4">
+          <ErrorState text={err} onRetry={() => load()} />
+        </div>
+      )}
+
+      {/* D=K gagal (rekon #15 JOURNAL_BAL): tolak angka formal. */}
+      {data && !data.d_k.balanced && (
+        <div className="card border-rose-200 bg-rose-50 p-4 dark:border-rose-900 dark:bg-rose-950/30">
+          <p className="text-sm font-bold text-rose-700 dark:text-rose-300">
+            Debit tak sama Kredit s.d. {data.as_of} (selisih {rp(data.d_k.gap)}). Angka
+            formal TIDAK otoritatif.
+          </p>
+          <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+            Perbaiki mutasi jurnal, atau cek JOURNAL_BAL di{' '}
+            <a href="/admin/rekonsiliasi" className="font-bold underline">
+              /admin/rekonsiliasi
+            </a>
+            .
+          </p>
+        </div>
+      )}
+
+      {data && <LakStatement p={data} />}
+      {data && data.notes.length > 0 && <NotesList notes={data.notes} />}
+    </div>
+  );
+}
+
+/** Satu aktivitas LAK: arus neto + rincian masuk/keluar + kode lawan (info). */
+function LakActivityBlock({ title, a }: { title: string; a: LakActivity }) {
+  return (
+    <div>
+      <Line label={title} value={a.neto} strong />
+      <div className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+        masuk {rp(a.masuk)} / keluar {rp(a.keluar)}
+        {a.codes.length > 0 && <span> -- akun lawan: {a.codes.join(', ')}</span>}
+      </div>
+    </div>
+  );
+}
+
+/** LAK s.d. as_of -- struktur Sek.5.4: footer, aktivitas, kas usaha, ZIS terpisah. */
+function LakStatement({ p }: { p: LakResp }) {
+  const f = p.footer;
+  const ks = p.kas_sosial;
+  // Sel numerik: 0 -> '-' agar ringkas (tabel ZIS).
+  const nz = (v: number) => (v === 0 ? '-' : rp(v));
+  return (
+    <div className="space-y-3">
+      <div className="card p-4">
+        <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+          Laporan Arus Kas Usaha s.d. {p.as_of} (Sek.5.4)
+        </h3>
+        <div className="overflow-x-auto">
+          <Table minW="min-w-[36rem]">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-navy-700">
+                <Th>Arus</Th>
+                <Th>Neto</Th>
+              </tr>
+            </thead>
+            <tbody>
+              <Trow>
+                <Td>Saldo kas usaha awal (pembuka 1010+1020)</Td>
+                <Td className="tabular-nums font-bold">{rp(f.saldo_awal)}</Td>
+              </Trow>
+              <Trow>
+                <Td>
+                  Arus dari aktivitas{' '}
+                  <span className="text-slate-500 dark:text-slate-400">(neto op+inv+pend)</span>
+                </Td>
+                <Td className="tabular-nums font-bold">{rp(f.neto_aktivitas)}</Td>
+              </Trow>
+              {f.pergeseran_kas_sosial !== 0 && (
+                <Trow>
+                  <Td>Pergeseran kas sosial (1100, bukan aktivitas)</Td>
+                  <Td className="tabular-nums">{rp(f.pergeseran_kas_sosial)}</Td>
+                </Trow>
+              )}
+              <Trow>
+                <Td className="font-bold">Saldo kas usaha akhir</Td>
+                <Td className="tabular-nums font-bold">{rp(f.saldo_akhir)}</Td>
+              </Trow>
+            </tbody>
+          </Table>
+        </div>
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Identitas footer: saldo_awal + neto_aktivitas + pergeseran_kas_sosial = saldo_akhir.
+          Transfer antar-kas (1010&lt;&gt;1020 / 1100) bukan aktivitas.
+        </p>
+      </div>
+
+      <div className="card p-4">
+        <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+          Arus per aktivitas (Sek.5.4)
+        </h3>
+        <LakActivityBlock title="Aktivitas operasional" a={p.aktivitas.operasional} />
+        <div className="mt-2" />
+        <LakActivityBlock title="Aktivitas investasi" a={p.aktivitas.investasi} />
+        <div className="mt-2" />
+        <LakActivityBlock title="Aktivitas pendanaan" a={p.aktivitas.pendanaan} />
+      </div>
+
+      <div className="card p-4">
+        <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
+          Kas usaha per akun (1010 + 1020)
+        </h3>
+        <div className="overflow-x-auto">
+          <Table minW="min-w-[40rem]">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-navy-700">
+                <Th>Akun</Th>
+                <Th>Pembuka</Th>
+                <Th>Masuk</Th>
+                <Th>Keluar</Th>
+                <Th>Transfer</Th>
+                <Th>Neto</Th>
+                <Th>Penutup</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {p.kas.map((k) => (
+                <Trow key={k.code}>
+                  <Td>
+                    {k.name}{' '}
+                    <span className="font-mono text-xs text-slate-400">{k.code}</span>
+                  </Td>
+                  <Td className="tabular-nums">{rp(k.pembuka)}</Td>
+                  <Td className="tabular-nums">{rp(k.masuk)}</Td>
+                  <Td className="tabular-nums">{rp(k.keluar)}</Td>
+                  <Td className="tabular-nums">{rp(k.transfer)}</Td>
+                  <Td className="tabular-nums">{rp(k.neto)}</Td>
+                  <Td className="tabular-nums font-bold">{rp(k.penutup)}</Td>
+                </Trow>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+      </div>
+
+      <div className="card p-4">
+        <h3 className="mb-2 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+          {ks.name} ({ks.code}) -- seksi terpisah
+        </h3>
+        <div className="overflow-x-auto">
+          <Table minW="min-w-[40rem]">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-navy-700">
+                <Th>Pembuka</Th>
+                <Th>Masuk</Th>
+                <Th>Keluar</Th>
+                <Th>Transfer</Th>
+                <Th>Neto</Th>
+                <Th>Penutup</Th>
+              </tr>
+            </thead>
+            <tbody>
+              <Trow>
+                <Td className="tabular-nums">{rp(ks.pembuka)}</Td>
+                <Td className="tabular-nums">{rp(ks.masuk)}</Td>
+                <Td className="tabular-nums">{rp(ks.keluar)}</Td>
+                <Td className="tabular-nums">{rp(ks.transfer)}</Td>
+                <Td className="tabular-nums">{rp(ks.neto)}</Td>
+                <Td className="tabular-nums font-bold">{rp(ks.penutup)}</Td>
+              </Trow>
+            </tbody>
+          </Table>
+        </div>
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Kas sosial (ZIS) TIDAK dijumlahkan ke kas usaha (anti-campur, Sek.5.4).
+        </p>
+        {ks.rincian.length > 0 && (
+          <div className="mt-3 overflow-x-auto">
+            <Table minW="min-w-[30rem]">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-navy-700">
+                  <Th>Rincian ZIS</Th>
+                  <Th>Kode</Th>
+                  <Th>Masuk</Th>
+                  <Th>Keluar</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {ks.rincian.map((r) => (
+                  <Trow key={r.code}>
+                    <Td>{r.label}</Td>
+                    <Td className="font-mono text-xs">{r.code}</Td>
+                    <Td className="tabular-nums">{nz(r.masuk)}</Td>
+                    <Td className="tabular-nums">{nz(r.keluar)}</Td>
+                  </Trow>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        )}
       </div>
     </div>
   );

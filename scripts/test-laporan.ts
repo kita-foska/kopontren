@@ -13,10 +13,15 @@
  *   alokasi coop 3020->3030/3050/3060 - distribusi placeholder 0 + D=K);
  *   (LP2) simpanan 2050/2060 = memo kewajiban, TIDAK ke ekuitas;
  *   (LP3) batas periode + flag_rekon15 bila tak seimbang; (LP4) DB kosong.
+ * Cakupan LAK (W2.5): (L1) golden (pembuka opening + 3 aktivitas +
+ *   transfer antar-kas + pergeseran kas sosial + identitas footer +
+ *   rincian ZIS terpisah); (L2) batas periode; (L3) tak seimbang ->
+ *   flag_rekon15; (L4) DB kosong; (L5) jurnal pembalik offset arus.
  */
 import { buildPosisi } from '../src/lib/laporan/posisi.ts';
 import { buildLka } from '../src/lib/laporan/lka.ts';
 import { buildLpe } from '../src/lib/laporan/lpe.ts';
+import { buildLak } from '../src/lib/laporan/lak.ts';
 import type { QueryDb } from '../src/lib/keuangan.ts';
 
 let passes = 0;
@@ -358,8 +363,118 @@ async function main(): Promise<void> {
     ok('LP4: 0=0 seimbang, flag_rekon15 = false', p.d_k.balanced === true && p.flag_rekon15 === false && p.d_k.total_debit === 0);
   }
 
+  // (L1) LAK golden: pembuka opening + 3 aktivitas + transfer antar-kas
+  // + pergeseran kas sosial + identitas footer (Sek.5.4).
+  {
+    const db = await freshDb();
+    const D = '2026-08-15';
+    // Pembuka (type='opening') -> saldo awal, BUKAN arus.
+    postX(db, 'L-O1', '2026-08-01', 'opening', 'coop', '1010', '3010', 10_000_000);
+    postX(db, 'L-O2', '2026-08-01', 'opening', 'coop', '1020', '3010', 500_000);
+    postX(db, 'L-O3', '2026-08-01', 'opening', 'coop', '1100', '2090', 200_000);
+    // Arus usaha: operasional / investasi / pendanaan.
+    post(db, 'L-K1', D, '1010', '4010', 3_000_000); // DR 1010: op masuk 3.000.000
+    post(db, 'L-K2', D, '5030', '1010', 500_000); // CR 1010: op keluar 500.000
+    post(db, 'L-I1', D, '1050', '1010', 2_000_000); // CR 1010: inv keluar 2.000.000
+    post(db, 'L-P1', D, '1010', '3010', 1_000_000); // DR 1010: pendanaan masuk 1.000.000
+    // Transfer antar-kas 1010->1020 (bukan aktivitas).
+    post(db, 'L-T1', D, '1020', '1010', 500_000);
+    // Kas sosial 1100: ZIS masuk/keluar + pergeseran 1010->1100.
+    post(db, 'L-Z1', D, '1100', '4090', 300_000); // ZIS masuk (4090 infak)
+    post(db, 'L-Z2', D, '5090', '1100', 150_000); // zakat keluar (5090)
+    post(db, 'L-Z3', D, '1100', '1010', 200_000); // pergeseran 1010->1100 (200.000)
+    const l = await buildLak(makeShim(db), '2026-10-01');
+    const k1010 = l.kas.find((r) => r.code === '1010')!;
+    const k1020 = l.kas.find((r) => r.code === '1020')!;
+    eq('L1: 1010 pembuka = 10.000.000', k1010.pembuka, 10_000_000);
+    eq('L1: 1010 masuk = 4.000.000 (op 3.000.000 + pend 1.000.000)', k1010.masuk, 4_000_000);
+    eq('L1: 1010 keluar = 2.500.000 (op 500.000 + inv 2.000.000)', k1010.keluar, 2_500_000);
+    eq('L1: 1010 transfer = -700.000 (T1 -500.000, Z3 -200.000)', k1010.transfer, -700_000);
+    eq('L1: 1010 neto = 800.000', k1010.neto, 800_000);
+    eq('L1: 1010 penutup = 10.800.000', k1010.penutup, 10_800_000);
+    eq('L1: 1020 pembuka = 500.000', k1020.pembuka, 500_000);
+    eq('L1: 1020 transfer = 500.000', k1020.transfer, 500_000);
+    eq('L1: 1020 penutup = 1.000.000', k1020.penutup, 1_000_000);
+    eq('L1: op masuk = 3.000.000', l.aktivitas.operasional.masuk, 3_000_000);
+    eq('L1: op keluar = 500.000', l.aktivitas.operasional.keluar, 500_000);
+    eq('L1: inv keluar = 2.000.000', l.aktivitas.investasi.keluar, 2_000_000);
+    eq('L1: inv neto = -2.000.000', l.aktivitas.investasi.neto, -2_000_000);
+    eq('L1: pend masuk = 1.000.000', l.aktivitas.pendanaan.masuk, 1_000_000);
+    eq('L1: kas_sosial pembuka = 200.000', l.kas_sosial.pembuka, 200_000);
+    eq('L1: kas_sosial masuk = 300.000 (ZIS 4090)', l.kas_sosial.masuk, 300_000);
+    eq('L1: kas_sosial keluar = 150.000 (zakat 5090)', l.kas_sosial.keluar, 150_000);
+    eq('L1: kas_sosial transfer = 200.000', l.kas_sosial.transfer, 200_000);
+    eq('L1: kas_sosial neto = 350.000', l.kas_sosial.neto, 350_000);
+    eq('L1: kas_sosial penutup = 550.000', l.kas_sosial.penutup, 550_000);
+    eq('L1: rincian ZIS 4090 masuk = 300.000', l.kas_sosial.rincian.find((r) => r.code === '4090')?.masuk, 300_000);
+    eq('L1: rincian ZIS 5090 keluar = 150.000', l.kas_sosial.rincian.find((r) => r.code === '5090')?.keluar, 150_000);
+    eq('L1: rincian ZIS tetap 4 baris (tanpa "(lain)")', l.kas_sosial.rincian.length, 4);
+    eq('L1: footer saldo_awal = 10.500.000', l.footer.saldo_awal, 10_500_000);
+    eq('L1: footer neto_aktivitas = 1.500.000', l.footer.neto_aktivitas, 1_500_000);
+    eq('L1: footer pergeseran_kas_sosial = -200.000', l.footer.pergeseran_kas_sosial, -200_000);
+    eq('L1: footer saldo_akhir = 11.800.000', l.footer.saldo_akhir, 11_800_000);
+    ok(
+      'L1: identitas footer (awal + neto + pergeseran = akhir)',
+      l.footer.saldo_awal + l.footer.neto_aktivitas + l.footer.pergeseran_kas_sosial === l.footer.saldo_akhir
+    );
+    ok('L1: D=K seimbang, flag_rekon15 = false', l.d_k.balanced === true && l.flag_rekon15 === false);
+  }
+
+  // (L2) LAK batas periode: entry_date < at (strict).
+  {
+    const db = await freshDb();
+    post(db, 'L-B1', '2026-09-30', '1010', '4010', 100_000); // IN (< at)
+    post(db, 'L-B2', '2026-10-01', '1010', '4010', 900_000); // OUT (= at)
+    const l = await buildLak(makeShim(db), '2026-10-01');
+    eq('L2: op masuk hanya B1 = 100.000', l.aktivitas.operasional.masuk, 100_000);
+    eq('L2: footer saldo_akhir = 100.000', l.footer.saldo_akhir, 100_000);
+    eq('L2: D=K total_debit hanya B1 = 100.000', l.d_k.total_debit, 100_000);
+  }
+
+  // (L3) LAK tak seimbang -> flag_rekon15 (kaki non-kas tak mengubah arus).
+  {
+    const db = await freshDb();
+    post(db, 'L-C1', '2026-08-01', '1010', '4010', 1_000_000); // seimbang
+    postUnbalanced(db, 'L-C2', '2026-08-02', '1030', 250_000); // kaki debit saja
+    const l = await buildLak(makeShim(db), '2026-10-01');
+    eq('L3: footer saldo_akhir = 1.000.000', l.footer.saldo_akhir, 1_000_000);
+    eq('L3: D=K gap = 250.000', l.d_k.gap, 250_000);
+    ok('L3: D=K TIDAK seimbang, flag_rekon15 = true', l.d_k.balanced === false && l.flag_rekon15 === true);
+  }
+
+  // (L4) LAK DB kosong -> semua nol, kas 2 baris, rincian ZIS 4 baris.
+  {
+    const db = await freshDb();
+    const l = await buildLak(makeShim(db), '2026-10-01');
+    eq('L4: 2 baris kas (1010+1020)', l.kas.length, 2);
+    ok(
+      'L4: semua kas 0',
+      l.kas.every((r) => r.pembuka === 0 && r.masuk === 0 && r.keluar === 0 && r.transfer === 0 && r.penutup === 0)
+    );
+    eq('L4: kas_sosial neto = 0', l.kas_sosial.neto, 0);
+    eq('L4: rincian ZIS tetap 4 baris', l.kas_sosial.rincian.length, 4);
+    ok(
+      'L4: footer semua 0',
+      l.footer.saldo_awal === 0 && l.footer.neto_aktivitas === 0 && l.footer.pergeseran_kas_sosial === 0 && l.footer.saldo_akhir === 0
+    );
+    ok('L4: 0=0 seimbang, flag_rekon15 = false', l.d_k.balanced === true && l.flag_rekon15 === false);
+  }
+
+  // (L5) LAK jurnal pembalik (type='reversal'): meng-ofset arus normal.
+  {
+    const db = await freshDb();
+    post(db, 'L-R1', '2026-08-15', '5030', '1010', 200_000); // normal: op keluar
+    postX(db, 'L-R2', '2026-08-15', 'reversal', 'pos', '1010', '5030', 200_000); // pembalik: op masuk
+    const l = await buildLak(makeShim(db), '2026-10-01');
+    eq('L5: op masuk = 200.000 (pembalik)', l.aktivitas.operasional.masuk, 200_000);
+    eq('L5: op keluar = 200.000 (normal)', l.aktivitas.operasional.keluar, 200_000);
+    eq('L5: op neto = 0 (offset penuh)', l.aktivitas.operasional.neto, 0);
+    eq('L5: footer saldo_akhir = 0', l.footer.saldo_akhir, 0);
+    ok('L5: D=K seimbang, flag_rekon15 = false', l.d_k.balanced === true && l.flag_rekon15 === false);
+  }
+
   console.log('');
-  console.log('test:laporan (W2.2+W2.3+W2.4) - ' + passes + ' ok, ' + failures + ' fail');
+  console.log('test:laporan (W2.2+W2.3+W2.4+W2.5) - ' + passes + ' ok, ' + failures + ' fail');
   process.exit(failures > 0 ? 1 : 0);
 }
 

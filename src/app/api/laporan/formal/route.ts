@@ -5,8 +5,9 @@
  * cache 60 dtk + periode WIB. W2.2 menerbitkan report `posisi`
  * (Laporan Posisi Keuangan formal, Sek.5.1); W2.3 menambah report `lka`
  * (Laporan Laba-Rugi formal, Sek.5.2); W2.4 menambah report `lpe`
- * (Laporan Perubahan Ekuitas formal, Sek.5.3). Report lain (LAK, CALK)
- * menyusul wave berikutnya -- dispatch disiapkan.
+ * (Laporan Perubahan Ekuitas formal, Sek.5.3); W2.5 menambah report
+ * `lak` (Laporan Arus Kas formal, Sek.5.4). Report lain (CALK) menyusul
+ * wave berikutnya -- dispatch disiapkan.
  *
  * `?as_of=YYYY-MM-DD` = tanggal laporan WIB (default = hari ini WIB).
  * Batas kumulatif `at` = akhir hari `as_of` (entry_date < at).
@@ -25,6 +26,7 @@ import { cached } from '@/lib/ref-cache';
 import { buildPosisi } from '@/lib/laporan/posisi';
 import { buildLka } from '@/lib/laporan/lka';
 import { buildLpe } from '@/lib/laporan/lpe';
+import { buildLak } from '@/lib/laporan/lak';
 import { wibToday } from '@/lib/zakat-period';
 
 export const FORMAL_NOTES: string[] = [
@@ -54,6 +56,16 @@ const LPE_NOTES: string[] = [
   'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
 ];
 
+const LAK_NOTES: string[] = [
+  'Laporan Arus Kas kumulatif s.d. as_of (entry_date < batas), struktur Sek.5.4; klasifikasi per entri sesuai akun lawan (investasi/pendanaan/operasional).',
+  'D=K (rekon #15 JOURNAL_BAL): bila flag_rekon15=true, angka formal TIDAK dianggap otoritatif -- periksa cek JOURNAL_BAL di /admin/rekonsiliasi.',
+  'Kas usaha = 1010 + 1020; kas sosial/ZIS = 1100 TERPISAH -- tidak dicampur ke kas usaha (invariant rekon #16 GL_CASH, cek sendiri W5.2).',
+  'Transfer antar-kas (1010<->1020) bukan aktivitas; pergeseran kas 1010/1020<->1100 tercatat di footer (pergeseran_kas_sosial) agar identitas footer tetap terpenuhi.',
+  'Identitas footer: saldo_awal + neto_aktivitas + pergeseran_kas_sosial = saldo_akhir; per akun kas: penutup = pembuka + masuk - keluar + transfer.',
+  'Rincian ZIS per akun lawan bersifat atribusi eksak (masuk/keluar per kode lawan, s.d. batas).',
+  'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
+];
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** as_of 'YYYY-MM-DD' -> batas eksklusif akhir hari (YYYY-MM-DD + 1). */
@@ -71,7 +83,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const report = (url.searchParams.get('report') ?? 'posisi').trim();
-  const supported = ['posisi', 'lka', 'lpe'];
+  const supported = ['posisi', 'lka', 'lpe', 'lak'];
   if (!supported.includes(report))
     return NextResponse.json(
       { error: 'report "' + report + '" belum tersedia', supported },
@@ -103,6 +115,11 @@ export async function GET(req: Request) {
         const lka = await buildLka(d, at);
         // as_of dikirim via ...lka (LkaPayload.as_of = at); tak perlu duplikat.
         return { ...common, ...lka, notes: LKA_NOTES };
+      }
+      if (report === 'lak') {
+        const lak = await buildLak(d, at);
+        // as_of dikirim via ...lak (LakPayload.as_of = at); tak perlu duplikat.
+        return { ...common, ...lak, notes: LAK_NOTES };
       }
       if (report === 'lpe') {
         const lpe = await buildLpe(d, at);
