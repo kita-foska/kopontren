@@ -3530,3 +3530,15 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   cold start menjalankan fullInit sekali (stempel v21 -> v22).
 - Standing rule: W2 FULL AUDIT (bug + UX + UI, W2.1-W2.7) WAJIB
   SEBELUM mulai Wave 3.
+
+## W2 FULL AUDIT + Standing Rule DeepSeek (2 Okt 2026)
+- Audit Wave 2 (2 Okt 2026): 0 must-fix; DeepSeek independent
+  audit corrected 3 findings (a11y tablist P1, rekonsiliasi P2,
+  race P3; loading.tsx dropped). Ruling Gus Fi: SAFE, lanjut
+  Wave 3. Temuan tercatat di TODO.md (commit `d0db0a2`).
+- Standing rule (2 Okt 2026): Starting Wave 3, every Cline
+  report is independently audited by DeepSeek (bug + UX + UI)
+  before forwarding to Gus Fi. Requirements: honesty, evidence
+  (test/diff/scan), explicit assumptions, accept corrections
+  without defensiveness, ASK before coding when in doubt.
+
