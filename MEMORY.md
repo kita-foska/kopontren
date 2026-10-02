@@ -272,6 +272,48 @@
   - **Standing rule**: audit pasca-wave W2.5 -> hardening bila
     ada bug (pola B1-B4 W2.2); mulai setelah go Gus Fi.
 
+### F3.4+ W2.6: CALK (Catatan LK formal, Sek.5.5) + API + client tab - SELESAI
+2 Okt 2026 (commit `4dd7891`, dual-push master+main)
+- **5 file (+753/-6)**: `src/lib/laporan/calk.ts` (BARU, modul data
+  murni import-free `buildCalk(db,at)` pola W2.2-W2.5; template
+  Sek.5.5: item 1-3 teks statis panel klien + badge data
+  (coop_registered, PKGF/wave); item 4-8 dari GL kumulatif
+  (entry_date < batas): kas 1010/1020/1100 terpisah, piutang
+  1030/1070/1110, hutang 2010/2020/2030/2040/2090/2100, ekuitas
+  3010-3070 (+ total), simpanan 2050/2060/2070 = memo (kewajiban,
+  BUKAN ekuitas), ZIS per jenis GL-only (zakat keluar 5090+6030;
+  infak masuk 4090 / keluar 5100; sedekah lumps; wakaf masuk 4100
+  + aset 1120 & memo 6020 -- memo, TAK masuk total aset), ZIS per
+  periode (bulan entry, non-pembuka), akad berjalan 1070/1080/
+  1090/2040; sign `natural()` identik `naturalBal` posisi.ts;
+  `d_k` global + `flag_rekon15` proxy) + `route.ts` (dispatch
+  `?report=calk` + CALK_NOTES; supported +calk) +
+  `laporan-formal-client.tsx` (tab baru "Catatan LK (CALK)":
+  CalkPanel (as_of + badge D=K/gl_enabled/kopontren + banner D!=K
+  link /admin/rekonsiliasi), CalkKebijakan (item 1-3),
+  CalkStatement (item 4-8 + badge GL-only), CalkPeristiwa (item 9
+  input manual, draft localStorage per as_of -- TIDAK ke server);
+  shell + V1 tak berubah; 0 new dep) + `scripts/test-laporan.ts`
+  (C1-C4: golden GL-only + D=K, batas periode strict, tak
+  seimbang flag_rekon15, DB kosong; 137 -> 174 assert) +
+  `TODO.md` (note test:wakaf legacy -> CLEANUP W5/W6).
+- **GL-only (skema v21)**: tabel zis/akad BELUM ada -- ZIS per
+  jenis = aproksimasi akun COA (4090/5100 menyatukan
+  infak+sedekah; 6030 memo syariah); pemisahan per jenis menyusul
+  W2.7 (kolom `kind`), rincian per akad menyusul W3.1.
+- **Gate bersih**: `tsc --noEmit` 0; `test:laporan` 174/174;
+  `test:zakat` 37/37; 0 non-ASCII; `public/sw.js` + V1
+  `laporan-admin-client.tsx` tak tersentuh; ref remote
+  `origin/master` + `origin/main` identik @ `4dd7891`.
+- **Progres Wave 2 (roadmap 12)**: W2.1 `ca0f39f`; W2.2 `d91dbd0`
+  (+ hardening `663876b`); W2.3 `6d8d5b7`; W2.4 `a4d90c7`; W2.5
+  `d7ca0e8`; W2.6 `4dd7891`. **WAVE 2 = 6/7**.
+  - W2.7 (menyusul, commit Wave 2 TERAKHIR -> audit full Wave 2):
+    modul ZIS (tabel zis Sek.8.2, skema v22, flip 2090/5090/4040
+    'open'); penutupan jurnal closing (4xx/5xx -> 3020) menyusul.
+  - **Standing rule**: audit pasca-wave W2.6 -> hardening bila ada
+    bug (pola B1-B4 W2.2); mulai setelah go Gus Fi.
+
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
 - **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3

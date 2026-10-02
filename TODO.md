@@ -1531,6 +1531,43 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
           test:laporan 137/137; 0 non-ASCII; sw.js + V1 tak
           tersentuh.
           **Progres Wave 2: WAVE 2 = 5/7.**
+    - [x] **F3.4+ W2.6 LEPAS 2 Okt** (`4dd7891`; ACC Gus Fi; semua
+          gate lulus): CALK (Catatan LK formal, Sek.5.5) + API
+          `?report=calk` + shell tab `/admin/laporan` "Catatan LK
+          (CALK)". 5 file (+753/-6):
+          `lib/laporan/calk.ts` (BARU, modul data murni import-free
+          `buildCalk`; item 1-3 teks statis panel + badge data;
+          item 4-8 dari GL kumulatif (entry_date < batas): kas
+          1010/1020/1100, piutang 1030/1070/1110, hutang
+          2010/2020/2030/2040/2090/2100, ekuitas 3010-3070
+          (+total), simpanan 2050/2060/2070 = memo (kewajiban,
+          BUKAN ekuitas), ZIS per jenis GL-only (zakat keluar
+          5090+6030; infak masuk 4090/keluar 5100; sedekah lumps;
+          wakaf masuk 4100 + aset 1120 & memo 6020 -- memo, TAK
+          masuk total aset), ZIS per periode (bulan, non-pembuka),
+          akad berjalan 1070/1080/1090/2040; sign natural()
+          identik naturalBal posisi.ts; `d_k` global +
+          `flag_rekon15` proxy) +
+          `api/laporan/formal/route.ts` (dispatch `?report=calk` +
+          CALK_NOTES; supported +calk) +
+          `laporan-formal-client.tsx` (tab CALK: CalkPanel (as_of
+          + badge D=K/gl_enabled/kopontren + banner D!=K ->
+          /admin/rekonsiliasi), CalkKebijakan (item 1-3),
+          CalkStatement (item 4-8 + badge GL-only),
+          CalkPeristiwa (item 9 input manual, draft localStorage
+          per as_of -- TIDAK ke server); shell + V1 tak berubah;
+          0 new dep) + `scripts/test-laporan.ts` (C1-C4: golden
+          GL-only + D=K, batas periode strict, tak seimbang
+          flag_rekon15, DB kosong; 137 -> 174 assert) + `TODO.md`
+          (note test:wakaf legacy -> CLEANUP W5/W6). **GL-only
+          (skema v21)**: tabel zis/akad belum ada -- ZIS per jenis
+          = aproksimasi akun COA (4090/5100 menyatukan
+          infak+sedekah; 6030 memo syariah; wakaf 1120+6020 memo);
+          pemisahan per jenis menyusul W2.7 (kolom `kind`),
+          rincian per akad menyusul W3.1. Gate: tsc 0;
+          test:laporan 174/174; test:zakat 37/37; 0 non-ASCII;
+          sw.js + V1 tak tersentuh.
+          **Progres Wave 2: WAVE 2 = 6/7.**
 
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
