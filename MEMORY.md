@@ -134,6 +134,42 @@
     (B1-B4) SELESAI `663876b`; UX/UI (U1-U4, a11y) ditunda ke
     UX-5/UX-6. W2.3 mulai setelah go Gus Fi.
 
+### F3.4+ W2.3: Laporan Laba-Rugi formal (LKA) + API + client tab - SELESAI
+2 Okt 2026 (commit `6d8d5b7`, dual-push master+main)
+- **4 file (+546/-18)**: `src/lib/laporan/lka.ts` (modul import-free
+  `buildLka(db,at)`; laba-rugi kumulatif s.d. `at`; pendapatan neto =
+  4010 - 4030 - 4040 + 4050; HPP neto = 5010 - 5020 (additive dBal,
+  Opsi B); beban operasional 5xx byCode memo + subtotal (5010/5020
+  TIDAK di-subtotal, S.5.2); laba kotor/bersih; blok memo 3010/3030/
+  3040/6020; D=K proxy flag_rekon15 TANPA import rekonsiliasi.ts)
+  + `src/app/api/laporan/formal/route.ts` (dispatch `?report=lka`
+  -> buildLka; guard tier `laporan` + nextDay + cache 60 dtk +
+  try/catch JSON 500)
+  + `src/components/admin/laporan-formal-client.tsx` (tab baru
+  "Laporan Laba-Rugi"; shell posisi+V1 tak berubah; panel LKA:
+  preset period + rentang custom, statement bruto->bersih->HPP->laba
+  kotor->beban (accordion byCategory)->laba bersih, blok memo di luar
+  laba, D=K badge, Bagikan WA inline clipboard)
+  + `scripts/test-laporan.ts` (4 fase LA-LD; 37 -> 60 assert; 0 new dep).
+- **Sign fix (Opsi B, ruling Gus Fi)**: HPP neto = penjumlahan ADDITIVE
+  `dBal` (sama dgn BEBAN di `posisi.ts`): `hppNeto = dBal(5010) +
+  dBal(5020) = gross - returns`. 5020 = kredit-normal (retur HPP
+  contra; live GL `journalForSalesReturn` = DR 1040 / CR 5020).
+  `hpp.retur` = magnitudo positif utk tampilan P&L; neto tetap
+  `gross - retur`. Fixture test LC2 di-correct ke mirror live GL
+  (`DR 1040 / CR 5020`; sebelum salah de-bit 5020 yang bikin test
+  lolos dgn bug).
+- **Gate bersih**: `tsc --noEmit` exit 0; `test:laporan` 60/60;
+  `test:all` 18 suite lulus; 0 non-ASCII di 4 file; `public/sw.js` +
+  V1 `laporan-admin-client.tsx` tak tersentuh; ref remote
+  `origin/master` + `origin/main` identik @ `6d8d5b7`.
+- **Progres Wave 2 (roadmap 12)**: W2.1 `ca0f39f`; W2.2 `d91dbd0`
+  (+ hardening `663876b`); W2.3 `6d8d5b7`. **WAVE 2 = 3/7**.
+  - W2.4+ (menyusul): LPE, LAK, CALK; penutupan jurnal closing
+    (4xx/5xx -> 3020).
+  - **Standing rule**: audit pasca-wave W2.3 -> hardening bila ada
+    bug (pola B1-B4 W2.2); mulai setelah go Gus Fi.
+
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
 - **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3

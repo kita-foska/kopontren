@@ -1438,6 +1438,28 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
           (RangeError -> JSON 500); (B3) `FORMAL_NOTES` cache
           'TTL backstop'; (B4) dokumentasi `flag_rekon15` proxy D=K
           global. Gate: tsc 0; test:laporan 37/37.
+    - [x] **F3.4+ W2.3 LEPAS 2 Okt** (`6d8d5b7`; ACC Gus Fi; semua
+          gate lulus): Laporan Laba-Rugi formal (LKA) + API
+          `?report=lka` + shell tab `/admin/laporan` "Laporan
+          Laba-Rugi". 4 file (+546/-18): `lib/laporan/lka.ts`
+          (buildLka kumulatif; pendapatan neto 4010-4030-4040+4050;
+          HPP neto = 5010-5020 additive dBal; beban operasional byCode
+          memo; laba kotor/bersih; memo 3010/3030/3040/6020; D=K
+          proxy flag_rekon15 tanpa import rekonsiliasi.ts) +
+          `api/laporan/formal/route.ts` (dispatch `?report=lka`;
+          guard tier laporan + nextDay + cache 60 dtk + JSON 500) +
+          `laporan-formal-client.tsx` (tab LKA: preset period +
+          rentang custom, statement bruto->bersih->HPP->laba
+          kotor->beban (accordion)->laba bersih, blok memo, D=K
+          badge, Bagikan WA inline; shell posisi+V1 tak berubah; 0
+          new dep) + `scripts/test-laporan.ts` (4 fase LA-LD;
+          37 -> 60 assert). **Sign fix (Opsi B, ruling Gus Fi)**:
+          HPP neto ADDITIVE dBal `hppNeto = dBal(5010)+dBal(5020)`
+          (sama dgn BEBAN posisi.ts); 5020 kredit-normal (retur HPP
+          contra; live GL DR 1040/CR 5020); fixture LC2 di-correct
+          ke mirror live GL. Gate: tsc 0; test:laporan 60/60;
+          test:all 18 suite; 0 non-ASCII; sw.js + V1 tak tersentuh.
+          **Progres Wave 2: WAVE 2 = 3/7.**
 
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
