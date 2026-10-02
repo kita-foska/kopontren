@@ -21,6 +21,9 @@
  *   piutang/hutang per akun, ekuitas + simpanan memo TIDAK ikut total,
  *   ZIS per jenis + per periode + memo wakaf 1120/6020, akad berjalan);
  *   (C2) batas periode; (C3) tak seimbang -> flag_rekon15; (C4) DB kosong.
+ *   (C5) W3.3 akad_ringkas: ringkasan per jenis dari tabel akad (aktif/
+ *   settled/saldo_aktif, OQ3) + tabel akad DDL di harness (mirror DDL_AKAD
+ *   skema v23, test-akad.ts) + update footer (W2.6 -> W3.3).
  *   (Item 1-3 = teks statis panel klien; item 9 = input manual -- tak di
  *   payload, tak diuji di sini.)
  */
@@ -47,9 +50,12 @@ function eq<T>(name: string, actual: T, expected: T): void {
 }
 
 // DDL mirror src/db.ts (v21): hanya kolom yang dipakai buildPosisi.
+// W3.3: + tabel akad (DDL_AKAD skema v23, mirror test-akad.ts) utk
+// buildCalk.akad_ringkas (item 8; QueryDb hanya baca -- butuh tabel ada).
 const DDL = [
   "CREATE TABLE IF NOT EXISTS journal_entries(id TEXT PRIMARY KEY, ref_table TEXT NOT NULL, ref_id TEXT, entry_date TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'normal', desc TEXT NOT NULL DEFAULT '', created_by TEXT, created_at TEXT NOT NULL DEFAULT '1970-01-01T00:00:00Z')",
   "CREATE TABLE IF NOT EXISTS journal_lines(entry_id TEXT NOT NULL, account_code TEXT NOT NULL, debit INTEGER NOT NULL DEFAULT 0, credit INTEGER NOT NULL DEFAULT 0, balance_running INTEGER, source TEXT NOT NULL DEFAULT '', PRIMARY KEY(entry_id, account_code, source))",
+  "CREATE TABLE IF NOT EXISTS akad(id TEXT PRIMARY KEY, type TEXT NOT NULL, counterparty TEXT NOT NULL, amount INTEGER NOT NULL, terms_json TEXT, status TEXT NOT NULL DEFAULT 'active', opened_at TEXT NOT NULL, settled_at TEXT, note TEXT, UNIQUE(type, counterparty, opened_at, amount))",
 ];
 
 type SyncDb = import('node:sqlite').DatabaseSync;
@@ -563,8 +569,36 @@ async function main(): Promise<void> {
     ok('C4: 0=0 seimbang, flag_rekon15 = false', c.d_k.balanced === true && c.flag_rekon15 === false && c.d_k.total_debit === 0);
   }
 
+  // (C5) W3.3: akad_ringkas -- ringkasan per jenis dari tabel akad (OQ3).
+  // at = '2026-10-01' (strict opened_at < at); seed: a1 aktif 9/1 (1jt),
+  // a2 settled 9/5 (2jt), a3 aktif 9/10 (5jt), a4 aktif 10/1 (OUT: = at).
+  {
+    const db = await freshDb();
+    function ins(id: string, type: string, cp: string, amount: number, status: string, opened: string): void {
+      db
+        .prepare("INSERT INTO akad(id, type, counterparty, amount, status, opened_at) VALUES (?,?,?,?,?,?)")
+        .run(id, type, cp, amount, status, opened);
+    }
+    ins('a1', 'murabahah', 'Nas A', 1_000_000, 'active', '2026-09-01');
+    ins('a2', 'murabahah', 'Nas B', 2_000_000, 'settled', '2026-09-05');
+    ins('a3', 'mudharabah', 'Ptn C', 5_000_000, 'active', '2026-09-10');
+    ins('a4', 'ijarah', 'Nas D', 7_000_000, 'active', '2026-10-01'); // OUT (= at)
+    const c = await buildCalk(makeShim(db), '2026-10-01');
+    eq('C5: ringkas = 2 jenis (ijarah tak masuk s.d. at)', c.akad_ringkas.length, 2);
+    eq('C5: mudharabah aktif = 1', c.akad_ringkas.find((a) => a.type === 'mudharabah')?.aktif, 1);
+    eq('C5: mudharabah saldo_aktif = 5.000.000', c.akad_ringkas.find((a) => a.type === 'mudharabah')?.saldo_aktif, 5_000_000);
+    eq('C5: murabahah aktif = 1', c.akad_ringkas.find((a) => a.type === 'murabahah')?.aktif, 1);
+    eq('C5: murabahah settled = 1', c.akad_ringkas.find((a) => a.type === 'murabahah')?.settled, 1);
+    eq('C5: murabahah saldo_aktif = 1.000.000 (settled tak ikut)', c.akad_ringkas.find((a) => a.type === 'murabahah')?.saldo_aktif, 1_000_000);
+    ok('C5: D=K tak terpengaruh tabel akad (0=0)', c.d_k.balanced === true && c.flag_rekon15 === false);
+    // Tabel akad kosong -> ringkas kosong (tak ada jenis).
+    const db0 = await freshDb();
+    const c0 = await buildCalk(makeShim(db0), '2026-10-01');
+    eq('C5: tabel akad kosong -> ringkas kosong', c0.akad_ringkas.length, 0);
+  }
+
   console.log('');
-  console.log('test:laporan (W2.2+W2.3+W2.4+W2.5+W2.6) - ' + passes + ' ok, ' + failures + ' fail');
+  console.log('test:laporan (W2.2+W2.3+W2.4+W2.5+W2.6+W3.3) - ' + passes + ' ok, ' + failures + ' fail');
   process.exit(failures > 0 ? 1 : 0);
 }
 

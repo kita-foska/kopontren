@@ -20,8 +20,8 @@
  *             (aset) + 6020 (memo syariah -- TIDAK masuk total aset,
  *             pola FORMAL_NOTES W2.2).
  * - Item 8 akad berjalan per jenis = saldo akun COA saja
- *   (1070/1080/1090 aset + 2040 liabilitas); rincian saldo per akad
- *   menyusul W3.1 (modul akad).
+ *   (1070/1080/1090 aset + 2040 liabilitas); W3.1 = modul akad; W3.3
+ *   menambah `akad_ringkas` (ringkasan per jenis dari tabel akad).
  * - Item 9 peristiwa pasca-periode = input manual di panel klien
  *   (draft lokal, bukan server) -- TIDAK di payload.
  * - Item 1-3 (info entitas, struktur, kebijakan akuntansi) = teks
@@ -64,6 +64,18 @@ export type CalkZisPeriode = {
   disalurkan: number;
 };
 
+/** Item 8 (W3.3): ringkasan akad per jenis dari tabel akad (modul W3.2). */
+export type CalkAkadRingkas = {
+  /** Tipe akad (murabahah/mudharabah/musyarakah/ijarah/wakalah). */
+  type: string;
+  /** Jumlah akad status='active'. */
+  aktif: number;
+  /** Jumlah akad status='settled' (soft status, OQ 1). */
+  settled: number;
+  /** Total amount akad status='active' (sisa berjalan, Rp). */
+  saldo_aktif: number;
+};
+
 /** Hasil `buildCalk` -- dikirim /api/laporan/formal?report=calk. */
 export type CalkPayload = {
   /** Batas periode eksklusif (entry_date < as_of); konsisten lka/lpe/lak. */
@@ -88,6 +100,13 @@ export type CalkPayload = {
   zis_periode: CalkZisPeriode[];
   /** Item 8: akad berjalan per akun COA (rincian per akad menyusul W3.1). */
   akad_berjalan: CalkRow[];
+  /**
+   * Item 8 (W3.3): ringkasan per jenis akad dari tabel akad (modul W3.2) --
+   * OQ3: akad_ringkas = ringkas per jenis; akad_berjalan = per akun COA.
+   * `aktif`/`settled` = jumlah akad per status; `saldo_aktif` = total
+   * amount akad status='active' (sisa berjalan, Rp).
+   */
+  akad_ringkas: CalkAkadRingkas[];
   /** D=K global s.d. `at` (proxy rekon #15 JOURNAL_BAL). */
   d_k: {
     total_debit: number;
@@ -201,6 +220,32 @@ async function zisPer(db: QueryDb, at: string): Promise<CalkZisPeriode[]> {
 }
 
 /**
+ * W3.3: ringkasan akad per jenis dari tabel akad (modul W3.2; DDL skema
+ * v23) s.d. batas `at` (opened_at < at, konsisten kumulatif GL). Tabel
+ * akad ada di semua DB skema v23; test Node membuat DDL-nya manual.
+ */
+async function akadRingkas(db: QueryDb, at: string): Promise<CalkAkadRingkas[]> {
+  const rows = (await db
+    .prepare(
+      `SELECT type,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) aktif,
+        SUM(CASE WHEN status = 'settled' THEN 1 ELSE 0 END) settled,
+        COALESCE(SUM(CASE WHEN status = 'active' THEN amount ELSE 0 END), 0) saldo_aktif
+       FROM akad
+       WHERE opened_at < ?
+       GROUP BY type
+       ORDER BY type`
+    )
+    .all(at)) as { type: string; aktif: number; settled: number; saldo_aktif: number }[];
+  return rows.map((r) => ({
+    type: r.type,
+    aktif: r.aktif,
+    settled: r.settled,
+    saldo_aktif: r.saldo_aktif,
+  }));
+}
+
+/**
  * Susun CALK template Sek.5.5 s.d. batas `at` (entry_date < at).
  * Item 1-3 statis (klien); item 4-8 dari GL; item 9 manual (klien).
  */
@@ -231,6 +276,8 @@ export async function buildCalk(db: QueryDb, at: string): Promise<CalkPayload> {
 
   // Item 8: akad berjalan per akun (rincian per akad menyusul W3.1).
   const akad_berjalan = AKAD.map(row);
+  // W3.3: ringkasan per jenis akad dari tabel akad (OQ3: akad_ringkas).
+  const akad_ringkas = await akadRingkas(db, at);
 
   // D=K global (proxy rekon #15).
   const dk = await journalTotals(db, at);
@@ -250,6 +297,7 @@ export async function buildCalk(db: QueryDb, at: string): Promise<CalkPayload> {
     zis_memo,
     zis_periode,
     akad_berjalan,
+    akad_ringkas,
     d_k: {
       total_debit: totalDebit,
       total_credit: totalCredit,

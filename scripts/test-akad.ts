@@ -8,6 +8,9 @@
  *         A1 murabahah golden; A2 mudharabah 4 sisi; A3 musyarakah;
  *         A4 ijarah; A5 throw (wakalah/denda/kind di luar matrix);
  *         A6 idempoten + F1; A7 edge (amount/term/gl-off/rounding).
+ *  A8 (W3.3): API-layer, UI-less -- pracheck 400/409 + bukti rollback
+ *         atomik (event hilang saat post gagal) + pesan UNIQUE (NOTE 3)
+ *         + soft status (OQ 1: active<->settled, tanpa DELETE).
  * Node langsung (type-stripping, Node >= 23.6/v24): npm run test:akad.
  * In-memory node:sqlite, DDL mirror src/db.ts (v23 + journal W1.1).
  * Cakupan M1/M2: kolom akad/akad_events persis Sek.6.1 (PRAGMA
@@ -17,7 +20,15 @@
  * 2080 & flip v22 tak berubah; stamp 22->23.
  */
 
-import { akadJournalFor, akadLines, akadValidateTerms, recordAkadEventInTx } from '../src/lib/akad.ts';
+import {
+  AKAD_STATUS,
+  AKAD_UNIQUE_ERROR,
+  akadJournalFor,
+  akadKindAllowed,
+  akadLines,
+  akadValidateTerms,
+  recordAkadEventInTx,
+} from '../src/lib/akad.ts';
 import type { AkadEventRec } from '../src/lib/akad.ts';
 import { isBalanced, postJournalInTx } from '../src/lib/jurnal.ts';
 import type { JLine, JSpec, TxDb } from '../src/lib/jurnal.ts';
@@ -72,6 +83,11 @@ function toTxDb(db: import('node:sqlite').DatabaseSync): TxDb {
       all: async (...a: unknown[]) => db.prepare(sql).all(...inVals(a)),
     }),
   };
+}
+
+/** Helper: jumlah baris hasil query COUNT(*) c pada DB in-memory. */
+function cnt0(db: import('node:sqlite').DatabaseSync, sql: string): number {
+  return Number((db.prepare(sql).get() as { c: number }).c);
 }
 
 /** Helper: nilai debit/credit akun tertentu pada entry (0 bila tak ada). */
@@ -571,6 +587,99 @@ async function main(): Promise<void> {
     ok('A7: isBalanced rounding', isBalanced(L));
   }
   db3.close();
+
+  // ===== A8 (W3.3): API-layer, UI-less -- pracheck 400/409 + bukti
+  // rollback atomik + pesan UNIQUE (NOTE 3) + soft status (OQ 1) =====
+  {
+    // A8.1: rollback atomik -- gagal di post => INSERT akad_events
+    // ikut TIDAK persist (event absent; NOTE 1 DeepSeek).
+    const db4 = new mod.DatabaseSync(':memory:');
+    db4.exec(DDL_AKAD);
+    db4.exec(DDL_AKAD_EV);
+    db4.exec(DDL_JE);
+    db4.exec(DDL_JL);
+    db4
+      .prepare(
+        "INSERT INTO akad(id, type, counterparty, amount, opened_at, status) VALUES ('aU8','murabahah','Nasabah U8',7000000,'2026-10-02T00:00:00+07:00','active')"
+      )
+      .run();
+    const tdb4 = toTxDb(db4);
+    const cnt4 = (sql: string): number =>
+      Number((db4.prepare(sql).get() as { c: number }).c);
+    // Pembukti rollback atomik: eksekusi di dalam tx manual (BEGIN -> ROLLBACK
+    // saat gagal; auto-commit node:sqlite tak punya rollback). Gagal di baris
+    // jurnal (PRIMARY KEY (entry_id, account_code, source)) => INSERT event +
+    // entry jurnal TIDAK persist (NOTE 1 DeepSeek).
+    db4.exec("INSERT INTO journal_lines(entry_id, account_code, debit, credit, source) VALUES ('JE-akadevt-eA8r','1010',0,0,'akad#murabahah:pencairan')");
+    let threw4 = false;
+    db4.exec('BEGIN');
+    try {
+      await recordAkadEventInTx(tdb4, {
+        id: 'eA8r',
+        akadId: 'aU8',
+        type: 'murabahah',
+        kind: 'pencairan',
+        amount: 7000000,
+        gl_enabled: true,
+      });
+      db4.exec('COMMIT');
+    } catch {
+      threw4 = true;
+      db4.exec('ROLLBACK');
+    }
+    ok('A8.1: post gagal -> throw + ROLLBACK dari recordAkadEventInTx', threw4);
+    eq('A8.1: INSERT event TIDAK persist (rollback)', cnt4('SELECT COUNT(*) c FROM akad_events'), 0);
+    eq('A8.1: journal entry tak terpersist', cnt4("SELECT COUNT(*) c FROM journal_entries WHERE ref_table='akad'"), 0);
+    // Kontrol: event lain (post berhasil, tanpa bentrok) -> persist setelah COMMIT.
+    const ok4 = await recordAkadEventInTx(tdb4, {
+      id: 'eA8c',
+      akadId: 'aU8',
+      type: 'murabahah',
+      kind: 'pencairan',
+      amount: 7000000,
+      gl_enabled: true,
+    });
+    eq('A8.1: kontrol -- post berhasil -> entryId', typeof ok4.entryId, 'string');
+    eq('A8.1: kontrol -- event persist', cnt4('SELECT COUNT(*) c FROM akad_events'), 1);
+    db4.close();
+
+    // A8.2: UNIQUE (409) -- pesan NOTE 3 W3.1 persis (single source).
+    const db5 = new mod.DatabaseSync(':memory:');
+    db5.exec(DDL_AKAD);
+    db5
+      .prepare(
+        "INSERT INTO akad(id, type, counterparty, amount, opened_at, status) VALUES ('u1','murabahah','Budi',9000000,'2026-10-02T00:00:00+07:00','active')"
+      )
+      .run();
+    let uniqMsg = '';
+    try {
+      db5
+        .prepare(
+          "INSERT INTO akad(id, type, counterparty, amount, opened_at, status) VALUES ('u2','murabahah','Budi',9000000,'2026-10-02T00:00:00+07:00','active')"
+        )
+        .run();
+    } catch (e) {
+      uniqMsg = e instanceof Error ? e.message : String(e);
+    }
+    ok('A8.2: UNIQUE ditolak', /UNIQUE/i.test(uniqMsg), uniqMsg);
+    eq('A8.2: pesan NOTE 3 W3.1 (single source)', AKAD_UNIQUE_ERROR,
+      'Akad dgn counterparty, tanggal, jumlah sama sudah ada -- periksa riwayat atau ubah salah satu parameter.');
+    db5
+      .prepare(
+        "INSERT INTO akad(id, type, counterparty, amount, opened_at, status) VALUES ('u3','murabahah','Budi',9000000,'2026-10-03T00:00:00+07:00','active')"
+      )
+      .run(); // control: opened_at beda -> diterima
+    eq('A8.2: u3 persist + u2 ditolak tak persist (total 2)', cnt0(db5, 'SELECT COUNT(*) c FROM akad'), 2);
+    db5.close();
+
+    // A8.3: pracheck 400 (NOTE 3 audit) -- gl_on + auto-post + kind tak
+    // didukung type -> 400, BUKAN 500. Wakalah/denda = tak dipost.
+    eq('A8.3: ijarah+settlement TIDAK didukung', akadKindAllowed('ijarah', 'settlement'), false);
+    eq('A8.3: murabahah+pencairan didukung', akadKindAllowed('murabahah', 'pencairan'), true);
+    eq('A8.3: wakalah -> [] (bridge W3.4)', akadKindAllowed('wakalah', 'pencairan'), false);
+    eq('A8.3: type tak dikenal -> []', akadKindAllowed('consignment', 'pencairan'), false);
+    eq('A8.3: AKAD_STATUS = active|settled (OQ 1)', JSON.stringify(AKAD_STATUS), '["active","settled"]');
+  }
 
   console.log(passes + ' passed, ' + failures + ' failed');
   if (failures > 0) {

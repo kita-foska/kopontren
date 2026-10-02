@@ -26,6 +26,7 @@ const PREFETCH_PATHS = new Set([
   '/admin/laporan',
   '/admin/zakat',
   '/admin/zis',
+  '/admin/akad', // W3.3: modul akad syariah (OQ 2: simetris dgn zis)
   '/tutorial',
 ]);
 
@@ -114,6 +115,26 @@ const IconZis = (
   </svg>
 );
 
+// W3.3: ikon modul akad (perjanjian: dokumen + centang -- inline SVG, 16px,
+// stroke currentColor; tanpa emoji/unicode/ikon-font).
+const IconAkad = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <path d="m9 15 2 2 4-4" />
+  </svg>
+);
+
 export function levelOk(role: Role, lv: MenuLevel): boolean {
   if (role === 'admin') return true; // mirror canAccess: admin selalu lolos
   if (lv === 'ops') return role === 'manajer'; // mirror isManager
@@ -140,6 +161,9 @@ export const MENU_ITEMS: MenuDef[] = [
   { href: '/admin/zakat', label: 'Zakat', level: 'zakat' },
   // W2.7: modul ZIS (skema v22; tier zis = admin + manajer, D2).
   { href: '/admin/zis', label: 'ZIS', icon: IconZis, level: 'zis' },
+  // W3.3: modul akad syariah (skema v23; tulis = tier akad admin/manajer;
+  // pengurus = read-only via tier laporan, Q3/OQ4 -- pola zis item 7).
+  { href: '/admin/akad', label: 'Akad', icon: IconAkad, level: 'laporan' },
   { href: '/admin/pengaturan-member', label: 'Keuntungan Member', level: 'admin' },
   { href: '/admin/member', label: 'Member', level: 'member' },
   { href: '/admin/laporan', label: 'Laporan Pengurus', level: 'laporan' },
@@ -179,6 +203,7 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
       '/admin/hutang',
       '/admin/zakat',
       '/admin/zis',
+      '/admin/akad', // W3.3: modul akad syariah (skema v23; pengurus = read-only, Q3)
       '/laporan',
     ],
   },

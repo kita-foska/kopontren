@@ -69,7 +69,7 @@ const LAK_NOTES: string[] = [
 
 const CALK_NOTES: string[] = [
   'CALK (Catatan atas Laporan Keuangan) template Sek.5.5: item 1-3 (info entitas, struktur, kebijakan akuntansi) = teks panel + badge data; item 4-8 dari GL kumulatif s.d. as_of (entry_date < batas); item 9 (peristiwa pasca-periode) = input manual di panel, draft lokal (localStorage), TIDAK tersimpan di server.',
-  'W2.6 GL-only (skema v21): tabel zis/akad belum ada -- ZIS per jenis adalah aproksimasi akun COA (4090/5100 menyatukan infak+sedekah; 6030 = zakat tijarah, memo syariah); pemisahan per jenis & saldo per akad menyusul W2.7/W3.1.',
+  'W2.6 GL-only (skema v21): tabel zis/akad belum ada -- ZIS per jenis adalah aproksimasi akun COA (4090/5100 menyatukan infak+sedekah; 6030 = zakat tijarah, memo syariah); W2.7 menambah pemisahan ZIS per jenis (kolom zis.kind); W3.3 menambah item 8 akad_ringkas (ringkasan per jenis dari tabel akad, modul W3.2).',
   'Wakaf (1120 aset + 6020 memo) TIDAK dijumlahkan ke total aset; simpanan 2050/2060/2070 = kewajiban anggota, TIDAK ekuitas (memo).',
   'Tanggal N buku pembuka (Sek.10) menunggu migrasi Wave 6 -- belum ada di aplikasi.',
   'D=K (rekon #15 JOURNAL_BAL): bila flag_rekon15=true, angka formal TIDAK dianggap otoritatif -- periksa cek JOURNAL_BAL di /admin/rekonsiliasi.',

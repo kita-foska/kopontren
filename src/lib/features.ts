@@ -54,6 +54,7 @@ export type Feature =
   | 'audit'
   | 'zakat'
   | 'zis' // W2.7: modul ZIS (skema v22; D2: tulis operasional)
+  | 'akad' // W3.3: modul akad syariah (skema v23; tulis operasional admin/manajer)
   | 'member'
   | 'personal';
 
@@ -68,6 +69,7 @@ export const FEATURE_MATRIX: Readonly<Record<Feature, readonly Role[]>> = {
   audit: ['admin', 'pengurus'],
   zakat: ['admin', 'manajer', 'pengurus'],
   zis: ['admin', 'manajer'], // W2.7 (D2): tulis operasional (sejajar kas); pengurus baca via CALK item 7
+  akad: ['admin', 'manajer'], // W3.3: tulis operasional; pengurus baca /admin/akad read-only (tier laporan) + CALK item 8
   member: ['admin', 'manajer'],
   personal: ['admin', 'manajer', 'pengurus', 'kasir', 'gudang', 'pembelian', 'member'],
 };

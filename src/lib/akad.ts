@@ -154,6 +154,22 @@ const KINDS_BY_TYPE: Record<string, readonly string[]> = {
   wakalah: [],
 };
 
+/** Validasi kind utk tipe (route /api/akad: 400, bukan 500 utk kombinasi invalid). */
+export function akadKindAllowed(type: string, kind: string): boolean {
+  return (KINDS_BY_TYPE[type] ?? []).includes(kind);
+}
+
+/**
+ * W3.3: pesan UNIQUE constraint (route /api/akad + UI + test).
+ * NOTE 3 W3.1: "Akad dgn counterparty, tanggal, jumlah sama sudah ada --
+ * periksa riwayat atau ubah salah satu parameter."
+ */
+export const AKAD_UNIQUE_ERROR =
+  'Akad dgn counterparty, tanggal, jumlah sama sudah ada -- periksa riwayat atau ubah salah satu parameter.';
+
+/** Status valid utk PUT /api/akad (soft status, bukan DELETE). */
+export const AKAD_STATUS = ['active', 'settled'] as const;
+
 export interface AkadLinesOpts {
   /** Murabahah pencairan: true = lunas saat pencairan -> C4060 (Sek.6.4). */
   lunas?: boolean;

@@ -1291,7 +1291,47 @@ function CalkStatement({ p }: { p: CalkResp }) {
         </p>
       </div>
 
-      {accTable('8. Akad berjalan per jenis', p.akad_berjalan, 'rincian saldo per akad menyusul W3.1 (modul akad)')}
+      {accTable(
+        '8. Akad berjalan per jenis',
+        p.akad_berjalan,
+        'rincian per akad: modul akad /admin/akad (W3.2; pengurus read-only, Q3) + ringkasan di bawah'
+      )}
+
+      {/* W3.3 (OQ3): item 8 -- ringkasan per jenis akad dari tabel akad
+          (akad_ringkas; aktif/settled/saldo_aktif s.d. as_of). */}
+      <div className="card p-4">
+        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">
+          8a. Akad -- ringkasan per jenis (tabel akad, modul W3.2/W3.3)
+        </h3>
+        {p.akad_ringkas.length > 0 ? (
+          <Table minW="min-w-[26rem]">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-navy-700">
+                <Th>Jenis</Th>
+                <Th>Aktif</Th>
+                <Th>Settled</Th>
+                <Th>Saldo Aktif</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {p.akad_ringkas.map((a) => (
+                <Trow key={a.type}>
+                  <Td>{a.type}</Td>
+                  <Td className="tabular-nums">{a.aktif}</Td>
+                  <Td className="tabular-nums">{a.settled}</Td>
+                  <Td className="tabular-nums">{nz(a.saldo_aktif)}</Td>
+                </Trow>
+              ))}
+            </tbody>
+          </Table>
+        ) : (
+          <p className="text-xs text-slate-500 dark:text-slate-400">Belum ada akad tercatat.</p>
+        )}
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Saldo aktif = total amount akad status=&#39;active&#39; s.d. {p.as_of};
+          &#39;settled&#39; = soft status (bukan hapus baris, OQ 1).
+        </p>
+      </div>
     </div>
   );
 }
