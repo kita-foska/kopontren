@@ -648,6 +648,51 @@ async function migrate(d: Db) {
       ')'
   );
   await d.exec('CREATE INDEX IF NOT EXISTS idx_zis_occurred ON zis(occurred_at)');
+  // W3.1 (skema v23): tabel akad + akad_events (Sek.6.1) -- modul akad
+  // syariah (murabahah/ijarah/mudharabah/musyarakah/wakaf). Purely
+  // additive (IF NOT EXISTS) -> DB v22 aman, tanpa ubah data lama.
+  // - UNIQUE(type, counterparty, opened_at, amount): cegah input ganda
+  //   identik. Catatan W3.3 (DeepSeek NOTE 3): 2 transaksi sah dgn
+  //   parameter sama terblokir -> UI tampilkan pesan error jelas.
+  // - terms_json: JSON bebas utk parameter syariah; contoh
+  //   {"nisbah":40,"margin":10,"rate":5}. 0 preset (Sek.6.5) -- semua
+  //   input manual; validasi akadValidateTerms (W3.2).
+  // - akad_events: event lifecycle (opening/angsuran/pencairan/
+  //   pembayaran/bagi_hasil/cicilan/ijarah_periodik/pencairan_wakaf/
+  //   denda; denda di akad TIDAK dipost -- Sek.6.4). posted_entry =
+  //   link journal_entries (NULL bila gl-off / belum di-post).
+  //   Anti-double-posting: UNIQUE journal_entries(ref_table,ref_id,
+  //   type); ref per baris event ('akad#<akad_id>:evt#<akad_events.
+  //   id>', W3.2/F1) agar event berulang (angsuran/bagi_hasil) tak
+  //   bentrok.
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS akad(' +
+      'id TEXT PRIMARY KEY, ' +
+      'type TEXT NOT NULL, ' +
+      'counterparty TEXT NOT NULL, ' +
+      'amount INTEGER NOT NULL, ' +
+      'terms_json TEXT, ' +
+      "status TEXT NOT NULL DEFAULT 'active', " +
+      'opened_at TEXT NOT NULL, ' +
+      'settled_at TEXT, ' +
+      'note TEXT, ' +
+      'UNIQUE(type, counterparty, opened_at, amount)' +
+      ')'
+  );
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS akad_events(' +
+      'id TEXT PRIMARY KEY, ' +
+      'akad_id TEXT NOT NULL, ' +
+      'kind TEXT NOT NULL, ' +
+      'amount INTEGER NOT NULL, ' +
+      'event_date TEXT NOT NULL, ' +
+      'posted_entry TEXT, ' +
+      'created_by TEXT, ' +
+      'created_at TEXT NOT NULL' +
+      ')'
+  );
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_akad_opened ON akad(opened_at)');
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_akad_events ON akad_events(akad_id, event_date)');
   // COA seed: 52 akun. pap_ref dibiarkan NULL sampai teks PAP final.
   // ON CONFLICT(code) DO NOTHING -> non-destruktif: akun yang sudah ada
   // (mis. ditambahkan admin) tidak ditimpa.
@@ -660,9 +705,9 @@ async function migrate(d: Db) {
       ['1040', 'Persediaan', '10xx', 'aset', 'open', 0],
       ['1050', 'Aset Tetap', '10xx', 'aset', 'open', 0],
       ['1060', 'Akumulasi Penyusutan', '10xx', 'aset', 'pending', 1],
-      ['1070', 'Piutang Murabahah', '10xx', 'aset', 'pending', 1],
-      ['1080', 'Investasi Mudharabah', '10xx', 'aset', 'pending', 1],
-      ['1090', 'Investasi Musyarakah', '10xx', 'aset', 'pending', 1],
+      ['1070', 'Piutang Murabahah', '10xx', 'aset', 'open', 0], // W3.1 (v23): flip open (modul akad)
+      ['1080', 'Investasi Mudharabah', '10xx', 'aset', 'open', 0], // W3.1 (v23): flip open (modul akad)
+      ['1090', 'Investasi Musyarakah', '10xx', 'aset', 'open', 0], // W3.1 (v23): flip open (modul akad)
       ['1100', 'Kas ZIS', '10xx', 'aset', 'open', 0],
       ['1110', 'Piutang Zakat', '10xx', 'aset', 'pending', 1],
       ['1120', 'Aset Wakaf', '10xx', 'aset', 'open', 0],
@@ -670,7 +715,7 @@ async function migrate(d: Db) {
       ['2010', 'Hutang Pembelianan', '20xx', 'kewajiban', 'open', 0],
       ['2020', 'Hutang Ujrah Konsinyasi', '20xx', 'kewajiban', 'open', 0],
       ['2030', 'Utang Cashback Member', '20xx', 'kewajiban', 'open', 0],
-      ['2040', 'Kewajiban Akad (Ujrah/Tijarah/Mudharabah)', '20xx', 'kewajiban', 'pending', 1],
+      ['2040', 'Kewajiban Akad (Ujrah/Tijarah/Mudharabah)', '20xx', 'kewajiban', 'open', 0], // W3.1 (v23): flip open (modul akad)
       ['2050', 'Simpanan Pokok', '20xx', 'kewajiban', 'open', 0],
       ['2060', 'Simpanan Wajib', '20xx', 'kewajiban', 'open', 0],
       ['2070', 'Simpanan Sukarela', '20xx', 'kewajiban', 'open', 0],
@@ -690,10 +735,10 @@ async function migrate(d: Db) {
       ['4020', 'Potongan & Diskon (kontra pendapatan)', '40xx', 'pendapatan', 'open', 0],
       ['4030', 'Retur Penjualan', '40xx', 'pendapatan', 'open', 0],
       ['4040', 'Ujrah Konsinyasi', '40xx', 'pendapatan', 'open', 0], // W2.7 (v22): flip open (P4 tashih 30 Sep)
-      ['4050', 'Pendapatan Ijarah', '40xx', 'pendapatan', 'pending', 1],
-      ['4060', 'Laba Murabahah', '40xx', 'pendapatan', 'pending', 1],
-      ['4070', 'Bagi Hasil Mudharabah', '40xx', 'pendapatan', 'pending', 1],
-      ['4080', 'Bagi Hasil Musyarakah', '40xx', 'pendapatan', 'pending', 1],
+      ['4050', 'Pendapatan Ijarah', '40xx', 'pendapatan', 'open', 0], // W3.1 (v23): flip open (modul akad)
+      ['4060', 'Laba Murabahah', '40xx', 'pendapatan', 'open', 0], // W3.1 (v23): flip open (modul akad)
+      ['4070', 'Bagi Hasil Mudharabah', '40xx', 'pendapatan', 'open', 0], // W3.1 (v23): flip open (modul akad)
+      ['4080', 'Bagi Hasil Musyarakah', '40xx', 'pendapatan', 'open', 0], // W3.1 (v23): flip open (modul akad)
       ['4090', 'ZIS Masuk', '40xx', 'pendapatan', 'open', 0],
       ['4100', 'Wakaf Masuk', '40xx', 'pendapatan', 'open', 0],
       // 50xx beban
@@ -702,7 +747,7 @@ async function migrate(d: Db) {
       ['5030', 'Beban Operasional', '50xx', 'beban', 'open', 0],
       ['5040', 'Beban Penyusutan Aset Tetap', '50xx', 'beban', 'pending', 1],
       ['5050', 'Denda/Keterlambatan (clearing)', '50xx', 'beban', 'closed', 0],
-      ['5060', 'Bagi Hasil Partner Mudharabah', '50xx', 'beban', 'pending', 1],
+      ['5060', 'Bagi Hasil Partner Mudharabah', '50xx', 'beban', 'open', 0], // W3.1 (v23): flip open (modul akad)
       ['5070', 'Beban Ijarah', '50xx', 'beban', 'pending', 1],
       ['5080', 'Distribusi SHU', '50xx', 'beban', 'pending', 1],
       ['5090', 'Zakat Keluar', '50xx', 'beban', 'open', 0], // W2.7 (v22): flip open (ZIS keluar zakat OQ-1)
@@ -726,6 +771,14 @@ async function migrate(d: Db) {
     // sengaja tetap 'pending' (jembatan zakat P3 -> W5.1).
     await d.exec(
       `UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('2090', '5090', '4040')`
+    );
+    // W3.1 (skema v23) -- upgrade path: flip COA 1070/1080/1090/2040/
+    // 4050/4060/4070/4080/5060 'pending' -> 'open' (modul akad).
+    // UPDATE eksplisit karena seed di atas DO NOTHING (DB v22: baris coa
+    // sudah ada, seed tidak menimpa). Idempoten; fresh install = no-op.
+    // 6030 & 14 akun pending lainnya tetap 'pending'.
+    await d.exec(
+      `UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('1070', '1080', '1090', '2040', '4050', '4060', '4070', '4080', '5060')`
     );
   }
 }
@@ -1017,7 +1070,15 @@ export async function saveZakatSettings(
 // install = no-op). 6030 tetap 'pending' (jembatan zakat P3, W5.1).
 // Purely additive; DB stempel v21 menjalankan fullInit sekali lagi saat
 // cold start berikutnya. BACKUP DB WAJIB sebelum deploy.
-const SCHEMA_VERSION = 22;
+// v23 (W3.1): + tabel akad (Sek.6.1, 5 jenis transaksi syariah) +
+// akad_events (lifecycle + anti-double-posting jurnal via
+// journal_entries UNIQUE) + idx_akad_opened/idx_akad_events + flip COA
+// 1070/1080/1090/2040/4050/4060/4070/4080/5060 'pending' -> 'open'
+// (UPDATE eksplisit di seed = upgrade path; seed INSERT ON CONFLICT DO
+// NOTHING tak menimpa baris v22, fresh install = no-op). Purely
+// additive; DB stempel v22 menjalankan fullInit sekali lagi.
+
+const SCHEMA_VERSION = 23;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
