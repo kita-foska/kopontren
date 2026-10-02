@@ -178,6 +178,8 @@ export default async function PengurusDashboardPage() {
   const quickActions: QuickAction[] = [
     { label: 'Laporan', href: '/admin/laporan', tier: 'laporan' },
     { label: 'Zakat', href: '/admin/zakat', tier: 'zakat' },
+    // W2.7 (D2/D5): CTA ZIS -- tampil utk tier zis (admin/manajer).
+    { label: 'ZIS', href: '/admin/zis', tier: 'zis' },
     { label: 'Audit', href: '/admin/audit', tier: 'audit' },
     { label: 'Ringkasan', href: '/', tier: 'personal' },
     { label: 'Dashboard', href: '/admin/dashboard', tier: 'laporan' },

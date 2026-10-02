@@ -25,6 +25,7 @@ const PREFETCH_PATHS = new Set([
   '/admin/member',
   '/admin/laporan',
   '/admin/zakat',
+  '/admin/zis',
   '/tutorial',
 ]);
 
@@ -93,6 +94,26 @@ const IconJurnal = (
   </svg>
 );
 
+// W2.7: ikon modul ZIS (uang: kotak + lingkaran -- inline SVG, 16px,
+// stroke currentColor; tanpa emoji/unicode/ikon-font).
+const IconZis = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="2" y="6" width="20" height="12" rx="2" />
+    <circle cx="12" cy="12" r="2.5" />
+    <path d="M6 12h.01M18 12h.01" />
+  </svg>
+);
+
 export function levelOk(role: Role, lv: MenuLevel): boolean {
   if (role === 'admin') return true; // mirror canAccess: admin selalu lolos
   if (lv === 'ops') return role === 'manajer'; // mirror isManager
@@ -117,6 +138,8 @@ export const MENU_ITEMS: MenuDef[] = [
   { href: '/admin/hutang', label: 'Hutang', roleLabel: { pembelian: 'Hutang Supplier' }, level: 'supplier' },
   { href: '/tutorial', label: 'Tutorial', level: 'personal' },
   { href: '/admin/zakat', label: 'Zakat', level: 'zakat' },
+  // W2.7: modul ZIS (skema v22; tier zis = admin + manajer, D2).
+  { href: '/admin/zis', label: 'ZIS', icon: IconZis, level: 'zis' },
   { href: '/admin/pengaturan-member', label: 'Keuntungan Member', level: 'admin' },
   { href: '/admin/member', label: 'Member', level: 'member' },
   { href: '/admin/laporan', label: 'Laporan Pengurus', level: 'laporan' },
@@ -155,6 +178,7 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
       '/piutang',
       '/admin/hutang',
       '/admin/zakat',
+      '/admin/zis',
       '/laporan',
     ],
   },

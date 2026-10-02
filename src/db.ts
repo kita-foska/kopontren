@@ -629,6 +629,25 @@ async function migrate(d: Db) {
   );
   await d.exec('CREATE INDEX IF NOT EXISTS idx_jl_acct ON journal_lines(account_code, entry_id)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_je_date ON journal_entries(entry_date)');
+  // W2.7 (skema v22): tabel zis (Sek.8.2) -- input ZIS per jenis
+  // (zakat/infak/sedekah/wakaf) + pencatatan auto-posting OQ-1
+  // (1100/2090/5090/5100). posted_entry = link journal_entries (NULL
+  // bila gl-off / wakaf (mapping 1120/4100/6020 = W3.5) / belum di-post).
+  // Purely additive (IF NOT EXISTS) -> DB v21 aman, tanpa ubah data lama.
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS zis(' +
+      'id TEXT PRIMARY KEY, ' +
+      'kind TEXT NOT NULL, ' +
+      'direction TEXT NOT NULL, ' +
+      'amount INTEGER NOT NULL, ' +
+      'payer TEXT, ' +
+      'occurred_at TEXT NOT NULL, ' +
+      'posted_entry TEXT, ' +
+      'created_by TEXT, ' +
+      'created_at TEXT NOT NULL' +
+      ')'
+  );
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_zis_occurred ON zis(occurred_at)');
   // COA seed: 52 akun. pap_ref dibiarkan NULL sampai teks PAP final.
   // ON CONFLICT(code) DO NOTHING -> non-destruktif: akun yang sudah ada
   // (mis. ditambahkan admin) tidak ditimpa.
@@ -656,7 +675,7 @@ async function migrate(d: Db) {
       ['2060', 'Simpanan Wajib', '20xx', 'kewajiban', 'open', 0],
       ['2070', 'Simpanan Sukarela', '20xx', 'kewajiban', 'open', 0],
       ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'pending', 1],
-      ['2090', 'ZIS Terkumpul Belum Disalurkan', '20xx', 'kewajiban', 'pending', 1],
+      ['2090', 'ZIS Terkumpul Belum Disalurkan', '20xx', 'kewajiban', 'open', 0], // W2.7 (v22): flip open (ZIS masuk OQ-1)
       ['2100', 'Kewajiban Lain-lain', '20xx', 'kewajiban', 'pending', 1],
       // 30xx ekuitas
       ['3010', 'Modal Penyertaan', '30xx', 'ekuitas', 'open', 0],
@@ -670,7 +689,7 @@ async function migrate(d: Db) {
       ['4010', 'Pendapatan Penjualan', '40xx', 'pendapatan', 'open', 0],
       ['4020', 'Potongan & Diskon (kontra pendapatan)', '40xx', 'pendapatan', 'open', 0],
       ['4030', 'Retur Penjualan', '40xx', 'pendapatan', 'open', 0],
-      ['4040', 'Ujrah Konsinyasi', '40xx', 'pendapatan', 'pending', 1],
+      ['4040', 'Ujrah Konsinyasi', '40xx', 'pendapatan', 'open', 0], // W2.7 (v22): flip open (P4 tashih 30 Sep)
       ['4050', 'Pendapatan Ijarah', '40xx', 'pendapatan', 'pending', 1],
       ['4060', 'Laba Murabahah', '40xx', 'pendapatan', 'pending', 1],
       ['4070', 'Bagi Hasil Mudharabah', '40xx', 'pendapatan', 'pending', 1],
@@ -686,7 +705,7 @@ async function migrate(d: Db) {
       ['5060', 'Bagi Hasil Partner Mudharabah', '50xx', 'beban', 'pending', 1],
       ['5070', 'Beban Ijarah', '50xx', 'beban', 'pending', 1],
       ['5080', 'Distribusi SHU', '50xx', 'beban', 'pending', 1],
-      ['5090', 'Zakat Keluar', '50xx', 'beban', 'pending', 1],
+      ['5090', 'Zakat Keluar', '50xx', 'beban', 'open', 0], // W2.7 (v22): flip open (ZIS keluar zakat OQ-1)
       ['5100', 'Infak/Sedekah Keluar', '50xx', 'beban', 'open', 0],
       // 60xx syariah/PAP
       ['6010', 'Dana Pesantren (memo)', '60xx', 'syariah', 'pending', 1],
@@ -700,6 +719,14 @@ async function migrate(d: Db) {
         )
         .run(code, name, grp, kind, status, nd);
     }
+    // W2.7 (skema v22) -- upgrade path: flip COA 2090/5090/4040
+    // 'pending' -> 'open'. UPDATE eksplisit karena seed di atas DO
+    // NOTHING (DB v21: baris coa sudah ada, seed tidak menimpa).
+    // Idempoten; fresh install = no-op (seed sudah 'open'). 6030
+    // sengaja tetap 'pending' (jembatan zakat P3 -> W5.1).
+    await d.exec(
+      `UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('2090', '5090', '4040')`
+    );
   }
 }
 
@@ -984,10 +1011,13 @@ export async function saveZakatSettings(
 // (id uuid, UNIQUE(ref_table,ref_id,type) utk idempotensi auto-posting) +
 // journal_lines (composite PK; source NOT NULL) + idx_jl_acct/idx_je_date;
 // settings gl_enabled/coop_registered (default '0', tanpa ubah perilaku V1).
-// Purely additive (CREATE TABLE IF NOT EXISTS + INSERT ON CONFLICT DO
-// NOTHING); DB stempel v20 menjalankan fullInit sekali lagi saat cold
-// start berikutnya. BACKUP DB WAJIB sebelum deploy.
-const SCHEMA_VERSION = 21;
+// v22 (W2.7): + tabel zis (Sek.8.2) + idx_zis_occurred + flip COA
+// 2090/5090/4040 'pending' -> 'open' (UPDATE eksplisit di seed = upgrade
+// path; seed INSERT ON CONFLICT DO NOTHING tak menimpa baris v21, fresh
+// install = no-op). 6030 tetap 'pending' (jembatan zakat P3, W5.1).
+// Purely additive; DB stempel v21 menjalankan fullInit sekali lagi saat
+// cold start berikutnya. BACKUP DB WAJIB sebelum deploy.
+const SCHEMA_VERSION = 22;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

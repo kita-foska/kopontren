@@ -1,0 +1,411 @@
+/**
+ * W2.7 (skema v22) -- test modul ZIS: tabel zis (Sek.8.2) + flip COA
+ * 2090/5090/4040 + mapping OQ-1 + recordZisInTx + anti-campur #16.
+ * Node langsung (type-stripping, Node >= 23.6/v24): npm run test:zis.
+ * In-memory node:sqlite, DDL mirror src/db.ts (v22). Cakupan:
+ *  - M1 (fresh install): seed v22 -> 3 akun flip 'open'; jumlah
+ *    open=28/pending=23/closed=1, needs_decision=23, COUNT=52.
+ *  - M2 (upgrade v21->v22): state coa v21 (3 akun pending) + seed v22
+ *    (DO NOTHING, baris lama tak ter-impa) + UPDATE flip -> 3 akun
+ *    open; 6030/5050 & lainnya tidak berubah (idempoten).
+ *  - Z1: mapping OQ-1 per jenis x arah (5 kombinasi auto):
+ *    masuk (zakat/infak/sedekah) D1100/C2090; keluar zakat D5090/C1100;
+ *    keluar infak/sedekah D5100/C1100. Wakaf = throw (D3: manual W3.5).
+ *  - Z2: anti-campur #16 -- HANYA akun 1100/2090/5090/5100 muncul
+ *    (1010/1020 TIDAK PERNAH tersentuh).
+ *  - Z3: D = K (JOURNAL_BAL #15 proxy) utk semua mapping.
+ *  - Z4: recordZisInTx gl_on: baris zis + jurnal + posted_entry; jurnal
+ *    idempoten (ulang spec sama = no-op); duplikat zis.id ditolak (PK).
+ *  - Z5: gl_off: baris dicatat, posted_entry NULL, jurnal 0 (D1/D6).
+ *  - Z6: wakaf + gl_on: dicatat tanpa jurnal (D3).
+ *  - Z7: edge cases: amount <= 0 ditolak; kind/direction tak dikenal
+ *    ditolak; wakaf di zisLines ditolak.
+ */
+import { recordZisInTx, zisLines, zisJournalFor, zisValidateAmount, ZIS_ACCT } from '../src/lib/zis.ts';
+import { postJournalInTx } from '../src/lib/jurnal.ts';
+import type { TxDb } from '../src/lib/jurnal.ts';
+
+let passes = 0;
+let failures = 0;
+function ok(name: string, cond: boolean, detail = ''): void {
+  if (cond) {
+    passes++;
+    console.log('  ok   ' + name + (detail ? ' (' + detail + ')' : ''));
+  } else {
+    failures++;
+    console.error('  FAIL ' + name + (detail ? ' (' + detail + ')' : ''));
+  }
+}
+function eq<T>(name: string, actual: T, expected: T): void {
+  ok(name, actual === expected, 'dapat ' + String(actual) + ', seharusnya ' + String(expected));
+}
+
+// DDL mirror src/db.ts (skema v22: coa + journal + zis; tanpa index).
+const DDL_COA =
+  'CREATE TABLE coa(code TEXT PRIMARY KEY, name TEXT NOT NULL, "group" TEXT NOT NULL, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT \'open\', pap_ref TEXT, needs_decision INTEGER NOT NULL DEFAULT 0, created_by TEXT, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')))';
+const DDL_JE =
+  "CREATE TABLE journal_entries(id TEXT PRIMARY KEY, ref_table TEXT NOT NULL, ref_id TEXT, entry_date TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'normal', desc TEXT NOT NULL DEFAULT '', created_by TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), reversed_by TEXT, UNIQUE(ref_table, ref_id, type))";
+const DDL_JL =
+  "CREATE TABLE journal_lines(entry_id TEXT NOT NULL, account_code TEXT NOT NULL, debit INTEGER NOT NULL DEFAULT 0, credit INTEGER NOT NULL DEFAULT 0, balance_running INTEGER, source TEXT NOT NULL DEFAULT '', PRIMARY KEY(entry_id, account_code, source))";
+const DDL_ZIS =
+  'CREATE TABLE zis(id TEXT PRIMARY KEY, kind TEXT NOT NULL, direction TEXT NOT NULL, amount INTEGER NOT NULL, payer TEXT, occurred_at TEXT NOT NULL, posted_entry TEXT, created_by TEXT, created_at TEXT NOT NULL)';
+
+// Seed COA v22 (mirror coaSeed src/db.ts + 3 flip W2.7: 2090/5090/4040
+// kini 'open'/0). 52 akun.
+type CoaRow = [string, string, string, string, string, number];
+const COA_V22: CoaRow[] = [
+  ['1010', 'Kas Toko', '10xx', 'aset', 'open', 0],
+  ['1020', 'Kas Bank', '10xx', 'aset', 'open', 0],
+  ['1030', 'Piutang Penjualan', '10xx', 'aset', 'open', 0],
+  ['1040', 'Persediaan', '10xx', 'aset', 'open', 0],
+  ['1050', 'Aset Tetap', '10xx', 'aset', 'open', 0],
+  ['1060', 'Akumulasi Penyusutan', '10xx', 'aset', 'pending', 1],
+  ['1070', 'Piutang Murabahah', '10xx', 'aset', 'pending', 1],
+  ['1080', 'Investasi Mudharabah', '10xx', 'aset', 'pending', 1],
+  ['1090', 'Investasi Musyarakah', '10xx', 'aset', 'pending', 1],
+  ['1100', 'Kas ZIS', '10xx', 'aset', 'open', 0],
+  ['1110', 'Piutang Zakat', '10xx', 'aset', 'pending', 1],
+  ['1120', 'Aset Wakaf', '10xx', 'aset', 'open', 0],
+  ['2010', 'Hutang Pembelianan', '20xx', 'kewajiban', 'open', 0],
+  ['2020', 'Hutang Ujrah Konsinyasi', '20xx', 'kewajiban', 'open', 0],
+  ['2030', 'Utang Cashback Member', '20xx', 'kewajiban', 'open', 0],
+  ['2040', 'Kewajiban Akad (Ujrah/Tijarah/Mudharabah)', '20xx', 'kewajiban', 'pending', 1],
+  ['2050', 'Simpanan Pokok', '20xx', 'kewajiban', 'open', 0],
+  ['2060', 'Simpanan Wajib', '20xx', 'kewajiban', 'open', 0],
+  ['2070', 'Simpanan Sukarela', '20xx', 'kewajiban', 'open', 0],
+  ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'pending', 1],
+  ['2090', 'ZIS Terkumpul Belum Disalurkan', '20xx', 'kewajiban', 'open', 0],
+  ['2100', 'Kewajiban Lain-lain', '20xx', 'kewajiban', 'pending', 1],
+  ['3010', 'Modal Penyertaan', '30xx', 'ekuitas', 'open', 0],
+  ['3020', 'SHU Ditahan', '30xx', 'ekuitas', 'pending', 1],
+  ['3030', 'SHU Cadangan Umum', '30xx', 'ekuitas', 'pending', 1],
+  ['3040', 'SHU Cadangan Khusus', '30xx', 'ekuitas', 'pending', 1],
+  ['3050', 'SHU Jasa Anggota', '30xx', 'ekuitas', 'pending', 1],
+  ['3060', 'SHU Dibagi', '30xx', 'ekuitas', 'pending', 1],
+  ['3070', 'Koreksi Saldo', '30xx', 'ekuitas', 'open', 0],
+  ['4010', 'Pendapatan Penjualan', '40xx', 'pendapatan', 'open', 0],
+  ['4020', 'Potongan & Diskon (kontra pendapatan)', '40xx', 'pendapatan', 'open', 0],
+  ['4030', 'Retur Penjualan', '40xx', 'pendapatan', 'open', 0],
+  ['4040', 'Ujrah Konsinyasi', '40xx', 'pendapatan', 'open', 0],
+  ['4050', 'Pendapatan Ijarah', '40xx', 'pendapatan', 'pending', 1],
+  ['4060', 'Laba Murabahah', '40xx', 'pendapatan', 'pending', 1],
+  ['4070', 'Bagi Hasil Mudharabah', '40xx', 'pendapatan', 'pending', 1],
+  ['4080', 'Bagi Hasil Musyarakah', '40xx', 'pendapatan', 'pending', 1],
+  ['4090', 'ZIS Masuk', '40xx', 'pendapatan', 'open', 0],
+  ['4100', 'Wakaf Masuk', '40xx', 'pendapatan', 'open', 0],
+  ['5010', 'HPP (Beban Persediaan)', '50xx', 'beban', 'open', 0],
+  ['5020', 'Retur COGS (reversal)', '50xx', 'beban', 'open', 0],
+  ['5030', 'Beban Operasional', '50xx', 'beban', 'open', 0],
+  ['5040', 'Beban Penyusutan Aset Tetap', '50xx', 'beban', 'pending', 1],
+  ['5050', 'Denda/Keterlambatan (clearing)', '50xx', 'beban', 'closed', 0],
+  ['5060', 'Bagi Hasil Partner Mudharabah', '50xx', 'beban', 'pending', 1],
+  ['5070', 'Beban Ijarah', '50xx', 'beban', 'pending', 1],
+  ['5080', 'Distribusi SHU', '50xx', 'beban', 'pending', 1],
+  ['5090', 'Zakat Keluar', '50xx', 'beban', 'open', 0],
+  ['5100', 'Infak/Sedekah Keluar', '50xx', 'beban', 'open', 0],
+  ['6010', 'Dana Pesantren (memo)', '60xx', 'syariah', 'pending', 1],
+  ['6020', 'Aset Wakaf (memo)', '60xx', 'syariah', 'open', 0],
+  ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'pending', 1],
+];
+
+/** Adapter node:sqlite -> TxDb (permukaan async jurnal.ts). */
+function toTxDb(db: import('node:sqlite').DatabaseSync): TxDb {
+  const inVals = (a: unknown[]) => a as import('node:sqlite').SQLInputValue[];
+  return {
+    prepare: (sql: string) => ({
+      run: async (...a: unknown[]) => {
+        const r = db.prepare(sql).run(...inVals(a)) as unknown as { changes: number | bigint };
+        return { changes: Number(r.changes ?? 0), lastInsertRowid: 0 };
+      },
+      get: async (...a: unknown[]) => db.prepare(sql).get(...inVals(a)),
+      all: async (...a: unknown[]) => db.prepare(sql).all(...inVals(a)),
+    }),
+  };
+}
+
+async function main(): Promise<void> {
+  let mod: typeof import('node:sqlite');
+  try {
+    mod = await import('node:sqlite');
+  } catch (e) {
+    console.error('  SKIP - node:sqlite tak tersedia: ' + String(e));
+    console.log('HAS_FAILURE');
+    process.exit(1);
+  }
+  const cnt = (q: string, d?: import('node:sqlite').DatabaseSync): number =>
+    Number((d?.prepare(q).get() as { c: number } | undefined)?.c ?? 0);
+
+  // ===== M1: fresh install skema v22 (seed v22 + flip) =====
+  const db1 = new mod.DatabaseSync(':memory:');
+  db1.exec(DDL_COA);
+  const insCoa = db1.prepare(
+    'INSERT INTO coa (code, name, "group", kind, status, needs_decision) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(code) DO NOTHING'
+  );
+  for (const r of COA_V22) insCoa.run(r[0], r[1], r[2], r[3], r[4], r[5]);
+  // UPDATE flip (mirror seed() src/db.ts; fresh install = no-op).
+  db1.exec(`UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('2090', '5090', '4040')`);
+  eq('M1: coa COUNT(*) = 52', cnt('SELECT COUNT(*) c FROM coa', db1), 52);
+  eq("M1: coa status open = 28", cnt("SELECT COUNT(*) c FROM coa WHERE status='open'", db1), 28);
+  eq("M1: coa status pending = 23", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db1), 23);
+  eq("M1: coa status closed = 1", cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'", db1), 1);
+  eq("M1: coa needs_decision=1 = 23", cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1', db1), 23);
+  for (const code of ['2090', '5090', '4040']) {
+    const r = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
+    ok(`M1: coa ${code} flip open/0`, r.s === 'open' && r.n === 0, `status=${r.s} nd=${r.n}`);
+  }
+  const r6030 = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=\'6030\'').get() as { s: string; n: number };
+  ok('M1: coa 6030 tetap pending/1 (jembatan P3, W5.1)', r6030.s === 'pending' && r6030.n === 1);
+  eq("M1: coa 5050 tetap closed", String((db1.prepare('SELECT status s FROM coa WHERE code=\'5050\'').get() as { s: string }).s), 'closed');
+  db1.close();
+
+  // ===== M2: upgrade v21 -> v22 (baris coa v21 ada; seed DO NOTHING + flip) =====
+  const db2 = new mod.DatabaseSync(':memory:');
+  db2.exec(DDL_COA);
+  const ins2 = db2.prepare(
+    'INSERT INTO coa (code, name, "group", kind, status, needs_decision) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(code) DO NOTHING'
+  );
+  // State v21: subset representatif (3 flip akun pending + kontrol).
+  const V21_STATE: CoaRow[] = [
+    ['1100', 'Kas ZIS', '10xx', 'aset', 'open', 0],
+    ['2090', 'ZIS Terkumpul Belum Disalurkan', '20xx', 'kewajiban', 'pending', 1],
+    ['4040', 'Ujrah Konsinyasi', '40xx', 'pendapatan', 'pending', 1],
+    ['5090', 'Zakat Keluar', '50xx', 'beban', 'pending', 1],
+    ['5050', 'Denda/Keterlambatan (clearing)', '50xx', 'beban', 'closed', 0],
+    ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'pending', 1],
+  ];
+  for (const r of V21_STATE) ins2.run(r[0], r[1], r[2], r[3], r[4], r[5]);
+  // seed v22 dijalankan ulang: baris v21 ada -> DO NOTHING (status lama);
+  // 46 akun baru ditambahkan (upgrade DB: coa tumbuh ke 52).
+  for (const r of COA_V22) ins2.run(r[0], r[1], r[2], r[3], r[4], r[5]);
+  eq('M2: seed v22 -> COUNT 52 (6 lama + 46 baru)', cnt('SELECT COUNT(*) c FROM coa', db2), 52);
+  const preFlip = db2.prepare('SELECT status s, needs_decision n FROM coa WHERE code=\'2090\'').get() as { s: string; n: number };
+  ok('M2: pre-flip 2090 masih pending/1 (do-nothing tak menimpa)', preFlip.s === 'pending' && preFlip.n === 1);
+  // Flip UPDATE (path upgrade; mutlak karena seed DO NOTHING).
+  db2.exec(`UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('2090', '5090', '4040')`);
+  for (const code of ['2090', '5090', '4040']) {
+    const r = db2.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
+    ok(`M2: coa ${code} upgrade -> open/0`, r.s === 'open' && r.n === 0, `status=${r.s} nd=${r.n}`);
+  }
+  eq("M2: coa 6030 tetap pending (di luar flip)", String((db2.prepare('SELECT status s FROM coa WHERE code=\'6030\'').get() as { s: string }).s), 'pending');
+  eq("M2: coa 5050 tetap closed", String((db2.prepare('SELECT status s FROM coa WHERE code=\'5050\'').get() as { s: string }).s), 'closed');
+  db2.close();
+
+  // ===== Z-engine: mapping OQ-1 + recordZisInTx (db3: jurnal + zis) =====
+  const db3 = new mod.DatabaseSync(':memory:');
+  db3.exec(DDL_JE);
+  db3.exec(DDL_JL);
+  db3.exec(DDL_ZIS);
+  const tdb = toTxDb(db3);
+  const TZ = '2026-10-02T08:00:00.000+07:00';
+  const bal = (a: string): number =>
+    cnt(`SELECT COALESCE(SUM(debit),0) - COALESCE(SUM(credit),0) c FROM journal_lines WHERE account_code='${a}'`, db3);
+
+  // Z1: mapping OQ-1 (5 kombinasi auto).
+  {
+    const inLines = zisLines('zakat', 'in', 5000000);
+    ok(
+      'Z1: masuk D1100/C2090',
+      inLines.length === 2 &&
+        inLines[0].account_code === ZIS_ACCT.KAS &&
+        inLines[0].debit === 5000000 &&
+        inLines[0].credit === 0 &&
+        inLines[1].account_code === ZIS_ACCT.TERKUMPUL &&
+        inLines[1].debit === 0 &&
+        inLines[1].credit === 5000000
+    );
+    for (const k of ['infak', 'sedekah']) {
+      const l = zisLines(k, 'in', 100000);
+      ok(
+        `Z1: masuk ${k} D1100/C2090`,
+        l[0].account_code === '1100' && l[0].debit === 100000 && l[1].account_code === '2090' && l[1].credit === 100000
+      );
+    }
+    const outZ = zisLines('zakat', 'out', 2500000);
+    ok(
+      'Z1: keluar zakat D5090/C1100',
+      outZ[0].account_code === ZIS_ACCT.ZAKAT_OUT &&
+        outZ[0].debit === 2500000 &&
+        outZ[1].account_code === ZIS_ACCT.KAS &&
+        outZ[1].credit === 2500000
+    );
+    for (const k of ['infak', 'sedekah']) {
+      const l = zisLines(k, 'out', 750000);
+      ok(
+        `Z1: keluar ${k} D5100/C1100`,
+        l[0].account_code === ZIS_ACCT.INFAK_OUT && l[0].debit === 750000 && l[1].account_code === ZIS_ACCT.KAS && l[1].credit === 750000
+      );
+    }
+  }
+
+  // Z2: anti-campur #16 -- semua baris hanya di {1100,2090,5090,5100}.
+  {
+    const allowed = new Set(['1100', '2090', '5090', '5100']);
+    const combos: Array<[string, string]> = [
+      ['zakat', 'in'],
+      ['infak', 'in'],
+      ['sedekah', 'in'],
+      ['zakat', 'out'],
+      ['infak', 'out'],
+      ['sedekah', 'out'],
+    ];
+    let clean = true;
+    for (const [k, dir] of combos) {
+      for (const l of zisLines(k, dir, 1000)) {
+        if (!allowed.has(l.account_code)) clean = false;
+      }
+    }
+    ok('Z2: anti-campur -- tak ada akun di luar 1100/2090/5090/5100 (1010/1020 tak tersentuh)', clean);
+  }
+
+  // Z3: D = K (JOURNAL_BAL #15 proxy) utk semua mapping.
+  {
+    let balanced = true;
+    for (const k of ['zakat', 'infak', 'sedekah']) {
+      for (const dir of ['in', 'out'] as const) {
+        const l = zisLines(k, dir, 123456);
+        const dSum = l.reduce((a, x) => a + x.debit, 0);
+        const cSum = l.reduce((a, x) => a + x.credit, 0);
+        if (dSum !== cSum) balanced = false;
+      }
+    }
+    ok('Z3: D = K utk 6 kombinasi auto', balanced);
+  }
+
+  // Z4: recordZisInTx gl_on -- zis + jurnal + posted_entry; idempoten.
+  {
+    const r1 = await recordZisInTx(tdb, {
+      id: 'z1',
+      kind: 'zakat',
+      direction: 'in',
+      amount: 5000000,
+      payer: 'Ahmad',
+      occurred_at: TZ,
+      created_by: '7',
+      gl_enabled: true,
+    });
+    eq('Z4: entryId = JE-zis-z1', r1.entryId, 'JE-zis-z1');
+    const zrow = db3.prepare('SELECT * FROM zis WHERE id=\'z1\'').get() as Record<string, unknown> | undefined;
+    ok('Z4: baris zis tercatat + posted_entry ter-link', zrow != null && Number(zrow.amount) === 5000000 && String(zrow.posted_entry) === 'JE-zis-z1');
+    eq("Z4: 1 journal_entries ref zis/z1", cnt("SELECT COUNT(*) c FROM journal_entries WHERE ref_table='zis' AND ref_id='z1'", db3), 1);
+    eq("Z4: 2 jurnal baris", cnt("SELECT COUNT(*) c FROM journal_lines jl JOIN journal_entries je ON je.id=jl.entry_id WHERE je.ref_table='zis'", db3), 2);
+    eq('Z4: saldo 1100 = +5000000', bal('1100'), 5000000);
+    eq('Z4: saldo 2090 = -5000000', bal('2090'), -5000000);
+    // Idempoten: ulang posting spec yang sama (ref zis/z1) = no-op.
+    const spec = zisJournalFor({ id: 'z1', kind: 'zakat', direction: 'in', amount: 5000000, occurred_at: TZ, gl_enabled: true });
+    const again = await postJournalInTx(tdb, spec);
+    eq('Z4: ulang posting = no-op (id sama)', again, 'JE-zis-z1');
+    eq("Z4: jurnal tetap 1", cnt("SELECT COUNT(*) c FROM journal_entries WHERE ref_table='zis'", db3), 1);
+    // zis.id duplikat ditolak (PK) -- transaksi ulang = baris baru (id baru).
+    let pkRejected = false;
+    try {
+      await recordZisInTx(tdb, { id: 'z1', kind: 'zakat', direction: 'in', amount: 5000000, occurred_at: TZ, gl_enabled: true });
+    } catch {
+      pkRejected = true;
+    }
+    ok('Z4: duplikat zis.id ditolak (PK)', pkRejected);
+  }
+
+  // Z4b: baris kedua (zakat keluar) -> akun 5090/1100; saldo net benar.
+  {
+    const r2 = await recordZisInTx(tdb, {
+      id: 'z2',
+      kind: 'zakat',
+      direction: 'out',
+      amount: 2500000,
+      occurred_at: TZ,
+      gl_enabled: true,
+    });
+    eq('Z4b: entryId = JE-zis-z2', r2.entryId, 'JE-zis-z2');
+    eq('Z4b: saldo 1100 = +2500000 (net)', bal('1100'), 2500000);
+    eq('Z4b: saldo 5090 = +2500000', bal('5090'), 2500000);
+  }
+
+  // Z5: gl_off -- dicatat, tanpa jurnal (D1/D6).
+  {
+    const r5 = await recordZisInTx(tdb, {
+      id: 'z5',
+      kind: 'infak',
+      direction: 'in',
+      amount: 100000,
+      occurred_at: TZ,
+      gl_enabled: false,
+    });
+    eq('Z5: gl_off entryId = null', r5.entryId, null);
+    const zrow = db3.prepare('SELECT * FROM zis WHERE id=\'z5\'').get() as Record<string, unknown> | undefined;
+    ok('Z5: baris zis tercatat, posted_entry NULL', zrow != null && zrow.posted_entry == null);
+    eq('Z5: jurnal tetap 2 (tak berubah)', cnt('SELECT COUNT(*) c FROM journal_entries', db3), 2);
+  }
+
+  // Z6: wakaf + gl_on -- dicatat, tanpa jurnal (D3).
+  {
+    const r6 = await recordZisInTx(tdb, {
+      id: 'z6',
+      kind: 'wakaf',
+      direction: 'in',
+      amount: 3000000,
+      occurred_at: TZ,
+      gl_enabled: true,
+    });
+    eq('Z6: wakaf gl_on entryId = null', r6.entryId, null);
+    const zrow = db3.prepare('SELECT * FROM zis WHERE id=\'z6\'').get() as Record<string, unknown> | undefined;
+    ok('Z6: baris wakaf tercatat, posted_entry NULL', zrow != null && zrow.posted_entry == null);
+    eq('Z6: jurnal tetap 2 (wakaf tak auto-post)', cnt('SELECT COUNT(*) c FROM journal_entries', db3), 2);
+  }
+
+  // Z7: edge cases.
+  {
+    let threw = 0;
+    try {
+      zisValidateAmount(0);
+    } catch {
+      threw++;
+    }
+    try {
+      zisValidateAmount(-500);
+    } catch {
+      threw++;
+    }
+    try {
+      zisValidateAmount('abc');
+    } catch {
+      threw++;
+    }
+    ok('Z7: amount <= 0 / non-numeric ditolak', threw === 3);
+    threw = 0;
+    try {
+      zisLines('qurban', 'in', 1000);
+    } catch {
+      threw++;
+    }
+    try {
+      zisLines('zakat', 'side', 1000);
+    } catch {
+      threw++;
+    }
+    try {
+      zisLines('wakaf', 'in', 1000);
+    } catch {
+      threw++;
+    }
+    ok('Z7: kind/direction tak dikenal + wakaf di zisLines ditolak', threw === 3);
+    eq('Z7: pecahan dibulatkan (1.9 -> 2)', zisValidateAmount(1.9), 2);
+    let t4 = 0;
+    try {
+      zisValidateAmount(0.4);
+    } catch {
+      t4++;
+    }
+    ok('Z7: 0.4 -> 0 -> ditolak', t4 === 1);
+  }
+
+  db3.close();
+}
+
+void main().then(() => {
+  console.log(`\nDONE: ${passes} lulus, ${failures} gagal`);
+  if (failures > 0) {
+    console.log('HAS_FAILURE');
+    process.exit(1);
+  }
+});
+
