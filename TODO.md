@@ -1492,6 +1492,40 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
           test:laporan 91/91; test:all 18 suite; 0 non-ASCII;
           sw.js + V1 tak tersentuh.
           **Progres Wave 2: WAVE 2 = 4/7.**
+    - [x] **F3.4+ W2.5 LEPAS 2 Okt** (`d7ca0e8`; ACC Gus Fi; semua
+          gate lulus): Laporan Arus Kas formal (LAK, Sek.5.4) +
+          API `?report=lak` + shell tab `/admin/laporan` "Arus
+          Kas". 4 file (+829/-6):
+          `lib/laporan/lak.ts` (BARU, modul data murni
+          import-free `buildLak`; kas usaha 1010+1020, kas sosial
+          1100 TERPISAH (anti-campur; rekon #16 GL_CASH W5.2);
+          klasifikasi per entri sesuai akun lawan: INVESTASI
+          {1050,1070-1090} / PENDANAAN {3010,3060,2050-2070} /
+          OPERASIONAL; transfer antar-kas BUKAN aktivitas
+          (1010/1020<->1100 -> footer pergeseran_kas_sosial);
+          identitas footer konstruktif (saldo_awal + neto_
+          aktivitas + pergeseran = saldo_akhir); rincian ZIS per
+          akun lawan 4090/5090/5100/6030 + "(lain)"; `bal`
+          debit-credit kas 1xxx sama dgn `posisi.ts`;
+          `flag_rekon15` proxy, engine rekon = W2.7) +
+          `api/laporan/formal/route.ts` (dispatch `?report=lak` +
+          LAK_NOTES) + `laporan-formal-client.tsx` (tab LAK:
+          footer + aktivitas x3 + kas per akun + seksi ZIS
+          terpisah; shell+V1 tak berubah; 0 new dep) +
+          `scripts/test-laporan.ts` (L1-L5: golden + transfer +
+          pergeseran + identitas footer, batas periode, tak
+          seimbang flag, DB kosong, pembalik offset; 91 -> 137
+          assert). **Fix pre-commit**: bug akumulasi per-akun
+          `k.masuk`/`k.keluar` di lak.ts (hanya total aktivitas
+          terisi, baris per akun 0) -> akumulasi paralel;
+          terkapton oleh test L1 sebelum commit. **Lesson
+          W2.5**: (1) akumulasi multi-akun -- test wajib
+          assert PER-AKUN, bukan hanya total; (2) label COA =
+          seed `src/db.ts` (1100 = "Kas ZIS" baris 647, bukan
+          "Kas Sosial (ZIS)" -- ulang lesson W2.4). Gate: tsc 0;
+          test:laporan 137/137; 0 non-ASCII; sw.js + V1 tak
+          tersentuh.
+          **Progres Wave 2: WAVE 2 = 5/7.**
 
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga

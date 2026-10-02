@@ -213,10 +213,64 @@
 - **Progres Wave 2 (roadmap 12)**: W2.1 `ca0f39f`; W2.2 `d91dbd0`
   (+ hardening `663876b`); W2.3 `6d8d5b7`; W2.4 `a4d90c7`.
   **WAVE 2 = 4/7**.
-  - W2.5+ (menyusul): LAK, CALK; penutupan jurnal closing
+  - W2.6+ (menyusul): CALK; penutupan jurnal closing
     (4xx/5xx -> 3020).
   - **Standing rule**: audit pasca-wave W2.4 -> hardening bila ada
     bug (pola B1-B4 W2.2); mulai setelah go Gus Fi.
+
+### F3.4+ W2.5: Laporan Arus Kas formal (LAK) + API + client tab - SELESAI
+2 Okt 2026 (commit `d7ca0e8`, dual-push master+main)
+- **4 file (+829/-6)**: `src/lib/laporan/lak.ts` (BARU, modul data
+  murni import-free `buildLak(db,at)`, pola `posisi.ts`/`lka.ts`/
+  `lpe.ts`; struktur Sek.5.4: kas usaha = 1010+1020, kas sosial
+  1100 TERPISAH (anti-campur; invariant rekon #16 GL_CASH utk
+  W5.2); klasifikasi per entri sesuai akun lawan: INVESTASI
+  {1050,1070-1090}, PENDANAAN {3010,3060,2050-2070}, OPERASIONAL
+  sisanya; transfer antar-kas (1010<->1020 / <->1100) BUKAN
+  aktivitas -- 1010/1020<->1100 masuk footer
+  `pergeseran_kas_sosial`; identitas footer konstruktif:
+  saldo_awal + neto_aktivitas + pergeseran_kas_sosial = saldo_akhir
+  (per akun: penutup = pembuka + masuk - keluar + transfer);
+  `bal` = debit-credit utk kas 1xxx (konvensi SAK-EP sama dgn
+  `posisi.ts`); rincian ZIS per akun lawan 4090/5090/5100/6030 +
+  fallback "(lain)"; nama 1100 = "Kas ZIS" selaras seed
+  `src/db.ts` baris 647; `d_k` global + `flag_rekon15` proxy) +
+  `src/app/api/laporan/formal/route.ts` (dispatch `?report=lak` +
+  LAK_NOTES; supported list kini ['posisi','lka','lpe','lak']) +
+  `src/components/admin/laporan-formal-client.tsx` (tab baru
+  "Arus Kas": footer tabel + identitas, blok aktivitas x3
+  (neto + masuk/keluar + kode lawan info), tabel kas per akun
+  (pembuka/masuk/keluar/transfer/neto/penutup), seksi ZIS
+  terpisah + rincian; shell posisi/LKA/LPE + V1 tak berubah) +
+  `scripts/test-laporan.ts` (L1-L5: golden (pembuka opening +
+  3 aktivitas + transfer + pergeseran + identitas footer +
+  rincian ZIS), batas periode, tak seimbang flag_rekon15, DB
+  kosong, jurnal pembalik offset arus; 91 -> 137 assert; 0 new
+  dep).
+- **Fix pre-commit (di-ACC Gus Fi, terkapton sebelum commit)**:
+  bug akumulasi per-akun di lak.ts: `k.masuk`/`k.keluar` (baris
+  kas per akun) tak pernah terisi -- hanya total aktivitas
+  `a.masuk`/`a.keluar` -- jadi tabel per akun tampil 0 saat neto
+  benar. Diperbaiki ke akumulasi paralel; terkapton pre-commit
+  oleh test L1.
+- **Lesson W2.5-1: akumulasi multi-akun (loop per akun di dalam
+  loop entri): total agregat bisa benar sementara kolom
+  per-akun nol -- test wajib assert PER-AKUN, bukan hanya total
+  modul.**
+- **Lesson W2.5-2 (ulang lesson W2.4): label COA modul HARUS
+  selaras seed `src/db.ts`, BUKAN teks proposal / asumsi
+  (1100 = "Kas ZIS" baris 647, bukan "Kas Sosial (ZIS)").**
+- **Gate bersih**: `tsc --noEmit` exit 0; `test:laporan`
+  137/137; 0 non-ASCII di 4 file (per-line check); `public/
+  sw.js` + V1 `laporan-admin-client.tsx` tak tersentuh; ref
+  remote `origin/master` + `origin/main` identik @ `d7ca0e8`.
+- **Progres Wave 2 (roadmap 12)**: W2.1 `ca0f39f`; W2.2
+  `d91dbd0` (+ hardening `663876b`); W2.3 `6d8d5b7`; W2.4
+  `a4d90c7`; W2.5 `d7ca0e8`. **WAVE 2 = 5/7**.
+  - W2.6+ (menyusul): CALK; penutupan jurnal closing
+    (4xx/5xx -> 3020).
+  - **Standing rule**: audit pasca-wave W2.5 -> hardening bila
+    ada bug (pola B1-B4 W2.2); mulai setelah go Gus Fi.
 
 ## 2026-09-30
 ### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
