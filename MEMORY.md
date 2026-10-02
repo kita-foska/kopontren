@@ -3571,3 +3571,47 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
 - NEXT: W3.2 = lib/akad.ts (akadValidateTerms + mapping jurnal
   per tipe) + test-akad A1-A7 penuh.
 
+## W3.2 lib/akad.ts jurnal + validasi terms (3 Okt 2026)
+- W3.2 (commit `e56736f`, ACC Gus Fi via DeepSeek, audit 0
+  must-fix): WAVE 3 = 2/5. LIB + TEST SAJA (tanpa UI/API).
+- (a) `src/lib/akad.ts` (339 baris baru):
+  `akadValidateTerms` (terms_json Sek.6.5: null/'' = {}
+  (0 preset); JSON korup -> throw; nisbah integer 0-100
+  (desimal ditolak, NOTE 2); margin/rate >= 0; key tak
+  dikenal diabaikan) + `akadLines` (mapping Sek.6.4 per
+  tipe: murabahah pencairan/angsuran D1010/K2040 (lunas
+  saat pencairan -> K4060, OQ-A1 literal) + settlement
+  D2040/K4060; mudharabah/musyarakah pencairan D1010/
+  K1080|1090, settlement K1010, bagi_hasil = 1 entry 4 sisi
+  (D inv + D5060 Pp / K4070|4080 Pc + K1010|K2040 Pp bila
+  heldPp; Pc = T - Pp -> D=K persis, NOTE 3); ijarah
+  D1010/K4050; wakalah = throw (bridge W3.4); denda = throw
+  (F3.3 #6; event tetap tercatat, tak dipost); 1070 tak
+  dipakai builder (OQ-A2, utk rekap piutang/laporan)) +
+  `akadJournalFor` (ref_id F1 'akad#<akad_id>:evt#
+  <akad_events.id>' per event -- pola docs ':evt#<kind>'
+  tabrakan utk event berulang, dibuktikan test A6) +
+  `recordAkadEventInTx` (pola recordZisInTx W2.7: INSERT
+  akad_events -> auto-post hanya gl_on && bukan
+  wakalah/denda -> UPDATE posted_entry; idempoten).
+- (b) `scripts/test-akad.ts` +350/-13 (583 baris): A1-A7
+  (77 cek): A1 murabahah golden (pencairan -> angsuran ->
+  settlement + flag lunas + verifikasi DB); A2 mudharabah
+  (4 sisi + heldPp + DB 1 entry 4 baris + ref_id F1); A3
+  musyarakah mirror (1090/4080); A4 ijarah (pencairan +
+  periodik C4050); A5 throw (wakalah x2, denda x4 tipe,
+  kind di luar matrix, type tak dikenal; gl-on denda/wakalah
+  = event tercatat, posted_entry NULL); A6 F1 (pola docs =
+  2 post 1 entry 4 baris vs F1 = 2 event 2 entry; post
+  ulang no-op); A7 edge (amount 0/negatif ditolak; 8 kasus
+  terms invalid; gl-off tak post; gl-on post; rounding
+  T=10.000.001 nisbah 33 -> Pp 3.300.000, Pc 6.700.001,
+  D=K persis).
+- Gate: tsc 0; test-akad 141 passed 0 failed (M1 34 + M2 30
+  + A 77); test:all 20 suite green; 0 non-ASCII; sw.js + V1
+  tak tersentuh; rev-list 0 0.
+- NEXT: W3.3 = UI /admin/akad + API (CRUD akad + event +
+  input terms manual + lunas/angsuran) + Q3 (ui-ux-2) +
+  CALK item 8; W3.4 = bridge wakalah via konsinyasi
+  (ujrah 4040 + settlement neto 2020/4010).
+

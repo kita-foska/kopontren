@@ -1649,6 +1649,39 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
           W3.3.
           **Progres Wave 3: 1/5 (W3.1 selesai; next W3.2 =
           lib/akad.ts + test-akad A1-A7 penuh).**
+   - [x] **W3.2 LEPAS 3 Okt** (`e56736f`; ACC Gus Fi via
+          DeepSeek; audit 0 must-fix): LIB `src/lib/akad.ts`
+          (339 baris) + test A1-A7 (tanpa UI/API):
+          (a) `akadValidateTerms` (terms_json Sek.6.5: 0
+          preset; JSON korup -> throw; nisbah integer 0-100,
+          desimal ditolak NOTE 2; margin/rate >= 0; key tak
+          dikenal diabaikan);
+          (b) `akadLines` mapping Sek.6.4: murabahah
+          D1010/K2040 (lunas saat pencairan -> K4060;
+          OQ-A1 literal) + settlement D2040/K4060;
+          mudharabah/musyarakah D1010/K1080|1090 + settlement
+          K1010 + bagi_hasil = 1 entry 4 sisi (D inv + D5060
+          Pp / K4070|4080 Pc + K1010|2040 Pp bila heldPp;
+          Pc = T - Pp jadi D=K persis, NOTE 3); ijarah
+          D1010/K4050; wakalah = throw (bridge W3.4); denda =
+          throw (F3.3 #6; event tetap tercatat, tak dipost);
+          1070 tak dipakai builder (OQ-A2, utk rekap
+          laporan);
+          (c) `akadJournalFor` ref_id F1
+          'akad#<akad_id>:evt#<akad_events.id>' (bukti
+          tabrakan pola docs ':evt#kind' utk event berulang di
+          test A6) + `recordAkadEventInTx` (pola
+          recordZisInTx W2.7; auto-post hanya gl_on;
+          idempoten).
+          (d) test-akad +350/-13 (141 passed, 0 failed:
+          M1 34 + M2 30 + A1-A7 77; A7 rounding
+          T=10.000.001 nisbah 33 -> Pp 3.300.000,
+          Pc 6.700.001).
+          Gate: tsc 0; test:all 20 suite green; 0 non-ASCII;
+          sw.js + V1 tak tersentuh.
+          **Progres Wave 3: 2/5 (W3.2 selesai; next W3.3 =
+          UI /admin/akad + API + Q3/CALK item 8; W3.4 =
+          bridge wakalah via konsinyasi).**
 
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
