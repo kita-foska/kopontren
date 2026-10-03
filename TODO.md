@@ -1718,6 +1718,12 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
           **Progres Wave 3: 3/5 (W3.3 selesai; next W3.4 =
           bridge wakalah via konsinyasi; W3.5 =
           jurnal manual 1120/4100/6020).**
+          Catatan V1 /api/neraca fix (3 Okt, commit `59d8daf`):
+          off-balance konsinyasi + `payables.owner_name` (skema
+          prod) di-fix via Option (a) ruling; false-green
+          test-neraca dihapus; catch /api/neraca kini log error.
+          W3.4 tetep UNCOMMITTED (dilepas di batch berikutnya);
+          Progres Wave 3 isih 3/5.
 
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga

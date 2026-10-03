@@ -3660,3 +3660,26 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   (existing W2.1 pattern) + extend `src/lib/akad.ts`
   (wakalah handling) + tests A9 (wakalah bridge).
 
+## V1 /api/neraca fix — off-balance konsinyasi + payables kolom (3 Okt 2026, commit 59d8daf)
+- Audit (via DeepSeek, saderengipun commit W3.4): error "Gagal
+  memuat neraca" ing tab Neraca V1 (/admin/laporan build lama).
+  Akar sasanjang: queryNeraca (A3) isih nglebetaken tabel legacy
+  `consignment_items` + kolom `payables.owner_name` ingkang sanes
+  wonten ing skema prod (saiki `consignments` + `supplier_name`)
+  -> throw -> 500. test-neraca green = false-green (harness
+  ngginakaken skema A3-era). Mboten saking W3.4 (4 file) sanes
+  saking flip COA W3.1 (queryNeraca sanes nglebetaken COA).
+- Ruling Gus Fi: off-balance = Option (a) outstanding payable
+  `agree_price * qty_sold - amount_paid WHERE settled_at IS NULL`,
+  OFF-BALANCE memo (BUKAN GL 2020; sanes double-count).
+- Edit: neraca.ts (query off-balance + hutang_top supplier_name +
+  2 note), test-neraca.ts (harness -> skema prod + 4 edge case),
+  api/neraca/route.ts (catch + console.error), rekonsiliasi.ts
+  (note known-issue -> sampun di-fix).
+- Gate: tsc 0; test-neraca 37/0; test-rekonsiliasi 55/0;
+  test-akad 175 green (coexist); 0 non-ASCII added; sw.js + V1
+  page tak tersentuh.
+- CATATAN: W3.4 (akad.ts, jurnal.ts, konsinyasi/route.ts,
+  test-akad.ts) MASIH UNCOMMITTED — dipun pelepasaken ing batch
+  pundi. Progres Wave 3 tetep 3/5 dumady W3.4 pelepas.
+
