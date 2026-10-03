@@ -1,5 +1,5 @@
-﻿# KOPONTREN AL ITTIHAD — PROGRES / MEMORY / TODO
-_Update: 2026-09-18 (SESSION AUDIT & FIX — scope Kopontren, BMT
+﻿# KOPONTREN AL ITTIHAD -- PROGRES / MEMORY / TODO
+_Update: 2026-09-18 (SESSION AUDIT & FIX -- scope Kopontren, BMT
  hanya dicek keberadaan). Di-audit: seluruh route API (auth/PIN,
  sales, reports, kas, shifts, debts, payables, purchases, expenses,
  returns, konsinyasi, members, member-settings, products+bulk,
@@ -7,7 +7,7 @@ _Update: 2026-09-18 (SESSION AUDIT & FIX — scope Kopontren, BMT
  belanja, zakat-skim), db.ts, lib/auth.ts, lib/notify.ts,
  komponen (pos-client 1586 baris, session-watcher,
  session-countdown, shell, notification-bell, ui, rekap, dll).
- FIX (11 file, tsc EXIT 0, next build EXIT 0 — 48 page, First
+ FIX (11 file, tsc EXIT 0, next build EXIT 0 -- 48 page, First
  Load JS maks ±123 kB):
   1. auth.ts changePin: PIN lama salah kini +failed_attempts &
      lockout (5x→15 mnt, konsisten verifyPin).
@@ -35,11 +35,33 @@ _Update: 2026-09-18 (SESSION AUDIT & FIX — scope Kopontren, BMT
  (20 jenis + cron), audit log, backup/reset. Gap fitur = TODO.md.
  Catatan env (tetap): node C:\Program Files\nodejs\node.exe; git
  C:\Program Files\Git\cmd\git.exe; main & master UNRELATED
- HISTORIES dulu — kini lokal HANYA branch main (mirror); sync
+ HISTORIES dulu -- kini lokal HANYA branch main (mirror); sync
  dgn push kedua remote. build panjang: Start-Process detached +
  polling file (terminal foreground Cline sering "close"
  command berjalan).)_
 
+
+## KINI (3 Okt 2026) -- W3.4 LEPAS + Gate B + Vercel fix + skema v23
+- [x] **W3.4 LEPAS** (commit `4199bcf`, 6 file +281/-38): bridge
+  wakalah via konsinyasi + settlement GL (OQ-7 Option C) + GATE B.
+  **Progres Wave 3 = 4/5** (sisa W3.5 = jurnal manual 1120/4100/6020).
+- [x] **GATE B** = `scripts/check-route-exports.mjs` (115 baris,
+  BARU): guard anti value-export di route file Next.js App Router
+  (route file hanya HTTP handler + config key; extra value-export
+  gagal `next build` di `.next/types`). Pemicu = Vercel fix.
+- [x] **Vercel route-export fix** (commit `f9f613c`, 2 file
+  +13/-2): de-export `GL_NOTES` + `FORMAL_NOTES`
+  (`/api/gl` + `/api/laporan/formal`).
+- [x] **Skema v21->v23**: v21 GL `3eaf906` (W1.1) -> v22 ZIS
+  `488d679` (W2.7) -> v23 akad `51b6db8` (W3.1); current
+  `SCHEMA_VERSION = 23` @ `src/db.ts`.
+- **Git/remote state (3 Okt, verified)**: `origin` =
+  `https://github.com/kita-foska/kopontren.git` (HTTPS, single
+  remote). `origin/master` = `origin/main` = `origin/HEAD` =
+  `4199bcf` (HEAD -> master). Dev di branch `master`; `main` =
+  cermin utk Vercel. Local `main` = **16 commit behind**
+  `origin/master` (tak fast-forward lokal; remote main sudah @
+  `4199bcf`). Angka 16 terverifikasi (`rev-list --count`).
 
 ## GOAL
 Aplikasi kasir & pembukuan Kopontren Al Ittihad (Next.js + Turso/libSQL, PWA).
@@ -49,11 +71,11 @@ Pola kerja: kembangkan di branch `master`; `main` = cermin utk Vercel
 gagal; sync dgn `git checkout main; git reset --hard master; git push -f
 origin main` (bukan merge). Kini main == master (@ 1f43e60; lineage
 lama main 5b072c6..6646028 ter-replace, file uniknya junk/duplikat
-tidak referenced runtime — lihat _Update atas).
+tidak referenced runtime -- lihat _Update atas).
 
 ## STATE
 ### DONE
-- [x] PWA INSTALLABLE FIX (21 Sep 2026) — laporan user: PWA tidak
+- [x] PWA INSTALLABLE FIX (21 Sep 2026) -- laporan user: PWA tidak
   bisa diinstal di HP admin. Root cause: `src/middleware.ts`
   redirect /sw.js & /manifest.json ke /login (307, respons HTML)
   saat belum ada cookie sesi => service worker gagal register =>
@@ -64,7 +86,7 @@ tidak referenced runtime — lihat _Update atas).
   /sw.js=200(application/javascript), /manifest.json=200,
   /icon-512.png=200, / & /admin=307->/login, /api/products=401.
   Ikon tervalidasi dimensi aktual (IHDR): 192x192 & 512x512 OK.
-- [x] OPTIMASI ROWS READ + CACHE (18 Sep 2026, session lanjutan) —
+- [x] OPTIMASI ROWS READ + CACHE (18 Sep 2026, session lanjutan) --
   laporan user: Turso "Rows Read" 8,202 (byok, 18 Sep). Temuan: 8/10
   index yang diminta SUDAH ada di kode; 2 hilang (`idx_sales_kasir`,
   `idx_returns_sale`). Semua route sudah batched (audit N+1: bersih).
@@ -73,7 +95,7 @@ tidak referenced runtime — lihat _Update atas).
     `SCHEMA_VERSION` 1 -> 2 (gate cold-start: fullInit sekali,
     cold start berikutnya cukup 1 SELECT).
   - `src/lib/ttl-cache.ts` (BARU): cache in-memory per-instance kecil
-    (ttlGet/ttlSet/ttlDel, cap 100 entry) — tanpa dependensi baru.
+    (ttlGet/ttlSet/ttlDel, cap 100 entry) -- tanpa dependensi baru.
   - `src/app/api/reports/route.ts`: GET sekarang cache per range
     (key `reports:<from>`) 60 s per instance + `Cache-Control:
     public, max-age=60` (browser) + header `X-Cache: HIT/MISS`.
@@ -88,13 +110,13 @@ tidak referenced runtime — lihat _Update atas).
   - `src/db.ts` `getMemberSettings()`: cache modul 30 s (dibaca tiap
     POST /api/sales); `saveMemberSettings()` invalidate.
   - Verifikasi: `tsc --noEmit` EXIT 0; `next build` EXIT 0.
-- [x] OPTIMASI PERFORMA (18 Sep 2026) — laporan user: server response
+- [x] OPTIMASI PERFORMA (18 Sep 2026) -- laporan user: server response
   15.42s, finish 19.56s, 51 requests:
-  - AKAR MASALAH: `src/db.ts` — fungsi `db()` menjalankan SELURUH rantai
+  - AKAR MASALAH: `src/db.ts` -- fungsi `db()` menjalankan SELURUH rantai
     migrasi (exec(SCHEMA) ±17 stmt, migrate() ±35 execColumn/exec, 8
     UPDATE normalisasi timestamp, seed) di SETIAP cold start function
     Vercel. Tiap statement = 1 round-trip HTTP ke Turso -> ~150 RTT
-    sekuensial (±15 detik). Sekarang: gate `schema_version` — cold start
+    sekuensial (±15 detik). Sekarang: gate `schema_version` -- cold start
     hanya 1 `SELECT version FROM schema_version`; full init hanya untuk
     DB baru / upgrade skema (naikkan `SCHEMA_VERSION` tiap migrasi baru,
     fullInit jalan sekali lalu stamp ulang).
@@ -104,25 +126,25 @@ tidak referenced runtime — lihat _Update atas).
     `idx_sales_created_status(sales(created_at,status))`,
     `idx_sale_items_sale(sale_items(sale_id,product_id))`,
     `idx_products_active(products(active,category))`.
-  - `next.config.mjs`: `headers()` — /_next/static/* immutable 1 tahun;
+  - `next.config.mjs`: `headers()` -- /_next/static/* immutable 1 tahun;
     /icon-* /logo-* /favicon.ico 1 bulan; /sw.js & /manifest.json
     no-cache (biar update PWA sampai ke user). compress/poweredByHeader/
     productionBrowserSourceMaps sudah ada sejak sebelumnya.
   - `public/sw.js` v7->v8: precache [/manifest.json, /icon-192.png,
     /favicon.ico] saat install; /favicon.ico ikut cache-first. Size
-    ±2.4KB raw (±0.9KB gzip) — tetap ringan karena statis+no-cache.
+    ±2.4KB raw (±0.9KB gzip) -- tetap ringan karena statis+no-cache.
   - `public/favicon.ico` BARU (10.8KB, wrapper ICO dari icon-192.png via
-    script node) — sebelumnya request /favicon.ico = 404/303ms.
-  - `vercel.json` BARU: `{"regions": ["sin"]}` — function Vercel di
+    script node) -- sebelumnya request /favicon.ico = 404/303ms.
+  - `vercel.json` BARU: `{"regions": ["sin"]}` -- function Vercel di
     Singapura (paling dekat user Indonesia); asset tetap CDN global.
   - Audit N+1: /api/sales GET sudah batched (3 query IN clause,
     bukan loop per transaksi); /api/products = 2 query; backfill
     qr_code di /api/members hanya jalan sekali utk member legacy
     (dibiarkan).
   - TIDAK pakai next/font: app memakai font sistem (0 request font web)
-    — menambah web font justru bikin HP entry-level makin berat.
+    -- menambah web font justru bikin HP entry-level makin berat.
     Code-splitting per route Next.js App Router sudah default.
-- [x] Sidebar navigasi (18 Sep 2026) — menggantikan nav pill horizontal
+- [x] Sidebar navigasi (18 Sep 2026) -- menggantikan nav pill horizontal
       (yang harus di-scroll di HP):
       - `src/components/sidebar.tsx` (baru, 'use client'): `Sidebar`
         (drawer slide-in dari kiri + overlay gelap `bg-navy-900/60`,
@@ -132,7 +154,7 @@ tidak referenced runtime — lihat _Update atas).
         klik menu / tombol ✕; scroll latar dikunci saat terbuka; item
         aktif = bg-accent-500 text-white) + `HamburgerNav` (tombol ☰,
         state `open` di sini).
-      - Posisi tombol ☰: KIRI logo — urutan header
+      - Posisi tombol ☰: KIRI logo -- urutan header
         `[☰] [Logo] [Nama Toko] ... [User] [Tema] [Keluar]`.
       - FIX sidebar terpotong (hanya 1 menu kelihatan): header punya
         `backdrop-blur` yang bikin *containing block* untuk descendant
@@ -151,7 +173,7 @@ tidak referenced runtime — lihat _Update atas).
       - `shell.tsx`: baris `<nav>` pill dihapus; header jadi 1 baris
         (☰ + logo + judul + chip user + tema + keluar); `min-w-0` +
         `truncate` pd judul agar aman di layar sempit.
-      - `src/components/navpills.tsx` DIHAPUS (tak terpakai) —
+      - `src/components/navpills.tsx` DIHAPUS (tak terpakai) --
         termasuk dari `main` (sisa strategi file-copy; commit `8bad685`).
       - `npx tsc --noEmit` EXIT=0. Test visual HP/desktop = manual
         (environment tanpa browser).
@@ -159,7 +181,7 @@ tidak referenced runtime — lihat _Update atas).
         (file-copy + `git rm navpills.tsx`); push keduanya.
 - [x] Penggantian SEMUA emoji dengan ikon SVG (18 Sep 2026):
       Pakai library `lucide-react` (^1.47.0, `npm install`) alih-alih
-      SVG custom — lebih konsisten & ringan (tree-shake). Scan regex
+      SVG custom -- lebih konsisten & ringan (tree-shake). Scan regex
       seluruh `src/` = 0 emoji tersisa.
       - `themetoggle.tsx`: ☾/☀ -> <Moon/>/<Sun/>.
       - `ui.tsx` (Modal): tombol tutup ✕ -> <X/>.
@@ -180,7 +202,7 @@ tidak referenced runtime — lihat _Update atas).
       - Ikon gaya outline (stroke), warna mengikuti `currentColor`
         (otomatis adjust utk dark mode); bintang pakai fill.
 
-- [x] Fitur Piutang (debts) & Retur (returns) — batch sesi 18 Sep:
+- [x] Fitur Piutang (debts) & Retur (returns) -- batch sesi 18 Sep:
       - API: `src/app/api/debts/route.ts` (GET daftar+summary / POST catat;
         kasir+admin bisa tulis, pengurus read-only, pengurus tak boleh).
       - API: `src/app/api/debts/[id]/route.ts` (PATCH terima-bayar `pay`
@@ -229,7 +251,7 @@ tidak referenced runtime — lihat _Update atas).
 
 ## NEXT / TODO
 - [x] Commit batch sidebar navigasi: `master` `b409dfb`, sync `main`
-      `99dc587` (+ commit kecil pd main utk hapus `navpills.tsx` sisa —
+      `99dc587` (+ commit kecil pd main utk hapus `navpills.tsx` sisa --
       strategi file-copy tidak menghapus file), push keduanya.
 - [x] (18 Sep, lanjutan) hamburger di KIRI logo + sidebar 280/260px +
       animasi 300ms: `master` `2fdad8f`, sync `main` `8bad685`
@@ -237,7 +259,7 @@ tidak referenced runtime — lihat _Update atas).
       main); `git ls-tree main/master -- src/components/navpills.tsx`
       = kosong di keduanya. Push keduanya.
 - [x] Keputusan: TIDAK pakai full-sync `git read-tree -u --reset
-      master` (cara 2) pd main — `main` punya 21 file ekstra yg
+      master` (cara 2) pd main -- `main` punya 21 file ekstra yg
       disengaja (sw.js, manifest.json, ikon PWA, dll; beda arah diff
       = semua insert). navpills sudah bersih via `git rm`, jadi
       cukup re-deploy Vercel (triggered oleh push main berikutnya).
@@ -245,15 +267,15 @@ tidak referenced runtime — lihat _Update atas).
       `turso db show`; jika US -> migrasi Singapore/Tokyo
       (`turso db create --region aws-ap-southeast-1` + clone + ganti
       env Vercel DATABASE_URL/TOKEN). Lalu jalankan Lighthouse
-      (Chrome DevTools, profil Mobile/Slow 4G) — target finish time
+      (Chrome DevTools, profil Mobile/Slow 4G) -- target finish time
       < 5 detik & TTFB < 1 detik.
-- [ ] Test visual: HP (Chrome DevTools device mode — pastikan TIDAK ada
+- [ ] Test visual: HP (Chrome DevTools device mode -- pastikan TIDAK ada
       scroll horizontal; sidebar membuka dari kiri + overlay, tombol ☰
-      di kiri logo; SEMUA ikon lucide tampil — search, tombol bayar,
+      di kiri logo; SEMUA ikon lucide tampil -- search, tombol bayar,
       struk, QR, star member, badge poin) & desktop (open/close
       sidebar, item aktif, Escape, lebar 280/260px).
 - [ ] Pantau deployment Vercel main (`d1f9e56` = terakhir yg di-push;
-      commit aplikasinya `c2b865a` ikon + `5b072c6` gitignore) —
+      commit aplikasinya `c2b865a` ikon + `5b072c6` gitignore) --
       build green; jika gagal walau branch sudah bersih -> Redeploy
       manual di dashboard Vercel.
 - [ ] Uji manual fitur baru di produksi: catat piutang, terima bayar
@@ -265,9 +287,9 @@ tidak referenced runtime — lihat _Update atas).
       `returns {count, total, refund_total}` (refund di-ambil dari jurnal
       cash_entries berlabel 'Retur #%'). `laporan-admin-client.tsx` nambah
       section "Rekap piutang & retur" (4 kartu). Catatan: TIDAK ada tabel
-      debt_payments — pembayaran piutang update `debts.paid` in-place.
+      debt_payments -- pembayaran piutang update `debts.paid` in-place.
 - [ ] (Opsional) Multi-store: tabel `stores` sudah ada di skema +
-      `sales.store_id` (kosong) — butuh pemilihan store di POS +
+      `sales.store_id` (kosong) -- butuh pemilihan store di POS +
       filter laporan per store.
 - [ ] (Opsional) Fitur bundel/kategori/produk-harga-grosir (tabel
       `bundles`, `categories`, `product_prices` sudah ada di skema,
@@ -289,7 +311,7 @@ tidak referenced runtime — lihat _Update atas).
   jalankan `& node node_modules/next/dist/bin/next build` dll.
 - Pola izin api: `currentUser()` -> 401; pengurus -> 403 utk tulis;
   kasir dibatasi ke data miliknya (sale.kasir_id === user.id).
-- Refund retur TIDAK memotong cash_entries manual — dicatat otomatis
+- Refund retur TIDAK memotong cash_entries manual -- dicatat otomatis
   sebagai jurnal expense berlabel 'Retur #<saleId> · <nama produk>'
   agar pembukuan kas tetap akur (termasuk di /api/kas & dashboard).
 - `todayStr()` di piutang-client memakai local date (WIB di Indonesia)
@@ -297,10 +319,10 @@ tidak referenced runtime — lihat _Update atas).
 - `Modal`, `Badge`, `Toast`, `useToast`, helper `api()` ada di
   `src/components/ui.tsx`; format `rp/fmtDateTime` di `src/lib/format.ts`.
 - Helper bertanda underscore gitignore: pola `_*` menyeluruh sejak
-  commit `5f6e6dc` (sebelumnya hanya `_*.{bat,ps1,txt}` + `*.log` —
+  commit `5f6e6dc` (sebelumnya hanya `_*.{bat,ps1,txt}` + `*.log` --
   celah itu bikin `_scanemoji2.mjs` lolos masuk commit, lalu dibuang).
 - Ikon UI seragam via `lucide-react` (lengkap di commit `eda03c7`);
-  jangan campur emoji lagi — tambah ikon dari lucide (import dari
+  jangan campur emoji lagi -- tambah ikon dari lucide (import dari
   `lucide-react`, stroke `currentColor`, ukuran `h-N w-N`).
 - PERFORMA: jangan tambah statement migrasi baru di `db()` tanpa
   menaikkan `SCHEMA_VERSION` (fullInit jalan sekali, lalu cold start
