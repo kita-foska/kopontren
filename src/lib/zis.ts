@@ -11,11 +11,14 @@
  *   masuk              : Debit  1100 (Kas ZIS)              / Kredit 2090
  *   keluar zakat       : Debit  5090 (Zakat Keluar)         / Kredit 1100
  *   keluar infak/sdkeh : Debit  5100 (Infak/Sedekah Keluar) / Kredit 1100
- *   wakaf              : DICATET TANPA auto-jurnal -- mapping
- *                        1120/4100/6020 = W3.5 (OQ-1, D3).
+ *   wakaf masuk (W3.5) : Debit  1120 (Aset Wakaf)            / Kredit 4100
+ *   wakaf keluar       : DICATET TANPA auto-jurnal (D3) --
+ *                        disposal/penyaluran = jurnal manual
+ *                        ke 6020/1120 (PSAK 112).
  *
  * Anti-campur #16: 1100 (Kas ZIS) MURNI -- tidak pernah campur
- * 1010/1020 (builder hanya menulis 1100/2090/5090/5100).
+ * 1010/1020 (builder menulis 1100/2090/5090/5100 utk
+ * zakat/infak/sedekah; 1120/4100 utk wakaf masuk; W3.5).
  * D1: baris zis SELALU dicatat; auto-jurnal hanya saat gl_enabled='1'
  * (pola W2.1; gl-off = zero GL behavior change). D6: baris gl-off
  * TIDAK di-backfill otomatis. Idempoten: UNIQUE(zis.id, type='auto').
@@ -30,14 +33,19 @@ export const ZIS_ACCT = {
   TERKUMPUL: '2090', // ZIS Terkumpul Belum Disalurkan (kewajiban)
   ZAKAT_OUT: '5090', // Zakat Keluar (beban)
   INFAK_OUT: '5100', // Infak/Sedekah Keluar (beban)
+  ASET_WAKAF: '1120', // Aset Wakaf (aset; PSAK 112; WAJIB -- memo di neraca)
+  WAKAF_IN: '4100', // Wakaf Masuk (pendapatan; PSAK 112; WAJIB -- laba/rugi)
 } as const;
 
 /** Jenis ZIS (kolom `kind` tabel zis). */
 export const ZIS_KINDS = ['zakat', 'infak', 'sedekah', 'wakaf'] as const;
 export type ZisKind = (typeof ZIS_KINDS)[number];
 
-/** Jenis yang auto-posting (wakaf = W3.5, D3). */
-export const ZIS_AUTO_KINDS = ['zakat', 'infak', 'sedekah'] as const;
+/**
+ * Jenis yang auto-posting. Wakaf (W3.5) auto-post hanya utk arah 'in'
+ * (D1120/K4100); arah 'out' = tercatat tanpa jurnal (lihat recordZisInTx).
+ */
+export const ZIS_AUTO_KINDS = ['zakat', 'infak', 'sedekah', 'wakaf'] as const;
 
 export type ZisDirection = 'in' | 'out';
 
@@ -74,16 +82,24 @@ function assertDirection(dir: string): asserts dir is ZisDirection {
 }
 
 /**
- * Kaki jurnal ZIS (OQ-1; anti-campur #16: HANYA akun 1100/2090/5090/5100,
- * TIDAK PERNAH 1010/1020). Wakaf = throw (D3: jurnal manual
- * 1120/4100/6020 = W3.5, bukan auto-mapping).
+ * Kaki jurnal ZIS (OQ-1; anti-campur #16: HANYA akun
+ * 1100/2090/5090/5100 utk zakat/infak/sedekah, 1120/4100 utk
+ * wakaf masuk; TIDAK PERNAH 1010/1020). Wakaf 'out' (D3):
+ * returned [] = tercatat tanpa auto-jurnal (PSAK 112: manual 6020/1120).
  */
 export function zisLines(kind: string, direction: string, amount: number): JLine[] {
   assertKind(kind);
   assertDirection(direction);
   const amt = zisValidateAmount(amount);
   if (kind === 'wakaf') {
-    throw new Error('zis: wakaf = jurnal manual (1120/4100/6020) W3.5, bukan auto-posting');
+    if (direction === 'in') {
+      const src = 'zis#wakaf';
+      return [
+        { account_code: ZIS_ACCT.ASET_WAKAF, debit: amt, credit: 0, source: src },
+        { account_code: ZIS_ACCT.WAKAF_IN, debit: 0, credit: amt, source: src },
+      ];
+    }
+    return []; // wakaf keluar = tercatat tanpa auto-jurnal (D3)
   }
   const src = 'zis#' + kind + direction;
   if (direction === 'in') {
@@ -122,9 +138,10 @@ export function zisJournalFor(rec: ZisRecord): JSpec {
 
 /**
  * Pencatatan atomik (dijalankan DI DALAM tx pemanggil, pola W2.1/W2.6):
- * INSERT zis -> (gl_on && kind != wakaf) auto-post OQ-1 via
- * postJournalInTx + UPDATE posted_entry. Wakaf / gl-off: tercatat tanpa
- * jurnal (posted_entry NULL; D3/D6). Mengembalikan id entry (atau null).
+ * INSERT zis -> (gl_on && auto-postable) auto-post OQ-1 via
+ * postJournalInTx + UPDATE posted_entry. Wakaf 'in' + gl_on = auto
+ * 1120/4100 (W3.5); wakaf 'out' & gl-off = tercatat tanpa jurnal
+ * (posted_entry NULL; D3/D6). Mengembalikan id entry (atau null).
  */
 export async function recordZisInTx(
   db: TxDb,
@@ -148,7 +165,10 @@ export async function recordZisInTx(
       rec.created_by ?? null,
       nowWib()
     );
-  const auto = rec.gl_enabled === true && (ZIS_AUTO_KINDS as readonly string[]).includes(rec.kind);
+  const auto =
+    rec.gl_enabled === true &&
+    (ZIS_AUTO_KINDS as readonly string[]).includes(rec.kind) &&
+    (rec.kind !== 'wakaf' || rec.direction === 'in');
   if (!auto) return { entryId: null };
   const entryId = await postJournalInTx(db, zisJournalFor(rec));
   await db.prepare('UPDATE zis SET posted_entry = ? WHERE id = ?').run(entryId, rec.id);

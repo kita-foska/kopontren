@@ -10,16 +10,20 @@
  *    open; 6030/5050 & lainnya tidak berubah (idempoten).
  *  - Z1: mapping OQ-1 per jenis x arah (5 kombinasi auto):
  *    masuk (zakat/infak/sedekah) D1100/C2090; keluar zakat D5090/C1100;
- *    keluar infak/sedekah D5100/C1100. Wakaf = throw (D3: manual W3.5).
+ *    keluar infak/sedekah D5100/C1100. Wakaf in = D1120/C4100 (W3.5);
+ *    wakaf out = tanpa auto-jurnal (D3).
  *  - Z2: anti-campur #16 -- HANYA akun 1100/2090/5090/5100 muncul
  *    (1010/1020 TIDAK PERNAH tersentuh).
  *  - Z3: D = K (JOURNAL_BAL #15 proxy) utk semua mapping.
  *  - Z4: recordZisInTx gl_on: baris zis + jurnal + posted_entry; jurnal
  *    idempoten (ulang spec sama = no-op); duplikat zis.id ditolak (PK).
  *  - Z5: gl_off: baris dicatat, posted_entry NULL, jurnal 0 (D1/D6).
- *  - Z6: wakaf + gl_on: dicatat tanpa jurnal (D3).
+ *  - Z6: wakaf in + gl_on: auto-jurnal D1120/C4100 + posted_entry (W3.5).
  *  - Z7: edge cases: amount <= 0 ditolak; kind/direction tak dikenal
- *    ditolak; wakaf di zisLines ditolak.
+ *    ditolak.
+ *  - W10 (W3.5): COA verify 1120/4100/6020 'open'/0 + wakaf in auto-post
+ *    (idempoten + D=K); wakaf out & gl_off = tercatat tanpa jurnal;
+ *    anti-campur #16 (1120/4100 saja, tak pernah 1100/1010/1020).
  */
 import { recordZisInTx, zisLines, zisJournalFor, zisValidateAmount, ZIS_ACCT } from '../src/lib/zis.ts';
 import { postJournalInTx } from '../src/lib/jurnal.ts';
@@ -336,7 +340,7 @@ async function main(): Promise<void> {
     eq('Z5: jurnal tetap 2 (tak berubah)', cnt('SELECT COUNT(*) c FROM journal_entries', db3), 2);
   }
 
-  // Z6: wakaf + gl_on -- dicatat, tanpa jurnal (D3).
+  // Z6: wakaf in + gl_on -- auto-jurnal D1120/C4100 + posted_entry (W3.5).
   {
     const r6 = await recordZisInTx(tdb, {
       id: 'z6',
@@ -346,10 +350,12 @@ async function main(): Promise<void> {
       occurred_at: TZ,
       gl_enabled: true,
     });
-    eq('Z6: wakaf gl_on entryId = null', r6.entryId, null);
+    eq('Z6: wakaf in gl_on entryId = JE-zis-z6', r6.entryId, 'JE-zis-z6');
     const zrow = db3.prepare('SELECT * FROM zis WHERE id=\'z6\'').get() as Record<string, unknown> | undefined;
-    ok('Z6: baris wakaf tercatat, posted_entry NULL', zrow != null && zrow.posted_entry == null);
-    eq('Z6: jurnal tetap 2 (wakaf tak auto-post)', cnt('SELECT COUNT(*) c FROM journal_entries', db3), 2);
+    ok('Z6: baris wakaf tercatat + posted_entry ter-link', zrow != null && Number(zrow.amount) === 3000000 && String(zrow.posted_entry) === 'JE-zis-z6');
+    eq('Z6: saldo 1120 = +3000000', bal('1120'), 3000000);
+    eq('Z6: saldo 4100 = -3000000 (kredit)', bal('4100'), -3000000);
+    eq('Z6: 1 jurnal entry ref zis/z6', cnt("SELECT COUNT(*) c FROM journal_entries WHERE ref_table='zis' AND ref_id='z6'", db3), 1);
   }
 
   // Z7: edge cases.
@@ -382,12 +388,7 @@ async function main(): Promise<void> {
     } catch {
       threw++;
     }
-    try {
-      zisLines('wakaf', 'in', 1000);
-    } catch {
-      threw++;
-    }
-    ok('Z7: kind/direction tak dikenal + wakaf di zisLines ditolak', threw === 3);
+    ok('Z7: kind/direction tak dikenal ditolak', threw === 2);
     eq('Z7: pecahan dibulatkan (1.9 -> 2)', zisValidateAmount(1.9), 2);
     let t4 = 0;
     try {
@@ -396,6 +397,103 @@ async function main(): Promise<void> {
       t4++;
     }
     ok('Z7: 0.4 -> 0 -> ditolak', t4 === 1);
+  }
+
+  // ===== W10 (W3.5): wakaf COA verify + auto-post in + out/gl_off tak post =====
+  {
+    // W10a: COA verify -- 1120/4100/6020 ada & 'open'/0 di seed (mirror db.ts).
+    for (const code of ['1120', '4100', '6020']) {
+      const row = COA_V22.find((r) => r[0] === code);
+      ok(
+        'W10a: COA ' + code + " status 'open'/0",
+        row != null && row[4] === 'open' && row[5] === 0,
+        row ? 'status=' + row[4] + ' nd=' + row[5] : 'missing'
+      );
+    }
+
+    // W10b..f: db4 fresh (jurnal + zis; COA tak perlu utk posting).
+    const db4 = new mod.DatabaseSync(':memory:');
+    db4.exec(DDL_JE);
+    db4.exec(DDL_JL);
+    db4.exec(DDL_ZIS);
+    const tdb4 = toTxDb(db4);
+    const bal4 = (a: string): number =>
+      cnt(`SELECT COALESCE(SUM(debit),0) - COALESCE(SUM(credit),0) c FROM journal_lines WHERE account_code='${a}'`, db4);
+
+    // W10b: wakaf in auto-post (D1120/K4100) + idempoten + D=K.
+    const rIn = await recordZisInTx(tdb4, {
+      id: 'w1',
+      kind: 'wakaf',
+      direction: 'in',
+      amount: 7000000,
+      occurred_at: TZ,
+      gl_enabled: true,
+    });
+    eq('W10b: wakaf in entryId = JE-zis-w1', rIn.entryId, 'JE-zis-w1');
+    eq('W10b: saldo 1120 = +7000000', bal4('1120'), 7000000);
+    eq('W10b: saldo 4100 = -7000000 (kredit)', bal4('4100'), -7000000);
+    eq('W10b: 6020 (memo) tak tersentuh, saldo 0', bal4('6020'), 0);
+    eq('W10b: 1 jurnal entry ref zis/w1', cnt("SELECT COUNT(*) c FROM journal_entries WHERE ref_table='zis' AND ref_id='w1'", db4), 1);
+    eq(
+      'W10b: 2 jurnal baris (1120+4100)',
+      cnt("SELECT COUNT(*) c FROM journal_lines jl JOIN journal_entries je ON je.id=jl.entry_id WHERE je.ref_table='zis'", db4),
+      2
+    );
+    const spec4 = zisJournalFor({ id: 'w1', kind: 'wakaf', direction: 'in', amount: 7000000, occurred_at: TZ, gl_enabled: true });
+    const again4 = await postJournalInTx(tdb4, spec4);
+    eq('W10b: ulang posting = no-op (id JE-zis-w1)', again4, 'JE-zis-w1');
+    eq('W10b: jurnal tetap 1', cnt("SELECT COUNT(*) c FROM journal_entries WHERE ref_table='zis'", db4), 1);
+
+    // W10c: wakaf out + gl_on -- tercatat tanpa jurnal (D3).
+    const rOut = await recordZisInTx(tdb4, {
+      id: 'w2',
+      kind: 'wakaf',
+      direction: 'out',
+      amount: 2000000,
+      occurred_at: TZ,
+      gl_enabled: true,
+    });
+    eq('W10c: wakaf out gl_on entryId = null', rOut.entryId, null);
+    const zrow4 = db4.prepare("SELECT * FROM zis WHERE id='w2'").get() as Record<string, unknown> | undefined;
+    ok('W10c: baris wakaf out tercatat, posted_entry NULL', zrow4 != null && Number(zrow4.amount) === 2000000 && zrow4.posted_entry == null);
+    eq('W10c: jurnal tetap 1 (wakaf out tak post)', cnt('SELECT COUNT(*) c FROM journal_entries', db4), 1);
+
+    // W10d: wakaf in + gl_off -- tercatat tanpa jurnal (D1/D6).
+    const rOff = await recordZisInTx(tdb4, {
+      id: 'w3',
+      kind: 'wakaf',
+      direction: 'in',
+      amount: 1000000,
+      occurred_at: TZ,
+      gl_enabled: false,
+    });
+    eq('W10d: wakaf in gl_off entryId = null', rOff.entryId, null);
+    eq('W10d: jurnal tetap 1 (gl-off tak post)', cnt('SELECT COUNT(*) c FROM journal_entries', db4), 1);
+
+    // W10e: anti-campur #16 utk wakaf -- in hanya {1120,4100}, tak pernah
+    // 1100/1010/1020; out = tanpa baris jurnal.
+    {
+      const wIn = zisLines('wakaf', 'in', 1000);
+      const codes = wIn.map((l) => l.account_code);
+      ok(
+        'W10e: wakaf in hanya 1120/4100 (tak campur 1100/1010/1020)',
+        codes.includes('1120') && codes.includes('4100') && !codes.includes('1100') && !codes.includes('1010') && !codes.includes('1020'),
+        codes.join(',')
+      );
+      const wOut = zisLines('wakaf', 'out', 1000);
+      ok('W10e: wakaf out = tanpa baris jurnal ([])', wOut.length === 0);
+    }
+
+    // W10f: D = K global (proxy JOURNAL_BAL #15) utk jurnal wakaf.
+    {
+      const g = db4.prepare('SELECT COALESCE(SUM(debit),0) d, COALESCE(SUM(credit),0) c FROM journal_lines').get() as {
+        d: number;
+        c: number;
+      };
+      ok('W10f: D = K global jurnal wakaf', Number(g.d) === Number(g.c), 'D=' + g.d + ' K=' + g.c);
+    }
+
+    db4.close();
   }
 
   db3.close();
