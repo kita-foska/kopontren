@@ -30,7 +30,13 @@ import { buildLak } from '@/lib/laporan/lak';
 import { buildCalk } from '@/lib/laporan/calk';
 import { wibToday } from '@/lib/zakat-period';
 
-export const FORMAL_NOTES: string[] = [
+// Module-local (TIDAK export): modul route Next.js hanya boleh mengeksport
+// handler HTTP (GET/POST/...) + route config (dynamic/revalidate/...). Export
+// nilai lain (konstanta) melanggar constraint type-check .next/types yang
+// di-generate next build -> build Error di Vercel. Dipakai internal utk
+// respons GET report 'posisi' (field 'notes'); sesama LKA/LPE/LAK/CALK_NOTES
+// sudah local, FORMAL_NOTES mengikuti pola itu.
+const FORMAL_NOTES: string[] = [
   'Laporan Posisi (Neraca) kumulatif s.d. as_of (entry_date < batas), struktur Sek.5.1.',
   'D=K (rekon #15 JOURNAL_BAL): bila flag_rekon15=true, angka formal TIDAK dianggap otoritatif -- periksa cek JOURNAL_BAL di /admin/rekonsiliasi.',
   'Laba/rugi berjalan (SUM 4xxx - SUM 5xxx) belum ditutup ke 3020; penutupan manual periodik (jurnal closing, Sek.3.2.6).',

@@ -24,7 +24,12 @@ import { cached } from '@/lib/ref-cache';
 import { trialBalance } from '@/lib/gl';
 import { wibToday } from '@/lib/zakat-period';
 
-export const GL_NOTES: string[] = [
+// Module-local (TIDAK export): modul route Next.js hanya boleh mengeksport
+// handler HTTP (GET/POST/...) + route config (dynamic/revalidate/...). Export
+// nilai lain (mis. konstanta) melanggar constraint type-check .next/types yang
+// di-generate next build (property tak dikenal => 'never') -> build Error di
+// Vercel sejak W1.4. Dipakai internal utk respons GET (field 'notes').
+const GL_NOTES: string[] = [
   'Neraca saldo bersifat KUMULATIF (sejak pembukuan), dibatasi batas periode to - bukan mutasi per-periode.',
   'Setiap entry harus seimbang (SUM debit = SUM kredit; rekonsiliasi #15 JOURNAL_BAL). balanced=false = ada entry tak seimbang - periksa di halaman Jurnal.',
   'Koreksi tidak menghapus data: gunakan jurnal pembalik (type=reversal, link reversed_by dua arah) lewat halaman Jurnal.',
