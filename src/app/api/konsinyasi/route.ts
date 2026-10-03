@@ -11,6 +11,7 @@ import {
   splitConsignment,
 } from '@/lib/konsinyasi';
 import {
+  journalForConsignmentSettlement, // W3.4: D2020/K1010 settlement
   journalForConsignmentUjrah,
   postJournalInTx,
 } from '@/lib/jurnal';
@@ -297,10 +298,16 @@ export async function POST(req: Request) {
                 'Pembayaran konsinyasi #' + id,
                 user.id
               );
-            // OQ-7 Option C (1 Okt 2026): GL settlement (D2020/K1010)
-            // DITUNDA ke W3/W4 bersama goods-receipt (D1040/K2020). V1
-            // cash_entries 'Kon. ...' (baris di atas) tetap tercatat;
-            // baris GL 2020-nya baru dipost di wave konsinyasi lengkap.
+            // W3.4: post GL settlement D2020/K1010 (gated gl_enabled=1).
+            // K2020 dibuat oleh akad settlement recognition (bridge, Sek.6.4).
+            if (glOn) {
+              await postJournalInTx(d, journalForConsignmentSettlement({
+                consId: id,
+                cumPaid: row.amount_paid + amount,
+                amount,
+                owner: row.owner,
+              }));
+            }
             // Uang keluar kas -> saldo kas & agregat laporan basi (cache).
             invalidate('kas:');
             invalidate('reports:');

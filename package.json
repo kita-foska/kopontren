@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/inject-sw-version.mjs && next build",
+    "check:routes": "node scripts/check-route-exports.mjs",
+    "gate": "node scripts/check-route-exports.mjs && node node_modules/next/dist/bin/next build",
     "start": "next start",
     "analyze": "next build --analyze",
     "migrate": "node scripts/migrate-from-sqlite.mjs",

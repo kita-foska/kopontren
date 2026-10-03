@@ -32,9 +32,13 @@
  *                           (pengembalian ke shahib/pemilik)
  *   ijarah     pencairan  : D1010 (imbalan awal, bila ada) -> C4050
  *   ijarah     periodik   : D1010 -> C4050 (imbalan sewa)
- *   wakalah    : THROW -- bridge P4 (konsinyasi; ujrah C4040 +
- *                           settlement neto C2020/C4010) = W3.4,
- *                           bukan auto-posting (preseden zis: wakaf).
+ *   wakalah    settlement  : D1010(bruto) -> C2020(neto) + C4010(uyrah)
+ *                           (W3.4 bridge; Sek.6.4; rate = terms.rate %)
+ *   wakalah    ujrah       : D1010 -> C4040 (sama W2.1; NOTE: helper
+ *                           utk /api/akad path, BUKAN production --
+ *                           production ujrah via konsinyasi route
+ *                           journalForConsignmentUjrah; do NOT
+ *                           double-post; mutually exclusive Sek.6.1)
  *   denda      : TIDAK DIANGKAT (F3.3 #6: tak ada skema denda; akun
  *                           5050 status=closed) -- event boleh
  *                           tercatat, TIDAK pernah di-post.
@@ -60,21 +64,24 @@ export const AKAD_TYPES = ['murabahah', 'mudharabah', 'musyarakah', 'ijarah', 'w
 export type AkadType = (typeof AKAD_TYPES)[number];
 
 /** Kind event (kolom `kind` tabel akad_events; per tipe, lihat matrix). */
-export const AKAD_KINDS = ['pencairan', 'angsuran', 'settlement', 'bagi_hasil', 'ijarah_periodik', 'denda'] as const;
+export const AKAD_KINDS = ['pencairan', 'angsuran', 'settlement', 'bagi_hasil', 'ijarah_periodik', 'denda', 'ujrah'] as const;
 export type AkadKind = (typeof AKAD_KINDS)[number];
 
-/** Akun GL modul akad (COA v23 -- kesembelanya flip open W3.1). */
+/** Akun GL modul akad (COA v23 -- 13 kode; 9 flip open W3.1 + 3 W3.4). */
 export const AKAD_ACCT = {
   KAS: '1010', // Kas Toko (event "terima pembayaran" saja; Sek.6.4)
   PIUTANG_MURABAHAH: '1070', // (OQ-A2: rekap piutang -- TAK dipakai builder)
   INVESTASI_MUDHARABAH: '1080', // P ditahan s/d settlement
   INVESTASI_MUSYARAKAH: '1090', // K ditahan s/d settlement
   KEWAJIBAN_AKAD: '2040', // sisa pokok+margin; Pp ditahan
+  HUTANG_KONSINYASI: '2020', // W3.4: bridge wakalah (settlement neto; OQ-7)
+  PEND_PENJUALAN: '4010', // W3.4: bridge wakalah (uyrah as sales revenue)
   PEND_IJARAH: '4050', // imbalan sewa
   LABA_MURABAHAH: '4060',
   BHM_MUDHARABAH: '4070', // porsi koperasi
   BHM_MUSYARAKAH: '4080', // porsi koperasi
   BGH_PARTNER: '5060', // porsi partner (beban; masuk Beban lka.ts)
+  UJRAH: '4040', // W3.4: bridge wakalah (ujrah income, W2.1)
 } as const;
 
 /** Terms ter-validasi (Sek.6.5: 0 preset -- semua dari input user). */
@@ -145,13 +152,13 @@ function assertKind(kind: string): asserts kind is AkadKind {
   }
 }
 
-/** Kind valid per tipe (Sek.6.2; wakalah = bridge W3.4; denda = tak dipost). */
+/** Kind valid per tipe (Sek.6.2; W3.4: wakalah bridge; denda = tak dipost). */
 const KINDS_BY_TYPE: Record<string, readonly string[]> = {
   murabahah: ['pencairan', 'angsuran', 'settlement'],
   mudharabah: ['pencairan', 'bagi_hasil', 'settlement'],
   musyarakah: ['pencairan', 'bagi_hasil', 'settlement'],
   ijarah: ['pencairan', 'ijarah_periodik'],
-  wakalah: [],
+  wakalah: ['settlement', 'ujrah'], // W3.4: bridge (was [] pre-W3.4)
 };
 
 /** Validasi kind utk tipe (route /api/akad: 400, bukan 500 utk kombinasi invalid). */
@@ -186,8 +193,8 @@ function bagiHasilPp(terms: AkadTerms, total: number): number {
 
 /**
  * Kaki jurnal per event (Sek.6.4; D=K terjamin per entry; debit/credit
- * non-negatif -- konvensi posisi.ts/lka.ts). Wakalah/denda/kind di
- * luar matrix -> throw.
+ * non-negatif -- konvensi posisi.ts/lka.ts). Denda/kind di luar
+ * matrix -> throw. Wakalah: W3.4 bridge (settlement + ujrah).
  */
 export function akadLines(
   type: string,
@@ -203,9 +210,26 @@ export function akadLines(
   const D = (code: string, a: number): JLine => ({ account_code: code, debit: a, credit: 0, source: src });
   const C = (code: string, a: number): JLine => ({ account_code: code, debit: 0, credit: a, source: src });
   if (type === 'wakalah') {
-    throw new Error(
-      'akad: wakalah = bridge W3.4 via konsinyasi (ujrah 4040 + settlement neto 2020/4010), belum auto-posting'
-    );
+    // W3.4 bridge (Sek.6.1: modul akad = bridge, bukan duplikat P4)
+    if (kind === 'settlement') {
+      // D1010(bruto) -> K2020(neto) + K4010(uyrah)
+      // OQ-7: K2020 eksis BEFORE D2020 dari konsinyasi pay.
+      const rate = terms.rate ?? 0;
+      const uyrah = Math.round((amt * rate) / 100);
+      const neto  = amt - uyrah;
+      const lines: JLine[] = [D(AKAD_ACCT.KAS, amt)];
+      if (neto  > 0) lines.push(C(AKAD_ACCT.HUTANG_KONSINYASI, neto));
+      if (uyrah > 0) lines.push(C(AKAD_ACCT.PEND_PENJUALAN,    uyrah));
+      return lines;
+    }
+    if (kind === 'ujrah') {
+      // D1010 -> K4040 (sama W2.1; NOTE: helper utk /api/akad path.
+      // Production ujrah posting via konsinyasi route
+      // (journalForConsignmentUjrah). Do NOT double-post;
+      // two paths mutually exclusive by design (Sek.6.1 bridge).)
+      return [D(AKAD_ACCT.KAS, amt), C(AKAD_ACCT.UJRAH, amt)];
+    }
+    throw new Error('akad: wakalah tak mendukung kind ' + kind);
   }
   if (kind === 'denda') {
     throw new Error('akad: denda TIDAK DIANGKAT (F3.3 #6: tak ada skema denda; akun 5050 closed)');
@@ -345,7 +369,7 @@ export async function recordAkadEventInTx(
       rec.createdBy ?? null,
       nowWib()
     );
-  const auto = rec.gl_enabled === true && rec.type !== 'wakalah' && rec.kind !== 'denda';
+  const auto = rec.gl_enabled === true && rec.kind !== 'denda'; // W3.4: wakalah bridge auto-posted
   if (!auto) return { entryId: null };
   const entryId = await postJournalInTx(db, akadJournalFor(rec, terms));
   await db.prepare('UPDATE akad_events SET posted_entry = ? WHERE id = ?').run(entryId, rec.id);

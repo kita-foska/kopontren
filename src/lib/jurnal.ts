@@ -59,14 +59,15 @@ export type JSpec = {
     | 'opening'
     | 'closing'
     // W2.1 (F3.4+): tipe jurnal auto Wave 2 (OQ-4 + struktur OQ-3).
-    // OQ-7 Option C (1 Okt 2026): settlement konsinyasi DITUNDA ke W3/W4
-    // (dipost bersama goods-receipt D1040/K2020 agar 2020 rekonsiliasi);
-    // tipe 'consignment_settle' & builder-nya dihapus dari W2.1.
+    // OQ-7 resolved W3.4: settlement konsinyasi (D2020/K1010) sekarang
+    // aktif -- K2020 dibuat oleh akad settlement recognition (bridge,
+    // Sek.6.4). 2020 reconciles to 0 when fully paid.
     | 'debt_payment'
     | 'payable_payment'
     | 'sales_return'
     | 'purchase_return'
-    | 'consignment_ujrah';
+    | 'consignment_ujrah'
+    | 'consignment_settlement';
   desc?: string;
   created_by?: string;
   lines: JLine[];
@@ -793,12 +794,37 @@ export function journalForConsignmentUjrah(inp: {
 }
 
 // ---------------------------------------------------------------------------
-// OQ-7 Option C (1 Okt 2026) -- journalForConsignmentSettlement DIHAPUS
-// dari W2.1. Settlement konsinyasi (aksi pay) D2020/K1010 DITUNDA ke
-// W3/W4 agar dipost BERSAMA goods-receipt (D1040/K2020): posting
-// settlement saja (tanpa kredit 2020 dari goods-receipt) membuat 2020
-// tak rekonsiliasi -> drift JOURNAL_BAL (#15) ke depan.
-// W3/W4: re-introduce tipe 'consignment_settle' + builder, lalu wire hook
-// di api/konsinyasi/route.ts (aksi pay). ACCT.HUTANG_KONSINYASI ('2020')
-// sudah tersedia di COA.
+// W3.4 (bridge wakalah, Sek.6.4): settlement konsinyasi (aksi pay).
+// D2020 (hutang konsinyasi dibayar) / K1010 (kas keluar).
+// OQ-7 resolved: K2020 dibuat oleh akad settlement recognition
+// (D1010/K2020+K4010 via lib/akad.ts) -- 2020 reconciles to 0
+// when fully paid. OQ-4: ref_id 'kons:<id>:pay:<cumPaid>'.
+// ---------------------------------------------------------------------------
+/**
+ * W3.4: settlement konsinyasi (aksi pay).
+ * D2020 (hutang konsinyasi dibayar) / K1010 (kas keluar).
+ * OQ-7: K2020 eksis via akad settlement recognition (bridge, Sek.6.4).
+ */
+export function journalForConsignmentSettlement(inp: {
+  consId: number;
+  cumPaid: number;
+  amount: number;
+  owner?: string;
+  entry_date?: string;
+}): JSpec {
+  const a = round(inp.amount);
+  if (a <= 0) throw new Error('journalForConsignmentSettlement: amount harus > 0');
+  return {
+    id: 'JE-konssettle-' + inp.consId + '-' + inp.cumPaid,
+    ref_table: 'konsinyasi',
+    ref_id: 'kons:' + inp.consId + ':pay:' + inp.cumPaid,
+    entry_date: inp.entry_date ?? nowWib(),
+    type: 'consignment_settlement',
+    desc: 'Settlement konsinyasi #' + inp.consId + (inp.owner ? ' - ' + inp.owner : ''),
+    lines: [
+      { account_code: ACCT.HUTANG_KONSINYASI, debit: a, credit: 0, source: 'consignment_settlement' },
+      { account_code: ACCT.KAS_TOKO,         debit: 0, credit: a, source: 'consignment_settlement' },
+    ],
+  };
+}
 

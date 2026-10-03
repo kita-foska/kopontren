@@ -30,7 +30,7 @@ import {
   recordAkadEventInTx,
 } from '../src/lib/akad.ts';
 import type { AkadEventRec } from '../src/lib/akad.ts';
-import { isBalanced, postJournalInTx } from '../src/lib/jurnal.ts';
+import { isBalanced, journalForConsignmentSettlement, postJournalInTx } from '../src/lib/jurnal.ts';
 import type { JLine, JSpec, TxDb } from '../src/lib/jurnal.ts';
 
 
@@ -307,6 +307,7 @@ async function main(): Promise<void> {
   seedAkad('aP', 'mudharabah', 'Partner P', 50000000, '{"nisbah":40}');
   seedAkad('aX', 'musyarakah', 'Partner X', 40000000, '{"nisbah":50}');
   seedAkad('aI', 'ijarah', 'Nasabah I', 1000000, '{"rate":500000}');
+  seedAkad('aW', 'wakalah', 'Pemilik W', 1000000, '{"rate":20}'); // W3.4
   // Post event (gl-on; terms_json diberikan) -> id entry (throw bila null).
   const postEvt = async (
     id: string,
@@ -428,8 +429,7 @@ async function main(): Promise<void> {
   }
 
   // ===== A5: throw (wakalah bridge W3.4; denda tak diangkat; matrix) =====
-  throwsWith(() => akadLines('wakalah', 'pencairan', 1000000), 'bridge W3.4', 'A5: wakalah pencairan');
-  throwsWith(() => akadLines('wakalah', 'settlement', 1000000), 'bridge W3.4', 'A5: wakalah settlement');
+  throwsWith(() => akadLines('wakalah', 'pencairan', 1000000), 'tak mendukung', 'A5: wakalah pencairan (kind invalid)');
   for (const t of ['murabahah', 'mudharabah', 'musyarakah', 'ijarah']) {
     throwsWith(() => akadLines(t, 'denda', 10000), 'TIDAK DIANGKAT', 'A5: denda ' + t);
   }
@@ -451,17 +451,18 @@ async function main(): Promise<void> {
     eq('A5: denda gl-on -> entryId null', rd.entryId, null);
     const pe5 = db3.prepare('SELECT posted_entry p FROM akad_events WHERE id=?').get('eA5d') as { p: string | null };
     ok('A5: event denda tercatat, posted_entry NULL', pe5.p === null, String(pe5.p));
-    // gl-on + wakalah: bridge W3.4 -- tercatat tanpa auto-posting.
+    // W3.4: gl-on + wakalah settlement -> auto-posted (bridge, Sek.6.4).
     const rw = await recordAkadEventInTx(tdb, {
       id: 'eA5w',
-      akadId: 'aM',
+      akadId: 'aW',
       type: 'wakalah',
-      kind: 'pencairan',
+      kind: 'settlement',
       amount: 1000000,
       event_date: EV_D,
       gl_enabled: true,
+      terms_json: '{"rate":20}',
     });
-    eq('A5: wakalah gl-on -> entryId null (bridge W3.4)', rw.entryId, null);
+    ok('A5: wakalah settlement gl-on -> entryId (W3.4 bridge)', typeof rw.entryId === 'string', String(rw.entryId));
   }
 
   // ===== A6: F1 ref_id per-event (bukti tabrakan) + idempoten =====
@@ -673,13 +674,81 @@ async function main(): Promise<void> {
     db5.close();
 
     // A8.3: pracheck 400 (NOTE 3 audit) -- gl_on + auto-post + kind tak
-    // didukung type -> 400, BUKAN 500. Wakalah/denda = tak dipost.
+    // didukung type -> 400, BUKAN 500. Denda = tak dipost.
     eq('A8.3: ijarah+settlement TIDAK didukung', akadKindAllowed('ijarah', 'settlement'), false);
     eq('A8.3: murabahah+pencairan didukung', akadKindAllowed('murabahah', 'pencairan'), true);
-    eq('A8.3: wakalah -> [] (bridge W3.4)', akadKindAllowed('wakalah', 'pencairan'), false);
+    eq('A8.3: wakalah pencairan TIDAK didukung', akadKindAllowed('wakalah', 'pencairan'), false);
+    eq('A8.3: wakalah settlement didukung (W3.4)', akadKindAllowed('wakalah', 'settlement'), true);
     eq('A8.3: type tak dikenal -> []', akadKindAllowed('consignment', 'pencairan'), false);
     eq('A8.3: AKAD_STATUS = active|settled (OQ 1)', JSON.stringify(AKAD_STATUS), '["active","settled"]');
   }
+
+  // ===== A9: W3.4 wakalah bridge (settlement + ujrah + konsinyasi) =====
+  {
+    // A9.1: akadLines wakalah settlement (3 sisi; rate=20%)
+    const Lw = akadLines('wakalah', 'settlement', 1000000, { rate: 20 });
+    eq('A9.1: 3 baris', Lw.length, 3);
+    eq('A9.1: D 1010 = bruto', val(Lw, '1010', 'debit'), 1000000);
+    eq('A9.1: K 2020 = neto', val(Lw, '2020', 'credit'), 800000);
+    eq('A9.1: K 4010 = uyrah', val(Lw, '4010', 'credit'), 200000);
+    ok('A9.1: isBalanced', isBalanced(Lw));
+
+    // A9.1b: rate=0 -> 2 baris (tanpa K4010)
+    const Lw0 = akadLines('wakalah', 'settlement', 500000, { rate: 0 });
+    eq('A9.1b: rate=0 -> 2 baris', Lw0.length, 2);
+    eq('A9.1b: K 2020 = full', val(Lw0, '2020', 'credit'), 500000);
+    eq('A9.1b: K 4010 absent', val(Lw0, '4010', 'credit'), 0);
+
+    // A9.2: akadLines wakalah ujrah (2 sisi; helper, bukan production)
+    const Lu = akadLines('wakalah', 'ujrah', 200000);
+    eq('A9.2: D 1010', val(Lu, '1010', 'debit'), 200000);
+    eq('A9.2: K 4040', val(Lu, '4040', 'credit'), 200000);
+    ok('A9.2: isBalanced', isBalanced(Lu));
+
+    // A9.3-9.5: DB (in-memory ke-6; akad + jurnal)
+    const db6 = new mod.DatabaseSync(':memory:');
+    db6.exec(DDL_AKAD);
+    db6.exec(DDL_AKAD_EV);
+    db6.exec(DDL_JE);
+    db6.exec(DDL_JL);
+    const tdb6 = toTxDb(db6);
+    db6.prepare("INSERT INTO akad(id, type, counterparty, amount, terms_json, opened_at) VALUES ('aW','wakalah','Pemilik W',1000000,'{\"rate\":20}','2026-10-02T00:00:00+07:00')").run();
+
+    // A9.3: recordAkadEventInTx wakalah settlement (gl-on -> posted)
+    const eA9 = await recordAkadEventInTx(tdb6, {
+      id: 'eA9w',
+      akadId: 'aW',
+      type: 'wakalah',
+      kind: 'settlement',
+      amount: 1000000,
+      event_date: EV_D,
+      gl_enabled: true,
+      terms_json: '{"rate":20}',
+    });
+    ok('A9.3: entryId non-null', eA9.entryId != null, String(eA9.entryId));
+    eq('A9.3: DB K 2020', lineVal(db6, eA9.entryId!, '2020', 'credit'), 800000);
+    eq('A9.3: DB K 4010', lineVal(db6, eA9.entryId!, '4010', 'credit'), 200000);
+
+    // A9.4: journalForConsignmentSettlement (pure builder; OQ-4 ref_id)
+    const spec = journalForConsignmentSettlement({ consId: 99, cumPaid: 800000, amount: 800000, owner: 'W' });
+    ok('A9.4: isBalanced', isBalanced(spec.lines));
+    eq('A9.4: D 2020', val(spec.lines, '2020', 'debit'), 800000);
+    eq('A9.4: K 1010', val(spec.lines, '1010', 'credit'), 800000);
+    eq('A9.4: ref_table', spec.ref_table, 'konsinyasi');
+    eq('A9.4: ref_id', spec.ref_id, 'kons:99:pay:800000');
+    eq('A9.4: type', spec.type, 'consignment_settlement');
+
+    // A9.5: Bridge reconciliation (K2020 from akad = D2020 from konsinyasi)
+    await postJournalInTx(tdb6, spec);
+    const bal2020 = Number(
+      (db6.prepare(
+        "SELECT COALESCE(SUM(debit),0)-COALESCE(SUM(credit),0) bal FROM journal_lines WHERE account_code='2020'"
+      ).get() as { bal: number }).bal
+    );
+    eq('A9.5: acct 2020 reconciles to 0 (OQ-7)', bal2020, 0);
+    db6.close();
+  }
+
 
   console.log(passes + ' passed, ' + failures + ' failed');
   if (failures > 0) {
