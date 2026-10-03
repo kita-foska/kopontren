@@ -37,12 +37,14 @@ export async function GET() {
       return { ok: true, ...p, notes: NERACA_NOTES };
     });
     return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } });
-  } catch {
+  } catch (e) {
     // Turso/Vercel exception tak tertangani (mis. DB transien) dulu bocor
     // sebagai halaman HTML 500; klien api() salah baca HTML tsb sebagai
-    // "Kesalahan jaringan." (sebenarnya server error). Tangkap global →
-    // balas JSON 500 dengan pesan jelas; client menampilkan r.error +
-    // tombol "Muat ulang." Cache sukses terakhir tetap backstop (TTL 60 dtk).
+    // "Kesalahan jaringan." (sebenarnya server error). Tangkap global ->
+    // balas JSON 500 dengan pesan jelas + log Vercel (diagnosa); client
+    // menampilkan r.error + tombol "Muat ulang." Cache sukses terakhir
+    // tetap backstop (TTL 60 dtk).
+    console.error('GET /api/neraca failed:', e);
     return NextResponse.json({ error: 'Gagal memuat neraca. Silakan coba lagi.' }, { status: 500 });
   }
 }

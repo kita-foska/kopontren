@@ -76,7 +76,7 @@ export const REKONSILIASI_NOTES: string[] = [
   'Cek shif membandingkan 30 shif closed terakhir; by_method (JSON per-metode) tidak dibandingkan.',
   'Ledger reward: poin (earn/redeem/void/return) & cashback (cashback/cashback_use/return_cash) — penyempurnaan INV-4 P0-C2.',
   "Data legacy (poin tanpa ledger, jurnal kas manual berlabel 'Kon. …'/'Ujrah Kon. …') bisa memicu flag sah-saja — modul melaporkan, tidak memutuskan.",
-  'Dikenal (di luar cakupan C3): /api/neraca off-balance masih membaca tabel legacy consignment_items yang tak ada di skema saat ini (data P4 ada di consignments).',
+  '/api/neraca V1 off-balance (konsinyasi) kini membaca consignments (outstanding payable opsi a: agree_price * qty_sold - amount_paid, settled_at IS NULL) sebagai OFF-BALANCE memo; BUKAN GL 2020 (laporan GL formal terpisah), tidak double-count. (Sebelumnya tabel legacy consignment_items yang sudah dihapus).',
   'COGS retur (V2-2): baris retur dgn snapshot HPP item > 0 (sale_items.cost_price) harus cogs = HPP item × qty retur; baris snapshot 0 (fallback harga beli produk saat write) tak dapat diverifikasi ulang, dikecualikan; baris pre-V2-2 cogs = 0 (konservatif).',
   'Jurnal GL (F3.4+, rekon #15 JOURNAL_BAL): tiap journal_entries harus total debit = total credit (double-entry D=K); jurnal_lines yatim (tanpa entry induk) ikut flagged; cross-check global total debit - total credit seluruh jurnal_lines harus 0.',
   'Zona waktu jurnal (F3.4+, rekon #17 GL_TZ): semua journal_entries.entry_date berakhiran +07:00 (satu zona waktu, mitigasi R1); tanggal UTC/Z atau offset lain adalah drift.',

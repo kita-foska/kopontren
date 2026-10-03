@@ -71,7 +71,7 @@ CREATE TABLE debts (
 );
 CREATE TABLE payables (
   id INTEGER PRIMARY KEY,
-  owner_name TEXT NOT NULL,
+  supplier_name TEXT NOT NULL,
   remaining INTEGER NOT NULL DEFAULT 0,
   due_date TEXT,
   status TEXT NOT NULL DEFAULT 'open',
@@ -84,12 +84,16 @@ CREATE TABLE members (
   total_spent INTEGER NOT NULL DEFAULT 0,
   cashback_balance INTEGER NOT NULL DEFAULT 0
 );
-CREATE TABLE consignment_items (
+CREATE TABLE consignments (
   id INTEGER PRIMARY KEY,
-  owner_name TEXT,
+  owner TEXT,
   item_name TEXT,
-  amount INTEGER NOT NULL DEFAULT 0,
-  status TEXT NOT NULL DEFAULT 'open',
+  qty_received INTEGER NOT NULL DEFAULT 0,
+  agree_price INTEGER NOT NULL DEFAULT 0,
+  qty_sold INTEGER NOT NULL DEFAULT 0,
+  qty_returned INTEGER NOT NULL DEFAULT 0,
+  amount_paid INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'active',
   settled_at TEXT
 );
 `;
@@ -152,7 +156,7 @@ async function main(): Promise<void> {
   );
   // Hutang open = 25.000 (settled TIDAK dihitung).
   db.exec(
-    `INSERT INTO payables (owner_name, remaining, due_date, status) VALUES
+    `INSERT INTO payables (supplier_name, remaining, due_date, status) VALUES
        ('CV Sembako', 25000, '2026-10-15', 'open'),
        ('Sudah Lunas', 0, '', 'settled');`
   );
@@ -163,9 +167,10 @@ async function main(): Promise<void> {
   );
   // Off-balance: tagihan konsinyasi terbuka 75.000 (TIDAK masuk neraca).
   db.exec(
-    `INSERT INTO consignment_items (owner_name, item_name, amount, status) VALUES
-       ('H. Ujang', 'Rendang', 75000, 'open'),
-       ('H. Ujang', 'Sambal', 40000, 'settled');`
+    `INSERT INTO consignments
+       (owner, item_name, qty_received, agree_price, qty_sold, qty_returned, amount_paid, status, settled_at) VALUES
+       ('H. Ujang', 'Rendang', 10, 10000, 6, 0, 0, 'active', NULL),
+       ('H. Ujang', 'Sambal', 5, 5000, 4, 0, 20000, 'settled', '2026-09-30T00:00:00.000Z');`
   );
 
   const p = await queryNeraca(shim);
@@ -187,11 +192,11 @@ async function main(): Promise<void> {
   eq('liabilitas total = 25.000 + 5.000 = 30.000', p.liabilitas_total, 30_000);
 
   // ── Anti dobel hitung off-balance ──
-  eq('off-balance konsinyasi = 75.000 (hanya open)', p.off_balance.konsinyasi.total, 75_000);
+  eq('off-balance konsinyasi = 60.000 (outstanding payable open, opsi a)', p.off_balance.konsinyasi.total, 60_000);
   eq('off-balance count = 1 (settled tak dihitung)', p.off_balance.konsinyasi.count, 1);
   ok(
     'off-balance TIDAK masuk liabilitas',
-    p.liabilitas_total === 30_000 && p.off_balance.konsinyasi.total === 75_000,
+    p.liabilitas_total === 30_000 && p.off_balance.konsinyasi.total === 60_000,
     'liabilitas=' + p.liabilitas_total
   );
 
@@ -241,6 +246,33 @@ async function main(): Promise<void> {
   ok('NERACA_NOTES ≥ 5 baris', NERACA_NOTES.length >= 5, 'panjang ' + NERACA_NOTES.length);
   ok('NERACA_NOTES menyebut "harga beli"', NERACA_NOTES.some((n) => n.includes('harga beli')));
   ok('NERACA_NOTES menyebut off-balance', NERACA_NOTES.some((n) => n.toLowerCase().includes('off-balance')));
+
+  // Off-balance edge cases (opsi a) pada DB terpisah: tak mengganggu
+  // asersi utama di atas (DB utama sudah terpakai utk skenario kas negatif).
+  const offDb = new (await import('node:sqlite')).DatabaseSync(':memory:') as unknown as import('node:sqlite').DatabaseSync;
+  offDb.exec(SCHEMA);
+  const shimOff = {
+    prepare: (q: string) => ({
+      all: async () => offDb.prepare(q).all(),
+      get: async () => offDb.prepare(q).get(),
+    }),
+  } as unknown as QueryDb;
+  // fully paid tapi belum settle -> outstanding 0 (count tetap +1)
+  offDb.exec(`INSERT INTO consignments (owner, qty_received, agree_price, qty_sold, qty_returned, amount_paid, status, settled_at)
+    VALUES ('P', 10, 5000, 10, 0, 50000, 'active', NULL);`);
+  const oe = await queryNeraca(shimOff);
+  eq('off-balance fully-paid unsettled = 0 (outstanding nol)', oe.off_balance.konsinyasi.total, 0);
+  eq('off-balance count tetap 1 (baris open dihitung)', oe.off_balance.konsinyasi.count, 1);
+  // negative guard: overpay -> outstanding negatif (memo, tak di-clamp)
+  offDb.exec(`INSERT INTO consignments (owner, qty_received, agree_price, qty_sold, qty_returned, amount_paid, status, settled_at)
+    VALUES ('N', 10, 1000, 4, 0, 5000, 'active', NULL);`);
+  const on = await queryNeraca(shimOff);
+  eq('off-balance negative guard = -1000 (overpay, memo tak di-clamp)', on.off_balance.konsinyasi.total, -1000);
+  // settled excluded: baris settled tidak menambah total
+  offDb.exec(`INSERT INTO consignments (owner, qty_received, agree_price, qty_sold, qty_returned, amount_paid, status, settled_at)
+    VALUES ('S', 10, 9000, 9, 0, 0, 'settled', '2026-09-30T00:00:00.000Z');`);
+  const os = await queryNeraca(shimOff);
+  eq('off-balance settled tetap excluded (masih -1000)', os.off_balance.konsinyasi.total, -1000);
 
   console.log('---');
   console.log('PASS: ' + passes + '  FAIL: ' + failures);

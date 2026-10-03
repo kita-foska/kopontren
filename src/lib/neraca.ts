@@ -28,7 +28,7 @@
  *  - Saldo reward member (members.cashback_balance > 0) = KEWAJIBAN
  *    (kumulasi cashback belum ditebus) → liabilitas, BUKAN beban —
  *    konsisten dgn keputusan A1 (cashback = kewajiban, bukan beban).
- *  - Konsinyasi TERBUKA (consignment_items.status='open') = tagihan
+ *  - Konsinyasi TERBUKA (consignments, settled_at IS NULL) = tagihan
  *    ke pemilik yang BELUM menjadi utang resmi (belum di-settle) →
  *    ditampilkan OFF-BALANCE (memo), TIDAK dijumlahkan ke
  *    liabilitas, selayaknya konsinyasi off-P&L pada FASE A1.
@@ -88,7 +88,7 @@ export type NeracaPayload = {
    * selayaknya konsinyasi off-P&L FASE A1).
    */
   off_balance: {
-    /** Σ consignment_items.amount (status='open', belum di-settle). */
+    /** outstanding payable titipan = agree_price * qty_sold - amount_paid, hanya consignments dgn settled_at IS NULL (belum di-settle). */
     konsinyasi: { total: number; count: number };
   };
   rincian: {
@@ -110,7 +110,8 @@ export const NERACA_NOTES: string[] = [
   'Stok dinilai pada harga beli (cost_price), bukan harga jual — konsisten dengan basis HPP; stok negatif (oversell) & produk tanpa harga beli diabaikan.',
   'Piutang & hutang hanya tagihan status TERBUKA (sisa outstanding, kolom remaining). Pelunasan otomatis memperbarui sisa saat tagihan di-settle.',
   'Saldo reward member (cashback) dicatat sebagai KEWAJIBAN, bukan beban — selaras keputusan FASE A1.',
-  'Tagihan konsinyasi terbuka (barang titipan belum di-settle) ditampilkan OFF-BALANCE, tidak dijumlahkan ke neraca.',
+  'Tagihan konsinyasi terbuka (barang titipan belum di-settle) = outstanding payable titipan (agree_price * qty_sold - amount_paid), ditampilkan OFF-BALANCE sebagai memo: TIDAK dijumlahkan ke neraca.',
+  'Tagihan konsinyasi ini = V1 raw-table snapshot, BUKAN GL 2020 (akun 2020 pada laporan GL formal = "Hutang Ujrah Konsinyasi"); dua laporan terpisah, tidak double-count.',
   '"Modal Setara" = total aset − total kewajiban; bukan ekuitas akuntansi formal (sistem belum menyimpan saldo awal/modal disetor).',
 ];
 
@@ -180,7 +181,10 @@ export async function queryNeraca(d: QueryDb): Promise<NeracaPayload> {
   // ── OFF-BALANCE (memo, TIDAK dijumlahkan ke neraca) ──
   const konRow = (await d
     .prepare(
-      "SELECT COUNT(*) c, COALESCE(SUM(amount), 0) v FROM consignment_items WHERE status = 'open'"
+      // Opsi (a): outstanding payable titipan open (settled_at IS NULL);
+      // menggantikan tabel legacy consignment_items (kini consignments).
+      // Memo INI BUKAN GL 2020; dua laporan terpisah, tidak double-count.
+      "SELECT COUNT(*) c, COALESCE(SUM(agree_price * qty_sold - amount_paid), 0) v FROM consignments WHERE settled_at IS NULL"
     )
     .get()) as { c: number; v: number };
 
@@ -207,7 +211,7 @@ export async function queryNeraca(d: QueryDb): Promise<NeracaPayload> {
 
   const hutangTop = (await d
     .prepare(
-      `SELECT owner_name name, remaining, due_date
+      `SELECT supplier_name name, remaining, due_date
        FROM payables
        WHERE status = 'open'
        ORDER BY remaining DESC
