@@ -1682,6 +1682,42 @@ dijalankan **setelah UX-3** — hasilnya jadi input utama UX-4.
           **Progres Wave 3: 2/5 (W3.2 selesai; next W3.3 =
           UI /admin/akad + API + Q3/CALK item 8; W3.4 =
           bridge wakalah via konsinyasi).**
+    - [x] **W3.3 LEPAS 3 Okt** (`b5a4bb9`; ACC Gus Fi via
+          DeepSeek; audit 0 must-fix): UI + API + Q3 +
+          CALK item 8 (12 file, +1453/-6; 9 ubah + 3 baru):
+          (a) `src/app/api/akad/route.ts` GET/POST/PUT akad
+          (GET tier `akad` OR `laporan` Q3 + `?csv=1`;
+          POST akad-enggal + event + jurnal; PUT soft
+          status OQ1; 409 AKAD_UNIQUE_ERROR; 400 precheck
+          `akadKindAllowed` fallback `?? []` cegah 500);
+          (b) `src/app/admin/akad/page.tsx` guard
+          `canWrite = canAccess('akad')`; pengurus read-only
+          via `laporan`;
+          (c) `src/components/admin/akad-client.tsx`
+          form + sim S6.3 + totals + timeline + CSV;
+          (d) `src/lib/akad.ts` +3 eksport
+          (`akadKindAllowed`, `AKAD_UNIQUE_ERROR`,
+          `AKAD_STATUS`);
+          (e) `src/lib/features.ts` +`akad`;
+          (f) `src/components/sidebar.tsx` +prefetch +
+          `IconAkad` inline SVG + menu + Keuangan group;
+          (g) `src/app/pengurus/dashboard/page.tsx` CTA
+          `Akad` tier `laporan`;
+          (h) `src/lib/laporan/calk.ts` +`CakAkadRingkas`
+          + `akad_ringkas` + `akadRingkas()`;
+          (i) `src/components/admin/laporan-formal-client.tsx`
+          item 8a;
+          (j) `src/app/api/laporan/formal/route.ts`
+          CALK_NOTES;
+          (k) `scripts/test-akad.ts` +A8 (rollback, UNIQUE,
+          precheck/status); A8.1 BEGIN/ROLLBACK proof;
+          (l) `scripts/test-laporan.ts` +akad DDL + C5.
+          Gate: tsc 0; test-akad 154 passed 0 failed;
+          test:all 20 suite green; 0 non-ASCII; sw.js + V1
+          tak tersentuh.
+          **Progres Wave 3: 3/5 (W3.3 selesai; next W3.4 =
+          bridge wakalah via konsinyasi; W3.5 =
+          jurnal manual 1120/4100/6020).**
 
 4. **Maintenance** — ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga

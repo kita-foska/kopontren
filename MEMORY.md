@@ -3615,3 +3615,48 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   CALK item 8; W3.4 = bridge wakalah via konsinyasi
   (ujrah 4040 + settlement neto 2020/4010).
 
+## W3.3 UI /admin/akad + API + Q3 pengurus read + CALK item 8 (3 Okt 2026)
+- W3.3 (commit `b5a4bb9`, ACC Gus Fi via DeepSeek, audit 0
+  must-fix): WAVE 3 = 3/5. UI + API + Q3 + CALK item 8.
+- (a) 12 file (+1453/-6; 9 ubah + 3 baru):
+  - `src/app/api/akad/route.ts` (353): GET/POST/PUT akad.
+    GET tier `akad` OR `laporan` (Q3) + `?csv=1`. POST =
+    akad-enggal + event + jurnal. PUT = soft status (OQ1).
+    409 -> `AKAD_UNIQUE_ERROR`. 400 precheck
+    (`akadKindAllowed` cegah 500; fallback `?? []`).
+  - `src/app/admin/akad/page.tsx` (36): Guard `canWrite =
+    canAccess('akad')`; pengurus read-only via `laporan`.
+  - `src/components/admin/akad-client.tsx` (781): Form akad
+    + event + sim S6.3 + totals + timeline + CSV. `canWrite`
+    nyingidaken form tulis; pengurus = read-only.
+  - `src/lib/akad.ts`: +3 eksport: `akadKindAllowed`,
+    `AKAD_UNIQUE_ERROR`, `AKAD_STATUS`.
+  - `src/lib/features.ts`: +`akad` feature.
+  - `src/components/sidebar.tsx`: +prefetch, +`IconAkad`
+    (inline SVG), +menu item, +Keuangan group.
+  - `src/app/pengurus/dashboard/page.tsx`: +CTA `Akad`
+    tier `laporan`.
+  - `src/lib/laporan/calk.ts`: +`CakAkadRingkas` +
+    `akad_ringkas` + `akadRingkas()` query.
+  - `src/components/admin/laporan-formal-client.tsx`:
+    Render item 8a `akad_ringkas`.
+  - `src/app/api/laporan/formal/route.ts`: CALK_NOTES update.
+  - `scripts/test-akad.ts`: +A8 (rollback, UNIQUE,
+    precheck/status). A8.1: BEGIN/ROLLBACK manual; forced
+    via journal_lines PK conflict; post-rollback
+    akad_events=0 + journal_entries(ref_table='akad')=0.
+  - `scripts/test-laporan.ts`: +akad DDL, +C5.
+- Gate: tsc 0; test-akad 154 passed 0 failed (M1 34 + M2 30
+  + A 90); test:all 20 suite green; 0 non-ASCII; sw.js + V1
+  tak tersentuh; rev-list 0 0.
+- A8.1 rollback proof: atomicity `recordAkadEventInTx`
+  dibukti kanthi wrap BEGIN/ROLLBACK manual; failure dipaksa
+  via journal_lines PK conflict; sasampun ROLLBACK:
+  akad_events count = 0 + journal_entries(ref_table='akad')
+  = 0. `logAudit` recordId = null (pola zis; akad ids TEXT,
+  sanes numeric; akad_id ing value object).
+- NEXT: W3.4 = bridge wakalah via konsinyasi (ujrah C4040 +
+  settlement neto C2020/C4010). Extend konsinyasi route
+  (existing W2.1 pattern) + extend `src/lib/akad.ts`
+  (wakalah handling) + tests A9 (wakalah bridge).
+
