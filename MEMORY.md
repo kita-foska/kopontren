@@ -3823,3 +3823,46 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   test-akad.ts) MASIH UNCOMMITTED -- dipun pelepasaken ing batch
   pundi. Progres Wave 3 tetep 3/5 dumady W3.4 pelepas.
 
+
+
+## Negative Stock -- Business Context (4 Okt 2026, ruling Gus Fi)
+
+- Stok NEGATIF = kondisi bisnis nyata (konsinyasi/titipan supplier):
+  barang sampai tanpa input stok kasir -> penjualan tetap terproses ->
+  stok turun ke nilai negatif. Negatif = INDIKATOR barang titipan
+  yang belum di-input, BUKAN bug. Nilai negatif DIPELIHARA saat
+  import (jangan di-zero-kan).
+
+- SISTEM SAAT INI TIDAK MEMUNGKINKAN (perlu enhancement, belum code):
+  1. CSV import (lib/product-import.ts + api/migrate/products): validasi
+     stock >= 0 -> baris stok negatif ditolak (RowError negative-stock).
+     Path Excel clamp Math.max(0,...). 9 baris stok negatif
+     (kode 49,111,113,136,140,143,148,152,234) tak akan masuk.
+  2. POS + checkout: pos-client.tsx disable tombol saat stock <= 0;
+     api/sales/route.ts hard-block "Stok tidak cukup" (prod.stock < qty)
+     + guarded decrement (stock >= ?) -> produk stok 0/negatif tidak
+     bisa dijual sampai ada restok (purchases).
+  3. products/bulk opname: MAX(0, stock+delta) -> tak bisa set negatif.
+     products/route.ts create: Math.max(0, ...).
+  Implikasi: transaksi untuk barang konsinyasi akan ditolak sistem.
+
+- Pembayaran supplier BERDASARKAN BARANG TERJUAL: SUDAH DIDUKUNG --
+  modul konsinyasi (api/konsinyasi): payable pemilik = qty_sold x
+  unitOwner(agree_price, komisi); komisi HANYA dari qty terjual;
+  action pay berdasarkan unpaid; close ditahan bila masih ada
+  sisa/unpaid. payables = utang supplier MANUAL (nominal tetap),
+  debts = piutang pelanggan.
+
+- Import produk upsert by BARCODE (api/migrate/products); name
+  sebagai fallback hanya bila barcode kosong. Sequence upload:
+  produk-2026-10-03.csv (stok=0, harga sudah di-fix) dulu, lalu
+  stok-2026-10-03.csv (nilai akhir, last-wins).
+
+- Harga final Baitina (4 Okt 2026): garam tiers per-POUCH (harga
+  katalog sudah benar, tak diubah); madu ecer per-sachet 6.000,
+  tiers per-box (pack) 55.000/52.500/51.000 (tak diubah); sabun
+  x4 (kode 148,154,155,156) per-PACK 50.000/45.000/42.500/41.000
+  (FIX x10 + UOM pcs->pack, cost 40.000/pack s.ruling Q2 4 Okt (HPP 10pcs x 4.000)); nasi jagung ecer
+  10.000/pcs (katalog sudah benar, confirm-only).
+
+- Q1 opsi (a) 4 Okt: 9 kode negatif (49,111,113,136,140,143,148,152,234) di-zero nang CSV upload stok-2026-10-03.csv (242 baris, 100% ASCII, 0 negative -- upload-ready); nilai riil -1/-16/-10/-12/-5/-17/-4/-10/-2 di-backup stok-2026-10-03.source-negatives.csv (audit trail); manual adjustment (stok opname) SABANJUNE. Harga kunci produk: sabun pack 50.000/45.000/42.500/41.000 cost 40.000 (Q2), nasi jagung 10.000/pcs cost 9.000 (149). Urutan upload: produk DULU, stok KEMUDIAN (upsert by barcode, last-wins).

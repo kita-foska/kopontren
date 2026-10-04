@@ -1221,8 +1221,8 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 **E21–E30 (warna, dark mode, help, syariah, audit):**
 - [ ] E21 Warna bermakna -- success/warning/danger/info/netral konsisten.
 - [ ] E22 Dark mode palette -- bukan inverte buta; dark = tenang, high contrast, bukan menyilaukan.
-- [ ] E23 Contextual help -- "?", panel bantuan per halaman, jawaban pendek.
-- [ ] E24 Istilah syariah dua lapis -- "zakat perdagangan" + tooltip "pengelolaan harta dagang…"; jangan tebar istilah tanpa konteks.
+- [x] E23 Contextual help -- "?", panel bantuan per halaman, jawaban pendek. (UX-1: TermTip per halaman P1/P2 -- GL, Jurnal, Zakat, ZIS, Kasir, laporan formal, akad, zis-client, konsinyasi, member, member-settings, POS.)
+- [x] E24 Istilah syariah dua lapis -- "zakat perdagangan" + tooltip "pengelolaan harta dagang..."; jangan tebar istilah tanpa konteks. (UX-1: bahasa awam di depan, istilah menyusul via TermTip -- mis. "Tagihan belum dibayar" + tip "Settlement".)
 - [ ] E25 Tandai provisional -- label "Menunggu tashih" utk keputusan belum final (P3 Soal 3 modal + P4 dasar hitung ujrah V1 -- aspek lain terjawab 30 Sep; badge "provisional" tetap di UI zakat modal & ujrah kon.).
 - [ ] E26 Audit trail komunikatif -- "SIAPA melakukan APA KAPAN"; log filter + timeline.
 - [ ] E27 Mode Pengurus -- view ringkas: kas, stok, piutang, hutang, performa; bukan dashboard teknis.
@@ -1237,9 +1237,9 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [ ] E34 Performance -- data besar, pagination/infinite scroll, filter cepat.
 - [ ] E35 Consistency Audit -- audit komprehensif UI (warna, tipografi, spacing, component patterns, empty states, iconography, copywriting); **jalankan setelah UX-3** → jadi input UX-4.
 - [ ] E36 Accessibility -- keyboard navigation, focus state, contrast WCAG, screen reader, font scalable.
-- [ ] E37 Help Center -- mini FAQ/glossary, icon "?".
+- [x] E37 Help Center -- mini FAQ/glossary, icon "?". (UX-1: halaman /admin/glosarium + sidebar level personal + TermTip "di halaman" per istilah)
 - [ ] E38 Progressive disclosure -- detail saat dibutuhkan (expand, tab, drill-down).
-- [ ] E39 Naming kamus resmi -- istilah global di `src/lib/glossary.ts`: "Omzet", "Laba Kotor", "Zakat Dagang", "Konsinyasi", "Ujrah", "Settlement".
+- [x] E39 Naming kamus resmi -- istilah global di `src/lib/glossary.ts`: "Omzet", "Laba Kotor", "Zakat Dagang", "Konsinyasi", "Ujrah", "Settlement". (UX-1: 39 istilah, 5 grup, + helper tipFor; sumber halaman /admin/glosarium.)
 - [ ] E40 Karakter -- system yang "tenang, jelas, dan aman".
 
 ### Kelompok P -- 15 perkara kelas profesional (P1–P15)
@@ -1893,3 +1893,23 @@ bikin keputusan fiqih baru demi kebutuhan coding.
 - [ ] **TermTip mobile viewport edge check** (setelah UX-3 selesai):
   tooltip istilah di layar sempit -- pastikan tidak overflow/melewati tepi
   layar, terbaca, dan bisa ditutup; bila perlu fallback bottom-sheet di HP.
+
+## NEG-1: Dukungan stok negatif utk konsinyasi -- tugas TERPISAH (ACC Gus Fi 4 Okt 2026, Q1 ruling (b))
+- [!] NEG-1.1: izinkan `stock < 0` pada import produk.
+      Saat ini `src/lib/product-import.ts` baris 139-146 menolak baris
+      negatif (RowError `negative-stock`), path Excel malah clamp
+      `Math.max(0, stock)`. Perlu ruling desain: negative-stock
+      di-izinkan untuk import produk ber-flag titipan / semua?
+      (Lihat "Negative Stock -- Business Context" di MEMORY.md, 4 Okt 2026.)
+- [m] NEG-1.2: POS mengizinkan penjualan saat stok <= 0 utk barang
+      konsinyasi. Saat ini: `sales/route.ts` hard-reject
+      `prod.stock < qty` + guarded decrement `WHERE stock >= ?`;
+      `pos-client.tsx` disable tombol `p.stock <= 0` + clamp qty.
+- [r] NEG-1.3 (opsional): flag per-produk "barang titipan"
+      (kolom baru `products` + migrasi skema Turso) utk membatasi
+      produk mana yg boleh negatif/dijual-nol.
+- Modul `api/konsinyasi` SUDAH menghitung pembayaran supplier berbasis
+  qty terjual -- tidak perlu perubahan.
+- Scheduling: W5 penguatan ATAU wave baru -- menunggu ruling Gus Fi.
+  **TIDAK mulai eksekusi sebelum approval.**
+
