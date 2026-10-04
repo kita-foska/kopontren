@@ -1,5 +1,37 @@
 # MEMORY
 
+## 2026-10-04
+### W3.5 LEPAS + LKA/POSISI ALIGN -- Wave 3 = 5/5 + rekonsiliasi universal (4 Okt 2026)
+- **W3.5 LEPAS (commit `19a7d66`)**: ZIS auto-posting
+  wakaf (in) -> jurnal D1120/K4100 via `recordZisInTx`
+  (gated `gl_enabled`). test-zis +W10 (in wakaf ->
+  jurnal 1 line + idempoten `UNIQUE(zis.id)`); test-gl
+  +W8. Gate: tsc 0; test-zis 205/205; test:all 20 suite.
+- **LKA + POSISI ALIGN LEPAS (commit `127b58d`, 5 file
+  +148/-11)**: rekonsiliasi universal
+  `lka.laba_bersih` == `posisi.laba_rugi_berjalan`:
+  (a) LKA: blok pendapatan lain 4050-4100 (akad
+  ijarah/murahabah + wakaf masuk) ditambahkan ke
+  `laba_bersih`; 4040 (ujrah) = MEMO -- income pemilik,
+  TIDAK masuk laba/rugi (P4 tashih, A1.1 LEPAS);
+  (b) Posisi: 4040 dieksklusi dari PENDAPATAN + 6030
+  (zakat keluar) masuk BEBAN (Sek.5.2);
+  (c) `api/laporan/formal` + `laporan-formal-client.tsx`
+  (blok Other Income LKA + label posisi + notes);
+  (d) test-laporan +LE/LE2 (193 -> 197 assert).
+  Dibuktikan: LE (tanpa 4040/6030) 3.100.000 ==
+  3.100.000; LE2 (dengan 4040 + 6030) 1.070.000 ==
+  1.070.000. Strictly additive (0 -> byte-identik);
+  sign convention preserved (4xxx kredit, 5xxx/6xxx
+  debit). Gate: tsc 0; test-laporan 197/197; test:all
+  20 suite green; 0 non-ASCII; sw.js + V1 tak
+  tersentuh.
+- **STATE (verify live git, 4 Okt)**: `origin/master` =
+  `origin/main` = local HEAD = `127b58d`.
+- **NEXT = W3 FULL AUDIT** (bug + UX + UI, W3.1-W3.5
+  termasuk LKA fix) WAJIB SEBELUM WAVE 4 (standing
+  rule) -- menunggu ruling Gus Fi.
+
 ## 2026-10-03
 ### W3.4 LEPAS + Gate B + Vercel route-export fix + skema v21->v23 (3 Okt 2026) -- Wave 3 = 4/5
 - **W3.4 LEPAS (commit `4199bcf`, 6 file +281/-38)**: bridge

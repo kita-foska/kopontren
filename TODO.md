@@ -1752,6 +1752,38 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
           failure; 0 non-ASCII; sw.js + V1 tak tersentuh.
           **Progres Wave 3: 4/5 (W3.4 selesai; sisa W3.5 = jurnal
           manual 1120/4100/6020).**
+    - [x] **W3.5 LEPAS 3 Okt** (`19a7d66`; ACC Gus Fi via
+          DeepSeek; audit 0 must-fix): ZIS auto-posting
+          wakaf (in) -> jurnal D1120/K4100 via
+          `recordZisInTx` (gated `gl_enabled`). test-zis
+          +W10 (in wakaf -> jurnal 1 line D1120/K4100 +
+          idempoten `UNIQUE(zis.id)`); test-gl +W8.
+          Gate: tsc 0; test-zis 205/205; test:all
+          20 suite green.
+          **Progres Wave 3: 5/5 (SEMUA SELESAI).**
+    - [x] **LKA+POSISI ALIGN LEPAS 4 Okt** (`127b58d`;
+          ACC Gus Fi; 5 file +148/-11): rekonsiliasi
+          universal `lka.laba_bersih` ==
+          `posisi.laba_rugi_berjalan`:
+          (a) LKA: blok pendapatan lain 4050-4100 (akad
+          ijarah/murahabah + wakaf masuk) ditambahkan ke
+          `laba_bersih`; 4040 (ujrah) = MEMO -- income
+          pemilik, TIDAK masuk laba/rugi (P4 tashih,
+          A1.1 LEPAS di W3.4/W4);
+          (b) Posisi: 4040 dieksklusi dari PENDAPATAN +
+          6030 (zakat keluar) masuk BEBAN (Sek.5.2);
+          (c) `route.ts` + notes `laporan/formal`; client
+          LKA menambah blok Other Income + label posisi;
+          (d) test-laporan +LE/LE2 (193 -> 197 assert;
+          LE tanpa 4040/6030: 3.100.000 == 3.100.000;
+          LE2 dengan 4040+6030: 1.070.000 ==
+          1.070.000; strictly additive, sign preserved).
+          Gate: tsc 0; test-laporan 197/197; test:all
+          20 suite green; 0 non-ASCII; sw.js + V1 tak
+          tersentuh.
+          **Progres Wave 3: 5/5 + rekonsiliasi universal.
+          W3 FULL AUDIT (bug + UX + UI, W3.1-W3.5) WAJIB
+          SEBELUM WAVE 4 (standing rule).**
 
 4. **Maintenance** -- ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
