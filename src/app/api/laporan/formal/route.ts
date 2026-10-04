@@ -49,6 +49,7 @@ const LKA_NOTES: string[] = [
   'D=K (rekon #15 JOURNAL_BAL): bila flag_rekon15=true, angka formal TIDAK dianggap otoritatif -- periksa cek JOURNAL_BAL di /admin/rekonsiliasi.',
   'Laba/rugi berjalan (SUM 4xxx - SUM 5xxx) belum ditutup ke 3020; penutupan manual periodik (jurnal closing, Sek.3.2.6).',
   'MEMO (ujrah konsinyasi 4040, cashback 2030, SHU 3020) TIDAK dijumlahkan ke laba bersih.',
+  'W3.5+: pendapatan lain koperasi (4050-4100) SUMMED ke laba bersih; posisi mengecualikan 4040 (owner income, memo) + membebankan 6030 (zakat) -> lka.laba_bersih == posisi.laba_rugi_berjalan (universal; residual 5020/5100/5050).',
   'Akun 5050 (denda) TIDAK AKTIF (F3.3 #6: tidak ada skema denda); tidak dihitung ke Beban.',
   'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
 ];

@@ -13,7 +13,8 @@
  *   Beban             = 5030 + 5040 + 5060 + 5070 + 5080
  *   Laba Sebelum ZIS  = Laba Kotor - Beban
  *   ZIS               = 5090 + 5100 + 6030
- *   Laba Bersih       = Laba Sebelum ZIS - ZIS
+ *   Laba Bersih       = Laba Sebelum ZIS - ZIS + Pendapatan Lain (W3.5+)
+ *   Pendapatan Lain   = 4050+4060+4070+4080+4090+4100 (SUMMED; 4040 memo)
  *   (5050 Denda = TIDAK AKTIF -- F3.3 #6: tidak ada skema denda; akun
  *    dibiarkan CLOSED dan TIDAK dijumlahkan ke Beban.)
  *
@@ -36,6 +37,13 @@ import type { QueryDb } from '../keuangan.ts';
 
 /** Satu baris memo: kode COA + label konseptual + saldo neto. */
 export type LkaMemoRow = {
+  code: string;
+  label: string;
+  value: number;
+};
+
+/** Satu baris pendapatan lain koperasi (SUMMED ke laba_bersih). */
+export type LkaOtherIncomeRow = {
   code: string;
   label: string;
   value: number;
@@ -71,7 +79,12 @@ export type LkaPayload = {
   laba_sebelum_zis: number;
   /** 5090 + 5100 + 6030. */
   zis: number;
-  /** Laba Sebelum ZIS - ZIS. Baris MEMO TIDAK dijumlahkan. */
+  /**
+   * W3.5+: pendapatan lain koperasi 4050-4100 (SUMMED ke laba_bersih).
+   * 4040 tetap MEMO (owner income, P4 tashih); 4040/6030/5050 = residual.
+   */
+  pendapatan_lainnya: { total: number; rows: LkaOtherIncomeRow[] };
+  /** (sebelum zis - zis) + pendapatan_lainnya; baris MEMO TIDAK ikut. */
   laba_bersih: number;
   /** Memo (4040 ujrah, 2030 cashback, 3020 SHU): TIDAK dijumlahkan. */
   memo: LkaMemoRow[];
@@ -101,6 +114,17 @@ const MEMO_ROWS: { code: string; label: string }[] = [
   { code: '4040', label: 'Ujrah Konsinyasi' },
   { code: '2030', label: 'Cashback (kewajiban)' },
   { code: '3020', label: 'SHU Ditahan (ekuitas)' },
+];
+// PENDAPATAN LAIN KOPERASI (SUMMED ke laba_bersih; 4040 tetap MEMO).
+// Efek-kredit (c-d). 4050-4100: ijarah, laba murabahah, bagi hasil
+// mudharabah/musyarakah, ZIS masuk, wakaf masuk (akad + wakaf, W3.5).
+const OTHER_INCOME_ROWS: { code: string; label: string }[] = [
+  { code: '4050', label: 'Ijarah' },
+  { code: '4060', label: 'Laba Murabahah' },
+  { code: '4070', label: 'Bagi Hasil Mudharabah' },
+  { code: '4080', label: 'Bagi Hasil Musyarakah' },
+  { code: '4090', label: 'ZIS Masuk' },
+  { code: '4100', label: 'Wakaf Masuk' },
 ];
 
 type RowDC = { debit: number; credit: number };
@@ -199,7 +223,17 @@ export async function buildLka(db: QueryDb, at: string): Promise<LkaPayload> {
   let zis = 0;
   for (const c of ZIS_CODES) zis += dBal(c, m);
 
-  const labaBersih = labaSebelumZis - zis;
+  // PENDAPATAN LAIN koperasi 4050-4100 (efek-kredit: c-d) SUMMED ke laba.
+  // 4040 TIDAK di sini (tetap MEMO; owner income, P4 tashih).
+  const pendapatanLainRows: LkaOtherIncomeRow[] = OTHER_INCOME_ROWS.map((r) => ({
+    code: r.code,
+    label: r.label,
+    value: cBal(r.code, m),
+  }));
+  const pendapatanLain = pendapatanLainRows.reduce((t, r) => t + r.value, 0);
+
+  // LABA BERSIH = (sebelum zis - zis) + pendapatan lain.
+  const labaBersih = labaSebelumZis - zis + pendapatanLain;
 
   // MEMO (TIDAK dijumlahkan ke laba_bersih).
   const memo = MEMO_ROWS.map((r) => ({
@@ -226,6 +260,7 @@ export async function buildLka(db: QueryDb, at: string): Promise<LkaPayload> {
     beban,
     laba_sebelum_zis: labaSebelumZis,
     zis,
+    pendapatan_lainnya: { total: pendapatanLain, rows: pendapatanLainRows },
     laba_bersih: labaBersih,
     memo,
     d_k: {

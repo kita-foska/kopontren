@@ -307,7 +307,7 @@ function PosisiStatement({ p }: { p: FormalResp }) {
         )}
         <div className="mt-3">
           <Line label="Total ekuitas (30xx)" value={t.total_ekuitas} />
-          <Line label="Laba/rugi berjalan (4xx - 5xx, pre-closing)" value={t.laba_rugi_berjalan} />
+          <Line label="Laba/rugi berjalan (4xx tanpa 4040 - 5xx - 6030, pre-closing; spt lka.laba_bersih)" value={t.laba_rugi_berjalan} />
           <Line label="Total ekuitas menutup (set closing)" value={t.total_ekuitas_menutup} strong />
         </div>
       </div>
@@ -457,7 +457,26 @@ function LkaStatement({ p }: { p: LkaResp }) {
         />
         <Line label="Laba Sebelum ZIS (kotor - beban)" value={p.laba_sebelum_zis} strong />
         <Line label="ZIS (5090+5100+6030)" value={p.zis} />
-        <Line label="Laba Bersih (sebelum ZIS - ZIS)" value={p.laba_bersih} strong />
+        {p.pendapatan_lainnya.rows.length > 0 ? (
+          <div className="mt-2">
+            <h4 className="mb-1 text-xs font-bold text-sky-700 dark:text-sky-400">
+              PENDAPATAN LAIN KOPERASI (4050-4100)
+            </h4>
+            {p.pendapatan_lainnya.rows.map((r) => (
+              <Line key={r.code} label={r.label + ' (' + r.code + ')'} value={r.value} />
+            ))}
+            <Line
+              label="Total pendapatan lain (4050-4100)"
+              value={p.pendapatan_lainnya.total}
+              strong
+            />
+          </div>
+        ) : null}
+        <Line
+          label="Laba Bersih (sebelum ZIS - ZIS + pendapatan lain)"
+          value={p.laba_bersih}
+          strong
+        />
       </div>
 
       {/* MEMO: ujrah konsinyasi (4040), cashback (2030), SHU (3020) -- TIDAK dijumlahkan. */}

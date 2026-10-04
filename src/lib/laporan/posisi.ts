@@ -16,6 +16,10 @@
  *   Kewajiban ZIS    = 2090
  *   Ekuitas          = 3010+3020+3030+3040+3050+3060+3070
  *
+ * Laba/rugi berjalan (belum closing ke 3020) = SUM 4xxx TANPA 4040
+ * (owner income, memo spt LKA) - SUM (5xxx + 6030 zakat per Sek.5.2)
+ * -> hasilnya == lka.laba_bersih (W3.5+ reconciliation universal).
+ *
  * D=K (Sek.5.1, Sek.3.2.1, rekon #15 JOURNAL_BAL): posisi adalah
  * laporan KUMULATIF (s.d. batas `at`), jadi identitias
  * SUM aset = SUM liab + SUM ekuitas hanya balance setelah jurnal
@@ -61,7 +65,12 @@ export type PosisiPayload = {
     total_kewajiban: number;
     /** SUM 30xx (ekuitas formal, tanpa laba berjalan). */
     total_ekuitas: number;
-    /** SUM 4xxx - SUM 5xxx: laba/rugi periode berjalan (belum closing ke 3020). */
+    /**
+     * SUM 4xxx (4040 owner income dikecualikan, spt LKA) - SUM (5xxx +
+     * 6030 zakat per Sek.5.2): laba/rugi periode berjalan (belum closing
+     * ke 3020). == lka.laba_bersih (residual 5020/5050/5100 bila terisi
+     * di GL; 5050 closed tak dihitung LKA).
+     */
     laba_rugi_berjalan: number;
     /** total_ekuitas + laba_rugi_berjalan (ekuitas setelah closing). */
     total_ekuitas_menutup: number;
@@ -92,8 +101,12 @@ const KEW_LANCAR = ['2010', '2020', '2030', '2040', '2100'];
 const KEW_ANGGOTA = ['2050', '2060', '2070', '2080'];
 const KEW_ZIS = ['2090'];
 const EKUITAS = ['3010', '3020', '3030', '3040', '3050', '3060', '3070'];
-const PENDAPATAN = ['4010', '4020', '4030', '4040', '4050', '4060', '4070', '4080', '4090', '4100'];
-const BEBAN = ['5010', '5020', '5030', '5040', '5050', '5060', '5070', '5080', '5090', '5100'];
+// W3.5+ reconciliation dgn LKA: 4040 (ujrah konsinyasi) TIDAK ikut --
+// owner income (P4 tashih), memo only spt LKA (MEMO_ROWS lka.ts).
+const PENDAPATAN = ['4010', '4020', '4030', '4050', '4060', '4070', '4080', '4090', '4100'];
+// 6030 (zakat tijarah) ikut BEBAN: beban per Sek.5.2 (ZIS = 5090+5100+6030,
+// spt ZIS_CODES lka.ts), agar posisi.laba_rugi_berjalan == lka.laba_bersih.
+const BEBAN = ['5010', '5020', '5030', '5040', '5050', '5060', '5070', '5080', '5090', '5100', '6030'];
 
 type RowDC = { debit: number; credit: number };
 
@@ -178,8 +191,10 @@ export async function buildPosisi(db: QueryDb, at: string): Promise<PosisiPayloa
   const ekuitasRows = rowsOf(EKUITAS, m);
   const totalEkuitas = ekuitasRows.reduce((a, r) => a + r.value, 0);
 
-  // Laba/rugi berjalan = SUM pendapatan neto (4xxx, kredit normal)
-  //                    - SUM beban neto (5xxx, debit normal).
+  // Laba/rugi berjalan = SUM pendapatan neto (4xxx, kredit normal; 4040
+  // owner income DIKECUALIKAN, spt LKA) - SUM beban neto (5xxx + 6030,
+  // debit normal; 6030 zakat dijumlahkan spt ZIS LKA). Hasil == lka.laba_bersih
+  // (W3.5+ reconciliation; residual 5020/5050/5100 bila terisi di GL).
   const labaRugiBerjalan = sumOf(PENDAPATAN, m) - sumOf(BEBAN, m);
 
   const totalAset = asetLancar + asetTetapNeto + investasi;

@@ -8,7 +8,12 @@
  * Cakupan LKA: (LA) golden seimbang (neto/HPP/kotor/beban/sebelum ZIS/
  *   ZIS/bersih + netting 5010-5020 + MEMO tak dijumlahkan);
  *   (LB) batas periode; (LC) 5050 denda CLOSED tidak dihitung;
- *   (LD) MEMO eksplisit tak masuk laba_bersih.
+ *   (LD) MEMO eksplisit tak masuk laba_bersih;
+ *   (LE) W3.5+ cross-report: 4050-4100 (akad/wakaf) SUMMED ke laba_bersih
+ *     -> lka.laba_bersih === posisi.laba_rugi_berjalan (dataset tanpa
+ *     4040/6030); (LE2) universal: DGN 4040 (owner income, dikecualikan) +
+ *     6030 (zakat, beban; posisi di-align: 4040 keluar, 6030 masuk) -> sama
+ *     (residual 5020/5050/5100 bila terisi di GL).
  * Cakupan LPE: (LP1) golden (pembuka opening + SHU closing ke 3020 +
  *   alokasi coop 3020->3030/3050/3060 - distribusi placeholder 0 + D=K);
  *   (LP2) simpanan 2050/2060 = memo kewajiban, TIDAK ke ekuitas;
@@ -292,6 +297,68 @@ async function main(): Promise<void> {
       denganMemo.memo.find((r) => r.code === '4040')?.value === 1_000_000 &&
         denganMemo.memo.find((r) => r.code === '3020')?.value === 1_000_000
     );
+  }
+
+  // (LE) W3.5+ cross-report: pendapatan lain koperasi 4050-4100 (akad/wakaf)
+  // SUMMED ke lka.laba_bersih -> lka.laba_bersih == posisi.laba_rugi_berjalan.
+  // Dataset: akad + wakaf income; TANPA 4040/6030/5050 -> equality holds.
+  // (Residual: bila 4040 owner-ujrah atau 6030 zakat != 0, keduanya divergensi
+  //  posisi -- di luar cakupan fix ini; lihat catatan header + route note.)
+  {
+    const db = await freshDb();
+    const D = '2026-08-15';
+    post(db, 'LE1', D, '1010', '4010', 1_000_000); // pendapatan neto 1.000.000
+    post(db, 'LE2', D, '1010', '4050', 500_000); // ijarah (akad)
+    post(db, 'LE3', D, '2040', '4060', 400_000); // laba murabahah
+    post(db, 'LE4', D, '1080', '4070', 300_000); // bagi hasil mudharabah
+    post(db, 'LE5', D, '1090', '4080', 200_000); // bagi hasil musyarakah
+    post(db, 'LE6', D, '1010', '4090', 100_000); // ZIS masuk
+    post(db, 'LE7', D, '1120', '4100', 600_000); // wakaf masuk (D1120/K4100)
+    const at = '2026-10-01';
+    const lka = await buildLka(makeShim(db), at);
+    const pos = await buildPosisi(makeShim(db), at);
+    eq('LE: pendapatan_lainnya.total = 2.100.000', lka.pendapatan_lainnya.total, 2_100_000);
+    eq('LE: 4050 ijarah = 500.000', lka.pendapatan_lainnya.rows.find((r) => r.code === '4050')?.value, 500_000);
+    eq('LE: 4060 laba murabahah = 400.000', lka.pendapatan_lainnya.rows.find((r) => r.code === '4060')?.value, 400_000);
+    eq('LE: 4070 bagi hasil mudharabah = 300.000', lka.pendapatan_lainnya.rows.find((r) => r.code === '4070')?.value, 300_000);
+    eq('LE: 4080 bagi hasil musyarakah = 200.000', lka.pendapatan_lainnya.rows.find((r) => r.code === '4080')?.value, 200_000);
+    eq('LE: 4090 ZIS masuk = 100.000', lka.pendapatan_lainnya.rows.find((r) => r.code === '4090')?.value, 100_000);
+    eq('LE: 4100 wakaf masuk = 600.000', lka.pendapatan_lainnya.rows.find((r) => r.code === '4100')?.value, 600_000);
+    eq('LE: lka.laba_bersih = 3.100.000 (1.000.000 + 2.100.000)', lka.laba_bersih, 3_100_000);
+    eq('LE: posisi.laba_rugi_berjalan = 3.100.000', pos.totals.laba_rugi_berjalan, 3_100_000);
+    ok(
+      'LE: lka.laba_bersih === posisi.laba_rugi_berjalan (akad+wakaf, tanpa 4040/6030/5050)',
+      lka.laba_bersih === pos.totals.laba_rugi_berjalan,
+      lka.laba_bersih + ' vs ' + pos.totals.laba_rugi_berjalan
+    );
+    ok('LE: D=K seimbang, flag_rekon15 = false', lka.d_k.balanced === true && lka.flag_rekon15 === false);
+  }
+
+  // (LE2) W3.5+ universal: DGN 4040 (owner income, dikecualikan) + 6030
+  // (zakat, beban). Posisi di-align (PENDAPATAN tanpa 4040, BEBAN dgn 6030)
+  // -> lka.laba_bersih MAH == posisi.laba_rugi_berjalan (residual 5020/5100/5050).
+  {
+    const db = await freshDb();
+    const D = '2026-08-15';
+    post(db, 'L2A', D, '1010', '4010', 1_000_000); // pendapatan neto
+    post(db, 'L2B', D, '1010', '4040', 200_000); // ujrah konsinyasi (owner income)
+    post(db, 'L2C', D, '1010', '4050', 100_000); // ijarah (akad)
+    post(db, 'L2D', D, '6030', '1010', 30_000); // zakat tijarah (beban)
+    const at = '2026-10-01';
+    const lka = await buildLka(makeShim(db), at);
+    const pos = await buildPosisi(makeShim(db), at);
+    // lka: (1.000.000 - 0 - 0) - zis(6030=30.000) + other(4050=100.000)
+    //      = 1.070.000; 4040 (200.000) TIDAK ikut (memo owner income).
+    eq('LE2: lka.laba_bersih = 1.070.000 (4040 excluded, 6030 beban)', lka.laba_bersih, 1_070_000);
+    // posisi: SUM 4xxx (tanpa 4040) - SUM beban (dgn 6030)
+    //        = (1.000.000 + 100.000) - 30.000 = 1.070.000.
+    eq('LE2: posisi.laba_rugi_berjalan = 1.070.000 (4040 excluded, 6030 beban)', pos.totals.laba_rugi_berjalan, 1_070_000);
+    ok(
+      'LE2: lka.laba_bersih === posisi.laba_rugi_berjalan (UNIVERSAL: dgn 4040 + 6030)',
+      lka.laba_bersih === pos.totals.laba_rugi_berjalan,
+      lka.laba_bersih + ' vs ' + pos.totals.laba_rugi_berjalan
+    );
+    ok('LE2: D=K seimbang, flag_rekon15 = false', lka.d_k.balanced === true && lka.flag_rekon15 === false && pos.d_k.balanced === true);
   }
 
   // (LP1) LPE golden: pembuka (opening) + SHU (closing ke 3020) + Alokasi
