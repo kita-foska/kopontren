@@ -1785,6 +1785,30 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
           W3 FULL AUDIT (bug + UX + UI, W3.1-W3.5) WAJIB
           SEBELUM WAVE 4 (standing rule).**
 
+    - [x] **W3.x HOUSEKEEPING LEPAS 4 Okt** (`659a6b3`;
+          ACC Gus Fi via DeepSeek; 2 file +18/-12;
+          audit W3 4/5): (B3) route.ts konsinyasi
+          9 non-ASCII -> ASCII (`--`/`...`);
+          (U1) copy zis "wakaf masuk: auto-jurnal
+          D1120/K4100; wakaf keluar: manual (W3.5)";
+          (U2) `statusBadge` zis: wakaf masuk
+          (posted=green, GL off=gray, unposted=red)
+          vs wakaf keluar unposted+GL on=amber
+          "Wakaf keluar: jurnal manual (W3.5)". Gate: tsc
+          0; test:all 20 suite ALL PASS; 0 non-ASCII.
+          **B1/B2/B4 DITUNDA ke W5 penguatan**
+          (ruling 4 Okt): B1 posisi
+          `pilihPeriode()` ignore `?periode=`; B2
+          zis-client double-POST; B4
+          `laporan.formal` re-export
+          non-idempoten.
+          **NEXT: UX-1 BAHASA AWAM** (P1+P2; P3
+          rekonsiliasi -> UX-2; + fold non-ASCII
+          cleanup; reuse `TermTip` UX-3; glosarium
+          `/admin/glosarium` + `src/lib/glossary.ts`
+          ` (E39 pattern); E23/E24 dicheck) SEBELUM Wave 4.
+
+
 4. **Maintenance** -- ongoing (audit periodik, test, performance).
 - Roadmap bakpao.id (7 fitur: live ticker multi-cabang, tangga
   loyalty tier, katalog hadiah + ranking, panel bagi-hasil per role,

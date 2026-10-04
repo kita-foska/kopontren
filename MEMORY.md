@@ -1,6 +1,37 @@
 # MEMORY
 
 ## 2026-10-04
+### W3.x HOUSEKEEPING (B3/U1/U2) LEPAS (4 Okt 2026)
+- **Commit `659a6b3`** (2 file +18/-12; ACC Gus Fi via
+  DeepSeek, W3 FULL AUDIT): (B3)
+  `src/app/api/konsinyasi/route.ts` -- 9 non-ASCII
+  (8 em-dash + 1 ellipsis) -> ASCII `--`/`...` (B3
+  strict-ASCII); (U1) copy zis-client: "Wakaf masuk:
+  auto-jurnal D1120/K4100; wakaf keluar: manual (W3.5)";
+  (U2) `statusBadge` zis-client distinguishes wakaf
+  masuk (posted=green, GL off=gray, unposted=red) vs
+  wakaf keluar unposted+GL on=amber "jurnal manual
+  (W3.5)". 2 user-visible error strings em-dash -> `--`
+  (semantics unchanged). Gate: tsc 0; test:all 20
+  suite ALL PASS; 0 non-ASCII in both file. Dual-push
+  `659a6b3`.
+- **B1/B2/B4 ditunda ke W5 penguatan** (ruling Gus
+  Fi 4 Okt): B1 posisi `pilihPeriode()` ignore
+  `?periode=`; B2 zis-client double-POST; B4
+  `laporan.formal` re-export non-idempoten.
+- **NEXT = UX-1 BAHASA AWAM wave** (P1 laporan
+  formal+akad+ZIS, P2 POS+konsinyasi+member; P3
+  rekonsiliasi ditunda ke UX-2) + fold pre-existing
+  non-ASCII UI cleanup. Reuse `TermTip` (UX-3,
+  sudah ada `ui.tsx`, a11y hover/pin/ESC) -- TIDAK
+  bikin komponen tooltip baru. Glosarium page
+  `/admin/glosarium` + `src/lib/glossary.ts`
+  (E39 pattern). E23/E24 dicheck saiki. UX-1
+  SEBELUM Wave 4 Koperasi (ruling: report tabs =
+  permukaan sing bakal di-extend W4).
+- **STATE `659a6b3`**: `origin/master` =
+  `origin/main` = local HEAD = `659a6b3`.
+
 ### W3.5 LEPAS + LKA/POSISI ALIGN -- Wave 3 = 5/5 + rekonsiliasi universal (4 Okt 2026)
 - **W3.5 LEPAS (commit `19a7d66`)**: ZIS auto-posting
   wakaf (in) -> jurnal D1120/K4100 via `recordZisInTx`
