@@ -1803,10 +1803,11 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
           `laporan.formal` re-export
           non-idempoten.
           **NEXT: UX-1 BAHASA AWAM** (P1+P2; P3
-          rekonsiliasi -> UX-2; + fold non-ASCII
-          cleanup; reuse `TermTip` UX-3; glosarium
-          `/admin/glosarium` + `src/lib/glossary.ts`
-          ` (E39 pattern); E23/E24 dicheck) SEBELUM Wave 4.
+          rekonsiliasi -> UX-2; fold non-ASCII SELESAI
+          10/04 (commit ini: 8 file UI); reuse `TermTip`
+          UX-3; glosarium `/admin/glosarium` +
+          `src/lib/glossary.ts` (E39 pattern); E23/E24
+          dicheck) SEBELUM Wave 4.
 
 
 4. **Maintenance** -- ongoing (audit periodik, test, performance).

@@ -1,5 +1,5 @@
 'use client';
-// UX-7B: Command Palette global (Ctrl+K / Cmd+K) — navigasi role-filtered
+// UX-7B: Command Palette global (Ctrl+K / Cmd+K) -- navigasi role-filtered
 // + aksi cepat + live-search lintas-entitas (GET /api/search, 7A).
 // Dipasang di Shell (seluruh halaman ter-shell) sehingga terbuka di mana
 // saja. Keyboard: ArrowUp/Down navigasi, Enter eksekusi, Escape tutup.
@@ -68,7 +68,7 @@ export function CommandPalette({
         if (!res.ok) return;
         setResults((await res.json()) as SearchResults);
       } catch {
-        // Abort (input berubah cepat) / network — biarkan hasil lama.
+        // Abort (input berubah cepat) / network -- biarkan hasil lama.
       }
     }, 300);
     return () => {
@@ -82,7 +82,7 @@ export function CommandPalette({
     const s: PaletteSection[] = [];
     if (q.trim().length < 2) {
       // Navigasi: SATU sumber menu = MENU_ITEMS (sidebar), visibilitas mirror
-      // levelOk (FEATURE_MATRIX/isManager/admin-only) — sddp menu sidebar.
+      // levelOk (FEATURE_MATRIX/isManager/admin-only) -- sddp menu sidebar.
       const nav: PaletteItem[] = user
         ? MENU_ITEMS.filter((m) => levelOk(user.role, m.level)).map((m) => ({
             kind: 'nav',
@@ -91,51 +91,51 @@ export function CommandPalette({
             run: () => go(m.href),
           }))
         : [];
-      s.push({ title: 'Pintar · Navigasi', items: nav });
+      s.push({ title: 'Pintar | Navigasi', items: nav });
       const actions: PaletteItem[] = [
         { kind: 'action', label: 'Ganti tema (light/dark)', sub: 'Pref lokal', run: onToggleTheme },
       ];
-      // H5 (I-3): notifikasi dibuka untuk pengurus (read-only) — same check
+      // H5 (I-3): notifikasi dibuka untuk pengurus (read-only) -- same check
       // with NotificationBell (admin + pengurus).
       if (user && (user.role === 'admin' || user.role === 'pengurus'))
         actions.push({ kind: 'action', label: 'Lihat notifikasi', sub: '/admin/notifikasi', run: () => go('/admin/notifikasi') });
       if (isManager(user))
         actions.push({ kind: 'action', label: 'Backup & restore SQLite', sub: '/admin/backup', run: () => go('/admin/backup') });
-      s.push({ title: 'Pintar · Aksi', items: actions });
+      s.push({ title: 'Pintar | Aksi', items: actions });
     }
     if (results) {
       if (results.products.length)
         s.push({
-          title: 'Pintar · Produk (' + results.products.length + ')',
+          title: 'Pintar | Produk (' + results.products.length + ')',
           items: results.products.map((p) => ({
             kind: 'result',
             label: p.name,
-            sub: rupiah(p.base_price) + ' / ' + p.unit + ' · stok ' + p.stock,
+            sub: rupiah(p.base_price) + ' / ' + p.unit + ' | stok ' + p.stock,
             run: () => go('/admin/produk'),
           })),
         });
       if (results.members.length)
         s.push({
-          title: 'Pintar · Member (' + results.members.length + ')',
+          title: 'Pintar | Member (' + results.members.length + ')',
           items: results.members.map((m) => ({
             kind: 'result',
             label: m.name,
-            sub: 'poin ' + m.points + ' · ' + m.phone + (m.tier ? ' · ' + m.tier : ''),
+            sub: 'poin ' + m.points + ' | ' + m.phone + (m.tier ? ' | ' + m.tier : ''),
             run: () => go('/admin/member'),
           })),
         });
       if (results.sales.length)
         s.push({
-          title: 'Pintar · Transaksi (' + results.sales.length + ')',
+          title: 'Pintar | Transaksi (' + results.sales.length + ')',
           items: results.sales.map((x) => ({
             kind: 'result',
-            label: '#' + x.id + (x.customer ? ' · ' + x.customer : ''),
-            sub: rupiah(x.total) + ' · ' + x.status + ' · ' + x.created_at.slice(0, 10),
+            label: '#' + x.id + (x.customer ? ' | ' + x.customer : ''),
+            sub: rupiah(x.total) + ' | ' + x.status + ' | ' + x.created_at.slice(0, 10),
             run: () => go('/laporan'),
           })),
         });
       if (!results.products.length && !results.members.length && !results.sales.length)
-        s.push({ title: 'Pintar · Hasil', items: [{ kind: 'result', label: 'Tidak ditemukan', sub: 'Percobaan kata lain', run: () => {} }] });
+        s.push({ title: 'Pintar | Hasil', items: [{ kind: 'result', label: 'Tidak ditemukan', sub: 'Percobaan kata lain', run: () => {} }] });
     }
     return s;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,7 +188,7 @@ export function CommandPalette({
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={onKey}
           aria-label="Cari produk, member, transaksi, atau navigasi"
-          placeholder="Pintar cari produk / member / transaksi, atau ketik komando…"
+          placeholder="Pintar cari produk / member / transaksi, atau ketik komando..."
           role="combobox"
           aria-autocomplete="list"
           aria-controls="palette-listbox"
@@ -199,7 +199,7 @@ export function CommandPalette({
           className="w-full border-0 bg-transparent px-4 py-3.5 text-[15px] outline-none dark:bg-transparent"
         />
         {q.trim().length >= 2 && !results && (
-          <p className="border-t border-stroke px-4 py-2 text-xs text-soft">Pintar mencari…</p>
+          <p className="border-t border-stroke px-4 py-2 text-xs text-soft">Pintar mencari...</p>
         )}
         <div ref={listRef} id="palette-listbox" role="listbox" aria-label="Pilihan komando" className="max-h-[46vh] overflow-auto border-t border-stroke">
           {sections.map((sec) => (
@@ -235,7 +235,7 @@ export function CommandPalette({
           )}
         </div>
         <div className="flex items-center gap-3 border-t border-stroke px-4 py-2 text-[10px] text-soft">
-          <span><b className="font-semibold">↑↓</b> navigasi</span>
+          <span><b className="font-semibold">UpDown</b> navigasi</span>
           <span><b className="font-semibold">Enter</b> pilih</span>
           <span><b className="font-semibold">Esc</b> tutup</span>
           <span className="ml-auto">{canAccess(user, 'pos') ? 'Pintar live-search aktif' : 'Pintar hanya navigasi/aksi'}</span>

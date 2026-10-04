@@ -1,6 +1,42 @@
 # MEMORY
 
 ## 2026-10-04
+### FOLD NON-ASCII 8 UI LEPAS (4 Okt 2026)
+- **8 file UI** (lib/format.ts,
+  pengurus/dashboard,
+  admin/member-client.tsx,
+  admin/produk-client.tsx,
+  admin/qris-client.tsx,
+  command-palette.tsx,
+  key-cheatsheet.tsx,
+  pos-client.tsx) dibersihkan 22
+  glyph non-ASCII (commit ini,
+  parent 9247ab6; precedent B3
+  659a6b3). Map: em-dash `--`
+  (konvensi B3), ellipsis `...`,
+  arrow `->` di komentar / `&gt;`
+  di JSX text (`->` bikin
+  TS1382), minus/en-dash `-`,
+  rule komentar `-`, kunci
+  `Up/Down`, middot `|`, sigma
+  `sum`, `sm+`, "Beli jumlah
+  minimum ke atas dapat diskon",
+  `stok +/-`, bintang poin &
+  emoji di-drop (tetap `N
+  poin`). kpiDelta ditulis ulang
+  bahasa-awam: `+12% vs
+  kemarin` / `stabil vs
+  kemarin` / `baru vs
+  kemarin` / `+N baru, 30 hari
+  ini`. Gate: tsc 0; test:all
+  exit 0 (20 suite); scan
+  8-file = 0 non-ASCII; next
+  build OK. LESSON: test repo =
+  20 script node di scripts/ via
+  `npm run test:all`, BUKAN
+  jest (`npx jest` = 0 test
+  found).
+
 ### W3.x HOUSEKEEPING (B3/U1/U2) LEPAS (4 Okt 2026)
 - **Commit `659a6b3`** (2 file +18/-12; ACC Gus Fi via
   DeepSeek, W3 FULL AUDIT): (B3)
@@ -21,8 +57,9 @@
   `laporan.formal` re-export non-idempoten.
 - **NEXT = UX-1 BAHASA AWAM wave** (P1 laporan
   formal+akad+ZIS, P2 POS+konsinyasi+member; P3
-  rekonsiliasi ditunda ke UX-2) + fold pre-existing
-  non-ASCII UI cleanup. Reuse `TermTip` (UX-3,
+  rekonsiliasi ditunda ke UX-2). FOLD pre-existing
+  non-ASCII UI SELESAI (section FOLD di atas).
+  Reuse `TermTip` (UX-3,
   sudah ada `ui.tsx`, a11y hover/pin/ESC) -- TIDAK
   bikin komponen tooltip baru. Glosarium page
   `/admin/glosarium` + `src/lib/glossary.ts`

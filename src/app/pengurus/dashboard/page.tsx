@@ -59,7 +59,7 @@ export default async function PengurusDashboardPage() {
     c: number;
   }).c;
 
-  // I-3 UX-6: delta konteks — 30h terakhir vs 30h sebelumnya (server-side),
+  // I-3 UX-6: delta konteks -- 30h terakhir vs 30h sebelumnya (server-side),
   // + jumlah member baru periode ini sbg pakan kartu "Member Aktif".
   const d60 = startOfDayJakarta(-59);
   const sPrev30 = (
@@ -94,9 +94,9 @@ export default async function PengurusDashboardPage() {
     'vs 30 hari sebelumnya'
   );
   const deltaMember: KpiDelta | null =
-    newMembers > 0 ? { text: '▲ ' + newMembers + ' baru · 30 hari ini', tone: 'up' } : null;
+    newMembers > 0 ? { text: '+' + newMembers + ' baru, 30 hari ini', tone: 'up' } : null;
 
-  // I-8 UX-6: feed "Apa yang berubah" — 5 audit log terbaru (server-side,
+  // I-8 UX-6: feed "Apa yang berubah" -- 5 audit log terbaru (server-side,
   // philosophy I-3: tanpa fetch tambahan di klien). Pengurus punya tier
   // "audit" (read-only); user tanpa tier -> kartu tersembunyi.
   const feedOk = canAccess(user, 'audit');
@@ -127,7 +127,7 @@ export default async function PengurusDashboardPage() {
     '(WIB). "baru" = periode sebelumnya tidak ada penjualan; ' +
     '"stabil" = perubahan < 0,5%.';
   const TIP_CASH =
-    'Arus kas = masuk (penjualan + kas masuk manual) − keluar ' +
+    'Arus kas = masuk (penjualan + kas masuk manual) - keluar ' +
     '(pembelian + pengeluaran + kas keluar manual), 30 hari terakhir ' +
     'vs 30 hari sebelumnya (WIB).';
   const TIP_MEMBER =
@@ -170,7 +170,7 @@ export default async function PengurusDashboardPage() {
     },
   ];
 
-  // UX-7D: baris quick actions — mirror kartu "Aksi cepat" dashboard admin,
+  // UX-7D: baris quick actions -- mirror kartu "Aksi cepat" dashboard admin,
   // tiap CTA di-guard per tier (FEATURE_MATRIX, src/lib/features.ts).
   // Pengurus read-only: kas/piutang bukan miliknya, jadi CTA ke-5 =
   // dashboard admin (tier 'laporan').
@@ -198,7 +198,7 @@ export default async function PengurusDashboardPage() {
           {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
             new Date()
           )}{' '}
-          · laporan keseluruhan Kopontren (rapat pengurus)
+          | laporan keseluruhan Kopontren (rapat pengurus)
         </p>
       </div>
 

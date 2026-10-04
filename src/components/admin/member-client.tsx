@@ -29,7 +29,7 @@ type Resp = {
   offset: number;
 };
 
-// Riwayat ledger poin & reward (GET /api/members/[id]/points) — tabel
+// Riwayat ledger poin & reward (GET /api/members/[id]/points) -- tabel
 // point_history yang ditulis POST /api/sales (earn/redeem/cashback/
 // cashback_use) & DELETE /api/sales/[id] (void/refund/refund_cash).
 type PointsResp = {
@@ -72,7 +72,7 @@ export function MemberClient() {
   const lastOffsetRef = useRef(0);
   const lastLimitRef = useRef(50);
 
-  // ── Modal Riwayat Poin & Reward (ledger point_history, baca-saja) ──
+  // -- Modal Riwayat Poin & Reward (ledger point_history, baca-saja) --
   // Guard busy per aksi (pola Batch A): satu request terbuka; ref "aktif"
   // mencegah respons basi setelah modal pindah ke member lain.
   const POINTS_LIMIT = 20;
@@ -84,7 +84,7 @@ export function MemberClient() {
   const [pointsBusy, setPointsBusy] = useState(false);
   const [pointsErr, setPointsErr] = useState('');
 
-  // ── Modal Kartu Membership (identitas + tier + QR + cetak) ──
+  // -- Modal Kartu Membership (identitas + tier + QR + cetak) --
   const [cardMember, setCardMember] = useState<Member | null>(null);
 
   useEffect(() => {
@@ -128,12 +128,12 @@ export function MemberClient() {
     setLoadingMore(false);
   }
 
-  // ── Riwayat poin & reward (ledger point_history) ──
+  // -- Riwayat poin & reward (ledger point_history) --
   async function fetchPoints(mid: number, offset: number, append: boolean) {
     const r = await api<PointsResp>(
       `/api/members/${mid}/points?limit=${POINTS_LIMIT}&offset=${offset}`
     );
-    // Modal bisa pindah ke member lain selama fetch — abaikan respons basi.
+    // Modal bisa pindah ke member lain selama fetch -- abaikan respons basi.
     if (pointsActiveRef.current !== mid) return;
     if (r.ok && r.data) {
       setPointsRows((prev) => (append ? [...prev, ...(r.data!.entries || [])] : r.data!.entries || []));
@@ -271,7 +271,7 @@ export function MemberClient() {
         <div className="flex items-center gap-2">
           <input
             className="input w-64 max-w-full"
-            placeholder="Cari nama, No. HP, alamat…"
+            placeholder="Cari nama, No. HP, alamat..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -326,11 +326,11 @@ export function MemberClient() {
                   </p>
                 </Td>
                 <Td className="text-slate-600 dark:text-slate-300">
-                  {m.address || '—'}
+                  {m.address || '--'}
                 </Td>
                 <Td>
                   <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}>
-                    ★ {m.points} poin
+                     {m.points} poin
                   </Badge>
                 </Td>
                 <Td className="font-bold text-slate-800 dark:text-slate-200">
@@ -396,7 +396,7 @@ export function MemberClient() {
         </Table>
         </div>
 
-        {/* Mobile: kartu member (<sm) — data sama (jendela virtual) dengan tabel.
+        {/* Mobile: kartu member (<sm) -- data sama (jendela virtual) dengan tabel.
             Spacer atas/bawah mengikuti padTop/padBottom agar scroll container tetap akurat. */}
         <div className="sm:hidden">
           {padTop > 0 && <div aria-hidden="true" style={{ height: padTop }} />}
@@ -407,9 +407,9 @@ export function MemberClient() {
                   <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">{m.name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{m.phone || 'Tanpa no. HP'}</p>
                 </div>
-                <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}>★ {m.points} poin</Badge>
+                <Badge tone={m.points > 50 ? 'green' : m.points > 0 ? 'blue' : 'gray'}> {m.points} poin</Badge>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{m.address || '—'}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{m.address || '--'}</p>
               <div className="mt-1 flex items-center justify-between gap-2">
                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{rp(m.total_spent)}</span>
                 <span className="text-1xs text-slate-600 dark:text-slate-400">
@@ -450,7 +450,7 @@ export function MemberClient() {
         {!qDeb.trim() && hasMoreRef.current && (
           <div className="border-t border-slate-200 p-3 text-center dark:border-navy-700">
             <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
-              {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
+              {loadingMore ? 'Memuat...' : 'Muat lebih banyak'}
             </Button>
           </div>
         )}
@@ -467,7 +467,7 @@ export function MemberClient() {
               Batal
             </Button>
             <Button variant="primary" disabled={busy} onClick={save}>
-              {busy ? 'Menyimpan…' : 'Simpan'}
+              {busy ? 'Menyimpan...' : 'Simpan'}
             </Button>
           </>
         }
@@ -502,17 +502,17 @@ export function MemberClient() {
             />
           </div>
           <p className="rounded-lg bg-slate-100 p-2.5 text-xs text-slate-500 dark:bg-navy-900/50 dark:text-slate-400">
-            ℹ️ Setiap transaksi belanja Rp 10.000 di kasir akan otomatis menambahkan 1 poin loyalitas untuk member ini.
+            Setiap transaksi belanja Rp 10.000 di kasir akan otomatis menambahkan 1 poin loyalitas untuk member ini.
           </p>
         </div>
       </Modal>
 
-      {/* Modal Riwayat Poin & Reward (ledger point_history) — baca-saja.
+      {/* Modal Riwayat Poin & Reward (ledger point_history) -- baca-saja.
           Unit delta berjenis campur: poin (earn/redeem/void/refund) vs
-          rupiah/reward (cashback/cashback_use/refund_cash) — lib/points. */}
+          rupiah/reward (cashback/cashback_use/refund_cash) -- lib/points. */}
       <Modal
         open={pointsMember !== null}
-        title={pointsMember ? `Riwayat Poin & Reward — ${pointsMember.name}` : ''}
+        title={pointsMember ? `Riwayat Poin & Reward -- ${pointsMember.name}` : ''}
         onClose={closePoints}
         footer={
           <Button variant="ghost" onClick={closePoints}>
@@ -528,7 +528,7 @@ export function MemberClient() {
                   Poin
                 </p>
                 <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">
-                  ★ {pointsMember.points}
+                   {pointsMember.points}
                 </p>
               </div>
               <div className="rounded-lg bg-slate-100 p-2.5 text-xs dark:bg-navy-900/50">
@@ -562,8 +562,8 @@ export function MemberClient() {
               {pointsRows.map((e) => {
                 const up = e.delta > 0;
                 const value = isPointUnit(e.reason)
-                  ? (up ? '+' : '−') + Math.abs(e.delta).toLocaleString('id-ID') + ' poin'
-                  : (up ? '+' : '−') + rp(Math.abs(e.delta));
+                  ? (up ? '+' : '-') + Math.abs(e.delta).toLocaleString('id-ID') + ' poin'
+                  : (up ? '+' : '-') + rp(Math.abs(e.delta));
                 return (
                   <div
                     key={e.id}
@@ -575,7 +575,7 @@ export function MemberClient() {
                       </p>
                       <p className="text-1xs text-slate-500 dark:text-slate-400">
                         {fmtDateTime(e.created_at)}
-                        {e.sale_id ? ` · Tx #${e.sale_id}` : ''}
+                        {e.sale_id ? ` | Tx #${e.sale_id}` : ''}
                       </p>
                     </div>
                     <span
@@ -602,7 +602,7 @@ export function MemberClient() {
                   disabled={pointsBusy}
                   onClick={loadMorePoints}
                 >
-                  {pointsBusy ? 'Memuat…' : 'Muat lebih banyak'}
+                  {pointsBusy ? 'Memuat...' : 'Muat lebih banyak'}
                 </Button>
               </div>
             )}
@@ -610,8 +610,8 @@ export function MemberClient() {
         )}
       </Modal>
 
-      {/* Modal Kartu Membership — identitas + tier + QR + cetak.
-          Token kosong di-generate otomatis (peran admin; 403 → hint). */}
+      {/* Modal Kartu Membership -- identitas + tier + QR + cetak.
+          Token kosong di-generate otomatis (peran admin; 403 -> hint). */}
       {cardMember && (
         <MemberQrBadge
           member={cardMember}

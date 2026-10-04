@@ -170,7 +170,7 @@ type Member = {
 };
 type MembersResp = { members: Member[] };
 
-/** Daftar pintasan lengkap kasir — tampil di panel Panduan kasir (tombol "Panduan kasir" / key ?). */
+/** Daftar pintasan lengkap kasir -- tampil di panel Panduan kasir (tombol "Panduan kasir" / key ?). */
 const CHEAT_ROWS: [string, string][] = [
   ['F1', 'Fokus pencarian produk'],
   ['F2', 'Fokus nama pembeli'],
@@ -182,8 +182,8 @@ const CHEAT_ROWS: [string, string][] = [
   ['F8', 'Fokus pilih member'],
   ['F9', 'Fokus diskon (pengurus/admin)'],
   ['1 / 2 / 3 / 4', 'Pilih metode bayar: Tunai / QRIS / Transfer / Campur'],
-  ['↑ / ↓', 'Pindah seleksi di keranjang'],
-  ['+ / −', 'Tambah / kurangi qty item terpilih'],
+  ['Up / Down', 'Pindah seleksi di keranjang'],
+  ['+ / -', 'Tambah / kurangi qty item terpilih'],
   ['Del', 'Hapus item terpilih'],
   ['Enter', 'Di kolom uang diterima: checkout langsung'],
   ['Ctrl+P', 'Cetak struk'],
@@ -195,7 +195,7 @@ const CHEAT_ROWS: [string, string][] = [
 ];
 
 /**
- * Tanggal hari ini (YYYY-MM-DD) zona Asia/Jakarta — dipakai cek ulang
+ * Tanggal hari ini (YYYY-MM-DD) zona Asia/Jakarta -- dipakai cek ulang
  * tahun. Server jalan UTC (Vercel), jadi match zona sama agar tidak
  * meleset sehari di sekitar tengah malam.
  */
@@ -242,7 +242,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [pay, setPay] = useState<'cash' | 'tf' | 'wa'>('cash');
   const [note, setNote] = useState('');
   const [received, setReceived] = useState('');
-  // Split pembayaran (fitur 3): nominal per metode, Σ harus = total.
+  // Split pembayaran (fitur 3): nominal per metode, sum harus = total.
   const [mix, setMix] = useState(false);
   const [mixCash, setMixCash] = useState('');
   const [mixTf, setMixTf] = useState('');
@@ -282,14 +282,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [shiftLabel, setShiftLabel] = useState('');
   const [closingSummary, setClosingSummary] = useState<ShiftInfo | null>(null);
 
-  // Hotkey batch 5: seleksi item keranjang (↑/↓/+/-/Del) + panel cheatsheet.
+  // Hotkey batch 5: seleksi item keranjang (Up/Down/+/-/Del) + panel cheatsheet.
   const [selIdx, setSelIdx] = useState(0);
   const [cheatOpen, setCheatOpen] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const memberSelRef = useRef<HTMLSelectElement>(null);
   const discRef = useRef<HTMLInputElement>(null);
-  // Fix 1: target sticky bottom bar mobile — scroll ke keranjang ini.
+  // Fix 1: target sticky bottom bar mobile -- scroll ke keranjang ini.
   const cartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -314,7 +314,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   }, []);
 
   // Pengaturan member (poin, diskon, cashback, ultah, tier) diambil dari
-  // /api/member-settings — admin ubah di /admin/pengaturan-member. POS
+  // /api/member-settings -- admin ubah di /admin/pengaturan-member. POS
   // memakai rumus yang sama dengan server (POST /api/sales) untuk preview
   // perk; server tetap sumber kebenaran saat transaksi disimpan.
   const [memberSettings, setMemberSettings] = useState<Record<string, string> | null>(null);
@@ -414,7 +414,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           return c;
         }
         // Qty naik: harga otomatis ikut tier/grosir (kecuali kasir sudah
-        // set harga manual baris ini — manual menang, tidak di-restore).
+        // set harga manual baris ini -- manual menang, tidak di-restore).
         return c.map((l) =>
           l.product.id === p.id
             ? { ...l, qty: l.qty + 1, price: l.manual ? l.price : autoPrice(p, l.qty + 1) }
@@ -496,8 +496,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         .map((l) => {
           if (l.product.id !== id) return l;
           const q = Math.max(0, Math.min(qty, l.product.stock));
-          // Ubah qty: harga otomatis recompute (naik ambang grosir → turun,
-          // turun ambang → naik lagi); harga manual tetap tidak disentuh.
+          // Ubah qty: harga otomatis recompute (naik ambang grosir -> turun,
+          // turun ambang -> naik lagi); harga manual tetap tidak disentuh.
           return { ...l, qty: q, price: l.manual ? l.price : autoPrice(l.product, q) };
         })
         .filter((l) => l.qty > 0)
@@ -513,7 +513,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   }
 
   function remove(id: number) {
-    // Hapus baris: flag manual ikut hilang — bila produk ini ditambah lagi,
+    // Hapus baris: flag manual ikut hilang -- bila produk ini ditambah lagi,
     // harga kembali otomatis (keputusan grosir: tanpa auto-restore manual).
     setCart((c) => c.filter((l) => l.product.id !== id));
   }
@@ -529,7 +529,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     [members, memberId]
   );
 
-  // Preview perk member — rumus identik dengan server (POST /api/sales):
+  // Preview perk member -- rumus identik dengan server (POST /api/sales):
   // diskon base = member_discount%; saat hari ulang tahun (MM-DD
   // birth_date vs tanggal hari ini zona Asia/Jakarta) & birthday_active,
   // pakai MAKS(birthday_discount, base). Cap 90%. Cashback = % dari total
@@ -544,8 +544,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const baseForPerk = Math.max(0, subtotal - discNum);
   const perkAmt = selectedMember ? Math.floor((baseForPerk * perkPct) / 100) : 0;
   const totalPerk = Math.max(0, baseForPerk - perkAmt);
-  // Preview redemsi (fitur 2): sumber = poin member (× nilai point_value,
-  // dipakai dulu) lalu cashback_balance; cap di total setelah perk —
+  // Preview redemsi (fitur 2): sumber = poin member (x nilai point_value,
+  // dipakai dulu) lalu cashback_balance; cap di total setelah perk --
   // identik dengan rumus server POST /api/sales.
   const pointValue = numSetting('point_value');
   const redeemMax = selectedMember
@@ -598,7 +598,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     }
     if (mix && mixSum !== total) {
       showToast(
-        'Split belum sama dengan total — selisih Rp ' +
+        'Split belum sama dengan total -- selisih Rp ' +
           rpShort(Math.abs(total - mixSum)) +
           (mixSum < total ? ' (kurang)' : ' (lebih)') +
           '. Lengkapi nominal tiap metode.'
@@ -650,21 +650,21 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           }
           return next;
         });
-        showToast('Offline — transaksi tercatat, akan otomatis tersinkron saat internet pulih.');
+        showToast('Offline -- transaksi tercatat, akan otomatis tersinkron saat internet pulih.');
       } else {
-        // Hint UX (review Fitur 3 🟡): server menolak split bila Σ ≠ total
-        // final (total bisa bergeser oleh perk member/redemsi) — arahkan
+        // Hint UX (review Fitur 3): server menolak split bila sum != total
+        // final (total bisa bergeser oleh perk member/redemsi) -- arahkan
         // kasir memperbarui nominal campur.
         const hint =
           mix && r.error && r.error.startsWith('Pembayaran campur belum lunas')
-            ? ' — Total bisa berubah (diskon/poin). Perbarui nominal campur, lalu coba lagi.'
+            ? ' -- Total bisa berubah (diskon/poin). Perbarui nominal campur, lalu coba lagi.'
             : '';
         showToast((r.error || 'Gagal menyimpan transaksi.') + hint);
       }
       return;
     }
     if (r.data.deduped) showToast('Transaksi sudah tersinkron sebelumnya (tanpa duplikat).');
-    // UX-8D (keputusan 8): penjualan sengaja TIDAK di-gate shift — kasir tetap
+    // UX-8D (keputusan 8): penjualan sengaja TIDAK di-gate shift -- kasir tetap
     // bisa melayani walau lupa buka shift; tapi beri peringatan non-blocking
     // bahwa transaksi ini tidak masuk rekap shift (bisa dicatat manual nanti).
     if (currentShift === null)
@@ -756,7 +756,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Hotkey kasir: F1 cari · F2 pembeli · F3 bayar · F4 simpan · F5 cetak · ESC batal.
+  // Hotkey kasir: F1 cari | F2 pembeli | F3 bayar | F4 simpan | F5 cetak | ESC batal.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'F1') {
@@ -811,8 +811,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     checkout,
   ]);
 
-  // ── Hotkey standar kasir (batch 5): F6–F9, Ctrl-*, panah/qty/Del,
-  // cheatsheet '?'. F1–F5 & ESC tetap di handler di atas (memori otot
+  // -- Hotkey standar kasir (batch 5): F6-F9, Ctrl-*, panah/qty/Del,
+  // cheatsheet '?'. F1-F5 & ESC tetap di handler di atas (memori otot
   // tidak berubah). useHotkeys stabil via useRef: listener didaftarkan
   // sekali, isi map ikut render terbaru (bebas closure stale).
   const router = useRouter();
@@ -823,7 +823,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     const tag = t.tagName;
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable;
   }
-  /** true bila salah satu modal POS terbuka — hotkey item di-disable. */
+  /** true bila salah satu modal POS terbuka -- hotkey item di-disable. */
   function anyModalOpen(): boolean {
     return (
       scanModal || qrisModal || shiftModalOpen || memberModal || !!closingSummary || cheatOpen
@@ -833,7 +833,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     const i = selIdx >= cart.length ? 0 : selIdx;
     return i < 0 || i >= cart.length ? -1 : i;
   }
-  /** ↑/↓ geser seleksi item keranjang — aturan: hanya di luar input & modal. */
+  /** Up/Down geser seleksi item keranjang -- aturan: hanya di luar input & modal. */
   function moveSel(e: KeyboardEvent, dir: number) {
     if (anyModalOpen() || inTextTarget(e.target) || cart.length === 0) return;
     e.preventDefault();
@@ -893,7 +893,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   // Fix 3: hotkey 1/2/3/4 untuk memilih metode pembayaran
   // (Tunai / QRIS / Transfer / Campur). Dijaga agar tidak memicu saat
   // kasir sedang mengetik di kolom apa pun (pencarian, uang diterima,
-  // dsb.) atau saat modal terbuka — mengetikan nominal tetap normal.
+  // dsb.) atau saat modal terbuka -- mengetikan nominal tetap normal.
   function selectPayMethod(e: KeyboardEvent, which: 'cash' | 'wa' | 'tf' | 'mix') {
     if (inTextTarget(e.target) || anyModalOpen()) return;
     e.preventDefault();
@@ -921,7 +921,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     f9: () => {
       if (!anyModalOpen() && admin) discRef.current?.focus();
     },
-    // Fix 3: 1=Tunai · 2=QRIS · 3=Transfer · 4=Campur (di luar kolom ketik).
+    // Fix 3: 1=Tunai | 2=QRIS | 3=Transfer | 4=Campur (di luar kolom ketik).
     '1': (e) => selectPayMethod(e, 'cash'),
     '2': (e) => selectPayMethod(e, 'wa'),
     '3': (e) => selectPayMethod(e, 'tf'),
@@ -945,7 +945,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     'ctrl+h': (e) => {
       if (inTextTarget(e.target)) return;
       // Catatan: di Chrome shortcut ini ditahan browser (bisa dicegah di
-      // Firefox/Edge) — bila tak aktif, riwayat tetap bisa via menu.
+      // Firefox/Edge) -- bila tak aktif, riwayat tetap bisa via menu.
       e.preventDefault();
       router.push('/laporan');
     },
@@ -1060,7 +1060,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     showToast('Teks struk berhasil disalin ke clipboard');
   }
 
-  // Fix 1: sticky bottom bar (mobile) — ketuk bar → scroll halus ke
+  // Fix 1: sticky bottom bar (mobile) -- ketuk bar -> scroll halus ke
   // keranjang & fokus ke kolom "Uang diterima" agar kasir langsung bisa
   // mengetik nominal bayar tanpa mengulir halaman sampai bawah.
   function goToCart() {
@@ -1088,11 +1088,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <span className="font-bold text-slate-800 dark:text-slate-200">
                 Shift Aktif: {currentShift.label || 'Sesi Kasir'}
               </span>
-              <span className="text-slate-500">·</span>
+              <span className="text-slate-500">|</span>
               <span className="text-slate-600 dark:text-slate-400">
                 Mulai: {fmtDateTime(currentShift.start_time).split(' ')[1] || currentShift.start_time}
               </span>
-              <span className="text-slate-500">·</span>
+              <span className="text-slate-500">|</span>
               <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                 {currentShift.sales_count} Transaksi ({rp(currentShift.sales_total)})
               </span>
@@ -1142,20 +1142,20 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       {!isOnline && (
         <div className="flex items-center gap-2 rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-2.5 text-xs font-semibold text-blue-600 dark:text-blue-300">
           <Radio className="h-4 w-4 shrink-0" />
-          Mode offline — POS tetap berjalan. Transaksi akan tersimpan & tersinkron otomatis.
+          Mode offline -- POS tetap berjalan. Transaksi akan tersimpan & tersinkron otomatis.
         </div>
       )}
       {offlineQueue.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
           <span className="inline-flex items-center gap-1.5">
             <Zap className="h-3.5 w-3.5 shrink-0" />
-            {offlineQueue.length} transaksi offline menunggu sinkronisasi…
+            {offlineQueue.length} transaksi offline menunggu sinkronisasi...
           </span>
           <Button variant="amber" size="sm"
             onClick={() => void flushQueue()}
             disabled={!isOnline}
             loading={flushing}
-            loadingLabel="Sinkronisasi…"
+            loadingLabel="Sinkronisasi..."
           >
             Sinkronkan Sekarang
           </Button>
@@ -1163,9 +1163,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       )}
 
       {/* Main POS layout */}
-      {/* minmax(0,1fr) + min-w-0: grid item default min-width:auto — bila
-          baris kategori (whitespace-nowrap) mbiyungahaké track, kaca HP
-          mungsor menyang tengen (semua elemen cut-off). minmax(0,…) ngunci. */}
+      {/* minmax(0,1fr) + min-w-0: grid item default min-width:auto -- bila
+          baris kategori (whitespace-nowrap) mbiyungahake track, kaca HP
+          mungsor menyang tengen (semua elemen cut-off). minmax(0,...) ngunci. */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
         {/* Left Column: Product catalog & Search */}
         <div className="min-w-0">
@@ -1178,7 +1178,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               <input
                 ref={searchInputRef}
                 className="input pl-9"
-                placeholder="Ketik nama / scan barcode — Enter utk auto-add (F1)…"
+                placeholder="Ketik nama / scan barcode -- Enter utk auto-add (F1)..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
@@ -1194,7 +1194,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               )}
             </div>
 
-            {/* Scan barcode via kamera (jsQR) — fallback utk HP tanpa scanner */}
+            {/* Scan barcode via kamera (jsQR) -- fallback utk HP tanpa scanner */}
             <button
               type="button"
               onClick={() => setScanModal(true)}
@@ -1208,9 +1208,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               </span>
             </button>
 
-            {/* Category pills — Fix 2: 1 baris + scroll horizontal
+            {/* Category pills -- Fix 2: 1 baris + scroll horizontal
                 (scrollbar disembunyikan via .no-scrollbar) agar hemat
-                2–3 baris vertikal; kategori tetap bisa digulir. */}
+                2-3 baris vertikal; kategori tetap bisa digulir. */}
             <div
               className="no-scrollbar flex flex-nowrap gap-1.5 overflow-x-auto pb-1"
               role="tablist"
@@ -1271,7 +1271,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       <p className="text-sm font-extrabold text-accent-500 dark:text-accent-300">
                         {rp(p.base_price)}
                       </p>
-                      {/* Grosir v1: produk ini punya tier — ada harga
+                      {/* Grosir v1: produk ini punya tier -- ada harga
                           lebih murah saat qty mencapai ambang. */}
                       {hasGrosirTier && (
                         <span className="rounded bg-emerald-500/15 px-1 py-0.5 text-2xs font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
@@ -1327,7 +1327,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
             {cart.map((l, idx) => {
               // Grosir v1: % diskon aktif utk qty baris ini (tier terbaik
-              // MAKS global). Badge tampil hanya utk harga OTOMATIS — bila
+              // MAKS global). Badge tampil hanya utk harga OTOMATIS -- bila
               // kasir sudah set harga manual, itu harga kasir (tanpa klaim
               // grosir di struk), bukan harga sistem.
               const gPct = l.manual ? 0 : grosirPct(l.product, l.qty);
@@ -1348,7 +1348,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     </p>
                     {gPct > 0 ? (
                       <span className="mt-0.5 inline-block rounded bg-emerald-500/15 px-1.5 py-0.5 text-2xs font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-                        Grosir −{gPct}%
+                        Grosir -{gPct}%
                       </span>
                     ) : l.manual ? (
                       <span className="mt-0.5 inline-block rounded bg-amber-500/15 px-1.5 py-0.5 text-2xs font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
@@ -1446,8 +1446,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     })
                     .map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.name} {m.phone ? `(${m.phone})` : ''} · {m.points} poin
-                        {m.tier ? ` · ${m.tier === 'gold' ? 'Gold' : 'Silver'}` : ''}
+                        {m.name} {m.phone ? `(${m.phone})` : ''} | {m.points} poin
+                        {m.tier ? ` | ${m.tier === 'gold' ? 'Gold' : 'Silver'}` : ''}
                       </option>
                     ))}
                 </select>
@@ -1484,8 +1484,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   </div>
                   <div>
                     {selectedMember.points} poin (+{Math.floor(total / pointsEvery)} poin)
-                    {perkAmt > 0 ? ` · Diskon member −${rp(perkAmt)}${isBday ? ' (ultah)' : ''}` : ''}
-                    {cbPreview > 0 ? ` · Saldo Reward +${rp(cbPreview)}` : ''}
+                    {perkAmt > 0 ? ` | Diskon member -${rp(perkAmt)}${isBday ? ' (ultah)' : ''}` : ''}
+                    {cbPreview > 0 ? ` | Saldo Reward +${rp(cbPreview)}` : ''}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className={redeemMax <= 0 ? 'text-slate-600 dark:text-slate-400' : ''}>
@@ -1520,14 +1520,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     {redeemMax <= 0
                       ? 'Tidak tersedia (saldo poin & reward habis)'
                       : redeemAmt > 0
-                        ? `Tebus −${rp(redeemAmt)} (${redeemPts} poin + Rp ${rp(redeemCb)} reward)`
+                        ? `Tebus -${rp(redeemAmt)} (${redeemPts} poin + Rp ${rp(redeemCb)} reward)`
                         : `Saldo: ${selectedMember.points} poin${
-                            pointValue > 0 ? ` × ${rp(pointValue)}` : ''
-                          } · saldo reward ${rp(selectedMember.cashback_balance || 0)} · maks ${rp(redeemMax)}`}
+                            pointValue > 0 ? ` x ${rp(pointValue)}` : ''
+                          } | saldo reward ${rp(selectedMember.cashback_balance || 0)} | maks ${rp(redeemMax)}`}
                   </div>
                   {redeemInputNum > redeemMax && redeemMax > 0 && (
                     <div className="text-amber-700 dark:text-amber-400">
-                      Nominal melebihi saldo — ditinjau ke maksimal {rp(redeemMax)}.
+                      Nominal melebihi saldo -- ditinjau ke maksimal {rp(redeemMax)}.
                     </div>
                   )}
                 </div>
@@ -1542,11 +1542,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               onChange={(e) => setCustomer(e.target.value)}
             />
 
-            {/* Payment Method Selector — Fix 3: hotkey 1/2/3/4
-                Mobile: grid 2×2 (ora 4-in-1-baris → label "QRIS / Non-Tunai"
+            {/* Payment Method Selector -- Fix 3: hotkey 1/2/3/4
+                Mobile: grid 2x2 (ora 4-in-1-baris -> label "QRIS / Non-Tunai"
                 mrah 3 baris + badge nomer mrayang). Konten tiap kartu sadermigena
                 (konstan): icon + label + nomer fixed ing tengen, setinggi
-                seragam. Desktop uga konsisten 2×2 (kartu luwih lapang). */}
+                seragam. Desktop uga konsisten 2x2 (kartu luwih lapang). */}
             <div className="grid grid-cols-2 gap-1.5">
               {(
                 [
@@ -1584,11 +1584,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               </TogglePill>
             </div>
 
-            {/* Split pembayaran (fitur 3): nominal tiap metode, Σ = total */}
+            {/* Split pembayaran (fitur 3): nominal tiap metode, sum = total */}
             {mix && total > 0 && (
               <div className="space-y-1.5 rounded-lg bg-amber-500/10 p-2 text-xs">
                 <p className="font-bold text-amber-700 dark:text-amber-300">
-                  Split pembayaran — total {rp(total)} (lunas, tanpa piutang)
+                  Split pembayaran -- total {rp(total)} (lunas, tanpa piutang)
                 </p>
                 <div className="flex gap-1.5">
                   <input
@@ -1648,12 +1648,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   ref={receivedRef}
                   className="input text-sm font-bold"
                   inputMode="numeric"
-                  placeholder="Uang diterima (Rp) · F3 · Enter = checkout"
+                  placeholder="Uang diterima (Rp) | F3 | Enter = checkout"
                   value={received}
                   onChange={(e) => setReceived(e.target.value)}
                   onKeyDown={(e) => {
                     // Enter di kolom uang diterima = checkout langsung
-                    // (guard uang kurang tetap jalan → toast).
+                    // (guard uang kurang tetap jalan -> toast).
                     if (e.key === 'Enter' && !mix && pay === 'cash' && total > 0) {
                       e.preventDefault();
                       void checkout();
@@ -1665,7 +1665,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <button
                       type="button"
                       onClick={() => setReceived(String(total))}
-                      title="Fix 4: isi otomatis nominal total — lunas tanpa kembalian"
+                      title="Fix 4: isi otomatis nominal total -- lunas tanpa kembalian"
                       className="rounded bg-slate-100 px-2 py-1 text-1xs font-bold hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-200"
                     >
                       Lunas
@@ -1704,7 +1704,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 ref={discRef}
                 className="input text-xs"
                 inputMode="numeric"
-                placeholder="Diskon khusus pengurus (Rp) · F9"
+                placeholder="Diskon khusus pengurus (Rp) | F9"
                 value={disc}
                 onChange={(e) => setDisc(e.target.value)}
               />
@@ -1753,8 +1753,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
 
             {/* Petunjuk hotkey (desktop) */}
             <p className="hidden text-2xs font-medium text-slate-500 lg:block dark:text-slate-500">
-              F1 Cari · F2 Pembeli · F3 Bayar · F4 Simpan · F5 Cetak · F6 Split · F7 Shift
-              · 1–4 Metode · ? Semua
+              F1 Cari | F2 Pembeli | F3 Bayar | F4 Simpan | F5 Cetak | F6 Split | F7 Shift
+              | 1-4 Metode | ? Semua
             </p>
 
             {/* Checkout Button */}
@@ -1762,7 +1762,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               onClick={checkout}
               disabled={cart.length === 0}
               loading={busy}
-              loadingLabel="Menyimpan Transaksi…"
+              loadingLabel="Menyimpan Transaksi..."
               className="font-bold"
             >
               Bayar {rp(total)} (F4)
@@ -2037,7 +2037,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           {receipt.paySplit && receipt.paySplit.length > 0 ? (
             receipt.paySplit.map((p) => (
               <div key={p.m} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>├ {payMethodLabel(p.m)}</span>
+                <span>- {payMethodLabel(p.m)}</span>
                 <span>{rp(p.a)}</span>
               </div>
             ))
@@ -2108,7 +2108,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               {rp(total)}
             </p>
             <p className="text-xs text-slate-500">
-              NMID: ID102003004050 · KOPONTREN AL ITTIHAD
+              NMID: ID102003004050 | KOPONTREN AL ITTIHAD
             </p>
             <p className="text-1xs text-slate-500 mt-1">
               Dapat discan menggunakan BCA, Mandiri, BSI, GoPay, OVO, Dana, ShopeePay
@@ -2264,7 +2264,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         </div>
       </Modal>
 
-      {/* UX-2: Panduan kasir — cara transaksi + pintasan + jika ada masalah
+      {/* UX-2: Panduan kasir -- cara transaksi + pintasan + jika ada masalah
           (tombol ghost "Panduan kasir" di banner shift / tekan ?) */}
       <Modal open={cheatOpen} title="Panduan Kasir" onClose={() => setCheatOpen(false)}>
         <div className="space-y-4">
@@ -2274,25 +2274,25 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </h3>
             <ol className="space-y-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
               <li>
-                <span className="font-bold text-slate-800 dark:text-slate-100">1. Pilih produk</span> —
+                <span className="font-bold text-slate-800 dark:text-slate-100">1. Pilih produk</span> --
                 ketik nama / scan barcode di kolom pencarian (F1); di HP pakai tombol scan.
               </li>
               <li>
                 <span className="font-bold text-slate-800 dark:text-slate-100">2. Pilih pembeli</span>
-                (opsional) — ketik nama (F2) atau pilih member terdaftar (F8); poin loyalitas
+                (opsional) -- ketik nama (F2) atau pilih member terdaftar (F8); poin loyalitas
                 tercatat otomatis.
               </li>
               <li>
-                <span className="font-bold text-slate-800 dark:text-slate-100">3. Bayar</span> —
-                pilih metode: 1 tunai · 2 QRIS · 3 transfer · 4 campur (F6). Tunai: ketik uang
+                <span className="font-bold text-slate-800 dark:text-slate-100">3. Bayar</span> --
+                pilih metode: 1 tunai | 2 QRIS | 3 transfer | 4 campur (F6). Tunai: ketik uang
                 diterima (F3), kembalian terhitung otomatis.
               </li>
               <li>
-                <span className="font-bold text-slate-800 dark:text-slate-100">4. Simpan</span> (F4) —
+                <span className="font-bold text-slate-800 dark:text-slate-100">4. Simpan</span> (F4) --
                 transaksi tercatat di shift &amp; laporan.
               </li>
               <li>
-                <span className="font-bold text-slate-800 dark:text-slate-100">5. Struk</span> (F5 / Ctrl+P) —
+                <span className="font-bold text-slate-800 dark:text-slate-100">5. Struk</span> (F5 / Ctrl+P) --
                 cetak, atau bagikan via WA dari struk.
               </li>
             </ol>
@@ -2315,8 +2315,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               ))}
             </div>
             <p className="mt-3 text-2xs leading-relaxed text-slate-600 dark:text-slate-400">
-              Panah / + / − / Del hanya aktif di luar kolom ketik &amp; saat modal tertutup.
-              Ctrl+H bisa ditahan browser tertentu (Chrome) — riwayat tetap bisa dibuka lewat
+              Panah / + / - / Del hanya aktif di luar kolom ketik &amp; saat modal tertutup.
+              Ctrl+H bisa ditahan browser tertentu (Chrome) -- riwayat tetap bisa dibuka lewat
               menu Laporan &amp; Rekap.
             </p>
           </section>
@@ -2326,21 +2326,21 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </h3>
             <ul className="space-y-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
               <li>
-                <span className="font-bold text-slate-800 dark:text-slate-100">Internet mati</span> —
+                <span className="font-bold text-slate-800 dark:text-slate-100">Internet mati</span> --
                 lanjutkan transaksi saja; ia antre offline &amp; sinkron otomatis saat internet
                 pulih (banner biru di atas).
               </li>
               <li>
-                <span className="font-bold text-slate-800 dark:text-slate-100">Item salah di keranjang</span> —
-                pindah seleksi (↑ / ↓), ubah qty (+ / −), hapus (Del), atau reset seluruh
+                <span className="font-bold text-slate-800 dark:text-slate-100">Item salah di keranjang</span> --
+                pindah seleksi (Up / Down), ubah qty (+ / -), hapus (Del), atau reset seluruh
                 pesanan (Ctrl+R).
               </li>
               <li>
-                <span className="font-bold text-slate-800 dark:text-slate-100">Sudah tersimpan tapi keliru</span> —
+                <span className="font-bold text-slate-800 dark:text-slate-100">Sudah tersimpan tapi keliru</span> --
                 buka Laporan &amp; Rekap (Ctrl+H) untuk cek; pengembalian produk lewat halaman Retur.
               </li>
               <li>
-                <span className="font-bold text-slate-800 dark:text-slate-100">Lupa pintasan</span> —
+                <span className="font-bold text-slate-800 dark:text-slate-100">Lupa pintasan</span> --
                 tekan ? kapan saja untuk membuka panduan ini.
               </li>
             </ul>
@@ -2348,8 +2348,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         </div>
       </Modal>
 
-      {/* Fix 1: sticky bottom bar — mobile/tablet (<lg) saja, tampil
-          hanya saat ada item di keranjang. Ketuk → lompat ke
+      {/* Fix 1: sticky bottom bar -- mobile/tablet (<lg) saja, tampil
+          hanya saat ada item di keranjang. Ketuk -> lompat ke
           keranjang + fokus "Uang diterima". Desktop: tidak tampil. */}
       {cart.length > 0 && (
         <div
@@ -2365,11 +2365,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <span className="flex min-w-0 items-center gap-1.5 text-sm font-bold">
               <ShoppingCart className="h-4 w-4 shrink-0" />
               <span className="min-w-0 truncate">
-                {cart.length} item · {rp(total)}
+                {cart.length} item | {rp(total)}
               </span>
             </span>
             <span className="shrink-0 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-bold">
-              Lihat Keranjang →
+              Lihat Keranjang &gt;
             </span>
           </button>
         </div>
@@ -2481,7 +2481,7 @@ function CameraScan({ onCode, onClose }: { onCode: (code: string) => void; onClo
         </div>
       </div>
       <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-        <span>{status === 'starting' ? 'Menyalakan kamera…' : 'Arahkan barcode ke dalam bingkai'}</span>
+        <span>{status === 'starting' ? 'Menyalakan kamera...' : 'Arahkan barcode ke dalam bingkai'}</span>
         <Button variant="ghost" size="sm" onClick={onClose}>
           Batal (ESC)
         </Button>

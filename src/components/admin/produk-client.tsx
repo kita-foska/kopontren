@@ -126,7 +126,7 @@ export function ProdukClient() {
     if (p) {
       setForm({ ...p, barcode: p.barcode ?? '' });
       // Muat tier grosir dari kolom `wholesale` produk (diisi subquery
-      // /api/products) — bila field tidak ada (klien/cache lama), fetch
+      // /api/products) -- bila field tidak ada (klien/cache lama), fetch
       // langsung dari endpoint prices supaya form tetap utuh.
       if (p.wholesale !== undefined) setTiers(parseTiers(p.wholesale));
       else if (p.id) {
@@ -185,7 +185,7 @@ export function ProdukClient() {
     }
   }
 
-  // ── Grosir v1: kelola tier (min_qty → discount%) per form ─────────────
+  // -- Grosir v1: kelola tier (min_qty -> discount%) per form -------------
   function addTier() {
     setTiersBusy(true);
     setTiers((t) => [...t, { min_qty: 2, discount_percent: 0 }]);
@@ -198,7 +198,7 @@ export function ProdukClient() {
     setTiersBusy(true);
     setTiers((t) => t.filter((_, j) => j !== i));
   }
-  /** Harga efektif (Rp) bila diskon tier ini diterapkan ke base_price —
+  /** Harga efektif (Rp) bila diskon tier ini diterapkan ke base_price --
    *  rumus sama dgn modul murni lib/wholesale (dipakai POS + test). */
   function tierEffPrice(t: TierDraft): number {
     const base = Number(form.base_price) || 0;
@@ -248,8 +248,8 @@ export function ProdukClient() {
         });
         if (r.ok) {
           if (r.data?.archived) {
-            // Ber-riwayat → server soft-archive (baris aman); undo = aktifkan.
-            showToast('Produk dinonaktifkan — riwayat penjualan tetap aman', 'critical', {
+            // Ber-riwayat -> server soft-archive (baris aman); undo = aktifkan.
+            showToast('Produk dinonaktifkan -- riwayat penjualan tetap aman', 'critical', {
               label: 'Urungkan',
               run: () =>
                 void api('/api/products/' + p.id, {
@@ -277,7 +277,7 @@ export function ProdukClient() {
     setLabel(p);
   }
 
-  // ── Kelola massal ────────────────────────────────────────────────
+  // -- Kelola massal ------------------------------------------------
   function toggleSel(id: number) {
     setSelected((s) => {
       const next = new Set(s);
@@ -310,7 +310,7 @@ export function ProdukClient() {
     setBulkBusy(false);
     if (r.ok) {
       if (action === 'delete') {
-        // I-2: bulk hapus = soft-archive semua → undo = aktifkan kembali
+        // I-2: bulk hapus = soft-archive semua -> undo = aktifkan kembali
         // via endpoint yang sama (tier akses sama).
         showToast(r.data?.affected + ' produk dinonaktifkan', 'critical', {
           label: 'Urungkan',
@@ -388,7 +388,7 @@ export function ProdukClient() {
         <div className="flex flex-wrap items-center gap-2">
           <input
             className="input w-64 max-w-full"
-            placeholder="Cari nama, barcode, kategori…"
+            placeholder="Cari nama, barcode, kategori..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -429,7 +429,7 @@ export function ProdukClient() {
           <input
             className="input w-24 py-1"
             type="number"
-            placeholder="Stok ±"
+            placeholder="Stok +/-"
             value={bulkStock}
             onChange={(e) => setBulkStock(e.target.value)}
           />
@@ -446,7 +446,7 @@ export function ProdukClient() {
             value={bulkCat}
             onChange={(e) => setBulkCat(e.target.value)}
           >
-            <option value="">Kategori…</option>
+            <option value="">Kategori...</option>
             {categories.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -499,7 +499,7 @@ export function ProdukClient() {
         </div>
       )}
 
-      {/* Product Table (desktop ≥sm) */}
+      {/* Product Table (desktop sm+) */}
       <div className="card hidden overflow-x-auto sm:block">
         <Table minW="min-w-[44rem]">
           <thead>
@@ -547,11 +547,11 @@ export function ProdukClient() {
                     <p className="font-bold text-slate-900 dark:text-slate-100">{p.name}</p>
                     <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                       <span>{p.category || 'Tanpa kategori'}</span>
-                      <span>·</span>
+                      <span>|</span>
                       <span>{p.unit}</span>
                       {p.barcode && (
                         <>
-                          <span>·</span>
+                          <span>|</span>
                           <span className="font-mono rounded bg-slate-100 px-1.5 py-0.5 text-2xs text-slate-700 dark:bg-navy-700 dark:text-slate-300">
                             {p.barcode}
                           </span>
@@ -581,7 +581,7 @@ export function ProdukClient() {
                         disabled={stockBusy}
                         onClick={() => setStock(p)}
                       >
-                        {stockBusy ? '…' : 'Simpan'}
+                        {stockBusy ? '...' : 'Simpan'}
                       </Button>
                       {p.stock <= 0 ? (
                         <StatusBadge status="habis" />
@@ -645,7 +645,7 @@ export function ProdukClient() {
         </Table>
       </div>
 
-      {/* Mobile: kartu produk (<sm) — data sama dengan tabel; toggle status,
+      {/* Mobile: kartu produk (<sm) -- data sama dengan tabel; toggle status,
           input stok & tombol aksi pakai hit-area 44px. */}
       <div className="card sm:hidden">
         {filtered.map((p) => {
@@ -657,8 +657,8 @@ export function ProdukClient() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{p.name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {p.category || 'Tanpa kategori'} · {p.unit}
-                    {p.barcode ? ' · ' + p.barcode : ''}
+                    {p.category || 'Tanpa kategori'} | {p.unit}
+                    {p.barcode ? ' | ' + p.barcode : ''}
                   </p>
                 </div>
                 <Button
@@ -675,7 +675,7 @@ export function ProdukClient() {
               <div className="mt-2 flex items-center justify-between gap-2">
                 <div className="text-xs text-slate-500 dark:text-slate-400">
                   <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{rp(p.base_price)}</p>
-                  HPP {rp(p.cost_price)} · Margin +{rp(margin)} ({marginPct}%)
+                  HPP {rp(p.cost_price)} | Margin +{rp(margin)} ({marginPct}%)
                 </div>
                 <div className="flex items-center gap-1.5">
                   <input
@@ -692,7 +692,7 @@ export function ProdukClient() {
                     disabled={stockBusy}
                     onClick={() => setStock(p)}
                   >
-                    {stockBusy ? '…' : 'Simpan'}
+                    {stockBusy ? '...' : 'Simpan'}
                   </Button>
                 </div>
                 {p.stock <= 0 ? (
@@ -738,7 +738,7 @@ export function ProdukClient() {
               Batal
             </Button>
             <Button variant="primary" disabled={saveBusy} onClick={save}>
-              {saveBusy ? 'Menyimpan…' : 'Simpan'}
+              {saveBusy ? 'Menyimpan...' : 'Simpan'}
             </Button>
           </>
         }
@@ -767,7 +767,7 @@ export function ProdukClient() {
               {F('stock', { numeric: true, label: 'Stok awal' })}
             </div>
           )}
-          {/* ── Grosir v1: tier harga per produk (min_qty → discount%) ── */}
+          {/* -- Grosir v1: tier harga per produk (min_qty -> discount%) -- */}
           <div className="col-span-2">
             <div className="mb-1 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
@@ -778,7 +778,7 @@ export function ProdukClient() {
               </Button>
             </div>
             <p className="mb-2 text-1xs leading-snug text-slate-600 dark:text-slate-400">
-              Beli ≥ jumlah minimum dapat diskon dari harga jual. Diskon dihitung dari harga
+              Beli jumlah minimum ke atas dapat diskon dari harga jual. Diskon dihitung dari harga
               satuan dasar; tier dengan jumlah minimum terkecil yang terpenuhi berlaku,
               dan bila ada pengaturan grosir global yang lebih besar, yang lebih besar dipakai.
             </p>
@@ -817,7 +817,7 @@ export function ProdukClient() {
                       />
                     </div>
                     <div className="w-28 shrink-0 pb-1 text-right text-1xs text-slate-600 dark:text-slate-400">
-                      {t.discount_percent > 0 ? '≈ ' + rp(tierEffPrice(t)) : '—'}
+                      {t.discount_percent > 0 ? '~' + rp(tierEffPrice(t)) : '--'}
                     </div>
                     <Button
                       variant="ghost"

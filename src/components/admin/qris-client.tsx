@@ -120,7 +120,7 @@ export function QrisClient() {
             </p>
           </div>
           <div>
-            <label className="label">NMID2 (tag 31) — opsional</label>
+            <label className="label">NMID2 (tag 31) -- opsional</label>
             <input
               className="input"
               value={nmid2}
@@ -132,7 +132,7 @@ export function QrisClient() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">MCC (tag 52) — opsional</label>
+              <label className="label">MCC (tag 52) -- opsional</label>
               <input
                 className="input"
                 placeholder="mis. 5731"
@@ -144,7 +144,7 @@ export function QrisClient() {
               />
             </div>
             <div>
-              <label className="label">Kota (tag 60) — opsional</label>
+              <label className="label">Kota (tag 60) -- opsional</label>
               <input
                 className="input"
                 placeholder="mis. Sleman"
@@ -157,12 +157,12 @@ export function QrisClient() {
             </div>
           </div>
           <div className="rounded-lg bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
-            Nama merchant (tag 59): <strong>{s?.store_name || '…'}</strong> — mengikuti
+            Nama merchant (tag 59): <strong>{s?.store_name || '...'}</strong> -- mengikuti
             pengaturan toko. Perubahan NMID/NMID2/MCC/kota tercatat di audit trail.
           </div>
           <div>
             <Button variant="primary" onClick={save} disabled={saving || !dirty}>
-              {saving ? 'Menyimpan…' : dirty ? 'Simpan' : 'Sudah tersimpan'}
+              {saving ? 'Menyimpan...' : dirty ? 'Simpan' : 'Sudah tersimpan'}
             </Button>
           </div>
         </div>
@@ -189,7 +189,7 @@ export function QrisClient() {
               )}
             </div>
             <p className="text-center text-xs text-slate-500">
-              QR statis (tanpa nominal) — pembeli input nominal di e-wallet. Dapat discan:
+              QR statis (tanpa nominal) -- pembeli input nominal di e-wallet. Dapat discan:
               BCA, Mandiri, BSI, GoPay, OVO, Dana, ShopeePay.
             </p>
             <div className="flex justify-center gap-2">
@@ -197,7 +197,7 @@ export function QrisClient() {
                 Download PNG
               </Button>
               <Button variant="ghost" onClick={copyPayload} disabled={!payload}>
-                {copied ? 'Tersalin ✓' : 'Copy Payload'}
+                {copied ? 'Tersalin' : 'Copy Payload'}
               </Button>
             </div>
             {payload && (
