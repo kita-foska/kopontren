@@ -9,6 +9,7 @@ import {
   Button,
   FilterPill,
   Modal,
+  TermTip,
   Toast,
   TogglePill,
   useToast,
@@ -1489,7 +1490,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className={redeemMax <= 0 ? 'text-slate-600 dark:text-slate-400' : ''}>
-                      Tebus poin/saldo
+                      <TermTip
+                        term="Tebus poin/saldo"
+                        tip="Bayar sebagian tagihan dengan poin member (dikonversi ke nilai Rupiah) dan saldo reward; poin terpakai dulu, sisanya dari saldo reward."
+                      >
+                        Tebus poin/saldo
+                      </TermTip>
                     </span>
                     <input
                       type="text"

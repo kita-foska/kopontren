@@ -135,6 +135,25 @@ const IconAkad = (
   </svg>
 );
 
+// UX-1: ikon Glosarium (buku terbuka -- inline SVG 16px, stroke
+// currentColor; tanpa emoji/unicode/ikon-font).
+const IconGlosarium = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z" />
+    <path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" />
+  </svg>
+);
+
 export function levelOk(role: Role, lv: MenuLevel): boolean {
   if (role === 'admin') return true; // mirror canAccess: admin selalu lolos
   if (lv === 'ops') return role === 'manajer'; // mirror isManager
@@ -158,6 +177,8 @@ export const MENU_ITEMS: MenuDef[] = [
   { href: '/piutang', label: 'Poin & Piutang', level: 'piutang' },
   { href: '/admin/hutang', label: 'Hutang', roleLabel: { pembelian: 'Hutang Supplier' }, level: 'supplier' },
   { href: '/tutorial', label: 'Tutorial', level: 'personal' },
+  // UX-1: Glosarium (E37/E39) -- daftar istilah bahasa awam, semua role.
+  { href: '/admin/glosarium', label: 'Glosarium', icon: IconGlosarium, level: 'personal' },
   { href: '/admin/zakat', label: 'Zakat', level: 'zakat' },
   // W2.7: modul ZIS (skema v22; tier zis = admin + manajer, D2).
   { href: '/admin/zis', label: 'ZIS', icon: IconZis, level: 'zis' },
@@ -180,7 +201,7 @@ export const MENU_ITEMS: MenuDef[] = [
 
 /** 4 grup (Q1 27 Sep: Loyalty fold ke OPERASIONAL - 4 grup, bukan 5). */
 const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
-  { title: 'Utama', hrefs: ['/', '/admin/dashboard', '/pengurus/dashboard', '/tutorial'] },
+  { title: 'Utama', hrefs: ['/', '/admin/dashboard', '/pengurus/dashboard', '/tutorial', '/admin/glosarium'] },
   {
     title: 'Operasional',
     hrefs: [
@@ -455,6 +476,7 @@ function groupsFor(role: Role): NavGroup[] {
           { href: '/', label: 'Ringkasan' },
           { href: '/member', label: 'Kartu Saya' },
           { href: '/tutorial', label: 'Tutorial' }, // T2: level personal = semua role
+          { href: '/admin/glosarium', label: 'Glosarium' }, // UX-1: semua role
         ],
       },
     ];

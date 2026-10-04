@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { canAccess, currentUser, isManager, roleHome } from '@/lib/auth';
 import { Shell } from '@/components/shell';
+import { TermTip } from '@/components/ui';
 import { PosLazy } from '@/components/pos-lazy';
 
 export const dynamic = 'force-dynamic';
@@ -14,9 +15,15 @@ export default async function KasirPage() {
   return (
     <Shell user={user}>
       <h1 className="mb-4 text-2xl font-extrabold tracking-tight">
-        Kasir <span className="text-accent-500 dark:text-accent-300">POS</span>
+        Kasir{' '}
+        <TermTip
+          term="POS"
+          tip="POS (Point of Sale): antarmuka kasir untuk transaksi penjualan; struk dicetak thermal 58mm."
+        >
+          <span className="text-accent-500 dark:text-accent-300">POS</span>
+        </TermTip>
         <span className="ml-2 text-sm font-semibold text-slate-600 dark:text-slate-400">
-          · transaksi otomatis menunggu laporan
+          - transaksi otomatis menunggu laporan
         </span>
       </h1>
       <PosLazy admin={isManager(user)} cashier={user.display_name || user.username} />

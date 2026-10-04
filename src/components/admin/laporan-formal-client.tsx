@@ -9,7 +9,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { api, Badge, Button, ErrorState, PageSkeleton, Td, Table, Th, Trow } from '@/components/ui';
+import { api, Badge, Button, ErrorState, PageSkeleton, Td, Table, TermTip, Th, Trow } from '@/components/ui';
 import { rp, todayWibStr } from '@/lib/format';
 import type { PosisiPayload } from '@/lib/laporan/posisi';
 import type { LkaPayload } from '@/lib/laporan/lka';
@@ -108,6 +108,36 @@ export function LaporanFormalClient() {
             </button>
           ))}
         </div>
+      </div>
+      {/* UX-1 (E23/E24): legenda istilah singkat; daftar lengkap di
+          /admin/glosarium (src/lib/glossary.ts, E39). */}
+      <div className="card mt-3 p-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+        {'Istilah: '}
+        <TermTip
+          term="Neraca"
+          tip="Laporan posisi harta (aset) dan kewajiban (utang) per tanggal. Potret kekayaan toko."
+        />
+        {' - '}
+        <TermTip
+          term="LKA"
+          tip="Laporan Laba-Rugi: pendapatan dikurangi beban; selisihnya = laba/rugi bersih."
+        />
+        {' - '}
+        <TermTip
+          term="LPE"
+          tip="Laporan Perubahan Ekuitas: apa yang menambah/mengurangi cadangan dalam periode."
+        />
+        {' - '}
+        <TermTip
+          term="CALK"
+          tip="Catatan Atas Laporan Keuangan: penjelasan kebijakan dan rincian di balik angka."
+        />
+        {' - '}
+        <TermTip
+          term="D=K"
+          tip="Debit harus sama dengan Kredit. Bila tidak seimbang, ada pencatatan yang salah; cek /admin/rekonsiliasi."
+        />
+        {'. Daftar lengkap: menu Glosarium.'}
       </div>
 
       {tab === 'posisi' ? <PositionPanel /> : tab === 'lka' ? <LkaPanel /> : tab === 'lpe' ? <LpePanel /> : tab === 'lak' ? <LakPanel /> : tab === 'calk' ? <CalkPanel /> : <V1Client />}

@@ -12,7 +12,7 @@
  * inline SVG saja.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, Badge, Button, Empty, Table, Td, Th, Trow, Toast, useToast } from '@/components/ui';
+import { api, Badge, Button, Empty, Table, Td, Th, TermTip, Trow, Toast, useToast } from '@/components/ui';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { fmtDateTime, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
@@ -410,7 +410,12 @@ export function AkadClient({ canWrite }: { canWrite: boolean }) {
           <h2 className="mb-3 font-bold">Akad Baru</h2>
           <div className="grid gap-3 md:grid-cols-6">
             <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
-              Jenis
+              <TermTip
+                term="Jenis Akad"
+                tip="Lima akad: jual beli margin tetap (murabahah); bagi hasil (mudharabah/musyarakah); sewa (ijarah); kuasa/wakil (wakalah)."
+              >
+                Jenis
+              </TermTip>
               <select className="input mt-1" value={aType} onChange={(e) => setAType(e.target.value)}>
                 <option value="murabahah">Murabahah</option>
                 <option value="mudharabah">Mudharabah</option>
@@ -418,6 +423,10 @@ export function AkadClient({ canWrite }: { canWrite: boolean }) {
                 <option value="ijarah">Ijarah</option>
                 <option value="wakalah">Wakalah (bridge W3.4)</option>
               </select>
+              <span className="mt-1 block text-[11px] font-normal normal-case tracking-normal text-slate-500 dark:text-slate-400">
+                Margin tetap sejak awal (murabahah); bagi hasil (mudharabah/musyarakah);
+                sewa (ijarah); kuasa (wakalah).
+              </span>
             </label>
             <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-2">
               Counterparty
@@ -449,7 +458,13 @@ export function AkadClient({ canWrite }: { canWrite: boolean }) {
             </label>
             {(aType === 'mudharabah' || aType === 'musyarakah') && (
               <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
-                Nisbah partner (%)
+                <TermTip
+                  term="Nisbah"
+                  tip="Porsi pembagian laba yang disepakati mitra, mis. 70:30."
+                >
+                  Nisbah partner
+                </TermTip>{' '}
+                (%)
                 <input
                   className="input mt-1"
                   inputMode="numeric"
@@ -461,7 +476,13 @@ export function AkadClient({ canWrite }: { canWrite: boolean }) {
             )}
             {aType === 'murabahah' && (
               <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
-                Margin (%)
+                <TermTip
+                  term="Margin"
+                  tip="Margin keuntungan yang diketahui dan tetap sejak awal akad (murabahah); tidak berubah walau cicilan lama."
+                >
+                  Margin
+                </TermTip>{' '}
+                (%)
                 <input
                   className="input mt-1"
                   inputMode="numeric"
@@ -605,7 +626,16 @@ export function AkadClient({ canWrite }: { canWrite: boolean }) {
 
       {/* Simulasi Sek.6.3 (tanpa booking; semua angka input user, 0 preset) */}
       <div className="card p-4">
-        <h2 className="mb-3 font-bold">Simulasi (tanpa booking - Sek.6.3)</h2>
+        <h2 className="mb-3 font-bold">
+          Simulasi (tanpa{' '}
+          <TermTip
+            term="Booking"
+            tip="Booking = pencatatan ke buku. Simulasi hanya menghitung angka dari input; tidak membuat data akad atau jurnal."
+          >
+            booking
+          </TermTip>{' '}
+          - Sek.6.3)
+        </h2>
         <div className="grid gap-3 md:grid-cols-6">
           <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
             Jenis
@@ -620,7 +650,13 @@ export function AkadClient({ canWrite }: { canWrite: boolean }) {
           {(sType === 'murabahah') && (
             <>
               <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-2">
-                Pokok (Rp)
+                <TermTip
+                  term="Pokok"
+                  tip="Jumlah pokok akad (harga barang / modal) yang wajib dibayar kembali."
+                >
+                  Pokok
+                </TermTip>{' '}
+                (Rp)
                 <input
                   className="input mt-1"
                   inputMode="numeric"
@@ -644,7 +680,13 @@ export function AkadClient({ canWrite }: { canWrite: boolean }) {
           {(sType === 'mudharabah' || sType === 'musyarakah') && (
             <>
               <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-2">
-                Profit T (Rp)
+                <TermTip
+                  term="Profit T"
+                  tip="Total laba yang diperkirakan, untuk dibagi antar mitra sesuai nisbah."
+                >
+                  Profit T
+                </TermTip>{' '}
+                (Rp)
                 <input
                   className="input mt-1"
                   inputMode="numeric"

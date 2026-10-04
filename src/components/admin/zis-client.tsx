@@ -8,7 +8,7 @@
  * manual 1120/4100/6020 = W3.5 (badge). 0 emoji; ikon inline SVG saja.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { api, Badge, Button, Empty, Table, Td, Th, Trow, Toast, useToast } from '@/components/ui';
+import { api, Badge, Button, Empty, Table, Td, Th, TermTip, Trow, Toast, useToast } from '@/components/ui';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { fmtDateTime, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
@@ -209,7 +209,14 @@ export function ZisClient() {
           <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">masuk - keluar</p>
         </div>
         <div className="card p-4">
-          <p className="label">Status GL</p>
+          <p className="label">
+            <TermTip
+              term="GL"
+              tip="GL (General Ledger) = buku besar. GL aktif: catatan ZIS otomatis tercatat di jurnal; off: hanya tersimpan sebagai catatan."
+            >
+              Status GL
+            </TermTip>
+          </p>
           <div className="mt-2">
             {d.gl_enabled ? (
               <Badge tone="green">GL aktif - auto jurnal</Badge>
@@ -228,7 +235,12 @@ export function ZisClient() {
         <h2 className="mb-3 font-bold">Catat ZIS</h2>
         <div className="grid gap-3 md:grid-cols-6">
           <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
-            Jenis
+            <TermTip
+              term="Jenis ZIS"
+              tip="Zakat = kewajiban; infak/sedekah = sukarela; wakaf = harta dipegang untuk umum. Tiap jenis punya pencatatan sendiri."
+            >
+              Jenis
+            </TermTip>
             <select className="input mt-1" value={kind} onChange={(e) => setKind(e.target.value)}>
               <option value="zakat">Zakat</option>
               <option value="infak">Infak</option>
@@ -297,7 +309,14 @@ export function ZisClient() {
                 <Th>Arah</Th>
                 <Th className="text-right">Jumlah</Th>
                 <Th>Pemberi</Th>
-                <Th>Status</Th>
+                <Th>
+                  <TermTip
+                    term="Status"
+                    tip="Apakah catatan ini sudah tercatat di buku (jurnal GL): hijau = ada nomor jurnal, abu = GL off, merah = belum tercatat."
+                  >
+                    Status
+                  </TermTip>
+                </Th>
                 <Th>Oleh</Th>
               </tr>
             </thead>

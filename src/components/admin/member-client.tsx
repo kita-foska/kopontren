@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Table, Td, Th, TEmpty, Trow, api, Badge, Button, Empty, Modal, Toast, useConfirm, useToast } from '@/components/ui';
+import { Table, Td, Th, TEmpty, Trow, api, Badge, Button, Empty, Modal, TermTip, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { isPointUnit, pointReasonLabel, type PointEntry } from '@/lib/points';
 import { MemberQrBadge } from './member-qr-badge';
@@ -305,7 +305,14 @@ export function MemberClient() {
             <tr className="border-b border-slate-200 dark:border-navy-700">
               <Th>Nama & Kontak</Th>
               <Th>Alamat / Asrama</Th>
-              <Th>Poin Loyalitas</Th>
+              <Th>
+                <TermTip
+                  term="Poin Loyalitas"
+                  tip="Poin yang didapat member dari belanja; dapat ditebus sesuai nilai poin (lihat menu Keuntungan Member)."
+                >
+                  Poin Loyalitas
+                </TermTip>
+              </Th>
               <Th>Total Belanja</Th>
               <Th>Terdaftar Sejak</Th>
               <Th className="text-right">Aksi</Th>

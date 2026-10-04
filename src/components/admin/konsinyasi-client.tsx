@@ -75,7 +75,7 @@ export function KonsinyasiClient() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [canMore, setCanMore] = useState(false);
   // Kegagalan muat awal (401/403/500): simpan pesan error + tombol retry,
-  // supaya PWA tidak stuck "Memuat…" selamanya (mis. DB produksi belum
+  // supaya PWA tidak stuck "Memuat..." selamanya (mis. DB produksi belum
   // migrasi v16 saat pertama deploy).
   const [loadErr, setLoadErr] = useState('');
   // Guard busy: cegah double-tap pada aksi jual/kembalikan/bayar/tutup.
@@ -154,13 +154,13 @@ export function KonsinyasiClient() {
       showToast('Harga tidak valid');
       return;
     }
-    // P4-B: rate disepakati (antardhin) — null = server resolve
-    // (default per-pemilik → global). 0 = tanpa komisi, valid.
+    // P4-B: rate disepakati (antardhin) -- null = server resolve
+    // (default per-pemilik -> global). 0 = tanpa komisi, valid.
     const rateVal =
       f.commission_rate === '' || f.commission_rate === null
         ? null
         : Number(f.commission_rate);
-    // `action: 'create'` WAJIB — server switch-case pada field ini; tanpa
+    // `action: 'create'` WAJIB -- server switch-case pada field ini; tanpa
     // field tsb request jatuh ke default "Aksi tidak dikenal" (regresi P4-B).
     await post(
       {
@@ -223,7 +223,7 @@ export function KonsinyasiClient() {
   const active = data?.consignments.filter((k) => k.status === 'active') || [];
   const done = data?.consignments.filter((k) => k.status === 'settled') || [];
   // Preview perhitungan form (per unit): rumus PERSIS server
-  // (src/lib/konsinyasi.ts) — floor komisi, bagian pemilik = harga − komisi.
+  // (src/lib/konsinyasi.ts) -- floor komisi, bagian pemilik = harga - komisi.
   const pPrice = f.agree_price === '' ? 0 : Math.floor(Number(f.agree_price) || 0);
   const pRate =
     f.commission_rate === ''
@@ -237,10 +237,10 @@ export function KonsinyasiClient() {
         <ErrorState
           text={loadErr}
           onRetry={load}
-          tech={'GET /api/konsinyasi — ' + loadErr}
+          tech={'GET /api/konsinyasi -- ' + loadErr}
         />
       );
-    return <p className="text-sm text-slate-500">Memuat…</p>;
+    return <p className="text-sm text-slate-500">Memuat...</p>;
   }
 
   function KonsCard({ k, doneMode, busy }: { k: Kons; doneMode: boolean; busy?: boolean }) {
@@ -253,22 +253,22 @@ export function KonsinyasiClient() {
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Pemilik: {k.owner}
-              {k.owner_phone ? ' · ' + k.owner_phone : ''}
+              {k.owner_phone ? ' - ' + k.owner_phone : ''}
             </p>
           </div>
           <StatusBadge status={doneMode ? 'done' : 'active'} />
         </div>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           Diterima {k.qty_received} {k.unit} @ {rp(k.agree_price)}
-          {k.note ? ' · ' + k.note : ''}
-          {!doneMode ? ' · dicatat ' + fmtDateTime(k.created_at) : ''}
-          {doneMode && k.settled_at ? ' · ditutup ' + fmtDateTime(k.settled_at) : ''}
+          {k.note ? ' - ' + k.note : ''}
+          {!doneMode ? ' - dicatat ' + fmtDateTime(k.created_at) : ''}
+          {doneMode && k.settled_at ? ' - ditutup ' + fmtDateTime(k.settled_at) : ''}
         </p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           <Badge tone="blue">Terjual {k.qty_sold}</Badge>
           <Badge tone="gray">Dikembalikan {k.qty_returned}</Badge>
           <Badge tone="amber">Sisa {k.remaining}</Badge>
-          <Badge tone="blue">Komisi {k.commission_rate}% · Pendapatan toko {rp(k.commission)}</Badge>
+          <Badge tone="blue">Komisi {k.commission_rate}% - Pendapatan toko {rp(k.commission)}</Badge>
           <Badge tone="red">Tagihan pemilik {rp(k.payable)}</Badge>
           <Badge tone="green">Terbayar {rp(k.amount_paid)}</Badge>
           {k.unpaid > 0 && <Badge tone="red">Kurang {rp(k.unpaid)}</Badge>}
@@ -333,7 +333,12 @@ export function KonsinyasiClient() {
         </div>
         <div className="card p-3">
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Tagihan belum dibayar
+            <TermTip
+              term="Settlement"
+              tip="Uang yang masih harus dibayar ke pemilik barang titipan: harga terjual dikurangi komisi toko."
+            >
+              Tagihan belum dibayar
+            </TermTip>
           </p>
           <p className="mt-1 text-2xl font-extrabold text-rose-600 dark:text-rose-400">{rp(data.totals.unpaid)}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400">kepada pemilik</p>
@@ -355,13 +360,13 @@ export function KonsinyasiClient() {
           <li>Pemilik menitipkan barang (mis. madu) untuk dijualkan toko.</li>
           <li>Toko menjualkan barang titipan.</li>
           <li>
-            Saat barang terjual, toko mengambil komisi (upah penjualan) —
+            Saat barang terjual, toko mengambil komisi (upah penjualan) --
             tercatat otomatis.
           </li>
-          <li>Sisa uang (harga − komisi) milik pemilik; bisa dibayar kapan saja.</li>
+          <li>Sisa uang (harga - komisi) milik pemilik; bisa dibayar kapan saja.</li>
         </ol>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          Contoh: harga Rp 100.000, komisi toko 20% → toko menerima Rp 20.000,
+          Contoh: harga Rp 100.000, komisi toko 20%: toko menerima Rp 20.000,
           pemilik menerima Rp 80.000.
         </p>
       </div>
@@ -373,7 +378,7 @@ export function KonsinyasiClient() {
         </p>
 
         <p className="mt-3 mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          1 · Pemilik
+          1. Pemilik
         </p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div>
@@ -415,7 +420,7 @@ export function KonsinyasiClient() {
           </div>
         </div>
         <p className="mt-3 mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          2 · Barang
+          2. Barang
         </p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div>
@@ -454,7 +459,7 @@ export function KonsinyasiClient() {
           </div>
         </div>
         <p className="mt-3 mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          3 · Harga & Komisi
+          3. Harga & Komisi
         </p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div>
@@ -475,7 +480,7 @@ export function KonsinyasiClient() {
             <label className="label">
               <TermTip
                 term="Komisi"
-                tip="Upah toko dari jual konsinyasi. Disepakati bersama (bisa per pemilik/barang; 0 = tanpa komisi). Catatan otomatis saat barang terjual — bukan di muka. Bagian pemilik = harga − komisi. (PROVISIONAL sampai tashih)."
+                tip="Upah toko dari jual konsinyasi -- disebut 'ujrah' dalam istilah syariah. Disepakati bersama (bisa per pemilik/barang; 0 = tanpa komisi). Catatan otomatis saat barang terjual -- bukan di muka. Bagian pemilik = harga - komisi. (PROVISIONAL sampai tashih)."
               >
                 Komisi toko (%)
               </TermTip>
@@ -519,18 +524,18 @@ export function KonsinyasiClient() {
           </div>
           {qtySafe > 0 && (
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Untuk {qtySafe} {f.unit.trim() || 'unit'} dititipkan → pemilik{' '}
-              {rp(preview.owner * qtySafe)} · komisi toko{' '}
+              Untuk {qtySafe} {f.unit.trim() || 'unit'} dititipkan: pemilik{' '}
+              {rp(preview.owner * qtySafe)} - komisi toko{' '}
               {rp(preview.commission * qtySafe)}.
             </p>
           )}
         </div>
         <div className="mt-3">
           <Button variant="primary" full disabled={busy} onClick={create}>
-            {busy ? 'Menyimpan…' : 'Terima Konsinyasi'}
+            {busy ? 'Menyimpan...' : 'Terima Konsinyasi'}
           </Button>
           <p className="mt-1 text-center text-xs text-slate-500 dark:text-slate-400">
-            Komisi dicatat otomatis saat barang terjual — tidak dibayar di muka.
+            Komisi dicatat otomatis saat barang terjual -- tidak dibayar di muka.
           </p>
         </div>
       </div>
@@ -550,7 +555,7 @@ export function KonsinyasiClient() {
             </p>
             {Object.entries(data.owner_rates || {}).map(([o, r]) => (
               <div key={o} className="flex items-center justify-between gap-2 text-xs">
-                <span className="font-bold">{o} — komisi {r}%</span>
+                <span className="font-bold">{o} - komisi {r}%</span>
                 <Button variant="danger" disabled={busy} onClick={() => delOwnerRate(o)}>
                   Hapus
                 </Button>
@@ -589,10 +594,10 @@ export function KonsinyasiClient() {
       </div>
 
       <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-        Komisi (upah toko) disepakati bersama saat titipan — boleh berbeda
+        Komisi (upah toko) disepakati bersama saat titipan -- boleh berbeda
         per pemilik atau per barang; 0 = tanpa komisi. Komisi dicatat
         OTOMATIS saat barang terjual (bukan di muka) dan menjadi pendapatan
-        toko; bagian pemilik = harga − komisi. Barang yang tidak terjual dan
+        toko; bagian pemilik = harga - komisi. Barang yang tidak terjual dan
         dikembalikan tidak menghasilkan komisi. Titipan yang sudah berjalan
         tidak bisa diubah komisinya oleh satu pihak.
       </p>
@@ -642,7 +647,7 @@ export function KonsinyasiClient() {
       {canMore && (
         <div className="p-1 text-center">
           <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? 'Memuat…' : 'Muat riwayat lebih lama'}
+            {loadingMore ? 'Memuat...' : 'Muat riwayat lebih lama'}
           </Button>
         </div>
       )}

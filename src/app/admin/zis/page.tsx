@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { canAccess, currentUser, roleHome } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
-import { PageSkeleton } from '@/components/ui';
+import { PageSkeleton, TermTip } from '@/components/ui';
 
 const ZisClient = lazy(() => import('@/components/admin/zis-client').then((m) => m.ZisClient), {
   loading: () => <PageSkeleton />,
@@ -23,10 +23,23 @@ export default async function ZisPage() {
           cetak jadi kosong tanpa kelas ini -- lihat globals.css). */}
       <div className="print-area">
         <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
-          Pencatatan <span className="text-accent-500 dark:text-accent-300">ZIS</span>
+          Pencatatan{' '}
+          <TermTip
+            term="ZIS"
+            tip="ZIS = Zakat, Infaq, Sedekah (di modul ini wakaf juga tercatat)."
+          >
+            <span className="text-accent-500 dark:text-accent-300">ZIS</span>
+          </TermTip>
         </h1>
         <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-          Zakat, infak, sedekah: input masuk/keluar per jenis + auto-jurnal GL (skema v22,
+          <TermTip tip="Tiga jenis ZIS: zakat = kewajiban menyucikan harta (2,5%); infak dan sedekah = sukarela. Tiap jenis punya pencatatan sendiri.">
+            Zakat, infak, sedekah
+          </TermTip>
+          : input masuk/keluar per jenis +{' '}
+          <TermTip tip="Ketik pencatatan otomatis ke buku (GL) tanpa input manual.">
+            auto-jurnal GL
+          </TermTip>{' '}
+          (skema v22,
           OQ-1: masuk D1100/C2090; keluar zakat D5090/C1100; infak/sedekah D5100/C1100).
           Wakaf: tercatat, jurnal manual 1120/4100/6020 = W3.5.
         </p>

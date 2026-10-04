@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api, Button, Toast, useToast } from '@/components/ui';
+import { api, Button, TermTip, Toast, useToast } from '@/components/ui';
 
 type Settings = Record<string, string>;
 
 const FIELDS: { key: string; label: string; hint: string; type: 'number' | 'toggle' }[] = [
   {
     key: 'points_every',
-    label: 'Poin: setiap Rp…',
+    label: 'Poin: setiap Rp...',
     hint: '1 poin loyalti per nominal ini dibelanjakan (mis. 10000 = 1 poin per Rp 10.000).',
     type: 'number',
   },
@@ -93,10 +93,32 @@ export function MemberSettingsClient() {
     else showToast(r.error || 'Gagal menyimpan', 'error');
   }
 
-  if (!settings) return <p className="text-sm text-slate-500">Memuat…</p>;
+  if (!settings) return <p className="text-sm text-slate-500">Memuat...</p>;
 
   return (
     <div className="card p-4">
+      {/* UX-1 (E24): penjelasan singkat istilah keuntungan member sebelum form. */}
+      <div className="mb-3 rounded-lg bg-slate-50 p-2 text-xs leading-relaxed text-slate-600 dark:bg-navy-800/60 dark:text-slate-300">
+        <TermTip
+          term="Poin"
+          tip="Poin loyalitas: didapat otomatis saat member belanja; bisa ditebus sesuai nilai poin."
+        />
+        {' - '}
+        <TermTip
+          term="Saldo Reward"
+          tip="Akumulasi cashback yang dikreditkan setelah transaksi; dipakai membayar transaksi berikutnya."
+        />
+        {' - '}
+        <TermTip
+          term="Tier"
+          tip="Level member berdasarkan total belanja kumulatif (Silver, Gold)."
+        />
+        {' - '}
+        <TermTip
+          term="Grosir"
+          tip="Potongan khusus saat jumlah pembelian melewati ambang yang ditetapkan."
+        />
+      </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {FIELDS.map((f) => (
           <div key={f.key}>
@@ -130,7 +152,7 @@ export function MemberSettingsClient() {
       </div>
       <div className="mt-4 flex items-center gap-2">
         <Button variant="primary" onClick={save} disabled={busy}>
-          {busy ? 'Menyimpan…' : 'Simpan Pengaturan'}
+          {busy ? 'Menyimpan...' : 'Simpan Pengaturan'}
         </Button>
       </div>
       <Toast msg={toast} tone={toastTone} onClose={() => showToast('')} />

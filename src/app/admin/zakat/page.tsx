@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { canAccess, currentUser, roleHome } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
-import { PageSkeleton } from '@/components/ui';
+import { PageSkeleton, TermTip } from '@/components/ui';
 
 const ZakatClient = lazy(
   () => import('@/components/admin/zakat-client').then((m) => m.ZakatClient),
@@ -23,13 +23,19 @@ export default async function ZakatPage() {
     <Shell user={user}>
       {/* .print-area: opt-in "cetak halaman penuh" di @media print
           (atk. global receipt body*{visibility:hidden} membuat halaman
-          cetak jadi kosong tanpa kelas ini — lihat globals.css). */}
+          cetak jadi kosong tanpa kelas ini -- lihat globals.css). */}
       <div className="print-area">
         <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
           Perhitungan <span className="text-accent-500 dark:text-accent-300">Zakat Toko</span>
         </h1>
         <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-          Zakat tijarah (perdagangan) 2,5% dari harta dagang: modal + laba kotor + piutang − hutang.
+          <TermTip
+            term="Zakat tijarah"
+            tip="Zakat atas harta dagang: 2,5% dari (modal + laba kotor + piutang - hutang); dibayar jika sudah nisab dan haul."
+          >
+            Zakat tijarah
+          </TermTip>{' '}
+          (perdagangan) 2,5% dari harta dagang: modal + laba kotor + piutang - hutang.
         </p>
         <ZakatClient />
       </div>
