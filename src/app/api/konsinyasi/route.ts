@@ -40,7 +40,7 @@ const COLS =
 /**
  * Add derived fields: sisa barang, tagihan PEMILIK (neto komisi), komisi
  * toko (ujrah, akad ju'alah), dan selisih belum dibayar. Komisi hanya
- * dari qty yang TERJUAL — barang dikembalikan (ora payu) tanpa komisi;
+ * dari qty yang TERJUAL -- barang dikembalikan (ora payu) tanpa komisi;
  * upah tidak pernah di muka.
  */
 function computed(r: Row) {
@@ -60,7 +60,7 @@ export async function GET(req: Request) {
   if (!isManager(user))
     return NextResponse.json({ error: 'Hanya pengurus' }, { status: 403 });
   const url = new URL(req.url);
-  // 50 baris/halaman + ?offset= (dulu LIMIT 500 tanpa paging — sekarang
+  // 50 baris/halaman + ?offset= (dulu LIMIT 500 tanpa paging -- sekarang
   // klien menambah "Muat lebih banyak").
   const limit = Math.min(50, Math.max(1, Number(url.searchParams.get('limit')) || 50));
   const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
   const now = new Date().toISOString();
   try {
     // Toleransi klien versi lama (cache PWA): POST form titipan tanpa field
-    // `action` diperlakukan sebagai 'create' — mencegah regresi "Aksi tidak
+    // `action` diperlakukan sebagai 'create' -- mencegah regresi "Aksi tidak
     // dikenal" saat klien ber-cache lama bertemu server baru (P4-B).
     if (!b.action) b.action = 'create';
     switch (b.action) {
@@ -135,7 +135,7 @@ export async function POST(req: Request) {
             { error: 'Pemilik, barang & jumlah wajib diisi' },
             { status: 400 }
           );
-        // FASE P4-B: komisi FLEKSIBEL (antardhin) — rate disepakati
+        // FASE P4-B: komisi FLEKSIBEL (antardhin) -- rate disepakati
         // saat titipan: eksplisit (form, boleh beda per barang) >
         // default per-pemilik (konsinyasi_owner_rates) > global.
         // Snapshot utk baris ini; baris aktif TIDAK terpengaruh.
@@ -218,15 +218,15 @@ export async function POST(req: Request) {
                     )
                     .run(n, id, n);
             if (Number(guard.changes) !== 1)
-              throw new Error('Jumlah melebihi sisa (data berubah — muat ulang)');
+              throw new Error('Jumlah melebihi sisa (data berubah -- muat ulang)');
             if (b.action === 'sell') {
               // FASE P4 (akad ju'alah): komisi (ujrah) baru TERCATAT saat
-              // barang terjual — upah tidak di muka; aksi 'return'
+              // barang terjual -- upah tidak di muka; aksi 'return'
               // (barang dikembalikan, ora payu) tidak menambah komisi.
               const ujrah = n * splitConsignment(row.agree_price, row.commission_rate).commission;
               if (ujrah > 0) {
                 // Tercatat sebagai pendapatan jasa (kas masuk
-                // 'Ujrah Kon. …'), berpasangan dgn settlement 'Kon. …'
+                // 'Ujrah Kon. ...'), berpasangan dgn settlement 'Kon. ...'
                 // (kas keluar, neto komisi). Jangan catat manual.
                 await d
                   .prepare(
@@ -285,7 +285,7 @@ export async function POST(req: Request) {
               )
               .run(amount, id, amount);
             if (Number(payRes.changes) !== 1)
-              throw new Error('Nominal melebihi tagihan pemilik (data berubah — muat ulang)');
+              throw new Error('Nominal melebihi tagihan pemilik (data berubah -- muat ulang)');
             // uang keluar kas untuk pemilik -> tercatat di pembukuan kas
             await d
               .prepare(
@@ -344,7 +344,7 @@ export async function POST(req: Request) {
         return NextResponse.json(out as object);
       }
       case 'save_owner_rate': {
-        // FASE P4-B: default komisi per pemilik (antardhin — hasil
+        // FASE P4-B: default komisi per pemilik (antardhin -- hasil
         // musyawarah dgn pemilik). Hanya utk pre-fill titipan BARU;
         // baris aktif tidak pernah terpengaruh.
         const ownerKey = String(b.owner || '').trim().slice(0, 200);

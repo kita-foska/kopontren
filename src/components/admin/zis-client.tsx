@@ -61,9 +61,15 @@ const IconDownload = (
   </svg>
 );
 
-/** Status jurnal per baris (D1/D3: gl-off & wakaf = tanpa auto-jurnal). */
+/** Status jurnal per baris (D1: gl-off = tanpa jurnal; D3: wakaf masuk
+ * auto-jurnal D1120/K4100 (W3.5); wakaf keluar = jurnal manual). */
 function statusBadge(r: ZisRow, glOn: boolean) {
-  if (r.kind === 'wakaf') return <Badge tone="amber">Jurnal manual (W3.5)</Badge>;
+  if (r.kind === 'wakaf') {
+    if (r.posted_entry) return <Badge tone="green">Jurnal {r.posted_entry.slice(0, 8)}...</Badge>;
+    if (!glOn) return <Badge tone="gray">GL off - tanpa jurnal</Badge>;
+    if (r.direction === 'out') return <Badge tone="amber">Wakaf keluar: jurnal manual (W3.5)</Badge>;
+    return <Badge tone="red">Tanpa jurnal</Badge>;
+  }
   if (r.posted_entry) return <Badge tone="green">Jurnal {r.posted_entry.slice(0, 8)}...</Badge>;
   if (!glOn) return <Badge tone="gray">GL off - tanpa jurnal</Badge>;
   return <Badge tone="red">Tanpa jurnal</Badge>;
@@ -212,7 +218,7 @@ export function ZisClient() {
             )}
           </div>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            Wakaf: jurnal manual (1120/4100/6020) = W3.5
+            Wakaf masuk: auto-jurnal D1120/K4100; wakaf keluar: manual (W3.5).
           </p>
         </div>
       </div>
