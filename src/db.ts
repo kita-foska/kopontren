@@ -693,6 +693,57 @@ async function migrate(d: Db) {
   );
   await d.exec('CREATE INDEX IF NOT EXISTS idx_akad_opened ON akad(opened_at)');
   await d.exec('CREATE INDEX IF NOT EXISTS idx_akad_events ON akad_events(akad_id, event_date)');
+  // W4.1 (skema v24): tabel koperasi Level C (Sek.7.1) -- modul simpanan
+  // anggota + distribusi SHU. Purely additive (IF NOT EXISTS) -> DB v23
+  // aman, tanpa ubah data lama.
+  // - coop_members: anggota koperasi (BUKAN member loyalty -- dua
+  //   entitas berbeda, Sek.7.3; tidak ada penggabungan data);
+  //   UNIQUE(name); status aktif|nonaktif|keluar (cek aplikasi);
+  //   rumpun = grup rumpun keluarga, opsional (ruling Q4 5 Okt).
+  // - coop_savings: transaksi simpanan per anggota (dicatat oleh
+  //   lib/coop.ts W4.2); kind 'pokok'|'wajib'|'sukarela'; jumlah &
+  //   jadwal simpanan wajib = ketentuan pengurus (PKGF Sek.13.10) --
+  //   app hanya wadah pencatatan, bukan penentu besaran.
+  // - coop_shu: satu baris per periode distribusi (UNIQUE period);
+  //   shu_total + rasio + 4 alokasi = input admin (0 preset,
+  //   Sek.7.2/Sek.13.4); posting jurnal distribusi = W4.4
+  //   (ref_table='coop').
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS coop_members(' +
+      'id TEXT PRIMARY KEY, ' +
+      'name TEXT NOT NULL, ' +
+      'npwp TEXT, ' +
+      'member_since TEXT NOT NULL, ' +
+      "status TEXT NOT NULL DEFAULT 'aktif', " +
+      'rumpun TEXT, ' +
+      'UNIQUE(name)' +
+      ')'
+  );
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS coop_savings(' +
+      'member_id TEXT NOT NULL, ' +
+      'kind TEXT NOT NULL, ' +
+      'amount INTEGER NOT NULL, ' +
+      'saved_at TEXT NOT NULL, ' +
+      'PRIMARY KEY(member_id, kind, saved_at, amount)' +
+      ')'
+  );
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS coop_shu(' +
+      'id TEXT PRIMARY KEY, ' +
+      'period TEXT NOT NULL, ' +
+      'shu_total INTEGER NOT NULL, ' +
+      'cadangan_umum INTEGER, ' +
+      'cadangan_khusus INTEGER, ' +
+      'jasa_anggota INTEGER, ' +
+      'dibagi INTEGER, ' +
+      'rasio_json TEXT, ' +
+      'created_by TEXT, ' +
+      'created_at TEXT NOT NULL, ' +
+      'UNIQUE(period)' +
+      ')'
+  );
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_coop_savings ON coop_savings(member_id, saved_at)');
   // COA seed: 52 akun. pap_ref dibiarkan NULL sampai teks PAP final.
   // ON CONFLICT(code) DO NOTHING -> non-destruktif: akun yang sudah ada
   // (mis. ditambahkan admin) tidak ditimpa.
@@ -719,16 +770,16 @@ async function migrate(d: Db) {
       ['2050', 'Simpanan Pokok', '20xx', 'kewajiban', 'open', 0],
       ['2060', 'Simpanan Wajib', '20xx', 'kewajiban', 'open', 0],
       ['2070', 'Simpanan Sukarela', '20xx', 'kewajiban', 'open', 0],
-      ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'pending', 1],
+      ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'pending', 1], // W4.1 (v24): tetap pending (ruling Q6 5 Okt: tak dipakai alur Sek.7)
       ['2090', 'ZIS Terkumpul Belum Disalurkan', '20xx', 'kewajiban', 'open', 0], // W2.7 (v22): flip open (ZIS masuk OQ-1)
       ['2100', 'Kewajiban Lain-lain', '20xx', 'kewajiban', 'pending', 1],
       // 30xx ekuitas
       ['3010', 'Modal Penyertaan', '30xx', 'ekuitas', 'open', 0],
-      ['3020', 'SHU Ditahan', '30xx', 'ekuitas', 'pending', 1],
-      ['3030', 'SHU Cadangan Umum', '30xx', 'ekuitas', 'pending', 1],
-      ['3040', 'SHU Cadangan Khusus', '30xx', 'ekuitas', 'pending', 1],
-      ['3050', 'SHU Jasa Anggota', '30xx', 'ekuitas', 'pending', 1],
-      ['3060', 'SHU Dibagi', '30xx', 'ekuitas', 'pending', 1],
+      ['3020', 'SHU Ditahan', '30xx', 'ekuitas', 'open', 0], // W4.1 (v24): flip open (modul koperasi; nilai = input PKGF)
+      ['3030', 'SHU Cadangan Umum', '30xx', 'ekuitas', 'open', 0], // W4.1 (v24): flip open (modul koperasi)
+      ['3040', 'SHU Cadangan Khusus', '30xx', 'ekuitas', 'open', 0], // W4.1 (v24): flip open (modul koperasi)
+      ['3050', 'SHU Jasa Anggota', '30xx', 'ekuitas', 'open', 0], // W4.1 (v24): flip open (modul koperasi; bobot = rataan, ruling Q5)
+      ['3060', 'SHU Dibagi', '30xx', 'ekuitas', 'open', 0], // W4.1 (v24): flip open (modul koperasi)
       ['3070', 'Koreksi Saldo', '30xx', 'ekuitas', 'open', 0],
       // 40xx pendapatan
       ['4010', 'Pendapatan Penjualan', '40xx', 'pendapatan', 'open', 0],
@@ -749,7 +800,7 @@ async function migrate(d: Db) {
       ['5050', 'Denda/Keterlambatan (clearing)', '50xx', 'beban', 'closed', 0],
       ['5060', 'Bagi Hasil Partner Mudharabah', '50xx', 'beban', 'open', 0], // W3.1 (v23): flip open (modul akad)
       ['5070', 'Beban Ijarah', '50xx', 'beban', 'pending', 1],
-      ['5080', 'Distribusi SHU', '50xx', 'beban', 'pending', 1],
+      ['5080', 'Distribusi SHU', '50xx', 'beban', 'open', 0], // W4.1 (v24): flip open (modul koperasi)
       ['5090', 'Zakat Keluar', '50xx', 'beban', 'open', 0], // W2.7 (v22): flip open (ZIS keluar zakat OQ-1)
       ['5100', 'Infak/Sedekah Keluar', '50xx', 'beban', 'open', 0],
       // 60xx syariah/PAP
@@ -779,6 +830,15 @@ async function migrate(d: Db) {
     // 6030 & 14 akun pending lainnya tetap 'pending'.
     await d.exec(
       `UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('1070', '1080', '1090', '2040', '4050', '4060', '4070', '4080', '5060')`
+    );
+    // W4.1 (skema v24) -- upgrade path: flip COA 3020/3030/3040/3050/
+    // 3060/5080 'pending' -> 'open' (modul koperasi; nilai rasio &
+    // besaran tetap PKGF = input admin, bukan preset). UPDATE eksplisit
+    // karena seed di atas DO NOTHING (DB v23: baris coa sudah ada,
+    // seed tidak menimpa). Idempoten; fresh install = no-op. 2080
+    // (SHU Berjalan) sengaja tetap 'pending' (ruling Q6 5 Okt).
+    await d.exec(
+      `UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('3020', '3030', '3040', '3050', '3060', '5080')`
     );
   }
 }
@@ -1077,8 +1137,20 @@ export async function saveZakatSettings(
 // (UPDATE eksplisit di seed = upgrade path; seed INSERT ON CONFLICT DO
 // NOTHING tak menimpa baris v22, fresh install = no-op). Purely
 // additive; DB stempel v22 menjalankan fullInit sekali lagi.
+// Bump v24 (2026-10-05, F3.4+ W4.1): skema koperasi Level C (Sek.7.1)
+// + tabel coop_members (UNIQUE name; rumpun opsional = ruling Q4
+// 5 Okt) + coop_savings (PK komposit member_id/kind/saved_at/amount;
+// kind pokok|wajib|sukarela) + coop_shu (satu baris per periode;
+// UNIQUE period; shu_total + rasio + alokasi = input admin, 0 preset
+// -- Sek.7.2/13.4) + idx_coop_savings(member_id, saved_at) + flip COA
+// 3020/3030/3040/3050/3060/5080 'pending' -> 'open' (UPDATE eksplisit
+// di seed = upgrade path; seed INSERT ON CONFLICT DO NOTHING tak
+// menimpa baris v23, fresh install = no-op). 2080 (SHU Berjalan)
+// tetap 'pending' (ruling Q6: tak dipakai alur Sek.7). Purely
+// additive; DB stempel v23 menjalankan fullInit sekali lagi saat cold
+// start berikutnya. BACKUP DB WAJIB sebelum deploy.
 
-const SCHEMA_VERSION = 23;
+const SCHEMA_VERSION = 24;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
