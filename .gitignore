@@ -6,6 +6,7 @@ data/*.db
 data/*.db-journal
 data/*.db-wal
 data/*.db-shm
+data/backup-*.sql
 .env
 .env.*
 .DS_Store

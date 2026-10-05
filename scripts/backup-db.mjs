@@ -37,7 +37,7 @@ const tables = (
   await client.execute(
     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
   )
-).rows.map((r) => String(r.name[0]));
+).rows.map((r) => String(r[0]));
 
 let sql = `-- Kopontren database backup — ${new Date().toISOString()}\n`;
 for (const t of tables) {
@@ -47,7 +47,8 @@ for (const t of tables) {
   sql += `\n-- table: ${t}\n${String(ddl.rows[0]?.[0] ?? '')};\n`;
   const data = await client.execute(`SELECT * FROM "${t}"`);
   for (const row of data.rows) {
-    const vals = row.map((v) => {
+    const vals = data.columns.map((_, i) => {
+      const v = row[i];
       if (v === null || v === undefined) return 'NULL';
       if (typeof v === 'number' || typeof v === 'bigint') return String(v);
       return `'${String(v).replace(/'/g, "''")}'`;
