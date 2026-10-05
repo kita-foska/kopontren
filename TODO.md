@@ -1419,6 +1419,31 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
        is off-balance per Sek.6.1 bridge design (not needed).
        Reconciliation 2020 = 0 proven by A9.5.
       - [x] **W2.7 (governance) -- SELESAI** (`488d679`, 2 Okt): flip COA `4040` (ujrah) `pending -> open` SUDAH DILAKSANAKAN (P4 tashih 30 Sep approve; governance-only). Flip via UPDATE eksplisit di seed db.ts (skema v22) bareng `2090` + `5090`; `6030` sengaja tetap `pending` W5.1. Detail lengkap = entri W2.7 LEPAS di bawah.
+      - [x] **F3.4+ W4.1 LEPAS 5 Okt** (`b9c0ae5`; ACC Gus Fi via
+            DeepSeek; audit independen 0 must-fix): skema v24
+            koperasi Level C -- DDL 3 tabel `coop_members`
+            (UNIQUE name + kolom rumpun, literal Sek.7.1, ruling
+            Q4) / `coop_savings` (PK komposit
+            member_id,kind,saved_at,amount) / `coop_shu` (UNIQUE
+            period) + index `idx_coop_savings` (murni aditif, IF
+            NOT EXISTS); flip COA `3020/3030/3040/3050/3060/5080`
+            `pending -> open` 2 layer (seed array fresh + UPDATE
+            eksplisit upgrade path v23 -- seed ON CONFLICT DO
+            NOTHING tak menimpa baris lama; `2080` SHU Berjalan
+            tetap pending, ruling Q6); SCHEMA_VERSION 23 -> 24;
+            test-coop M-suite (M1 fresh / M2 upgrade / M3 stamp)
+            45/0 + test:all 21 suite hijau + tsc 0 + 0 non-ASCII.
+            Ops-fix terpisah `30a3ae5` (backup-db.mjs row-index
+            libsql + gitignore `data/backup-*.sql`; backup
+            pre-deploy `data/backup-2026-10-05T06-20-56.sql`).
+            Detail = entri W4.1 LEPAS di MEMORY.md (seksi
+            2026-10-05).
+      - [ ] **W5 + PINJ-1 (pinjaman anggota) -- dicatat 5 Okt
+            (ruling batch W4.1, Gus Fi; masuk W5 penguatan)**:
+            tashih qardh/murabahah dulu (pilihan akad syariah),
+            akun COA baru + sumber dana ditetapkan pasca-tashih.
+            Menunggu ruling/ACC Gus Fi; **TIDAK mulai eksekusi
+            sebelum approval.**
     - [ ] **AUDIT WAVE 2 (2 Okt 2026; ruling Gus Fi: SAFE,
           0 must-fix) -- findings pasca-koreksi DeepSeek:**
           **P1 (W3 housekeeping)**: a11y tablist shell laporan
@@ -1835,7 +1860,11 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
    - [ ] **PHASE 2 (ditunda)**: Plan B banner global `shell.tsx`;
          F3 refresh member-settings saat reconnect; offline
          lebih luas (member/reports).
-   - NEXT: **Wave 4 (Koperasi)**.
+   - NEXT: **W4.2** (`src/lib/coop.ts` -- engine simpanan koperasi +
+          extend test-coop C-suite; skema v24 sudah SELESAI di
+          `b9c0ae5`). Setelah W4 habis = **W5 penguatan** (bawaan
+          baru: PINJ-1 pinjaman anggota -- tashih qardh/murabahah,
+          akun COA baru, sumber dana).
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.

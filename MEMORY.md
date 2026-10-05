@@ -1,6 +1,47 @@
 # MEMORY
 
 ## 2026-10-05
+### W4.1 LEPAS -- skema v24 koperasi Level C (5 Okt 2026)
+- **Commit `b9c0ae5`** (full `b9c0ae5ddfead632d127cfa6508826d076c6fae`;
+  3 file +353/-9: `src/db.ts` + `scripts/test-coop.ts` (baru,
+  M-suite) + `package.json` (+`test:coop`, masuk test:all 21
+  suite); ACC Gus Fi via DeepSeek, audit independen 0 must-fix):
+  (a) DDL 3 tabel koperasi Sek.7.1 (proposal) literal + rumpun
+  (ruling Q4): `coop_members` (UNIQUE name, kolom rumpun),
+  `coop_savings` (PK komposit member_id,kind,saved_at,amount),
+  `coop_shu` (UNIQUE period) + index `idx_coop_savings`; murni
+  aditif (IF NOT EXISTS).
+  (b) Flip COA 6 akun `pending -> open` (3020/3030/3040/3050/3060/5080)
+  -- 2 layer: seed array (fresh install) + UPDATE eksplisit di
+  upgrade path (DB v23 lama; seed INSERT ON CONFLICT DO NOTHING
+  tak menimpa baris lama). `2080` (SHU Berjalan) sengaja tetap
+  pending (ruling Q6).
+  (c) SCHEMA_VERSION 23 -> 24 + komentar header.
+- **Rulings Q1-Q6 diterapkan di skema** (teks lengkap = pesan
+  audit DeepSeek W4.1, 5 Okt): Q4 = DDL literal Sek.7.1 + kolom
+  rumpun; Q6 = 2080 tetap pending; M-suite mencover keduanya +
+  kontrol (PRAGMA per kolom, UNIQUE, PK komposit, index, COA
+  count, 6 flip, 2080, upgrade path, stamp).
+- **Gate lulus**: test-coop 45/0; regresi test-akad 175/0;
+  test:all 21 suite RC=0, 0 gagal; tsc 0; 0 non-ASCII;
+  `public/sw.js` + V1 `laporan-admin-client.tsx` tak tersentuh.
+- **Backup DB pre-deploy (gate STEP 1)**:
+  `data/backup-2026-10-05T06-20-56.sql` (47.720 byte = 46,6 KB,
+  34 tabel, baseline skema v13 dev lokal) -- run awal crash
+  karena bug row-index libsql di `scripts/backup-db.mjs`
+  (`r.name[0]` = karakter pertama 'a' -> "no such table: a");
+  fix commit `30a3ae5` (`r[0]` + iterasi `data.columns` +
+  gitignore `data/backup-*.sql`).
+- **STATE (verify live git, 5 Okt)**: W4.1 `b9c0ae5` dual-push
+  master+main; ops-fix `30a3ae5`; entri docs ini = HEAD lokal
+  (dual-push + ls-remote terverifikasi; dua ref sama).
+- **NEXT = W4.2** (`src/lib/coop.ts` -- engine simpanan koperasi;
+  extend test-coop C-suite); menyusul W4.3 (UI), W4.4 (SHU),
+  W4.5 (modal + closing). **W5: + PINJ-1 (pinjaman anggota)** --
+  tashih qardh/murabahah, akun COA baru, sumber dana (dicatat
+  5 Okt; menunggu ruling/ACC Gus Fi; TIDAK dieksekusi sebelum
+  approval).
+
 ### OFF-1 PHASE 1 LEPAS -- offline read-only POS (cache snapshot + banner) (5 Okt 2026)
 - **Commit `14d07d4`** (full `14d07d4601e02a4ac0708a2e6847859631634321`,
   1 file `src/components/pos-client.tsx` +133/-3; parent `68c36a7`;
