@@ -98,6 +98,46 @@ function loadQueue(): QueuedSale[] {
   }
 }
 
+/**
+ * OFF-1 FASE 1: cache snapshot POS (read-only) di localStorage utk cold
+ * start offline. Tiap load live sukses men-simpan snapshot lengkap; bila
+ * fetch gagal, state diisi dari cache + banner "data mungkin tidak
+ * terbaru" (stamping 'at'). Tanpa TTL -- freshnesnya ditopang load
+ * ulang otomatis saat online (lihat handler 'online'). Ukuran ~300 KB
+ * (600 produk + member + settings), jauh di bawah kuota 5 MB. NOTE:
+ * members memuat PII (nama + phone) -- keputusan sadar utk terminal
+ * kasir (device terkontrol), tercatat di MEMORY.md.
+ */
+const POS_CACHE_KEY = 'kopontren_pos_cache_v1';
+
+type PosCache = {
+  products: Product[];
+  categories: string[];
+  members: Member[];
+  memberSettings: Record<string, string> | null;
+  at: string;
+};
+
+function loadPosCache(): PosCache | null {
+  try {
+    const raw = localStorage.getItem(POS_CACHE_KEY);
+    if (!raw) return null;
+    const c = JSON.parse(raw) as PosCache;
+    if (!c || !Array.isArray(c.products)) return null;
+    return c;
+  } catch {
+    return null;
+  }
+}
+
+function savePosCache(c: PosCache) {
+  try {
+    localStorage.setItem(POS_CACHE_KEY, JSON.stringify(c));
+  } catch {
+    /* penyimpanan penuh: cache abaikan, POS tetap jalan */
+  }
+}
+
 /** Skor pencarian fuzzy: subsequence + bonus beruntun/posisi awal. */
 function fuzzyScore(term: string, text: string): number {
   const t = term.toLowerCase();
@@ -274,6 +314,18 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const receivedRef = useRef<HTMLInputElement>(null);
   const queueRef = useRef<QueuedSale[]>(offlineQueue);
   queueRef.current = offlineQueue;
+  // OFF-1 FASE 1: cache snapshot POS (produk/kategori/member/settings) --
+  // cacheInfo != null berarti state terakhir diisi dari cache (offline),
+  // jadi banner "data mungkin tidak terbaru" tampil; di-reset saat load
+  // live sukses. Ref mirror (pola queueRef) supaya tiap loader yg sukses
+  // men-simpan snapshot lengkap tanpa tergantung urutan state.
+  const [cacheInfo, setCacheInfo] = useState<{ at: string } | null>(null);
+  const productsRef = useRef<Product[]>(products);
+  productsRef.current = products;
+  const categoriesRef = useRef<string[]>(categories);
+  categoriesRef.current = categories;
+  const membersRef = useRef<Member[]>(members);
+  membersRef.current = members;
   const [toast, showToast, , toastTone] = useToast();
 
   // Shift states
@@ -306,12 +358,49 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     if (r.ok && r.data) {
       setProducts(r.data.products);
       setCategories(r.data.categories || []);
+      // OFF-1 FASE 1: data live -- perbarui cache & matikan banner cache.
+      // Field yg belum ke-load lokal (members/settings saat mount) diwarisi
+      // dari cache lama -- jangan merusak snapshot yg lebih lengkap.
+      setCacheInfo(null);
+      const prev = loadPosCache();
+      savePosCache({
+        products: r.data.products,
+        categories: r.data.categories || [],
+        members: membersRef.current.length ? membersRef.current : prev?.members ?? [],
+        memberSettings: memberSettingsRef.current ?? prev?.memberSettings ?? null,
+        at: new Date().toISOString(),
+      });
+    } else {
+      // OFF-1 FASE 1: offline/cold start -- cadang dari cache localStorage.
+      const c = loadPosCache();
+      if (c) {
+        setProducts(c.products);
+        setCategories(Array.isArray(c.categories) ? c.categories : []);
+        setCacheInfo({ at: c.at });
+      }
     }
   }, []);
 
   const loadMembers = useCallback(async () => {
     const r = await api<MembersResp>('/api/members');
-    if (r.ok && r.data) setMembers(r.data.members || []);
+    if (r.ok && r.data) {
+      setMembers(r.data.members || []);
+      setCacheInfo(null);
+      const prev = loadPosCache();
+      savePosCache({
+        products: productsRef.current,
+        categories: categoriesRef.current,
+        members: r.data.members || [],
+        memberSettings: memberSettingsRef.current ?? prev?.memberSettings ?? null,
+        at: new Date().toISOString(),
+      });
+    } else {
+      const c = loadPosCache();
+      if (c) {
+        setMembers(Array.isArray(c.members) ? c.members : []);
+        setCacheInfo({ at: c.at });
+      }
+    }
   }, []);
 
   // Pengaturan member (poin, diskon, cashback, ultah, tier) diambil dari
@@ -319,9 +408,31 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   // memakai rumus yang sama dengan server (POST /api/sales) untuk preview
   // perk; server tetap sumber kebenaran saat transaksi disimpan.
   const [memberSettings, setMemberSettings] = useState<Record<string, string> | null>(null);
+  const memberSettingsRef = useRef<Record<string, string> | null>(null);
+  memberSettingsRef.current = memberSettings;
   useEffect(() => {
     api<{ settings: Record<string, string> }>('/api/member-settings').then((r) => {
-      if (r.ok && r.data?.settings) setMemberSettings(r.data.settings);
+      if (r.ok && r.data?.settings) {
+        setMemberSettings(r.data.settings);
+        setCacheInfo(null);
+        const prev = loadPosCache();
+        savePosCache({
+          products: productsRef.current,
+          categories: categoriesRef.current,
+          // warisi cache lama bila members belum ke-load lokal saat save ini
+          // (race mount) -- hindari snapshot members kosong.
+          members: membersRef.current.length ? membersRef.current : prev?.members ?? [],
+          memberSettings: r.data.settings,
+          at: new Date().toISOString(),
+        });
+      } else {
+        // OFF-1 FASE 1: offline -- pakai settings dari cache.
+        const c = loadPosCache();
+        if (c) {
+          setMemberSettings(c.memberSettings);
+          setCacheInfo({ at: c.at });
+        }
+      }
     });
   }, []);
   const pointsEvery = Math.max(1000, Math.floor(Number(memberSettings?.points_every) || 10000));
@@ -742,7 +853,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   useEffect(() => {
     const onOn = () => {
       setIsOnline(true);
-      void flushQueue();
+      // OFF-1 FASE 1: refresh cache+data di .then() -- flushQueue() sendiri
+      // memanggil load()+loadShift() SETELAH sinkron; .then() menjamin load
+      // selalu jalan (juga saat queue kosong -> flushQueue early-return) TANPA
+      // race: load() paralel pra-flush bisa menulis cache stok lama berstempel
+      // fresh. loadMembers aman paralel (flush hanya POST /api/sales).
+      void flushQueue().then(() => {
+        void load();
+      });
+      void loadMembers();
     };
     const onOff = () => setIsOnline(false);
     window.addEventListener('online', onOn);
@@ -1139,6 +1258,17 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         </div>
       </div>
 
+      {/* OFF-1 FASE 1: state terisi dari cache (offline) -- tandai data stale */}
+      {cacheInfo && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300"
+        >
+          <Radio className="h-4 w-4 shrink-0" />
+          OFFLINE -- data mungkin tidak terbaru (data per {fmtDateTime(cacheInfo.at)}).
+        </div>
+      )}
       {/* Antrean transaksi offline: sinkron otomatis saat internet pulih */}
       {!isOnline && (
         <div className="flex items-center gap-2 rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-2.5 text-xs font-semibold text-blue-600 dark:text-blue-300">
