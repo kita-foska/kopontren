@@ -1817,6 +1817,25 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
   = **CANCELLED** (keputusan Gus Fi, 27 Sep -- ora perlu; ora
   diimplementasi).
 
+5. **OFF-1 -- Offline POS (read-only, wave offline tambahan,
+   5 Okt 2026):**
+   - [x] **PHASE 1 LEPAS 5 Okt** (`14d07d4`; 1 file
+         `src/components/pos-client.tsx` +133/-3; ACC Gus Fi via
+         DeepSeek; manual test PASS): cache snapshot POS (produk
+         + kategori + member + member settings) ke localStorage
+         `kopontren_pos_cache_v1` tiap load live sukses; offline
+         -> state terhidrasi dari cache + banner amber "OFFLINE
+         -- data mungkin tidak terbaru"; handler 'online'
+         `flushQueue().then(load)` + `loadMembers()`.
+         **Keputusan PII terdokumentasi**: cache memuat member
+         (nama + phone) -- terminal kasir = device terkontrol
+         (detail: MEMORY.md seksi 5 Okt). Verifikasi lanjut
+         opsional (Gus Fi): scan barcode + cart offline,
+         checkout -> queue, back-online -> sinkron.
+   - [ ] **PHASE 2 (ditunda)**: Plan B banner global `shell.tsx`;
+         F3 refresh member-settings saat reconnect; offline
+         lebih luas (member/reports).
+   - NEXT: **Wave 4 (Koperasi)**.
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.

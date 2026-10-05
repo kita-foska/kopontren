@@ -1,5 +1,51 @@
 # MEMORY
 
+## 2026-10-05
+### OFF-1 PHASE 1 LEPAS -- offline read-only POS (cache snapshot + banner) (5 Okt 2026)
+- **Commit `14d07d4`** (full `14d07d4601e02a4ac0708a2e6847859631634321`,
+  1 file `src/components/pos-client.tsx` +133/-3; parent `68c36a7`;
+  ACC Gus Fi via DeepSeek; manual test PASS Gus Fi 5 Okt):
+  (a) snapshot POS (produk + kategori + member + member settings)
+  disimpan ke localStorage key `kopontren_pos_cache_v1` tiap load
+  live sukses (~300 KB, jauh di bawah kuota 5 MB); bila fetch
+  gagal (offline), state terhidrasi dari cache + banner amber
+  "OFFLINE -- data mungkin tidak terbaru (data per <stempel>)";
+  banner di-reset saat load live sukses. Ref mirror (pola
+  `queueRef`) utk products/categories/members.
+  (b) handler 'online': `void flushQueue().then(() => void load())`
+  + `void loadMembers()` -- flushQueue sendiri memanggil load()
+  SETELAH sinkron; .then() menjamin load selalu jalan (termasuk
+  saat queue kosong -> early-return) TANPA race (load paralel
+  pra-flush bisa menulis cache stok lama berstempel fresh).
+  (c) banner "Mode offline -- POS tetap berjalan. Transaksi akan
+  tersimpan & tersinkron otomatis." (existing) tetap tampil.
+- **Keputusan PII (TERDOKUMENTASI)**: cache localStorage memuat
+  member (nama + phone = PII) -- keputusan sadar utk terminal
+  kasir (device terkontrol); trade-off = POS tetap bisa baca data
+  cadangan saat offline; tercatat di komentar kode + entry ini.
+- **DITUNDA ke Phase 2**: (1) Plan B -- banner global offline di
+  `shell.tsx` (sudah dicukupi banner per-halaman + existing
+  "Mode offline" banner); (2) F3 -- refresh member-settings saat
+  reconnect (saiki settings hanya difetch saat mount; reconnect
+  hanya reload members + products/stock); (3) offline lebih luas
+  (member/reports).
+- **Manual test PASS (Gus Fi, 5 Okt 2026)**: DevTools Offline,
+  cold start /kasir -- produk + stok tampil dari cache (Sajadah,
+  buku batik, parfum oil, plastisin, solasi nachi, sticky note;
+  stok 1/9/14 pcs dst), banner "Mode offline -- POS tetap
+  berjalan" tampil. Catatan MINOR: banner cache "OFFLINE -- data
+  mungkin tidak terbaru" mungkin belum tampak saat test (first
+  visit = cache kosong, `loadPosCache()` null; banner hanya
+  muncul bila state terhidrasi dari cache setelah fetch gagal)
+  -- bukan blocker; verifikasi lanjut opsional: scan barcode +
+  cart offline, checkout -> queue, back-online -> sinkron.
+- CONSTRAINT dipatuhi: `public/sw.js` + V1
+  `laporan-admin-client.tsx` tak tersentuh; ASCII-only (0
+  non-ASCII); ikon SVG inline; dual-push + verify.
+- **STATE (verify live git, 5 Okt)**: `origin/master` =
+  `origin/main` = local HEAD = `14d07d4`.
+- **NEXT = WAVE 4 (Koperasi)** -- OFF-1 Phase 2 menyusul.
+
 ## 2026-10-04
 ### FOLD NON-ASCII 8 UI LEPAS (4 Okt 2026)
 - **8 file UI** (lib/format.ts,
