@@ -1,5 +1,47 @@
 # MEMORY
 
+## 2026-10-06
+### W4.2 LEPAS -- lib/coop.ts engine simpanan koperasi (6 Okt 2026)
+- **Commit `fce2531`** (full `fce25314a907241aa3f62194111f24210da2a38e`;
+  2 file +591/-2: `src/lib/coop.ts` (BARU, 367 baris) +
+  `scripts/test-coop.ts` (+224/-2, C-suite); ACC Gus Fi via DeepSeek,
+  audit independen 0 must-fix):
+  (a) Engine simpanan Sek.7.2.3: setor `recordCoopSavingsInTx`
+  D1010 -> K2050/2060/2070 per kind; tarik sukarela
+  `recordCoopWithdrawInTx` D2070 -> K1010 + Option A (ruling 6 Okt):
+  baris NEGATIF di coop_savings (guard sisa = SUM >= 0, selain itu
+  throw); keluar `recordCoopMemberKeluarInTx` refund POKOK saja
+  D2050 -> K1010 (wajib/sukarela TIDAK dikembalikan -- literal
+  Sek.7.2.3) + status keluar TERMINAL (re-aktif ditolak; re-keluar
+  = no-op, tidak ada refund kedua).
+  (b) Pola lib/akad.ts: 0-preset (semua nominal = input admin),
+  validasi ketat (anggota ada, kind, status, amount > 0),
+  postJournalInTx idempoten (ref_id F1 per event:
+  `coop#<id>:sv|wd|exit#...`), ref_table='coop', D1: gl-off = zero
+  GL behavior change (event selalu tercatat di tabel; jurnal hanya
+  saat gl_enabled='1').
+  (c) Anggota: `createCoopMemberInTx` (status awal 'aktif';
+  UNIQUE(name) clash -> throw) + `setCoopMemberStatusInTx`
+  (aktif <-> nonaktif bebas; keluar = terminal) + helper saldo
+  `coopSavingsBalance` (SUM aljabar termasuk baris negatif) +
+  `coopKindAccount` (mapping kind -> 2050/2060/2070).
+- **4 deviasi (diaudit, DDL-literal, di-ACC)**:
+  1. coop_members tanpa kolom created_by/created_at (DDL v24
+     literal Sek.7.1; audit trail via journal_entries
+     ref_table='coop').
+  2. Bug di TEST suite C4 (tarik sukarela sebelum setor) --
+     di-fix di test, bukan lib.
+  3. Konvensi balance_running `prev + (debit - credit)`: akun
+     liabilitas NEGAT saat kredit (asersi C1 disesuaikan).
+  4. Validasi kind selalu jalan walau gl-off (D1: event terekam
+     = valid).
+- **Gate lulus**: test-coop 91/0 (M-suite + C1-C6); regresi
+  test-gl 102/0 + test-akad 175/0; tsc --noEmit 0 error; 0
+  non-ASCII di file berubah; `public/sw.js` + V1
+  `laporan-admin-client.tsx` + db.ts + package.json tak tersentuh.
+- NEXT = **W4.3** (UI /admin/koperasi + API; absorb rekap W4.1 Q2
+  ke tab Rekap). W4.4 = SHU, W4.5 = modal + closing.
+
 ## 2026-10-05
 ### W4.1 LEPAS -- skema v24 koperasi Level C (5 Okt 2026)
 - **Commit `b9c0ae5`** (full `b9c0ae5ddfead632d127cfa6508826d076c6fae`;
@@ -35,8 +77,8 @@
 - **STATE (verify live git, 5 Okt)**: W4.1 `b9c0ae5` dual-push
   master+main; ops-fix `30a3ae5`; entri docs ini = HEAD lokal
   (dual-push + ls-remote terverifikasi; dua ref sama).
-- **NEXT = W4.2** (`src/lib/coop.ts` -- engine simpanan koperasi;
-  extend test-coop C-suite); menyusul W4.3 (UI), W4.4 (SHU),
+- **NEXT = W4.2** (SELESAI 6 Okt, commit `fce2531`, lihat seksi
+  2026-10-06); menyusul W4.3 (UI), W4.4 (SHU),
   W4.5 (modal + closing). **W5: + PINJ-1 (pinjaman anggota)** --
   tashih qardh/murabahah, akun COA baru, sumber dana (dicatat
   5 Okt; menunggu ruling/ACC Gus Fi; TIDAK dieksekusi sebelum

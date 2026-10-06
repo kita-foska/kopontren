@@ -1872,11 +1872,15 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
    - [ ] **PHASE 2 (ditunda)**: Plan B banner global `shell.tsx`;
          F3 refresh member-settings saat reconnect; offline
          lebih luas (member/reports).
-   - NEXT: **W4.2** (`src/lib/coop.ts` -- engine simpanan koperasi +
-          extend test-coop C-suite; skema v24 sudah SELESAI di
-          `b9c0ae5`). Setelah W4 habis = **W5 penguatan** (bawaan
-          baru: PINJ-1 pinjaman anggota -- tashih qardh/murabahah,
-          akun COA baru, sumber dana).
+   - [x] **W4.2 LEPAS** (6 Okt): `src/lib/coop.ts` engine simpanan
+          koperasi (setor/tarik/keluar, Option A baris negatif,
+          C-suite C1-C6) -- commit `fce2531`; detail: MEMORY.md
+          seksi 2026-10-06.
+   - NEXT: **W4.3** (UI /admin/koperasi: tab Anggota, Simpanan,
+          Rekap + API; absorb rekap W4.1 Q2 ke tab Rekap). Setelah
+          W4 habis = **W5 penguatan** (bawaan baru: PINJ-1
+          pinjaman anggota -- tashih qardh/murabahah, akun COA
+          baru, sumber dana).
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.
