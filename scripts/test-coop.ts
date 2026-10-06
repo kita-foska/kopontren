@@ -7,6 +7,10 @@
  * In-memory node:sqlite; DDL mirror src/db.ts (skema v24). W4.2:
  * C-suite (lib/coop.ts) -- C1 D=K + mapping / C2 idempoten /
  * C3 negative guard / C4 gl-off / C5 keluar refund / C6 transisi.
+ * W4.3: R-suite (route wiring, pola /api/akad) -- R1 rekap akun COA
+ * W4.1 (2050/2060/2070 + 30xx, 4-digit) / R2 setor D1010->K205x /
+ * R3 tarik baris NEGATIF tanpa double-count / R4 keluar refund
+ * D2050->K1010 + terminal / R5 kondisi galat -> mapping HTTP route.
  */
 
 let passes = 0;
@@ -478,6 +482,157 @@ async function main(): Promise<void> {
     }
     ok('C6: keluar -> aktif ditolak (terminal)', e9.includes('terminal'));
     db4.close();
+  }
+
+  // ===== R-suite W4.3: route wiring (engine lib/coop.ts + rekap SQL) =====
+  // C-suite menguji engine. R-suite menguji LAYER yang route.ts (pola
+  // /api/akad) sajikan + akui: rekap GET = akun W4.1 COA 4-digit
+  // (2050/2060/2070 + 30xx) dari journal_lines (SUM debit-credit) + COA
+  // + saldo aljabar coop_savings; tiap op delegasi ke engine InTx (tak
+  // ada logika duplikat / akun 5-digit / coop_savings_jv / kolom cat /
+  // double-count).
+  {
+    const db5 = new mod.DatabaseSync(':memory:');
+    db5.exec(DDL_COA);
+    const insCoa5 = db5.prepare(INSERT_COA);
+    for (const r of COA_V24) insCoa5.run(r[0], r[1], r[2], r[3], r[4], r[5]);
+    db5.exec(DDL_COOP_MEM);
+    db5.exec(DDL_COOP_SV);
+    db5.exec(DDL_JE);
+    db5.exec(DDL_JL);
+    const tdb5 = toTxDb(db5);
+
+    // Miror REKAP_ACCOUNTS route.ts (OQ6 W4.3): simpanan 2050/2060/2070
+    // + modal/SHU 30xx. 2080 pending tak ditampil.
+    const R_REKAP = ['2050', '2060', '2070', '3010', '3020', '3030', '3040', '3050', '3060'];
+    // Miror GET /api/koperasi rekap: saldo akun = SUM(debit)-SUM(credit)
+    // di journal_lines (kumulatif, pola gl route W1.4); nama dari COA.
+    const rekapAccounts = (): { code: string; name: string; balance: number }[] => {
+      const ph = R_REKAP.map(() => '?').join(', ');
+      const balRows = db5
+        .prepare(
+          'SELECT account_code, SUM(debit) - SUM(credit) AS bal FROM journal_lines WHERE account_code IN (' +
+            ph +
+            ') GROUP BY account_code'
+        )
+        .all(...R_REKAP) as { account_code: string; bal: number }[];
+      const coaRows = db5
+        .prepare('SELECT code, name FROM coa WHERE code IN (' + ph + ')')
+        .all(...R_REKAP) as { code: string; name: string }[];
+      const coaMap = new Map(coaRows.map((x) => [x.code, x.name] as const));
+      const balMap = new Map(balRows.map((x) => [x.account_code, Math.round(Number(x.bal) || 0)] as const));
+      return R_REKAP.map((code) => ({ code, name: coaMap.get(code) ?? 'Akun ' + code, balance: balMap.get(code) ?? 0 }));
+    };
+    // Miror saldo aljabar route (SUM coop_savings per anggota+kind;
+    // baris tarik = negatif, Option A W4.2).
+    const memberBal = (memberId: string, kind: string): number =>
+      Number(
+        (db5
+          .prepare('SELECT COALESCE(SUM(amount), 0) s FROM coop_savings WHERE member_id=? AND kind=?')
+          .get(memberId, kind) as { s: number }).s
+      );
+
+    // R1: rekap GET = 9 akun COA W4.1 (4-digit), TIDAK 5-digit; nama COA.
+    const acc1 = rekapAccounts();
+    eq('R1: rekap = 9 akun (2050/2060/2070 + 3010..3060)', acc1.length, 9);
+    eq('R1: daftar akun rekap = COA W4.1', acc1.map((a) => a.code).join(','), R_REKAP.join(','));
+    ok('R1: tak ada kode 5-digit (11010 dst.)', !acc1.some((a) => a.code.length === 5));
+    ok('R1: nama 2050 = Simpanan Pokok (dari COA)', acc1.find((a) => a.code === '2050')?.name === 'Simpanan Pokok');
+    ok('R1: nama 3020 = SHU Ditahan (akun ekuitas)', acc1.find((a) => a.code === '3020')?.name === 'SHU Ditahan');
+    ok('R1: saldo awal semua rekap = 0', acc1.every((a) => a.balance === 0));
+    // R2: setor (engine) -> K205x rekap turun (liabilitas) + D1010 kas;
+    // saldo aljabar anggota naik.
+    await createCoopMemberInTx(tdb5, { id: 'r1', name: 'Rina', memberSince: '2026-10-06' });
+    const rs1 = await recordCoopSavingsInTx(tdb5, {
+      memberId: 'r1',
+      kind: 'pokok',
+      amount: 10000,
+      savedAt: '2026-10-06T08:00:00+07:00',
+      gl_enabled: true,
+    });
+    ok(
+      'R2: sektor punya entryId (D1010 -> K2050)',
+      !!rs1.entryId && lineVal(db5, rs1.entryId!, '1010', 'debit') === 10000 && lineVal(db5, rs1.entryId!, '2050', 'credit') === 10000
+    );
+    await recordCoopSavingsInTx(tdb5, { memberId: 'r1', kind: 'wajib', amount: 5000, savedAt: '2026-10-06T08:01:00+07:00', gl_enabled: true });
+    await recordCoopSavingsInTx(tdb5, { memberId: 'r1', kind: 'sukarela', amount: 7000, savedAt: '2026-10-06T08:02:00+07:00', gl_enabled: true });
+    eq('R2: rekap 2050 = -10000 (kredit liabilitas)', rekapAccounts().find((a) => a.code === '2050')!.balance, -10000);
+    eq('R2: rekap 2060 = -5000', rekapAccounts().find((a) => a.code === '2060')!.balance, -5000);
+    eq('R2: rekap 2070 = -7000', rekapAccounts().find((a) => a.code === '2070')!.balance, -7000);
+    eq('R2: saldo pokok r1 (coop_savings) = 10000', memberBal('r1', 'pokok'), 10000);
+    eq('R2: saldo wajib r1 = 5000', memberBal('r1', 'wajib'), 5000);
+    eq('R2: saldo sukarela r1 = 7000', memberBal('r1', 'sukarela'), 7000);
+
+    // R3: tarik sukarela (engine) = SATU baris negatif saja (tanpa
+    // UPDATE / double-count); rekap 2070 net turun sekali.
+    const rw1 = await recordCoopWithdrawInTx(tdb5, {
+      memberId: 'r1',
+      amount: 3000,
+      savedAt: '2026-10-06T09:00:00+07:00',
+      gl_enabled: true,
+    });
+    ok(
+      'R3: tarik punya entryId (D2070 -> K1010)',
+      !!rw1.entryId && lineVal(db5, rw1.entryId!, '2070', 'debit') === 3000 && lineVal(db5, rw1.entryId!, '1010', 'credit') === 3000
+    );
+    eq(
+      'R3: tepat 1 baris negatif -3000 (tak ada UPDATE/double-count)',
+      cnt0(db5, "SELECT COUNT(*) c FROM coop_savings WHERE member_id='r1' AND amount = -3000"),
+      1
+    );
+    eq('R3: saldo sukarela r1 = 4000 (7000 - 3000, sekali)', memberBal('r1', 'sukarela'), 4000);
+    eq('R3: rekap 2070 net = -4000 (kredit 7000 - debit 3000)', rekapAccounts().find((a) => a.code === '2070')!.balance, -4000);
+    // R4: keluar (engine) -> refund pokok D2050->K1010; status terminal;
+    // re-keluar = no-op idempoten (tanpa refund kedua).
+    const rk = await recordCoopMemberKeluarInTx(tdb5, {
+      memberId: 'r1',
+      changedAt: '2026-10-06T11:00:00+07:00',
+      gl_enabled: true,
+    });
+    ok(
+      'R4: keluar punya entryId (refund pokok D2050/K1010)',
+      !!rk.entryId && lineVal(db5, rk.entryId!, '2050', 'debit') === 10000 && lineVal(db5, rk.entryId!, '1010', 'credit') === 10000
+    );
+    eq('R4: status r1 = keluar', String((db5.prepare('SELECT status s FROM coop_members WHERE id=?').get('r1') as { s: string }).s), 'keluar');
+    eq('R4: rekap 2050 kembali 0 (debit = credit = 10000)', rekapAccounts().find((a) => a.code === '2050')!.balance, 0);
+    eq(
+      'R4: re-keluar = no-op (tanpa refund kedua)',
+      (await recordCoopMemberKeluarInTx(tdb5, { memberId: 'r1', changedAt: '2026-10-06T12:00:00+07:00', gl_enabled: true })).entryId,
+      null
+    );
+
+    // R5: kondisi galat yang route.ts petakan ke HTTP status.
+    // 404 anggota tak ditemukan / 409 UNIQUE(name) / 400 validasi+insufficient.
+    let g404 = '';
+    try {
+      await recordCoopSavingsInTx(tdb5, { memberId: 'hantu', kind: 'pokok', amount: 1000, gl_enabled: true });
+    } catch (x) {
+      g404 = String(x);
+    }
+    ok('R5: anggota tak ditemukan -> galat (route: 404)', g404.includes('tidak ditemukan'));
+    let g409 = '';
+    try {
+      await createCoopMemberInTx(tdb5, { id: 'dup', name: 'Rina', memberSince: '2026-10-06' });
+    } catch (x) {
+      g409 = String(x);
+    }
+    ok('R5: nama duplikat -> UNIQUE (route: 409 coop_member_duplicate)', g409.includes('UNIQUE constraint failed'));
+    await createCoopMemberInTx(tdb5, { id: 'r2', name: 'Sari', memberSince: '2026-10-06' });
+    let g400 = '';
+    try {
+      await recordCoopWithdrawInTx(tdb5, { memberId: 'r2', amount: 1000, savedAt: '2026-10-06T09:00:00+07:00', gl_enabled: true });
+    } catch (x) {
+      g400 = String(x);
+    }
+    ok('R5: tarik melebihi sisa -> galat (route: 400 coop_insufficient)', g400.includes('melebihi sisa'));
+    let g400b = '';
+    try {
+      await recordCoopSavingsInTx(tdb5, { memberId: 'r2', kind: 'pokok', amount: 0, gl_enabled: true });
+    } catch (x) {
+      g400b = String(x);
+    }
+    ok('R5: amount <= 0 -> galat (route: 400 validasi)', g400b.length > 0);
+    db5.close();
   }
 
   console.log(passes + ' passed, ' + failures + ' failed');

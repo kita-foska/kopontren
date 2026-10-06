@@ -104,6 +104,32 @@ export const GLOSSARY: GlossaryTerm[] = [
     desc: 'Biaya akibat keterlambatan atau pelanggaran akad. Di aplikasi ini dicatat, tetapi tidak pernah di-bukukan (uang hasil denda tidak boleh jadi pendapatan).',
     group: 'Akad & Bagi Hasil',
   },
+  // -- Koperasi (W4.3; akun simpanan 2050/2060/2070 + SHU 30xx, skema v24)
+  {
+    term: 'Simpanan Pokok',
+    desc: 'Simpanan masuk awal saat menjadi anggota koperasi. Tidak bisa ditarik selama keanggotaan masih aktif; dikembalikan saat anggota keluar (bila GL aktif, refund otomatis D2050 ke kas).',
+    group: 'Akad & Bagi Hasil',
+  },
+  {
+    term: 'Simpanan Wajib',
+    desc: 'Simpanan rutin yang diatur koperasi (mis. setoran per bulan). Tetap milik anggota; tidak dikembalikan saat anggota keluar.',
+    group: 'Akad & Bagi Hasil',
+  },
+  {
+    term: 'Simpanan Sukarela',
+    desc: 'Simpanan atas keinginan sendiri dari anggota; jumlahnya bebas. Bisa ditarik selama masih tersisa; tidak perlu dikembalikan saat keluar.',
+    group: 'Akad & Bagi Hasil',
+  },
+  {
+    term: 'SHU',
+    desc: 'Sisa Hasil Usaha: keuntungan koperasi dalam satu periode. Bisa dicadangkan (umum/khusus), dipakai jasa anggota, atau dibagikan; distribusinya dicatat lewat jurnal (fitur W4.4).',
+    group: 'Akad & Bagi Hasil',
+  },
+  {
+    term: 'Rumpun',
+    desc: 'Lingkaran keluarga atau pesantren tempat anggota; pengelompokan anggota koperasi (opsional, untuk pelaporan per rumpun).',
+    group: 'Akad & Bagi Hasil',
+  },
   // -- ZIS & Zakat
   {
     term: 'Zakat',

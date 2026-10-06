@@ -27,6 +27,7 @@ const PREFETCH_PATHS = new Set([
   '/admin/zakat',
   '/admin/zis',
   '/admin/akad', // W3.3: modul akad syariah (OQ 2: simetris dgn zis)
+  '/admin/koperasi', // W4.3: modul koperasi (simetris dgn akad/zis)
   '/tutorial',
 ]);
 
@@ -135,6 +136,26 @@ const IconAkad = (
   </svg>
 );
 
+// W4.3: ikon modul koperasi (tumpukan koin/simpanan -- inline SVG, 16px,
+// stroke currentColor; tanpa emoji/unicode/ikon-font).
+const IconKoperasi = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <ellipse cx="12" cy="5" rx="8" ry="3" />
+    <path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5" />
+    <path d="M4 11v8c0 1.7 3.6 3 8 3s8-1.3 8-3v-8" />
+  </svg>
+);
+
 // UX-1: ikon Glosarium (buku terbuka -- inline SVG 16px, stroke
 // currentColor; tanpa emoji/unicode/ikon-font).
 const IconGlosarium = (
@@ -185,6 +206,9 @@ export const MENU_ITEMS: MenuDef[] = [
   // W3.3: modul akad syariah (skema v23; tulis = tier akad admin/manajer;
   // pengurus = read-only via tier laporan, Q3/OQ4 -- pola zis item 7).
   { href: '/admin/akad', label: 'Akad', icon: IconAkad, level: 'laporan' },
+  // W4.3: modul koperasi (skema v24, Sek.7.1/7.3; tulis = tier koperasi
+  // admin/manajer; pengurus = read-only via tier laporan -- pola Q3 akad).
+  { href: '/admin/koperasi', label: 'Koperasi', icon: IconKoperasi, level: 'laporan' },
   { href: '/admin/pengaturan-member', label: 'Keuntungan Member', level: 'admin' },
   { href: '/admin/member', label: 'Member', level: 'member' },
   { href: '/admin/laporan', label: 'Laporan Pengurus', level: 'laporan' },
@@ -225,6 +249,7 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
       '/admin/zakat',
       '/admin/zis',
       '/admin/akad', // W3.3: modul akad syariah (skema v23; pengurus = read-only, Q3)
+      '/admin/koperasi', // W4.3: modul koperasi (skema v24; pengurus = read-only, pola Q3)
       '/laporan',
     ],
   },
