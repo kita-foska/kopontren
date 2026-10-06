@@ -1,6 +1,70 @@
 # MEMORY
 
 ## 2026-10-06
+### W4.4 LEPAS -- SHU distribusi (rasio input admin + 1 jurnal alokasi) (6 Okt 2026)
+- **Commit `a141211`** (full `a141211abe8c4b9a09d725ce14e3907397e9ca46`;
+  16 file +1045/-9 = 14 M + 2 A; dual-push master+main; ACC Gus Fi
+  via DeepSeek -- audit independen 0 must-fix):
+  (a) **`src/lib/shu.ts` (BARU, 215 baris)**: distribusi SHU, rasio
+  input admin -- TANPA angka default (Sek.13 / PKGF sisi-pasif,
+  keputusan #13.4). Alur OQ1=A (Sek.7.2.2): SATU jurnal alokasi
+  D3020 (SHU Ditahan) -> K3030/3040/3050/3060 (cadangan umum /
+  khusus, jasa, dibagi); 3 porsi dibulatkan (round(total*pct/100)),
+  porsi "dibagi" = residu (total - SUM 3 porsi) sehingga SUM 4
+  porsi SELALU = shu_total -> D=K terjamin. entry_date = AWAL
+  PERIODE (period+'-01'), bukan tanggal posting (ruling correction
+  2; jejak audit ke periode). Idempoten: ref_table='coop',
+  ref_id='coop#shu#<period>', UNIQUE(ref_table,ref_id,type).
+  Periode unik -> SHU_PERIOD_EXISTS (route map 409; koreksi =
+  jurnal pembalik, BUKAN hapus). GL off = tercatat di coop_shu
+  tanpa jurnal (pola D1). Guard input: SHU_PERIOD_INVALID
+  (YYYY-MM) / SHU_TOTAL_INVALID / SHU_RATIO_INVALID / SHU_RATIO_SUM
+  (SUM 3 rasio <= 100). Jasa per anggota (bobot rata-rata,
+  keputusan Q5, konservatif, BUKAN bunga) + tunai/transfer (akun
+  5080) = **W4.5** (ditunda setelah W4.4 -- skema D1).
+  (b) **route `/api/koperasi` op `shu`**: guard tulis 403 (tier
+  'koperasi' ATAU 'shu' = admin+manajer; pengurus/role lain =
+  read-only); validasi -> 400; duplikat periode -> 409
+  shu_period_exists; semua tulis SATU tx (engine + logAudit, pola
+  W2.7/W3.3) + invalidate('coop:') dan invalidate('gl:').
+  (c) **UI `/admin/koperasi`**: tab ke-4 "SHU" (tab "Rekap & SHU"
+  jadi "Rekap"; riwayat SHU pindah ke tab SHU; baris lama tanpa
+  rasio = "distribusi = W4.4"). Form: periode YYYY-MM + SHU total +
+  3 input persen (cad umum / khusus, jasa) + porsi "dibagi" auto +
+  pratinjau Rupiah live + tombol "Catat Alokasi SHU"; gate
+  `canWrite` (mode baca = form tersembunyi). E.4: 4 kode validasi
+  dipetakan ke toast polos. E.5: `useTablistNav` (arrow + Home/End,
+  pola APG, sama dgn POS).
+  (d) **Tutorial/docs**: seksi "Koperasi & SHU" di 4 docs
+  (SOP-ADMIN +28, SOP-MANAJER +24, SOP-PENGURUS +17,
+  DOKUMENTASI-APLIKASI +21) + 4 salinan public/tutorial (salin
+  polos, IDENTIK via hash) + `glossary.ts` 6 istilah baru ("Koperasi
+  & SHU": SHU / Cadangan Umum / Cadangan Khusus / Jasa Anggota / SHU
+  Dibagi / Rasio Alokasi) + `glosarium-client.tsx` (GROUP_ORDER +
+  "Koperasi & SHU") + `features.ts` `'shu': ['admin','manajer']` +
+  TIPS 6 term di `koperasi-client.tsx` + `package.json` test:shu
+  (masuk chain test:all).
+  (e) **`scripts/test-shu.ts` (BARU, 327 baris)**: self-contained
+  (in-memory node:sqlite; DDL journal/coop_shu mirror db.ts; TIDAK
+  bergantung test-coop.ts -- file itu tak bisa dibaca/diedit di
+  sesi awal). 45 assert: S1 hitung (round + residu; SUM 4 porsi =
+  shu_total), S2 guard (total/periode/rasio + kasus positif),
+  S3 GL-on (4 kaki D=K + ref_id + entry_date + rasio_json),
+  S3b rasio 0/0/0 (hanya 2 kaki), S4 UNIQUE(period) + idempoten
+  postJournalInTx, S5 GL-off (1 baris, 0 jurnal).
+- **Gate lulus**: tsc --noEmit exit 0; test:shu 45/0; regresi aman
+  (hanya 16 file W4.4 yang berubah); 0 non-ASCII di file baru
+  (3 section-sign + 7 sigma di shu.ts ketahuan saat audit STEP 6
+  -- dihapus, diganti "Sek."/"SUM" SEBELUM commit);
+  `public/sw.js` + V1 `laporan-admin-client.tsx` + engine
+  `src/lib/coop.ts` UNCHANGED.
+- NEXT = **W4.5** (modal akun 3010 + closing journal Sek.3.2.6 +
+  jasa per anggota rata-rata (Q5) + distribusi tunai/transfer akun
+  5080; rekon #16 ke W5.2). **W4.4b** = backfill tutorial W4.3
+  Koperasi -- commit TERPISAH setelah W4.4. W4.6 = rekap per
+  rumpun. Setelah W4 habis = **W5 penguatan** (PINJ-1 pinjaman
+  anggota -- tashih qardh/murabahah).
+
 ### W4.3 LEPAS -- API + UI koperasi (pola /api/akad, engine W4.2) + R-suite (6 Okt 2026)
 - **Commit `d3865a2`** (full `d3865a2b41f64590f50fa6a4cee812dce8446033`;
   7 file +1510, dual-push master+main; ACC Gus Fi via DeepSeek --

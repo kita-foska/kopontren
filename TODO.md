@@ -1882,10 +1882,25 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
           + 3010-3060; withdraw = 1 baris negatif) + R-suite R1-R5
           (25 assert). commit `d3865a2`; detail: MEMORY.md seksi
           2026-10-06.
-   - NEXT: **W4.4** (SHU: hitung input + rasio Sek.7.2 + posting
-          distribusi). W4.5 = modal + closing. Setelah W4 habis =
-          **W5 penguatan** (PINJ-1 pinjaman anggota -- tashih
-          qardh/murabahah, akun COA baru, sumber dana).
+    - [x] **W4.4 LEPAS** (6 Okt): SHU distribusi -- rasio input
+           admin (TANPA angka default; Sek.13/PKGF sisi-pasif) +
+           SATU jurnal alokasi D3020 -> K3030/3040/3050/3060
+           (OQ1=A; porsi "dibagi" = residu, D=K; entry_date = awal
+           periode; periode unik -> 409, koreksi = jurnal
+           pembalik; GL off = tercatat saja). File baru
+           `src/lib/shu.ts` (215 baris) + `scripts/test-shu.ts`
+           (327, test 45/0); route op `shu` (403/400/409); UI
+           tab ke-4 "SHU" (form rasio + pratinjau + E.4 toast
+           4 kode + E.5 tablist nav); tutorial Koperasi & SHU di
+           4 docs + 4 sync public/tutorial; glosarium 6 istilah
+           baru. commit `a141211`; detail: MEMORY.md seksi
+           2026-10-06.
+   - NEXT: **W4.5** (modal akun 3010 + closing journal Sek.3.2.6
+          + jasa per anggota rata-rata (Q5) + tunai 5080; rekon
+          #16 ke W5.2). W4.4b = backfill tutorial W4.3 Koperasi
+          (commit terpisah). W4.6 = rekap per rumpun. Setelah
+          W4 habis = **W5 penguatan** (PINJ-1 pinjaman anggota
+          -- tashih qardh/murabahah, akun COA baru, sumber dana).
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.
