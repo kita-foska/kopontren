@@ -282,6 +282,34 @@ body{background:#fff}
 <div class="anno"><span class="ch">⓸</span><div><b>Tab Laba-Rugi / Neraca</b> — Laba-Rugi: omzet − HPP − pengeluaran = laba bersih. Neraca: aset vs kewajiban + ekuitas (harus seimbang). Ganti periode lewat pil di atas.</div></div>
 
 <div class="legend"><b>Keterangan warna:</b> maroon = utama/brand · hijau = baik/aktif · kuning = peringatan (stok menipis, rekap tertunda) · merah = masalah (habis, defisit). Halaman ini sudah <b>siap cetak A4</b> — tekan Ctrl+P untuk salinan fisik.</div>
+
+<h2><span class="n">7</span>Koperasi &amp; SHU (distribusi SHU)</h2>
+<div class="card">
+<h3>Kapan dipakai</h3>
+<p style="margin-top:0">Setelah tutup buku, <b>Admin</b> mendistribusikan <b>SHU (Sisa Hasil Usaha)</b> per periode lewat halaman <b>Koperasi</b> (/admin/koperasi), tab <b>SHU</b>. Anda mengisi rasio alokasi SHU untuk satu periode.</p>
+
+<h3>Isi form "Alokasi SHU"</h3>
+<table>
+<tr><th>Field</th><th>Keterangan</th></tr>
+<tr><td><b>Periode</b></td><td>Bulan tahun, format YYYY-MM. Satu periode = satu alokasi (unik).</td></tr>
+<tr><td><b>SHU Total (Rp)</b></td><td>Total SHU periode itu. Bilangan bulat rupiah, lebih dari 0.</td></tr>
+<tr><td><b>Cadangan Umum (%)</b></td><td>Porsi ditahan memperkuat permodalan koperasi (akun 3030). Tanpa angka default.</td></tr>
+<tr><td><b>Cadangan Khusus (%)</b></td><td>Porsi utk kebutuhan tertentu koperasi (akun 3040). Tanpa angka default.</td></tr>
+<tr><td><b>Jasa Anggota (%)</b></td><td>Porsi imbal jasa/modal anggota (akun 3050), bobot rata-rata (bukan bunga). Tanpa angka default.</td></tr>
+<tr><td><b>Dibagi (%)</b></td><td>Otomatis = sisa (100 dikurangi cadangan umum, khusus, jasa) ke akun 3060, agar total pas.</td></tr>
+</table>
+<p>Pratinjau Rupiah tiap porsi muncul otomatis saat SHU Total lebih dari 0. Lalu tekan tombol <b>Simpan / "Catat Alokasi SHU"</b>.</p>
+
+<h3>GL aktif vs GL off</h3>
+<div class="note"><b>GL aktif:</b> satu jurnal alokasi dibuat otomatis (Debit 3020 SHU; Kredit 3030 / 3040 / 3050 / 3060), tanggal jurnal = awal periode. Porsi 0 persen tidak dibuatkan baris jurnal.<br><b>GL off:</b> alokasi tetap tercatat di koperasi ("tercatat saja"), tanpa jurnal. Lihat badge <i>GL aktif / GL off</i> di atas tab.</div>
+
+<h3>Periode unik &amp; koreksi</h3>
+<div class="note">Satu periode hanya dicatat sekali. Bila periode sudah terisi, sistem menolak (pesan <i>"SHU periode ini sudah tercatat"</i>). Koreksi lewat <b>jurnal pembalik</b> di Kas, bukan hapus baris.</div>
+
+<h3>Riwayat SHU</h3>
+<p>Tabel Riwayat menampilkan tiap periode: total, rasio 4 porsi (cadangan umum / khusus, jasa, dibagi), dan tanggal pencatatan. Baris yang tercatat sebelum fitur rasio ada menampilkan <b>distribusi = W4.4</b> (masih distribusi lama).</p>
+</div>
+
 </div>
 </body>
 </html>

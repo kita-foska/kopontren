@@ -13,7 +13,8 @@ export interface GlossaryTerm {
     | 'Akad & Bagi Hasil'
     | 'ZIS & Zakat'
     | 'Laporan & Buku'
-    | 'Member & Reward';
+    | 'Member & Reward'
+    | 'Koperasi & SHU';
 }
 
 export const GLOSSARY: GlossaryTerm[] = [
@@ -252,6 +253,37 @@ export const GLOSSARY: GlossaryTerm[] = [
     term: 'Tier Loyalty',
     desc: 'Level member berdasarkan total belanja kumulatif (mis. Silver, Gold); level lebih tinggi mendapat keuntungan lebih besar.',
     group: 'Member & Reward',
+  },
+  // -- Koperasi & SHU (W4.4)
+  {
+    term: 'SHU',
+    desc: 'Sisa Hasil Usaha: hasil usaha koperasi dalam satu periode (laba/rugi) setelah semua beban. Di aplikasi dihitung dari input admin plus rasio alokasi, lalu dicatat sebagai jurnal alokasi. Pembagian jasa anggota (per orang) dan tunai dikerjakan tahap berikutnya.',
+    group: 'Koperasi & SHU',
+  },
+  {
+    term: 'Cadangan Umum',
+    desc: 'Sebagian SHU yang ditahan untuk cadangan umum koperasi (akun 3030), memperkuat permodalan; tidak dibagikan ke anggota.',
+    group: 'Koperasi & SHU',
+  },
+  {
+    term: 'Cadangan Khusus',
+    desc: 'Sebagian SHU untuk cadangan khusus koperasi (akun 3040), ditahan untuk kebutuhan tertentu koperasi.',
+    group: 'Koperasi & SHU',
+  },
+  {
+    term: 'Jasa Anggota',
+    desc: 'Sebagian SHU sebagai imbal jasa/modal anggota (akun 3050). Ditetapkan dengan bobot rata-rata (konservatif, bukan bunga); pembagian per anggota dan tunai dikerjakan tahap berikutnya.',
+    group: 'Koperasi & SHU',
+  },
+  {
+    term: 'SHU Dibagi',
+    desc: 'Sebagian SHU yang dibagikan kepada anggota (akun 3060). Pencairan tunai atau transfer memakai akun distribusi (tahap berikutnya).',
+    group: 'Koperasi & SHU',
+  },
+  {
+    term: 'Rasio Alokasi',
+    desc: 'Persentase pembagian SHU (cadangan umum / cadangan khusus / jasa / dibagi). Diisi admin per periode; aplikasi tidak menyediakan angka default. Porsi "dibagi" dihitung sebagai sisa agar total pas.',
+    group: 'Koperasi & SHU',
   },
 ];
 

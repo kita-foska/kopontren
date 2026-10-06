@@ -31,6 +31,7 @@ import {
   Toast,
   useConfirm,
   useToast,
+  useTablistNav,
 } from '@/components/ui';
 import { fmtDateTime, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
@@ -99,17 +100,35 @@ const TIPS = {
     'Simpanan wajib: setoran rutin yang ditentukan koperasi. Tetap milik anggota; tidak dikembalikan saat anggota keluar.',
   sukarela:
     'Simpanan sukarela: setoran bebas atas keinginan anggota. Bisa ditarik selama masih tersisa; tidak perlu refund saat keluar.',
-  shu: 'SHU (Sisa Hasil Usaha): keuntungan koperasi per periode; dibagikan/dicadangkan (distribusi = W4.4).',
+  shu: 'SHU (Sisa Hasil Usaha): keuntungan koperasi per periode; dialokasikan via jurnal (W4.4). Jasa per orang + tunai = W4.5.',
   rumpun:
     'Rumpun: lingkaran keluarga/pesantren; pengelompokan anggota koperasi (opsional, utk laporan).',
+  cad_umum:
+    'Cadangan umum: bagian SHU yang ditahan memperkuat permodalan koperasi (akun 3030); tidak dibagikan.',
+  cad_khusus:
+    'Cadangan khusus: bagian SHU yang ditahan utk kebutuhan tertentu koperasi (akun 3040).',
+  jasa: 'Jasa anggota: bagian SHU utk imbal jasa/modal anggota (akun 3050); bobot rata-rata (konservatif, bukan bunga).',
+  dibagi: 'SHU dibagi: bagian SHU utk dibagikan ke anggota (akun 3060); pencairan tunai/transfer = W4.5.',
+  rasio: 'Rasio alokasi SHU (persen) cad um/khusus/jasa; porsi "dibagi" = sisa 100 - lainnya agar total pas. Diisi admin, tanpa angka default.',
 };
 
-type Tab = 'anggota' | 'simpanan' | 'rekap';
+type Tab = 'anggota' | 'simpanan' | 'rekap' | 'shu';
+
+/** Urutan tab koperasi (navigasi keyboard tablist; W4.4 E.5). */
+const COOP_TABS: Tab[] = ['anggota', 'simpanan', 'rekap', 'shu'];
 
 const STATUS_TONE: Record<string, 'green' | 'gray' | 'red'> = {
   aktif: 'green',
   nonaktif: 'gray',
   keluar: 'red',
+};
+
+/** E.4: petakan kode validasi 400 server ("Validasi SHU: <CODE>") ke kalimat polos. */
+const SHU_VALIDATION_TOAST: Record<string, string> = {
+  SHU_TOTAL_INVALID: 'SHU Total harus rupiah > 0',
+  SHU_RATIO_INVALID: 'Rasio harus angka >= 0',
+  SHU_RATIO_SUM: 'Total rasio melebihi 100%',
+  SHU_PERIOD_INVALID: 'Periode harus format YYYY-MM',
 };
 
 /** Suffix toast pencatatan (jurnal id / GL off; pola akad-client W3.3). */
@@ -142,6 +161,16 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
   const [wMember, setWMember] = useState('');
   const [wAmount, setWAmount] = useState('');
   const [wDate, setWDate] = useState('');
+
+  // -- form: alokasi SHU (rasio input, W4.4) ------------------------
+  const [shuPeriod, setShuPeriod] = useState('');
+  const [shuTotal, setShuTotal] = useState('');
+  const [shuCadU, setShuCadU] = useState('');
+  const [shuCadK, setShuCadK] = useState('');
+  const [shuJasa, setShuJasa] = useState('');
+
+  // W4.4 E.5: keyboard nav tablist koperasi (pola APG, sama dgn POS via useTablistNav).
+  const { onTabKeyDown } = useTablistNav<Tab>((i) => COOP_TABS[i] ?? 'anggota', setTab);
 
   const load = useCallback(async () => {
     const r = await api<KoperasiData>('/api/koperasi');
@@ -295,11 +324,68 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
     });
   }
 
+  /** op: shu (W4.4: distribusi SHU rasio input; 1 jurnal alokasi D3020 -> C30xx). */
+  async function submitShu(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(shuPeriod)) {
+      showToast('Periode harus format YYYY-MM', 'error');
+      return;
+    }
+    const total = Math.round(Number(shuTotal) || 0);
+    if (total <= 0) {
+      showToast('SHU Total harus rupiah > 0', 'error');
+      return;
+    }
+    const cu = Number(shuCadU) || 0;
+    const ck = Number(shuCadK) || 0;
+    const js = Number(shuJasa) || 0;
+    if (cu + ck + js > 100) {
+      showToast('Total rasio (cad um / cad khusus / jasa) melebihi 100%', 'error');
+      return;
+    }
+    setBusy(true);
+    const r = await post({
+      op: 'shu',
+      period: shuPeriod,
+      shu_total: total,
+      rasio: { cad_umum: cu, cad_khusus: ck, jasa: js },
+    });
+    if (r?.ok) {
+      showToast('SHU ' + shuPeriod + ' tercatat (' + rp(total) + ')' + postNote(r), 'success');
+      setShuTotal('');
+      setShuCadU('');
+      setShuCadK('');
+      setShuJasa('');
+    } else if (!r) showToast('Gagal mencatat SHU', 'error');
+    else {
+      // E.4: petakan kode validasi 400 server ke kalimat polos (kode tak dikenal lolos apa adanya).
+      const raw = r.error || 'Gagal mencatat SHU';
+      const mv = /^Validasi SHU: (SHU_[A-Z]+)$/.exec(raw);
+      showToast(mv ? SHU_VALIDATION_TOAST[mv[1]] ?? raw : raw, 'error');
+    }
+    setBusy(false);
+  }
+
   const d = data;
   if (!d) {
     return <div className="card p-4 text-sm text-slate-500 dark:text-slate-400">Memuat...</div>;
   }
   const wSisa = wMember ? (d.balances[wMember]?.sukarela ?? 0) : 0;
+
+  // -- pratinjau alokasi SHU (rasio input; "dibagi" = residu) -------
+  const shuTotalN = Math.round(Number(shuTotal) || 0);
+  const shuCu = Number(shuCadU) || 0;
+  const shuCk = Number(shuCadK) || 0;
+  const shuJs = Number(shuJasa) || 0;
+  const shuSum3 = shuCu + shuCk + shuJs;
+  const shuDibPct = 100 - shuSum3;
+  const shuA: { cu: number; ck: number; js: number; dib: number } = {
+    cu: Math.round((shuTotalN * shuCu) / 100),
+    ck: Math.round((shuTotalN * shuCk) / 100),
+    js: Math.round((shuTotalN * shuJs) / 100),
+    dib: 0,
+  };
+  shuA.dib = shuTotalN - (shuA.cu + shuA.ck + shuA.js);
 
   return (
     <div className="space-y-4">
@@ -326,13 +412,14 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
         </div>
       </div>
 
-      {/* Tab (APG tablist via FilterPill; 3 tab W4.3) */}
-      <div role="tablist" aria-label="Tab koperasi" className="flex flex-wrap gap-2">
+      {/* Tab (APG tablist via FilterPill; 4 tab W4.4; nav keyboard E.5) */}
+      <div role="tablist" aria-label="Tab koperasi" onKeyDown={onTabKeyDown} className="flex flex-wrap gap-2">
         {(
           [
             ['anggota', 'Anggota (' + d.members.length + ')'],
             ['simpanan', 'Simpanan'],
-            ['rekap', 'Rekap & SHU'],
+            ['rekap', 'Rekap'],
+            ['shu', 'SHU'],
           ] as [Tab, string][]
         ).map(([t, label]) => (
           <FilterPill key={t} role="tab" aria-selected={tab === t} active={tab === t} onClick={() => setTab(t)}>
@@ -751,10 +838,136 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
             </Table>
           </div>
 
+        </div>
+      )}
+
+      {/* -- Tab SHU (W4.4): alokasi rasio input + riwayat SHU -- */}
+      {tab === 'shu' && (
+        <div className="space-y-4">
+          <div className="card p-4">
+            <h2 className="mb-3 font-bold">
+              <TermTip term="SHU" tip={TIPS.shu}>
+                Alokasi SHU
+              </TermTip>
+            </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Hitung dari input admin + rasio alokasi (PKGF sisi-pasif). Distribusi tercatat
+              otomatis: jurnal D3020 -&gt; C3030/3040/3050/3060 saat GL on. Jasa per anggota +
+              tunai (akun 5080) = W4.5.
+            </p>
+            {canWrite ? (
+              <form onSubmit={submitShu} className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  Periode
+                  <input
+                    className="input mt-1"
+                    placeholder="YYYY-MM"
+                    maxLength={7}
+                    value={shuPeriod}
+                    onChange={(e) => setShuPeriod(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  <TermTip term="SHU" tip={TIPS.shu}>
+                    SHU Total (Rp)
+                  </TermTip>
+                  <input
+                    className="input mt-1"
+                    type="number"
+                    min={0}
+                    step={100}
+                    value={shuTotal}
+                    onChange={(e) => setShuTotal(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  <TermTip term="Rasio Alokasi" tip={TIPS.rasio}>
+                    <TermTip term="Cadangan Umum" tip={TIPS.cad_umum}>
+                      Cad. Umum (%)
+                    </TermTip>
+                  </TermTip>
+                  <input
+                    className="input mt-1"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={shuCadU}
+                    onChange={(e) => setShuCadU(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  <TermTip term="Cadangan Khusus" tip={TIPS.cad_khusus}>
+                    Cad. Khusus (%)
+                  </TermTip>
+                  <input
+                    className="input mt-1"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={shuCadK}
+                    onChange={(e) => setShuCadK(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  <TermTip term="Jasa Anggota" tip={TIPS.jasa}>
+                    Jasa (%)
+                  </TermTip>
+                  <input
+                    className="input mt-1"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={shuJasa}
+                    onChange={(e) => setShuJasa(e.target.value)}
+                  />
+                </label>
+                <div className="md:col-span-1 flex items-end">
+                  <Button type="submit" loading={busy}>
+                    Catat Alokasi SHU
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Mode baca (tulis SHU hanya admin/manajer).
+              </p>
+            )}
+            {shuTotalN > 0 && (
+              <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-5">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <TermTip term="Cadangan Umum" tip={TIPS.cad_umum}>
+                    Cad. Umum
+                  </TermTip>{' '}
+                  {shuCu}% = {rp(shuA.cu)}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <TermTip term="Cadangan Khusus" tip={TIPS.cad_khusus}>
+                    Cad. Khusus
+                  </TermTip>{' '}
+                  {shuCk}% = {rp(shuA.ck)}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <TermTip term="Jasa Anggota" tip={TIPS.jasa}>
+                    Jasa
+                  </TermTip>{' '}
+                  {shuJs}% = {rp(shuA.js)}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <TermTip term="SHU Dibagi" tip={TIPS.dibagi}>
+                    Dibagi
+                  </TermTip>{' '}
+                  {shuDibPct}% = {rp(shuA.dib)}
+                </p>
+                <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  SHU Total {rp(shuTotalN)}
+                </p>
+              </div>
+            )}
+          </div>
           <div className="card p-4">
             <h2 className="mb-3 font-bold">Riwayat SHU ({d.shu.length})</h2>
             {d.shu.length === 0 ? (
-              <Empty compact text="Belum ada perhitungan SHU. Jurnal distribusi SHU = W4.4." />
+              <Empty compact text="Belum ada alokasi SHU. Isi form di atas." />
             ) : (
               <Table minW="min-w-[880px]">
                 <thead>

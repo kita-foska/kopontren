@@ -315,6 +315,27 @@ body{background:#fff}
 <div class="anno"><span class="ch">④</span><div><b>Tabel Riwayat</b> — setiap zakat tercatat: status waktu itu, media, harta dagang, dan nominal zakat. Halaman ini bisa dicetak A4 (tombol Cetak) untuk arsip rapat.</div></div>
 
 <div class="legend"><b>Keterangan warna:</b> hijau = Wajib/sukses · kuning = Belum (belum nishab/haul) · maroon = nilai utama. Dokumen ini <b>siap cetak A4</b> (Ctrl+P). Untuk panduan peran lain, lihat 7 file SOP di folder yang sama.</div>
+
+<h2><span class="n">9</span>Modul Koperasi &amp; SHU</h2>
+<div class="card">
+<h3>Ringkasan modul</h3>
+<p style="margin-top:0">Koperasi = unit usaha: simpanan anggota (pokok, wajib, sukarela; setor / tarik / keluar) plus distribusi <b>SHU (Sisa Hasil Usaha)</b> per periode. Wewenang <b>tulis</b>: Admin &amp; Manajer. Pengurus dan peran lain <b>baca</b> lewat rekap. Halaman: /admin/koperasi.</p>
+
+<h3>Istilah (glosarium, W4.4)</h3>
+<table>
+<tr><th>Istilah</th><th>Arti</th><th>Akun</th></tr>
+<tr><td><b>SHU</b></td><td>Sisa Hasil Usaha; keuntungan koperasi dalam satu periode.</td><td>3020</td></tr>
+<tr><td><b>Cadangan umum</b></td><td>Bagian SHU ditahan memperkuat permodalan; tidak dibagikan.</td><td>3030</td></tr>
+<tr><td><b>Cadangan khusus</b></td><td>Bagian SHU ditahan utk kebutuhan tertentu koperasi.</td><td>3040</td></tr>
+<tr><td><b>Jasa anggota</b></td><td>Bagian SHU utk imbal jasa/modal anggota (bobot rata-rata, bukan bunga).</td><td>3050</td></tr>
+<tr><td><b>SHU dibagi</b></td><td>Bagian SHU utk dibagikan ke anggota; pencairan tunai / transfer menyusul.</td><td>3060</td></tr>
+<tr><td><b>Rasio alokasi</b></td><td>Persen (cadangan umum / khusus / jasa) yang diisi admin; "dibagi" = residu agar total pas. Tanpa angka default.</td><td>-</td></tr>
+</table>
+
+<h3>Mekanisme</h3>
+<div class="note">Distribusi SHU = input rasio + <b>satu jurnal alokasi</b> (Debit 3020 SHU; Kredit 3030 / 3040 / 3050 / 3060) saat GL aktif; GL off = tercatat saja. Periode unik (dicatat sekali); koreksi via <b>jurnal pembalik</b>. Pencairan tunai / transfer SHU dibagi menyusul (W4.5).</div>
+</div>
+
 </div>
 </body>
 </html>

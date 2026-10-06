@@ -15,6 +15,7 @@ const GROUP_ORDER = [
   'ZIS & Zakat',
   'Laporan & Buku',
   'Member & Reward',
+  'Koperasi & SHU',
 ];
 
 export function GlosariumClient() {

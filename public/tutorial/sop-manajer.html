@@ -188,6 +188,30 @@ body{background:#fff}
 <div class="anno"><span class="ch">③</span><div><b>Tombol Cetak Kartu / Perbarui QR</b> — cetak landscape maroon; "Perbarui QR" memaksa dialog konfirmasi (kartu lama batal). Kedua tombol ini khusus wewenang Manajer/Admin penuh.</div></div>
 
 <div class="legend"><b>Ringkasan peran:</b> Manajer = semua halaman Admin + POS + layanan QR member. Jika satu peran untuk satu orang sudah cukup, tetapkan <b>Admin</b>; tetapkan <b>Manajer</b> bila orang itu memang sering turun ke kasir. Halaman ini <b>siap cetak A4</b> (Ctrl+P).</div>
+
+<h2><span class="n">7</span>Koperasi &amp; SHU (wewenang tulis)</h2>
+<div class="card">
+<h3>Akses</h3>
+<p style="margin-top:0">Manajer punya wewenang <b>tulis</b> yang sama dengan Admin untuk distribusi SHU: halaman <b>Koperasi</b> (/admin/koperasi), tab <b>SHU</b>. Gunakan saat memasukkan atau menyetujui alokasi SHU per periode.</p>
+
+<h3>Langkah memasukkan SHU</h3>
+<table>
+<tr><th>No</th><th>Aksi</th></tr>
+<tr><td>1</td><td>Isi <b>Periode</b> (format YYYY-MM).</td></tr>
+<tr><td>2</td><td>Isi <b>SHU Total</b> dalam rupiah (bilangan bulat, lebih dari 0).</td></tr>
+<tr><td>3</td><td>Isi rasio <b>Cadangan Umum</b>, <b>Cadangan Khusus</b>, <b>Jasa Anggota</b> (persen). Porsi <b>Dibagi</b> dihitung otomatis sebagai sisa.</td></tr>
+<tr><td>4</td><td>Periksa pratinjau Rupiah, lalu tekan <b>Simpan / "Catat Alokasi SHU"</b>.</td></tr>
+</table>
+
+<h3>GL aktif vs GL off</h3>
+<div class="note"><b>GL aktif</b> = satu jurnal alokasi otomatis (Debit 3020 SHU; Kredit 3030 / 3040 / 3050 / 3060), tanggal = awal periode. <b>GL off</b> = tercatat saja, tanpa jurnal.</div>
+
+<h3>Periode unik &amp; koreksi</h3>
+<div class="note">Periode yang sudah terisi tidak bisa diinput ulang (pesan <i>"SHU periode ini sudah tercatat"</i>). Koreksi via <b>jurnal pembalik</b> di Kas, bukan hapus.</div>
+
+<p>Tabel Riwayat SHU (tab SHU / Rekap) menampilkan semua periode + rasio 4 porsi. Baris sebelum fitur ini ada menampilkan <b>distribusi = W4.4</b> (masih distribusi lama).</p>
+</div>
+
 </div>
 </body>
 </html>

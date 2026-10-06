@@ -22,6 +22,10 @@
  *           - keluar        : recordCoopMemberKeluarInTx (status terminal
  *             + refund pokok D2050->K1010 saat gl-on; sudah 'keluar' =
  *             no-op idempoten).
+ *           - shu           : recordShuInTx W4.4 (distribusi SHU rasio input
+ *             admin; 1 jurnal alokasi D3020->C3030/3040/3050/3060 saat
+ *             gl-on; entry_date = awal periode (period+'-01'); periode unik
+ *             -> 409 shu_period_exists; validasi rasio/total -> 400).
  *           Semua op tulis: SATU transaksi (db + logAudit + engine InTx,
  *           pola W2.7/W3.3) + invalidate('coop:') dan invalidate('gl:')
  *           (OQ4 W4.3: auto-jurnal coop mencemari cache /api/gl).
@@ -48,6 +52,12 @@ import {
   recordCoopWithdrawInTx,
   recordCoopMemberKeluarInTx,
 } from '@/lib/coop';
+import {
+  recordShuInTx,
+  validateShuInput,
+  type ShuRasio,
+  type ShuValidated,
+} from '@/lib/shu';
 
 export const dynamic = 'force-dynamic';
 
@@ -442,9 +452,64 @@ export async function POST(req: Request) {
       }
     }
 
+    // -- op: shu (W4.4: distribusi SHU rasio input + jurnal alokasi) ------
+    case 'shu': {
+      // OQ7: tulis = tier koperasi ATAU shu (admin+manajer); pengurus = 403.
+      if (!canAccess(user, 'koperasi') && !canAccess(user, 'shu'))
+        return NextResponse.json({ error: 'Hanya admin/manajer (tulis SHU)' }, { status: 403 });
+      let validated: ShuValidated;
+      try {
+        validated = validateShuInput({
+          period: String(b.period ?? ''),
+          shu_total: Number(b.shu_total),
+          rasio: (b.rasio ?? {}) as ShuRasio,
+        });
+      } catch (e) {
+        const m = e instanceof Error ? e.message : String(e);
+        return NextResponse.json({ error: 'Validasi SHU: ' + m, code: m }, { status: 400 });
+      }
+      try {
+        const out = await tx(d, async () => {
+          const r = await recordShuInTx(d, {
+            id: crypto.randomUUID(),
+            period: validated.period,
+            shu_total: validated.shu_total,
+            rasio: validated.rasio,
+            amounts: validated.amounts,
+            glDate: validated.period + '-01', // entry_date = awal periode (correction 2)
+            glEnabled: glOn,
+            createdBy: String(user.id),
+          });
+          await logAudit(user, 'coop:shu', 'coop_shu', null, undefined, {
+            period: validated.period,
+            shu_total: validated.shu_total,
+            rasio: validated.rasio,
+            gl_enabled: glOn,
+          });
+          return r;
+        });
+        invalidate('coop:');
+        invalidate('gl:');
+        return NextResponse.json(
+          { ok: true, id: out.id, entryId: out.entryId, gl_enabled: glOn } satisfies CoopActionResult
+        );
+      } catch (e) {
+        const m = e instanceof Error ? e.message : String(e);
+        if (m === 'SHU_PERIOD_EXISTS' || isUniqueViolation(e))
+          return NextResponse.json(
+            {
+              error: 'SHU periode ini sudah tercatat (periode unik; koreksi via jurnal pembalik)',
+              code: 'shu_period_exists',
+            },
+            { status: 409 }
+          );
+        return NextResponse.json({ error: 'Gagal mencatat SHU: ' + m }, { status: 500 });
+      }
+    }
+
     default:
       return NextResponse.json(
-        { error: 'op tidak dikenal (ops: member_create/setor/tarik/status/keluar)' },
+        { error: 'op tidak dikenal (ops: member_create/setor/tarik/status/keluar/shu)' },
         { status: 400 }
       );
   }
