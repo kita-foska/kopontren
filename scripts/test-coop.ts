@@ -4,8 +4,9 @@
  *  M2: upgrade path v23 -> v24 (seed COA_V23 + FLIP6 + DDL IF NOT EXISTS).
  *  M3: stamp 23 -> 24 (mekanisme ON CONFLICT DO UPDATE = db.ts).
  * Node langsung (type-stripping, Node >= 23.6): npm run test:coop.
- * In-memory node:sqlite; DDL mirror src/db.ts (skema v24). C-suite
- * (lib/coop.ts) ditambahkan di W4.2.
+ * In-memory node:sqlite; DDL mirror src/db.ts (skema v24). W4.2:
+ * C-suite (lib/coop.ts) -- C1 D=K + mapping / C2 idempoten /
+ * C3 negative guard / C4 gl-off / C5 keluar refund / C6 transisi.
  */
 
 let passes = 0;
@@ -111,6 +112,57 @@ function cnt0(db: import('node:sqlite').DatabaseSync, sql: string): number {
 /** Helper: daftar nama kolom tabel (PRAGMA table_info). */
 function colsOf(db: import('node:sqlite').DatabaseSync, t: string): string {
   return (db.prepare('PRAGMA table_info(' + t + ')').all() as Array<{ name: string }>).map((r) => r.name).join(',');
+}
+
+// W4.2: C-suite (lib/coop.ts) -- import lib + postJournalInTx + DDL
+// jurnal mirror src/db.ts (skema W1.1, sama test-akad.ts) + adapter
+// TxDb + helper.
+import {
+  coopSavingsBalance,
+  coopSavingsJournalFor,
+  coopWithdrawJournalFor,
+  createCoopMemberInTx,
+  recordCoopMemberKeluarInTx,
+  recordCoopSavingsInTx,
+  recordCoopWithdrawInTx,
+  setCoopMemberStatusInTx,
+} from '../src/lib/coop.ts';
+import type { CoopWithdrawRec } from '../src/lib/coop.ts';
+import { postJournalInTx } from '../src/lib/jurnal.ts';
+import type { TxDb } from '../src/lib/jurnal.ts';
+
+// DDL journal mirror src/db.ts (skema W1.1 -- test-akad.ts; tanpa index).
+const DDL_JE =
+  "CREATE TABLE journal_entries(id TEXT PRIMARY KEY, ref_table TEXT NOT NULL, ref_id TEXT, entry_date TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'normal', desc TEXT NOT NULL DEFAULT '', created_by TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), reversed_by TEXT, UNIQUE(ref_table, ref_id, type))";
+const DDL_JL =
+  "CREATE TABLE journal_lines(entry_id TEXT NOT NULL, account_code TEXT NOT NULL, debit INTEGER NOT NULL DEFAULT 0, credit INTEGER NOT NULL DEFAULT 0, balance_running INTEGER, source TEXT NOT NULL DEFAULT '', PRIMARY KEY(entry_id, account_code, source))";
+
+/** Adapter node:sqlite -> TxDb (permukaan async jurnal.ts; mirror test-akad.ts). */
+function toTxDb(db: import('node:sqlite').DatabaseSync): TxDb {
+  const inVals = (a: unknown[]) => a as import('node:sqlite').SQLInputValue[];
+  return {
+    prepare: (sql: string) => ({
+      run: async (...a: unknown[]) => {
+        const r = db.prepare(sql).run(...inVals(a)) as unknown as { changes: number | bigint };
+        return { changes: Number(r.changes ?? 0), lastInsertRowid: 0 };
+      },
+      get: async (...a: unknown[]) => db.prepare(sql).get(...inVals(a)),
+      all: async (...a: unknown[]) => db.prepare(sql).all(...inVals(a)),
+    }),
+  };
+}
+
+/** Helper: nilai debit/credit akun tertentu pada entry (0 bila tak ada). */
+function lineVal(
+  db: import('node:sqlite').DatabaseSync,
+  entryId: string,
+  code: string,
+  what: 'debit' | 'credit'
+): number {
+  const r = db
+    .prepare('SELECT ' + what + ' v FROM journal_lines WHERE entry_id=? AND account_code=?')
+    .get(entryId, code) as { v: number } | undefined;
+  return r ? Number(r.v) : 0;
 }
 
 async function main(): Promise<void> {
@@ -256,6 +308,176 @@ async function main(): Promise<void> {
     db3.exec('INSERT INTO schema_version(id, version) VALUES (1, 24) ON CONFLICT(id) DO UPDATE SET version = excluded.version');
     eq('M3: stamp pasca upgrade = 24', Number((db3.prepare('SELECT version v FROM schema_version').get() as { v: number }).v), 24);
     db3.close();
+  }
+
+  // ===== C1-C6: lib/coop.ts (W4.2) -- engine simpanan Sek.7.2.3 =====
+  {
+    const db4 = new mod.DatabaseSync(':memory:');
+    db4.exec(DDL_COA);
+    const insCoa4 = db4.prepare(INSERT_COA);
+    for (const r of COA_V24) insCoa4.run(r[0], r[1], r[2], r[3], r[4], r[5]);
+    db4.exec(DDL_COOP_MEM);
+    db4.exec(DDL_COOP_SV);
+    db4.exec(DDL_JE);
+    db4.exec(DDL_JL);
+    const tdb4 = toTxDb(db4);
+    const jeCnt = () => cnt0(db4, "SELECT COUNT(*) c FROM journal_entries WHERE ref_table='coop'");
+    const coopJlCnt = () =>
+      cnt0(db4, "SELECT COUNT(*) c FROM journal_lines jl JOIN journal_entries je ON je.id = jl.entry_id WHERE je.ref_table='coop'");
+    const statusOf = (id: string): string =>
+      String((db4.prepare('SELECT status s FROM coop_members WHERE id=?').get(id) as { s: string }).s);
+    const rf = (entry: string): string =>
+      String((db4.prepare('SELECT ref_id r FROM journal_entries WHERE id=?').get(entry) as { r: string }).r);
+    const br = (entry: string, code: string): number =>
+      Number((db4.prepare('SELECT balance_running b FROM journal_lines WHERE entry_id=? AND account_code=?').get(entry, code) as { b: number }).b);
+
+    // C1: setor per kind -- D=K per entry + mapping akun Sek.7.2.3.
+    await createCoopMemberInTx(tdb4, { id: 'c1', name: 'Andi', memberSince: '2026-10-06' });
+    const s1 = await recordCoopSavingsInTx(tdb4, { memberId: 'c1', kind: 'pokok', amount: 10000, savedAt: '2026-10-06T08:00:00+07:00', gl_enabled: true });
+    const s2 = await recordCoopSavingsInTx(tdb4, { memberId: 'c1', kind: 'wajib', amount: 5000, savedAt: '2026-10-06T08:01:00+07:00', gl_enabled: true });
+    const s3 = await recordCoopSavingsInTx(tdb4, { memberId: 'c1', kind: 'sukarela', amount: 7000, savedAt: '2026-10-06T08:02:00+07:00', gl_enabled: true });
+    eq('C1: 3 entry jurnal setor', jeCnt(), 3);
+    ok('C1: entry id unik', !!s1.entryId && !!s2.entryId && !!s3.entryId && s1.entryId !== s2.entryId && s2.entryId !== s3.entryId);
+    ok('C1: D=K 2050 (setor pokok)', lineVal(db4, s1.entryId!, '2050', 'credit') === 10000 && lineVal(db4, s1.entryId!, '1010', 'debit') === 10000);
+    ok('C1: D=K 2060 (setor wajib)', lineVal(db4, s2.entryId!, '2060', 'credit') === 5000 && lineVal(db4, s2.entryId!, '1010', 'debit') === 5000);
+    ok('C1: D=K 2070 (setor sukarela)', lineVal(db4, s3.entryId!, '2070', 'credit') === 7000 && lineVal(db4, s3.entryId!, '1010', 'debit') === 7000);
+    eq('C1: balance_running 2050 = -10000 (akun liabilitas: kredit = negatif)', br(s1.entryId!, '2050'), -10000);
+    eq('C1: balance_running 1010 = 10000 (kas: debit = positif)', br(s1.entryId!, '1010'), 10000);
+    eq('C1: ref_id F1 setor', rf(s1.entryId!), 'coop#c1:sv#2026-10-06T08:00:00+07:00:pokok@10000');
+    eq('C1: saldo pokok c1 = 10000', await coopSavingsBalance(tdb4, 'c1', 'pokok'), 10000);
+    eq('C1: saldo wajib c1 = 5000', await coopSavingsBalance(tdb4, 'c1', 'wajib'), 5000);
+    eq('C1: saldo sukarela c1 = 7000', await coopSavingsBalance(tdb4, 'c1', 'sukarela'), 7000);
+
+    // C2: idempoten -- re-post spec sama = no-op (kembalikan id entry).
+    const w1rec: CoopWithdrawRec = { memberId: 'c1', amount: 3000, savedAt: '2026-10-06T09:00:00+07:00', gl_enabled: true };
+    const w1 = await recordCoopWithdrawInTx(tdb4, w1rec);
+    ok('C2: tarik 3000 tercatat + jurnal D2070/K1010', !!w1.entryId && lineVal(db4, w1.entryId!, '2070', 'debit') === 3000 && lineVal(db4, w1.entryId!, '1010', 'credit') === 3000);
+    eq('C2: saldo sukarela c1 = 4000 (7000 - 3000)', await coopSavingsBalance(tdb4, 'c1', 'sukarela'), 4000);
+    eq('C2: baris negatif -3000 (Option A)', cnt0(db4, "SELECT COUNT(*) c FROM coop_savings WHERE member_id='c1' AND amount = -3000"), 1);
+    const jeB2 = jeCnt();
+    eq('C2: re-post setor ref sama = no-op (entry sama)', await postJournalInTx(tdb4, coopSavingsJournalFor({ memberId: 'c1', kind: 'pokok', amount: 10000, savedAt: '2026-10-06T08:00:00+07:00' })), s1.entryId);
+    eq('C2: re-post tarik ref sama = no-op (entry sama)', await postJournalInTx(tdb4, coopWithdrawJournalFor(w1rec)), w1.entryId);
+    eq('C2: jumlah entry tak bertambah', jeCnt(), jeB2);
+
+    // C3: negative guard + validasi input.
+    let e1 = '';
+    try {
+      await recordCoopWithdrawInTx(tdb4, { memberId: 'c1', amount: 4001, savedAt: '2026-10-06T09:01:00+07:00', gl_enabled: true });
+    } catch (x) {
+      e1 = String(x);
+    }
+    ok('C3: tarik 4001 > sisa 4000 ditolak', e1.includes('melebihi sisa'));
+    eq('C3: entry tak bertambah (guard)', jeCnt(), jeB2);
+    const w2 = await recordCoopWithdrawInTx(tdb4, { memberId: 'c1', amount: 4000, savedAt: '2026-10-06T09:02:00+07:00', gl_enabled: true });
+    ok('C3: tarik = sisa (4000) sah (sisa -> 0)', !!w2.entryId && (await coopSavingsBalance(tdb4, 'c1', 'sukarela')) === 0);
+    let e2 = '';
+    try {
+      await recordCoopWithdrawInTx(tdb4, { memberId: 'c1', amount: 1, savedAt: '2026-10-06T09:03:00+07:00', gl_enabled: true });
+    } catch (x) {
+      e2 = String(x);
+    }
+    ok('C3: tarik 1 pada sisa 0 ditolak', e2.includes('melebihi sisa'));
+    let e3 = '';
+    try {
+      await recordCoopWithdrawInTx(tdb4, { memberId: 'seseorang', amount: 100, gl_enabled: true });
+    } catch (x) {
+      e3 = String(x);
+    }
+    ok('C3: anggota tak dikenal ditolak', e3.includes('tidak ditemukan'));
+    let e4 = '';
+    try {
+      await recordCoopSavingsInTx(tdb4, { memberId: 'c1', kind: 'pokok', amount: 0, gl_enabled: true });
+    } catch (x) {
+      e4 = String(x);
+    }
+    ok('C3: amount 0 ditolak (positif saja)', e4.includes('positif'));
+
+    // C4: gl-off = zero behavior change (rows tercatat, 0 jurnal baru).
+    await createCoopMemberInTx(tdb4, { id: 'c4', name: 'Budi', memberSince: '2026-10-06' });
+    const jeB4 = jeCnt();
+    const jlB4 = coopJlCnt();
+    eq(
+      'C4: gl-off setor entryId = null',
+      (await recordCoopSavingsInTx(tdb4, { memberId: 'c4', kind: 'pokok', amount: 9000, savedAt: '2026-10-06T10:00:00+07:00', gl_enabled: false })).entryId,
+      null
+    );
+    eq(
+      'C4: gl-off setor sukarela entryId = null',
+      (await recordCoopSavingsInTx(tdb4, { memberId: 'c4', kind: 'sukarela', amount: 5000, savedAt: '2026-10-06T10:00:30+07:00', gl_enabled: false })).entryId,
+      null
+    );
+    eq(
+      'C4: gl-off tarik entryId = null',
+      (await recordCoopWithdrawInTx(tdb4, { memberId: 'c4', amount: 2000, savedAt: '2026-10-06T10:01:00+07:00', gl_enabled: false })).entryId,
+      null
+    );
+    eq('C4: gl-off = 0 entry jurnal baru', jeCnt(), jeB4);
+    eq('C4: gl-off = 0 baris jurnal baru', coopJlCnt(), jlB4);
+    eq('C4: baris coop_savings c4 tercatat (pokok 9000)', await coopSavingsBalance(tdb4, 'c4', 'pokok'), 9000);
+    eq('C4: saldo sukarela c4 = 3000 (5000 - 2000)', await coopSavingsBalance(tdb4, 'c4', 'sukarela'), 3000);
+
+    // C5: keluar -- refund pokok saja (D2050 -> K1010); re-keluar no-op.
+    const k1 = await recordCoopMemberKeluarInTx(tdb4, { memberId: 'c1', changedAt: '2026-10-06T11:00:00+07:00', gl_enabled: true });
+    ok(
+      'C5: D2050 = K1010 = 10000 (pokok c1)',
+      !!k1.entryId && lineVal(db4, k1.entryId!, '2050', 'debit') === 10000 && lineVal(db4, k1.entryId!, '1010', 'credit') === 10000
+    );
+    eq('C5: wajib/sukarela TIDAK di-refund', lineVal(db4, k1.entryId!, '2060', 'debit') + lineVal(db4, k1.entryId!, '2070', 'debit'), 0);
+    eq('C5: ref_id exit F1', rf(k1.entryId!), 'coop#c1:exit#2026-10-06T11:00:00+07:00');
+    eq('C5: status c1 = keluar', statusOf('c1'), 'keluar');
+    eq(
+      'C5: re-keluar = no-op',
+      (await recordCoopMemberKeluarInTx(tdb4, { memberId: 'c1', changedAt: '2026-10-06T12:00:00+07:00', gl_enabled: true })).entryId,
+      null
+    );
+    eq('C5: entry keluar c1 tetap 1', cnt0(db4, "SELECT COUNT(*) c FROM journal_entries WHERE ref_table='coop' AND ref_id = 'coop#c1:exit#2026-10-06T11:00:00+07:00'"), 1);
+    await createCoopMemberInTx(tdb4, { id: 'c5b', name: 'Cak Nun', memberSince: '2026-10-06' });
+    eq(
+      'C5: keluar tanpa pokok = tanpa jurnal',
+      (await recordCoopMemberKeluarInTx(tdb4, { memberId: 'c5b', changedAt: '2026-10-06T11:05:00+07:00', gl_enabled: true })).entryId,
+      null
+    );
+    eq('C5: status c5b = keluar', statusOf('c5b'), 'keluar');
+
+    // C6: create + transisi status (keluar = terminal).
+    await createCoopMemberInTx(tdb4, { id: 'c6', name: 'Dewi', rumpun: 'Rumpun X', memberSince: '2026-10-06' });
+    let e6 = '';
+    try {
+      await createCoopMemberInTx(tdb4, { id: 'c6b', name: 'Dewi', memberSince: '2026-10-06' });
+    } catch (x) {
+      e6 = String(x);
+    }
+    ok('C6: UNIQUE(name) ditolak', e6.length > 0);
+    eq('C6: status awal c6 = aktif', statusOf('c6'), 'aktif');
+    await setCoopMemberStatusInTx(tdb4, { memberId: 'c6', status: 'nonaktif' });
+    eq('C6: c6 -> nonaktif', statusOf('c6'), 'nonaktif');
+    await setCoopMemberStatusInTx(tdb4, { memberId: 'c6', status: 'aktif' });
+    eq('C6: c6 kembali aktif', statusOf('c6'), 'aktif');
+    await setCoopMemberStatusInTx(tdb4, { memberId: 'c6', status: 'aktif' });
+    eq('C6: status sama = no-op', statusOf('c6'), 'aktif');
+    let e7 = '';
+    try {
+      await setCoopMemberStatusInTx(tdb4, { memberId: 'c6', status: 'gila' });
+    } catch (x) {
+      e7 = String(x);
+    }
+    ok('C6: status tak dikenal ditolak', e7.includes('tidak dikenal'));
+    let e8 = '';
+    try {
+      await setCoopMemberStatusInTx(tdb4, { memberId: 'hantu', status: 'aktif' });
+    } catch (x) {
+      e8 = String(x);
+    }
+    ok('C6: anggota tak dikenal ditolak', e8.includes('tidak ditemukan'));
+    await recordCoopMemberKeluarInTx(tdb4, { memberId: 'c6', changedAt: '2026-10-06T13:00:00+07:00', gl_enabled: false });
+    let e9 = '';
+    try {
+      await setCoopMemberStatusInTx(tdb4, { memberId: 'c6', status: 'aktif' });
+    } catch (x) {
+      e9 = String(x);
+    }
+    ok('C6: keluar -> aktif ditolak (terminal)', e9.includes('terminal'));
+    db4.close();
   }
 
   console.log(passes + ' passed, ' + failures + ' failed');
