@@ -1438,6 +1438,18 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
             pre-deploy `data/backup-2026-10-05T06-20-56.sql`).
             Detail = entri W4.1 LEPAS di MEMORY.md (seksi
             2026-10-05).
+       - [x] **Rulings Q2/Q3/Q5 dicatat (amend docs, 5 Okt;
+             batch ruling W4.1, Gus Fi; full text = entri
+             MEMORY.md seksi 2026-10-05)**:
+             Q2 LAPORAN: ABSORB ke W4.3 UI (tab Rekap) -- 5
+             laporan formal sudah ada (W2.2-W2.6).
+             Q3 INTEGRASI: SETUJU -- GL posting built-in per
+             commit (pola D1); rekon #16 = W5.2; W4.5 = modal
+             (akun 3010) + closing journal (Sek.3.2.6).
+             Q5 BOBOT JASA ANGGOTA: RATAAN (konservatif) --
+             PKGF Sek.2.3 tak men-set bobot; rata = tanpa
+             asumsi; manual override kemudian.
+       - [ ] **W5 + PINJ-1 (pinjaman anggota) -- dicatat 5 Okt
       - [ ] **W5 + PINJ-1 (pinjaman anggota) -- dicatat 5 Okt
             (ruling batch W4.1, Gus Fi; masuk W5 penguatan)**:
             tashih qardh/murabahah dulu (pilihan akad syariah),

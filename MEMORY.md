@@ -41,6 +41,26 @@
   tashih qardh/murabahah, akun COA baru, sumber dana (dicatat
   5 Okt; menunggu ruling/ACC Gus Fi; TIDAK dieksekusi sebelum
   approval).
+- **Rulings Q1-Q3/Q5 -- amend docs (5 Okt; teks lengkap via pesan
+  Gus Fi setelah audit W4.1; konteks awal Cline tak memuat
+  ruling set ini, kini dicatat utuh)**:
+  - **Q1 PINJAMAN: TUNDA ke W5 (PINJ-1).** Tidak ada di
+    proposal Sek.7/12. Belum ada akun COA untuk pinjaman
+    anggota. Shariah-first: perlu tashih (qardh? murabahah?
+    sumber dana?) sebelum dieksekusi.
+  - **Q2 LAPORAN: ABSORB ke W4.3 UI (tab Rekap).** 5 laporan
+    formal sudah ada (W2.2-W2.6); koperasi tidak menambah
+    entitas laporan terpisah -- rekap ditampilkan di tab
+    Rekap W4.3.
+  - **Q3 INTEGRASI: SETUJU.** GL posting built-in di setiap
+    commit (pola D1, ref_table + ref_id per event). Rekon
+    #16 masuk W5.2. W4.5 = modal (akun 3010) + closing
+    journal (Sek.3.2.6).
+  - **Q5 BOBOT JASA ANGGOTA: RATAAN (konservatif).** PKGF
+    Sek.2.3 tidak men-set bobot; memakai nilai rata-rata =
+    tanpa asumsi (tidak mengarang pembobotan). Manual
+    override dimungkinkan kemudian jika ada ruling.
+
 
 ### OFF-1 PHASE 1 LEPAS -- offline read-only POS (cache snapshot + banner) (5 Okt 2026)
 - **Commit `14d07d4`** (full `14d07d4601e02a4ac0708a2e6847859631634321`,
