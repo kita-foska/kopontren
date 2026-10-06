@@ -1,6 +1,31 @@
 # MEMORY
 
 ## 2026-10-06
+### W4.3 LEPAS -- API + UI koperasi (pola /api/akad, engine W4.2) + R-suite (6 Okt 2026)
+- **Commit `d3865a2`** (full `d3865a2b41f64590f50fa6a4cee812dce8446033`;
+  7 file +1510, dual-push master+main; ACC Gus Fi via DeepSeek --
+  7 audit item ternyata FALSE POSITIVE; verifikasi benar =
+  against w43-full-diff.txt (NO_HITS):
+  (a) `src/app/api/koperasi/route.ts` = WIRING ONLY ke engine W4.2
+  `@/lib/coop.ts` (5 fungsi *InTx). Rekap = 9 akun COA 4-digit
+  W4.1 (2050/2060/2070 + 3010-3060), SUM(debit)-SUM(credit).
+  Withdraw = 1 baris negatif (tanpa UPDATE/double-count). TIDAK
+  ada addJv / coop_savings_jv / coop_savings.cat / settings.
+  (b) UI `/admin/koperasi` (page.tsx + koperasi-client.tsx,
+  SVG-only icons, guard admin) + sidebar/features/glossary.
+  (c) **R-suite** `scripts/test-coop.ts` (+155, R1-R5, 25 assert):
+  R1 rekap 9 akun (tak ada 5-digit); R2 setor D1010 ->
+  K2050/2060/2070; R3 tarik = 1 baris -3000 (tak ada
+  double-count); R4 keluar refund D2050 -> K1010 + status
+  terminal + re-keluar no-op; R5 galat 404/409/400.
+- **Gate lulus**: test-coop 116/0 (M+C+R); test:all HAS_FAILURE=0;
+  tsc --noEmit 0 error; check-route-exports 0; next build 59/59.
+  0 non-ASCII. `public/sw.js` + V1 `laporan-admin-client.tsx` +
+  engine `src/lib/coop.ts` UNCHANGED.
+- NEXT = **W4.4** (SHU: hitung input + rasio Sek.7.2 + posting
+  distribusi). W4.5 = modal + closing. Setelah W4 habis =
+  **W5 penguatan** (PINJ-1 pinjaman anggota).
+
 ### W4.2 LEPAS -- lib/coop.ts engine simpanan koperasi (6 Okt 2026)
 - **Commit `fce2531`** (full `fce25314a907241aa3f62194111f24210da2a38e`;
   2 file +591/-2: `src/lib/coop.ts` (BARU, 367 baris) +

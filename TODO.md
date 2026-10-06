@@ -1876,11 +1876,16 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
           koperasi (setor/tarik/keluar, Option A baris negatif,
           C-suite C1-C6) -- commit `fce2531`; detail: MEMORY.md
           seksi 2026-10-06.
-   - NEXT: **W4.3** (UI /admin/koperasi: tab Anggota, Simpanan,
-          Rekap + API; absorb rekap W4.1 Q2 ke tab Rekap). Setelah
-          W4 habis = **W5 penguatan** (bawaan baru: PINJ-1
-          pinjaman anggota -- tashih qardh/murabahah, akun COA
-          baru, sumber dana).
+   - [x] **W4.3 LEPAS** (6 Okt): API + UI koperasi `/admin/koperasi`
+          + `src/app/api/koperasi/route.ts` (wiring ke engine W4.2
+          `src/lib/coop.ts`; rekap 9 akun COA W4.1: 2050/2060/2070
+          + 3010-3060; withdraw = 1 baris negatif) + R-suite R1-R5
+          (25 assert). commit `d3865a2`; detail: MEMORY.md seksi
+          2026-10-06.
+   - NEXT: **W4.4** (SHU: hitung input + rasio Sek.7.2 + posting
+          distribusi). W4.5 = modal + closing. Setelah W4 habis =
+          **W5 penguatan** (PINJ-1 pinjaman anggota -- tashih
+          qardh/murabahah, akun COA baru, sumber dana).
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.
