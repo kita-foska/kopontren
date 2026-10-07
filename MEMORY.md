@@ -1,6 +1,54 @@
 # MEMORY
 
 ## 2026-10-07
+### W4.5b LEPAS -- jasa per-anggota 3050 > 2070 + pencairan tunai/transfer 3060 > 1010/1020 (7 Okt 2026)
+- **Commit C1 `e7bba07`** (full
+  `e7bba07e6078d006cfd125cb6838ba5d7e7a568a`;
+  8 file +1235/-10 = 3 A baru + 5 M; dual-push
+  master+main, rev-list 0 0):
+  (a) **`src/lib/coop-jasa.ts` (BARU, 207 baris)**: op `jasa`
+  (Q5: SELURUH pool 3050 dibagi rata-rata ke anggota AKTIF --
+  bukan bunga; sisa pembulatan dipas ke urutan nama A-Z; 1
+  distribusi/periode -> JASA_PERIOD_EXISTS 409, event-level
+  termasuk gl-off, OQ15 D1). Jurnal AGREGAT D3050 > K2070 (1
+  kaki debit + 1 kaki kredit per anggota), entry_date = hari
+  terakhir periode (leap-aware). Guard: JASA_SHU_MISSING 404,
+  JASA_NO_POOL, JASA_NO_ACTIVE. Porsi tercatat di rekap
+  sukarela (jenis "jasa"); GL off = tercatat tanpa jurnal.
+  (b) **`src/lib/coop-tunai.ts` (BARU, 181 baris)**: op `tunai`
+  (OQ7-A: D3060 > C1010 kas / C1020 bank/transfer; nominal tak
+  melebihi saldo 3060 -> coop_tunai:exceeds_balance 400;
+  TUNAI_NO_POOL; 1 pencairan/periode -> TUNAI_PERIOD_EXISTS 409;
+  gl-off = selalu 400). **Akun 5080 TIDAK PERNAH jadi leg
+  (invariant saldo 5080 = 0; pencairan bukan beban).**
+  (c) 5 M: route.ts (op jasa/tunai di dispatch -- koperasi kini
+  10 op; tulis admin+manajer; closing tetap admin-only),
+  koperasi-client.tsx (kartu "Jasa per Anggota" + "Pencairan
+  Tunai/Transfer" di tab SHU; pengurus read-only), page.tsx,
+  glossary.ts (+2 istilah), package.json (+test:coop5b,
+  test:all). `scripts/test-coop5b.ts` (BARU, 469 baris;
+  JB1-JB8 jasa + JT1-JT4 tunai; 49/49 asersi LULUS).
+  Engine `src/lib/coop.ts` TIDAK disentuh; test:all exit 0;
+  tsc exit=0; gate GATE=0.
+- **Commit C2 `88824a7`** (full
+  `88824a74a9b56be5b466c7a9fc68edfddc0f97e3`;
+  8 file +36/-10; dual-push rev-list 0 0): 4 docs
+  (DOKUMENTASI: ops 8 -> 10 + glosarium 2 istilah + note
+  Mekanisme W4.5b; SOP-ADMIN: kartu jasa + pencairan tunai;
+  SOP-MANAJER: ops jasa/tunai tulis; SOP-PENGURUS: read-only +
+  list) + 4 mirror public/tutorial BYTE-IDENTIK (SHA-256 SAME
+  x4; SYNC-TUTORIAL-OK 9 file; eccepsi AKUNTANSI tetap).
+  Audit independen DeepSeek 7 Okt: LULUS (diff docs 15 insersi
+  100% akurat).
+- **OQ1-OQ17 (audit STEP 1 W4.5b)**: OQ7-A = tunai via
+  C1010/1020 (5080 keluar dari leg jurnal); OQ9-OQ11 guard;
+  OQ13 entry_date akhir periode; OQ15 D1 duplikat event-level.
+- **N1 type-fix note**: klaim "tsc OK" era W4.4/W4.5a TIDAK
+  akurat; isu type pada lineage itu ditemukan & diperbaiki
+  selama W4.5b; per C1 `npx tsc --noEmit` exit=0.
+- Pembersihan pra-commit (7 Okt): `src/lib/
+  coop-amount-line.txt` (untracked, isi "77") DIHAPUS sebelum
+  C1; 3 leftover step-A W4.5a terkonfirmasi hilang.
 ### W4.5a LEPAS -- modal anggota 3010 + jurnal closing 3020 (7 Okt 2026)
 - **Commit `42cf80c`** (full `42cf80c497eaf867866ddd7ddc0d2ed8d8ee9a1f`;
   7 file +1023/-3 = 4 M + 3 A; dual-push master+main; ACC Gus Fi

@@ -1922,12 +1922,35 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
            (56/0) + test:all (22 suite) exit 0 + tsc clean + gate
            GATE=0. commit `42cf80c` (feat) + `96c6fb1` (docs); detail:
            MEMORY.md seksi 2026-10-07.
+    - [x] **W4.5b LEPAS** (7 Okt): op `jasa` + op `tunai` via
+           POST /api/koperasi (koperasi kini 10 op). 2 lib baru
+           `src/lib/coop-jasa.ts` (207) + `src/lib/coop-tunai.ts`
+           (181), engine `src/lib/coop.ts` TIDAK disentuh. JASA
+           (Q5): SELURUH pool 3050 rata-rata ke anggota aktif
+           (bukan bunga; sisa pembulatan ke urutan nama A-Z; 1
+           distribusi/periode = 409); jurnal AGREGAT D3050 ->
+           K2070 (1 kaki per anggota; entry_date = hari terakhir
+           periode, leap-aware); porsi tercatat di rekap sukarela
+           (jenis "jasa"); gl-off = tercatat tanpa jurnal. TUNAI
+           (OQ7-A): D3060 -> C1010 kas / C1020 bank; nominal tak
+           melebihi saldo 3060 (coop_tunai:exceeds_balance 400);
+           1 pencairan/periode = 409; AKUN 5080 TIDAK PERNAH JADI
+           LEG (invariant saldo 0; pencairan bukan beban); gl-off
+           = selalu 400. Guard OQ9-OQ11: JASA_SHU_MISSING 404,
+           JASA_NO_POOL, JASA_NO_ACTIVE, TUNAI_NO_POOL. Duplikat
+           event-level (OQ15 D1, termasuk gl-off). UI: kartu
+           "Jasa per Anggota" + "Pencairan Tunai/Transfer" (tab
+           SHU; pengurus read-only). Glosarium +2 istilah;
+           test:coop5b (49/49) + test:all exit 0 + tsc exit=0
+           + gate GATE=0. commit `e7bba07` (feat, C1) +
+           `88824a7` (docs 4 + 4 mirror, C2); detail: MEMORY.md
+           seksi 2026-10-07.
 
-   - NEXT: **W4.5b** (jasa per anggota rata-rata (Q5; porsi 3050;
-          konservatif -- BUKAN bunga) + pencairan tunai/transfer
-          SHU (akun 5080); rekon #16 ke W5.2). W4.5a (modal 3010 +
-          jurnal closing 3020) sudah LEPAS (`42cf80c` + `96c6fb1`);
-          detail: MEMORY.md seksi 2026-10-07. W4.6 = rekap per rumpun.
+   - NEXT: **W4.6** = rekap per rumpun. W4.5b (op jasa + op tunai)
+          sudah LEPAS (`e7bba07` + `88824a7`): D3050 -> K2070
+          rata-rata + D3060 -> C1010/1020; akun 5080 TIDAK
+          terpakai (OQ7-A, invariant saldo 0) -- rekon #16 tetap
+          ke W5.2; detail: MEMORY.md seksi 2026-10-07.
           Setelah
           W4 habis = **W5 penguatan** (PINJ-1 pinjaman anggota
           -- tashih qardh/murabahah, akun COA baru, sumber dana).
