@@ -285,6 +285,16 @@ export const GLOSSARY: GlossaryTerm[] = [
     desc: 'Persentase pembagian SHU (cadangan umum / cadangan khusus / jasa / dibagi). Diisi admin per periode; aplikasi tidak menyediakan angka default. Porsi "dibagi" dihitung sebagai sisa agar total pas.',
     group: 'Koperasi & SHU',
   },
+  {
+    term: 'Modal',
+    desc: 'Uang yang dititipkan anggota sebagai kekuatan kooperasi (akun 3010). Bukan simpanan dan bukan pinjaman: tidak bisa dibagikan sebagai keuntungan dan tidak kembali per anggota saat keluar.',
+    group: 'Koperasi & SHU',
+  },
+  {
+    term: 'Jurnal Closing',
+    desc: 'Jurnal akhir periode yang menol-kan net akun laba-rugi (omzet, HPP, beban, dst) ke 3020 SHU Ditahan: laba menambah 3020, rugi mengurangi 3020 (3020 boleh negatif). Satu closing per periode.',
+    group: 'Koperasi & SHU',
+  },
 ];
 
 /** Cari definisi dari kamus (untuk TermTip konteks; fallback = tip lokal). */

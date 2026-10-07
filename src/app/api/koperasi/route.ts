@@ -26,6 +26,17 @@
  *             admin; 1 jurnal alokasi D3020->C3030/3040/3050/3060 saat
  *             gl-on; entry_date = awal periode (period+'-01'); periode unik
  *             -> 409 shu_period_exists; validasi rasio/total -> 400).
+ *           - modal         : recordCoopModalInTx W4.5a (modal anggota
+ *             3010; baris kind 'modal' di coop_savings + jurnal D1010->K3010
+ *             saat gl-on; ref_id +uuid; event duplikat -> 409
+ *             coop_modal_duplicate; anggota tak ada -> 404; tier =
+ *             koperasi (OQ7-A).
+ *           - closing       : postCoopClosingInTx W4.5a (Sek.3.2.6; net
+ *             P&L 4010-4030 & 5010-5040 KUMULATIF -> 3020, excl.
+ *             4040/4090 (OQ1); 3020 boleh negatif = rugi (OQ2); legs
+ *             net-0 ditiada (OQ9); 1 periode = 1 closing -> 409
+ *             closing_period_exists; periode tanpa aktivitas -> 400
+ *             closing_no_activity; ADMIN-ONLY (OQ7-B); gl-off -> 400).
  *           Semua op tulis: SATU transaksi (db + logAudit + engine InTx,
  *           pola W2.7/W3.3) + invalidate('coop:') dan invalidate('gl:')
  *           (OQ4 W4.3: auto-jurnal coop mencemari cache /api/gl).
@@ -37,7 +48,7 @@
 import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { db, getSettings, tx } from '@/db';
-import { canAccess, currentUser } from '@/lib/auth';
+import { canAccess, currentUser, isAdmin } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
 import { nowWib } from '@/lib/jurnal';
@@ -58,6 +69,8 @@ import {
   type ShuRasio,
   type ShuValidated,
 } from '@/lib/shu';
+import { recordCoopModalInTx } from '@/lib/coop-modal';
+import { postCoopClosingInTx, validateClosingPeriod } from '@/lib/coop-closing';
 
 export const dynamic = 'force-dynamic';
 
@@ -507,9 +520,151 @@ export async function POST(req: Request) {
       }
     }
 
+    // -- op: modal (W4.5a: modal anggota 3010; OQ7-A tier koperasi) ----
+    case 'modal': {
+      if (!canAccess(user, 'koperasi'))
+        return NextResponse.json({ error: 'Hanya admin/manajer (catat modal)' }, { status: 403 });
+      const memberId = String(b.member_id ?? '').trim();
+      if (!memberId) return NextResponse.json({ error: 'member_id wajib', code: 'member_required' }, { status: 400 });
+      let savedAt: string | undefined;
+      const rawDate = b.saved_at ?? b.date;
+      if (rawDate != null && rawDate !== '') {
+        savedAt = String(rawDate);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(savedAt))
+          return NextResponse.json(
+            { error: 'saved_at harus YYYY-MM-DD', code: 'saved_at_invalid' },
+            { status: 400 }
+          );
+      }
+      const mem = (await d.prepare('SELECT 1 AS x FROM coop_members WHERE id = ?').get(memberId)) as
+        | { x?: number }
+        | undefined;
+      if (!mem)
+        return NextResponse.json(
+          { error: 'Anggota tidak ditemukan', code: 'coop_member_not_found' },
+          { status: 404 }
+        );
+      try {
+        const out = await tx(d, async () => {
+          const r = await recordCoopModalInTx(d, {
+            memberId,
+            amount: b.amount,
+            savedAt,
+            gl_enabled: glOn,
+            createdBy: String(user.id),
+          });
+          await logAudit(user, 'coop:modal', 'coop_savings', null, undefined, {
+            member_id: memberId,
+            amount: b.amount,
+            saved_at: savedAt ?? null,
+            gl_enabled: glOn,
+          });
+          return r;
+        });
+        invalidate('coop:');
+        invalidate('gl:');
+        return NextResponse.json(
+          { ok: true, entryId: out.entryId, uuid: out.uuid, gl_enabled: glOn } satisfies CoopActionResult
+        );
+      } catch (e) {
+        const m = e instanceof Error ? e.message : String(e);
+        if (m === 'COOP_MEMBER_NOT_FOUND')
+          return NextResponse.json(
+            { error: 'Anggota tidak ditemukan', code: 'coop_member_not_found' },
+            { status: 404 }
+          );
+        if (m === 'COOP_MODAL_DUPLICATE' || isUniqueViolation(e))
+          return NextResponse.json(
+            {
+              error: 'Modal ini sudah tercatat (anggota + tanggal + nominal sama)',
+              code: 'coop_modal_duplicate',
+            },
+            { status: 409 }
+          );
+        if (m.startsWith('coop:'))
+          return NextResponse.json({ error: 'Validasi modal: ' + m, code: 'coop_modal_invalid' }, { status: 400 });
+        return NextResponse.json({ error: 'Gagal mencatat modal: ' + m }, { status: 500 });
+      }
+    }
+
+    // -- op: closing (W4.5a Sek.3.2.6: nol-kan net P&L -> 3020) --------
+    // OQ7-B: ADMIN-ONLY (tak ada tier closing -- ruling STEP 1 OQ7).
+    case 'closing': {
+      if (!isAdmin(user))
+        return NextResponse.json({ error: 'Hanya admin (jurnal closing periode)' }, { status: 403 });
+      if (!glOn)
+        return NextResponse.json(
+          { error: 'Jurnal closing butuh GL aktif', code: 'gl_off' },
+          { status: 400 }
+        );
+      let period: string;
+      try {
+        period = validateClosingPeriod(b.period);
+      } catch (e) {
+        const m = e instanceof Error ? e.message : String(e);
+        return NextResponse.json(
+          { error: 'Periode closing harus YYYY-MM', code: 'closing_period_invalid' },
+          { status: 400 }
+        );
+      }
+      try {
+        const out = await tx(d, async () => {
+          const r = await postCoopClosingInTx(d, {
+            period,
+            glEnabled: glOn,
+            createdBy: String(user.id),
+          });
+          await logAudit(user, 'coop:closing', 'journal_entries', null, undefined, {
+            period,
+            shu: r.shu,
+            profit: r.profit,
+            entry_id: r.entryId,
+            gl_enabled: glOn,
+          });
+          return r;
+        });
+        invalidate('coop:');
+        invalidate('gl:');
+        return NextResponse.json(
+          {
+            ok: true,
+            period: out.period,
+            shu: out.shu,
+            profit: out.profit,
+            entryId: out.entryId,
+            gl_enabled: out.gl,
+          } satisfies CoopActionResult
+        );
+      } catch (e) {
+        const m = e instanceof Error ? e.message : String(e);
+        if (m === 'CLOSING_PERIOD_EXISTS')
+          return NextResponse.json(
+            {
+              error: 'Closing periode ini sudah dilakukan (1 periode = 1 closing; koreksi via jurnal manual)',
+              code: 'closing_period_exists',
+            },
+            { status: 409 }
+          );
+        if (m === 'CLOSING_NO_ACTIVITY')
+          return NextResponse.json(
+            { error: 'Tidak ada aktivitas P&L untuk ditutup (semua net 0)', code: 'closing_no_activity' },
+            { status: 400 }
+          );
+        if (m === 'CLOSING_PERIOD_INVALID')
+          return NextResponse.json(
+            { error: 'Periode closing harus YYYY-MM', code: 'closing_period_invalid' },
+            { status: 400 }
+          );
+        return NextResponse.json({ error: 'Gagal posting jurnal closing: ' + m }, { status: 500 });
+      }
+    }
+
     default:
       return NextResponse.json(
-        { error: 'op tidak dikenal (ops: member_create/setor/tarik/status/keluar/shu)' },
+        {
+          error:
+            'op tidak dikenal (ops: member_create/setor/tarik/status/keluar/shu/modal/closing)',
+        },
         { status: 400 }
       );
   }

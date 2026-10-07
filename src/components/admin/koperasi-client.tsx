@@ -83,6 +83,10 @@ type PostResult = {
   error?: string;
   entryId?: string | null;
   gl_enabled?: boolean;
+  // W4.5a op closing (respons server; modal ikut entryId/gl_enabled).
+  shu?: number;
+  profit?: boolean;
+  period?: string;
 };
 
 const KINDS = ['pokok', 'wajib', 'sukarela'] as const;
@@ -110,6 +114,10 @@ const TIPS = {
   jasa: 'Jasa anggota: bagian SHU utk imbal jasa/modal anggota (akun 3050); bobot rata-rata (konservatif, bukan bunga).',
   dibagi: 'SHU dibagi: bagian SHU utk dibagikan ke anggota (akun 3060); pencairan tunai/transfer = W4.5.',
   rasio: 'Rasio alokasi SHU (persen) cad um/khusus/jasa; porsi "dibagi" = sisa 100 - lainnya agar total pas. Diisi admin, tanpa angka default.',
+  modal:
+    'Modal: setoran uang anggota sebagai kekuatan kooperasi (akun 3010) -- bukan simpanan: tidak masuk 2050/2060/2070 dan tidak di-refund saat keluar. Jurnal D1010 -> K3010 hanya saat GL aktif.',
+  closing:
+    'Jurnal closing: nol-kan net akun operasi & beban (4010-4030, 5010-5040; 4040 & 4090 dikecualikan) ke 3020 SHU Ditahan, kumulatif sejak awal pembukuan (self-healing). Satu closing per periode; laba = kredit 3020, rugi = debit 3020 (3020 boleh negatif).',
 };
 
 type Tab = 'anggota' | 'simpanan' | 'rekap' | 'shu';
@@ -168,6 +176,14 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
   const [shuCadU, setShuCadU] = useState('');
   const [shuCadK, setShuCadK] = useState('');
   const [shuJasa, setShuJasa] = useState('');
+
+  // -- form: modal anggota 3010 (W4.5a; tab Simpanan) ----------------
+  const [mdMember, setMdMember] = useState('');
+  const [mdAmount, setMdAmount] = useState('');
+  const [mdDate, setMdDate] = useState('');
+
+  // -- form: jurnal closing 3020 (W4.5a; tab Rekap; admin-only) -----
+  const [cPeriod, setCPeriod] = useState('');
 
   // W4.4 E.5: keyboard nav tablist koperasi (pola APG, sama dgn POS via useTablistNav).
   const { onTabKeyDown } = useTablistNav<Tab>((i) => COOP_TABS[i] ?? 'anggota', setTab);
@@ -363,6 +379,56 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
       const mv = /^Validasi SHU: (SHU_[A-Z]+)$/.exec(raw);
       showToast(mv ? SHU_VALIDATION_TOAST[mv[1]] ?? raw : raw, 'error');
     }
+    setBusy(false);
+  }
+
+  /** op: modal (W4.5a: modal anggota 3010; D1010 -> K3010 saat GL aktif). */
+  async function submitModal(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mdMember) {
+      showToast('Pilih anggota dulu', 'error');
+      return;
+    }
+    const amt = Number(mdAmount);
+    if (!Number.isInteger(amt) || amt <= 0) {
+      showToast('Jumlah harus rupiah integer > 0', 'error');
+      return;
+    }
+    setBusy(true);
+    const body: Record<string, unknown> = { op: 'modal', member_id: mdMember, amount: amt };
+    if (mdDate) body.saved_at = mdDate + 'T00:00:00.000+07:00';
+    const r = await post(body);
+    if (r?.ok) {
+      showToast('Modal ' + rp(amt) + ' tercatat' + postNote(r), 'success');
+      setMdAmount('');
+      setMdDate('');
+    } else if (!r) showToast('Gagal mencatat modal', 'error');
+    else showToast(r.error || 'Gagal mencatat modal', 'error');
+    setBusy(false);
+  }
+
+  /** op: closing (W4.5a Sek.3.2.6: nol-kan net P&L -> 3020; admin-only). */
+  async function submitClosing(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(cPeriod.trim())) {
+      showToast('Periode harus format YYYY-MM', 'error');
+      return;
+    }
+    setBusy(true);
+    const r = await post({ op: 'closing', period: cPeriod.trim() });
+    if (r?.ok) {
+      showToast(
+        'Closing ' + (r.period ?? cPeriod) + ' tercatat: ' +
+          (r.profit ? 'laba' : 'rugi') +
+          ' ' +
+          rp(Math.abs(r.shu ?? 0)) +
+          ' -> 3020' +
+          postNote(r),
+        'success'
+      );
+      setCPeriod('');
+    } else if (!r) showToast('Gagal posting jurnal closing', 'error');
+    else showToast(r.error || 'Gagal posting jurnal closing', 'error');
     setBusy(false);
   }
 
@@ -757,6 +823,62 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
                   </Button>
                 </div>
               </form>
+
+              <form onSubmit={submitModal} className="card p-4">
+                <h2 className="mb-3 font-bold">
+                  <TermTip term="Modal" tip={TIPS.modal}>
+                    Modal Anggota (3010)
+                  </TermTip>
+                </h2>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                    Anggota
+                    <select
+                      className="input mt-1"
+                      value={mdMember}
+                      onChange={(e) => setMdMember(e.target.value)}
+                    >
+                      <option value="" disabled>
+                        pilih anggota
+                      </option>
+                      {savable.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                    Jumlah (Rp)
+                    <input
+                      className="input mt-1"
+                      inputMode="numeric"
+                      placeholder="mis. 250000"
+                      value={mdAmount}
+                      onChange={(e) => setMdAmount(e.target.value)}
+                    />
+                  </label>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                    Tanggal (WIB)
+                    <input
+                      className="input mt-1"
+                      type="date"
+                      value={mdDate}
+                      onChange={(e) => setMdDate(e.target.value)}
+                    />
+                  </label>
+                </div>
+                <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  Modal = penyertaan anggota (akun 3010), TIDAK simpanan: tak masuk
+                  2050/2060/2070, tak di-refund saat keluar. Jurnal D1010 -&gt; K3010
+                  hanya saat GL aktif.
+                </p>
+                <div className="mt-3">
+                  <Button type="submit" loading={busy}>
+                    Catat Modal
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
 
@@ -837,6 +959,39 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
               </tbody>
             </Table>
           </div>
+
+          {canWrite && (
+            <div className="card p-4">
+              <h2 className="mb-2 font-bold">
+                <TermTip term="Jurnal Closing" tip={TIPS.closing}>
+                  Closing Periode (ke 3020)
+                </TermTip>{' '}
+                <Badge tone="amber">Hanya admin</Badge>
+              </h2>
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                Nol-kan net operasi &amp; beban (4010-4030, 5010-5040; kumulatif,
+                self-healing; 4040 &amp; 4090 dikecualikan) ke 3020 SHU Ditahan.
+                Satu closing per periode.
+              </p>
+              <form onSubmit={submitClosing} className="grid gap-3 md:grid-cols-2">
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  Periode (YYYY-MM)
+                  <input
+                    className="input mt-1"
+                    type="text"
+                    placeholder="mis. 2026-09"
+                    value={cPeriod}
+                    onChange={(e) => setCPeriod(e.target.value)}
+                  />
+                </label>
+                <div className="flex items-end md:col-span-1">
+                  <Button type="submit" loading={busy}>
+                    Posting Closing
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
 
         </div>
       )}
