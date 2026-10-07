@@ -321,6 +321,9 @@ body{background:#fff}
 <h3>Ringkasan modul</h3>
 <p style="margin-top:0">Koperasi = unit usaha: simpanan anggota (pokok, wajib, sukarela; setor / tarik / keluar) plus distribusi <b>SHU (Sisa Hasil Usaha)</b> per periode. Wewenang <b>tulis</b>: Admin &amp; Manajer. Pengurus dan peran lain <b>baca</b> lewat rekap. Halaman: /admin/koperasi.</p>
 
+<h3>Rekap per Rumpun (W4.6)</h3>
+<p style="margin-top:0">Kartu <b>Rekap per Rumpun</b> di tab Rekap (baca saja; semua peran yang bisa buka Koperasi): saldo simpanan anggota (pokok / wajib / sukarela) dikumpulkan per rumpun (keluarga / pesantren). Kolom: nama rumpun, jumlah anggota, pokok, wajib, sukarela, dan total simpanan; baris TOTAL menjumlah semua rumpun. Anggota tanpa rumpun dikelompokkan di baris <b>Tanpa rumpun</b> (diurutkan paling bawah). Nama rumpun dihitung tidak peka huruf besar/kecil ("Rumpun A" dan "rumpun a" = satu rumpun; label = yang pertama ditemui). Agregasi dihitung <b>server</b> (GET /api/koperasi, satu sumber -- tidak ada form input, tak ada op POST).</p>
+
 <h3>Operasi Koperasi (setor / tarik / keluar / modal / closing / jasa / tunai)</h3>
 <p style="margin-top:0">Sepuluh operasi <b>tulis</b> melalui satu route (POST /api/koperasi, dispatch op):</p>
 <table>

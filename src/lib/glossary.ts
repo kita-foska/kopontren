@@ -131,6 +131,11 @@ export const GLOSSARY: GlossaryTerm[] = [
     desc: 'Lingkaran keluarga atau pesantren tempat anggota; pengelompokan anggota koperasi (opsional, untuk pelaporan per rumpun).',
     group: 'Akad & Bagi Hasil',
   },
+  {
+    term: 'Rekap per Rumpun',
+    desc: 'Ringkasan saldo simpanan per rumpun (keluarga): jumlah anggota di rumpun itu + rincian simpanan pokok, wajib, sukarela, dan totalnya; baris TOTAL menjumlah semua rumpun. Anggota tanpa rumpun dikelompokkan di baris "Tanpa rumpun" (paling bawah). Huruf besar/kecil dihitung satu rumpun (label = yang pertama ditemui). Tampil di kartu "Rekap per Rumpun", tab Rekap Koperasi.',
+    group: 'Koperasi & SHU',
+  },
   // -- ZIS & Zakat
   {
     term: 'Zakat',

@@ -215,6 +215,7 @@ body{background:#fff}
 <h3>Yang bisa dipantau</h3>
 <ul>
 <li>Tab <b>Rekap</b> Koperasi: saldo simpanan anggota (pokok / wajib / sukarela) + ringkasan, baca saja. Rekap juga menampilkan akun modal 3010, SHU ditahan 3020, dan baris jurnal closing (bila sudah ada).</li>
+<li>Kartu <b>Rekap per Rumpun</b> (W4.6, tab Rekap): saldo simpanan anggota dikumpulkan per rumpun (keluarga) -- jumlah anggota + rincian pokok/wajib/sukarela + total per rumpun; baris TOTAL menjumlah semua; anggota tanpa rumpun di baris "Tanpa rumpun" (paling bawah). Baca saja; agregasi dihitung server (GET /api/koperasi).</li>
 <li>Tab <b>SHU</b> Koperasi: tabel Riwayat SHU per periode (total, rasio 4 porsi, tanggal).</li>
 <li>Baris berlabel <b>distribusi = W4.4</b> adalah pencatatan sebelum fitur rasio ada.</li>
 <li>Kartu <b>Jasa per Anggota</b> dan <b>Pencairan Tunai / Transfer</b> (W4.5b, tab SHU): tampil <b>baca saja</b> -- form "Bagikan Jasa" dan "Catat Pencairan" disembunyikan. Hasil bagi jasa terlihat di rekap simpanan sukarela (jenis <i>jasa</i>, Debit 3050 &gt; Kredit 2070) dan pencairan di riwayat jurnal kas (Debit 3060 &gt; Kredit 1010 / 1020; akun 5080 tidak dipakai).</li>
