@@ -283,8 +283,15 @@ body{background:#fff}
 
 <div class="legend"><b>Keterangan warna:</b> maroon = utama/brand · hijau = baik/aktif · kuning = peringatan (stok menipis, rekap tertunda) · merah = masalah (habis, defisit). Halaman ini sudah <b>siap cetak A4</b> — tekan Ctrl+P untuk salinan fisik.</div>
 
-<h2><span class="n">7</span>Koperasi &amp; SHU (distribusi SHU)</h2>
+<h2><span class="n">7</span>Koperasi &amp; SHU (simpanan anggota + distribusi SHU)</h2>
 <div class="card">
+<h3>Tab Anggota</h3>
+<p style="margin-top:0">Tab <b>Anggota</b>: daftar anggota koperasi + form "Anggota Baru" (nama wajib, rumpun, NPWP, tanggal mulai). Status awal <b>aktif</b>; nama unik -- bila sudah tercatat, sistem menolak (409). Tanpa jurnal.</p>
+<p>Setiap baris menampilkan saldo total + tombol <b>status</b> (aktif &lt;&gt; nonaktif, tanpa jurnal) dan tombol <b>KELUAR</b> (terminal, dialog konfirmasi): status menjadi <b>keluar</b> dan tidak bisa dikembalikan. Dampak: <b>refund simpanan pokok</b> D2050 &gt; K1010 hanya bila GL aktif dan pokok &gt; 0; simpanan <b>wajib &amp; sukarela TIDAK dikembalikan</b> (sukarela bisa ditarik lebih dulu).</p>
+<h3>Tab Simpanan</h3>
+<p style="margin-top:0">Tiga kartu saldo: <b>Pokok</b> (akun 2050), <b>Wajib</b> (2060), <b>Sukarela</b> (2070). Form <b>Setor Simpanan</b>: pilih anggota, jenis (pokok / wajib / sukarela), nominal rupiah bulat &gt; 0, tanggal. Form <b>Tarik Sukarela</b>: nominal tidak boleh melebihi sisa (bila lebih, sistem menolak 400). Riwayat mutasi menampilkan baris tarik sebagai nilai negatif.</p>
+<h3>Tab Rekap</h3>
+<p style="margin-top:0">Rekap akun: saldo 2050 / 2060 / 2070 (kewajiban -- simpanan anggota) + modal / SHU 30xx. Badge <i>GL aktif / GL off</i> menandakan apakah <b>auto-jurnal</b> dibuat saat setor / tarik / keluar (GL off = tercatat saja, tanpa jurnal).</p>
 <h3>Kapan dipakai</h3>
 <p style="margin-top:0">Setelah tutup buku, <b>Admin</b> mendistribusikan <b>SHU (Sisa Hasil Usaha)</b> per periode lewat halaman <b>Koperasi</b> (/admin/koperasi), tab <b>SHU</b>. Anda mengisi rasio alokasi SHU untuk satu periode.</p>
 
