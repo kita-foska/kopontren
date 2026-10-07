@@ -135,9 +135,23 @@ export type CoopShuRow = {
   created_at: string;
 };
 
+/** W4.6: agregasi rekap per rumpun (kumpul ulang per keluarga; key NOCASE).
+ *  member_count = jumlah anggota di rumpun itu; pokok/wajib/sukarela/total =
+ *  jumlah saldo simpanan per jenis + total anggota di rumpun itu (BUKAN modal
+ *  3010 / jasa 3050 -- itu op terpisah). Label null = tanpa rumpun. */
+export type RekapRumpunRow = {
+  rumpun: string | null;
+  member_count: number;
+  pokok: number;
+  wajib: number;
+  sukarela: number;
+  total: number;
+};
+
 export type CoopRekap = {
   members: CoopMemberRow[];
   balances: Record<string, CoopBalance>;
+  rekap_rumpun: RekapRumpunRow[];
   history: CoopHistoryRow[];
   accounts: CoopAccountRow[];
   shu: CoopShuRow[];
@@ -250,7 +264,51 @@ export async function GET() {
         )
         .all()) as CoopShuRow[];
 
-      return { members, balances, history, accounts, shu, gl_enabled: glOn };
+      // W4.6: rekap per rumpun -- kumpul ulang saldo simpanan per keluarga
+      // (key NOCASE; bucket 'tanpa rumpun' diurutkan paling bawah). Satu
+      // sumber (members + balances di atas), tanpa query tambahan. Rincian
+      // per jenis simpanan (pokok/wajib/sukarela) + total per rumpun.
+      const rumpunMap = new Map<
+        string,
+        {
+          label: string | null;
+          member_count: number;
+          pokok: number;
+          wajib: number;
+          sukarela: number;
+          total: number;
+        }
+      >();
+      for (const m of members) {
+        const key = m.rumpun ? m.rumpun.toLowerCase() : '';
+        const e =
+          rumpunMap.get(key) ??
+          { label: m.rumpun ?? null, member_count: 0, pokok: 0, wajib: 0, sukarela: 0, total: 0 };
+        e.member_count += 1;
+        const b = balances[m.id];
+        e.pokok += b?.pokok ?? 0;
+        e.wajib += b?.wajib ?? 0;
+        e.sukarela += b?.sukarela ?? 0;
+        e.total += b?.total ?? 0;
+        rumpunMap.set(key, e);
+      }
+      const rekap_rumpun = [...rumpunMap.values()]
+        .sort((a, b) => {
+          if (a.label === null && b.label === null) return 0;
+          if (a.label === null) return 1;
+          if (b.label === null) return -1;
+          return a.label.localeCompare(b.label);
+        })
+        .map((x) => ({
+          rumpun: x.label,
+          member_count: x.member_count,
+          pokok: x.pokok,
+          wajib: x.wajib,
+          sukarela: x.sukarela,
+          total: x.total,
+        }));
+
+      return { members, balances, rekap_rumpun, history, accounts, shu, gl_enabled: glOn };
     });
     return NextResponse.json(payload as CoopRekap);
   } catch {

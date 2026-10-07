@@ -69,9 +69,19 @@ type ShuRow = {
   created_at: string;
 };
 
+type RumpunRow = {
+  rumpun: string | null;
+  member_count: number;
+  pokok: number;
+  wajib: number;
+  sukarela: number;
+  total: number;
+};
+
 type KoperasiData = {
   members: MemberRow[];
   balances: Record<string, CoopBalance>;
+  rekap_rumpun: RumpunRow[];
   history: HistoryRow[];
   accounts: AccountRow[];
   shu: ShuRow[];
@@ -125,6 +135,8 @@ const TIPS = {
     'Modal: setoran uang anggota sebagai kekuatan kooperasi (akun 3010) -- bukan simpanan: tidak masuk 2050/2060/2070 dan tidak di-refund saat keluar. Jurnal D1010 -> K3010 hanya saat GL aktif.',
   closing:
     'Jurnal closing: nol-kan net akun operasi & beban (4010-4030, 5010-5040; 4040 & 4090 dikecualikan) ke 3020 SHU Ditahan, kumulatif sejak awal pembukuan (self-healing). Satu closing per periode; laba = kredit 3020, rugi = debit 3020 (3020 boleh negatif).',
+  rekap_rumpun:
+    'Rekap per rumpun: saldo simpanan dikumpulkan per keluarga (rumpun). Kolom: nama rumpun, jumlah anggota, rincian simpanan pokok/wajib/sukarela, dan total per rumpun; baris TOTAL menjumlah semua rumpun. "Tanpa rumpun" = anggota belum diisi rumpun; diurutkan paling bawah.',
 };
 
 type Tab = 'anggota' | 'simpanan' | 'rekap' | 'shu';
@@ -1022,6 +1034,73 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
                   ))
                 )}
               </tbody>
+            </Table>
+          </div>
+
+          <div className="card p-4">
+            <h2 className="mb-2 font-bold">
+              <TermTip term="Rumpun" tip={TIPS.rekap_rumpun}>
+                Rekap per Rumpun
+              </TermTip>
+            </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Saldo simpanan (pokok + wajib + sukarela) dikumpulkan per keluarga
+              (rumpun). Tanpa rumpun = anggota yang belum diisi rumpun;
+              diurutkan paling bawah. Baris TOTAL menjumlah semua rumpun.
+            </p>
+            <Table minW="min-w-[760px]">
+              <thead>
+                <tr>
+                  <Th>Rumpun</Th>
+                  <Th className="text-right">Jumlah Anggota</Th>
+                  <Th className="text-right">Pokok (Rp)</Th>
+                  <Th className="text-right">Wajib (Rp)</Th>
+                  <Th className="text-right">Sukarela (Rp)</Th>
+                  <Th className="text-right">Total Simpanan (Rp)</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {d.rekap_rumpun.length === 0 ? (
+                  <TEmpty colSpan={6}>Belum ada anggota koperasi.</TEmpty>
+                ) : (
+                  d.rekap_rumpun.map((r) => (
+                    <Trow key={r.rumpun ?? 'none'} hover>
+                      <Td>
+                        {r.rumpun ?? (
+                          <span className="italic text-slate-400">Tanpa rumpun</span>
+                        )}
+                      </Td>
+                      <Td className="text-right tabular-nums">{r.member_count}</Td>
+                      <Td className="text-right tabular-nums">{rp(r.pokok)}</Td>
+                      <Td className="text-right tabular-nums">{rp(r.wajib)}</Td>
+                      <Td className="text-right tabular-nums">{rp(r.sukarela)}</Td>
+                      <Td className="text-right font-bold tabular-nums">{rp(r.total)}</Td>
+                    </Trow>
+                  ))
+                )}
+              </tbody>
+              {d.rekap_rumpun.length > 0 && (
+                <tfoot>
+                  <Trow border="top" className="bg-slate-50 dark:bg-navy-800/40">
+                    <Td className="font-bold">TOTAL</Td>
+                    <Td className="text-right font-bold tabular-nums">
+                      {d.rekap_rumpun.reduce((s, r) => s + r.member_count, 0)}
+                    </Td>
+                    <Td className="text-right font-bold tabular-nums">
+                      {rp(d.rekap_rumpun.reduce((s, r) => s + r.pokok, 0))}
+                    </Td>
+                    <Td className="text-right font-bold tabular-nums">
+                      {rp(d.rekap_rumpun.reduce((s, r) => s + r.wajib, 0))}
+                    </Td>
+                    <Td className="text-right font-bold tabular-nums">
+                      {rp(d.rekap_rumpun.reduce((s, r) => s + r.sukarela, 0))}
+                    </Td>
+                    <Td className="text-right font-bold tabular-nums">
+                      {rp(d.rekap_rumpun.reduce((s, r) => s + r.total, 0))}
+                    </Td>
+                  </Trow>
+                </tfoot>
+              )}
             </Table>
           </div>
 

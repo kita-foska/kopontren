@@ -635,6 +635,135 @@ async function main(): Promise<void> {
     db5.close();
   }
 
+  // ===== R6 (W4.6): rekap per rumpun -- kumpul ulang saldo per keluarga =====
+  // Miror agregasi GET /api/koperasi (route.ts W4.6, satu sumber): key
+  // rumpun NOCASE, bucket 'tanpa rumpun' (label null) diurutkan paling
+  // bawah, total = simpanan pokok+wajib+sukarela per anggota (BUKAN modal
+  // 3010 / jasa 3050, itu op terpisah). 4 anggota: m1 'Rumpun A' +
+  // m2 'rumpun a' (merge NOCASE) + m3 'Rumpun B' + m4 null.
+  {
+    const db6 = new mod.DatabaseSync(':memory:');
+    db6.exec(DDL_COOP_MEM);
+    db6.exec(DDL_COOP_SV);
+    const insMem6 = db6.prepare(
+      "INSERT INTO coop_members(id, name, rumpun, member_since) VALUES (?, ?, ?, '2026-10-06')"
+    );
+    insMem6.run('m1', 'Andi', 'Rumpun A');
+    insMem6.run('m2', 'Budi', 'rumpun a'); // NOCASE: sama dgn 'Rumpun A'
+    insMem6.run('m3', 'Cici', 'Rumpun B');
+    insMem6.run('m4', 'Dodi', null); // tanpa rumpun
+    const insSv6 = db6.prepare(
+      'INSERT INTO coop_savings(member_id, kind, amount, saved_at) VALUES (?, ?, ?, ?)'
+    );
+    insSv6.run('m1', 'pokok', 10000, '2026-10-06T08:00:00+07:00');
+    insSv6.run('m1', 'sukarela', 5000, '2026-10-06T08:01:00+07:00');
+    insSv6.run('m2', 'wajib', 3000, '2026-10-06T08:02:00+07:00');
+    insSv6.run('m2', 'sukarela', 2000, '2026-10-06T08:03:00+07:00');
+    insSv6.run('m3', 'pokok', 8000, '2026-10-06T08:04:00+07:00');
+    insSv6.run('m4', 'sukarela', 1000, '2026-10-06T08:05:00+07:00');
+
+    // Miror route.ts W4.6: saldo per anggota per jenis (pokok/wajib/sukarela)
+    // lalu kumpul per rumpun (key NOCASE; null bucket label null, urut bawah).
+    type RRRow = {
+      rumpun: string | null;
+      member_count: number;
+      pokok: number;
+      wajib: number;
+      sukarela: number;
+      total: number;
+    };
+    const rekapRumpun = (): RRRow[] => {
+      const mems = db6
+        .prepare('SELECT id, rumpun FROM coop_members ORDER BY name COLLATE NOCASE')
+        .all() as { id: string; rumpun: string | null }[];
+      const bal = new Map<string, { pokok: number; wajib: number; sukarela: number; total: number }>();
+      for (const m of mems) bal.set(m.id, { pokok: 0, wajib: 0, sukarela: 0, total: 0 });
+      for (const r of db6
+        .prepare(
+          "SELECT member_id, kind, SUM(amount) s FROM coop_savings WHERE kind IN ('pokok','wajib','sukarela') GROUP BY member_id, kind"
+        )
+        .all() as { member_id: string; kind: string; s: number }[]) {
+        const b = bal.get(r.member_id)!;
+        const amt = Math.round(Number(r.s) || 0);
+        if (r.kind === 'pokok') b.pokok = amt;
+        else if (r.kind === 'wajib') b.wajib = amt;
+        else if (r.kind === 'sukarela') b.sukarela = amt;
+      }
+      for (const b of bal.values()) b.total = b.pokok + b.wajib + b.sukarela;
+      type Acc = {
+        label: string | null;
+        member_count: number;
+        pokok: number;
+        wajib: number;
+        sukarela: number;
+        total: number;
+      };
+      const map = new Map<string, Acc>();
+      for (const m of mems) {
+        const key = m.rumpun ? m.rumpun.toLowerCase() : '';
+        const e =
+          map.get(key) ??
+          { label: m.rumpun ?? null, member_count: 0, pokok: 0, wajib: 0, sukarela: 0, total: 0 };
+        e.member_count += 1;
+        const b = bal.get(m.id)!;
+        e.pokok += b.pokok;
+        e.wajib += b.wajib;
+        e.sukarela += b.sukarela;
+        e.total += b.total;
+        map.set(key, e);
+      }
+      const out = [...map.values()].sort((a, b) => {
+        if (a.label === null && b.label === null) return 0;
+        if (a.label === null) return 1;
+        if (b.label === null) return -1;
+        return a.label.localeCompare(b.label);
+      });
+      return out.map((x) => ({
+        rumpun: x.label,
+        member_count: x.member_count,
+        pokok: x.pokok,
+        wajib: x.wajib,
+        sukarela: x.sukarela,
+        total: x.total,
+      }));
+    };
+
+    const rr = rekapRumpun();
+    const gA = rr.find((x) => x.rumpun === 'Rumpun A')!;
+    const gB = rr.find((x) => x.rumpun === 'Rumpun B')!;
+    const gN = rr[rr.length - 1]; // tanpa rumpun (label null)
+    eq('R6a: rekap rumpun = 3 baris (Rumpun A merge, Rumpun B, tanpa rumpun)', rr.length, 3);
+    eq('R6b: Rumpun A member_count = 2 (m1+m2 NOCASE)', gA.member_count, 2);
+    eq('R6c: Rumpun B member_count = 1 (m3)', gB.member_count, 1);
+    ok('R6d: baris terakhir = tanpa rumpun (label null)', gN.rumpun === null);
+    eq('R6e: urutan = [Rumpun A, Rumpun B, null]', rr.map((x) => x.rumpun ?? 'null').join(','), 'Rumpun A,Rumpun B,null');
+    // Rincian per jenis (m1: 10000 pokok + 5000 sukarela; m2: 3000 wajib + 2000
+    // sukarela; m3: 8000 pokok; m4: 1000 sukarela):
+    eq('R6h: Rumpun A pokok = 10000 (m1)', gA.pokok, 10000);
+    eq('R6i: Rumpun A wajib = 3000 (m2)', gA.wajib, 3000);
+    eq('R6j: Rumpun A sukarela = 7000 (m1 5000 + m2 2000)', gA.sukarela, 7000);
+    eq('R6k: Rumpun A total = 20000 (10000+3000+7000)', gA.total, 20000);
+    eq('R6l: Rumpun B pokok = 8000 (m3)', gB.pokok, 8000);
+    eq('R6m: Rumpun B wajib + sukarela = 0', gB.wajib + gB.sukarela, 0);
+    eq('R6n: Tanpa rumpun sukarela = 1000 (m4)', gN.sukarela, 1000);
+    eq('R6f1: SUM(member_count) = 4 (semua anggota)', rr.reduce((s, x) => s + x.member_count, 0), 4);
+    eq(
+      'R6f2: SUM per jenis = pokok 18000 / wajib 3000 / sukarela 8000',
+      [
+        rr.reduce((s, x) => s + x.pokok, 0),
+        rr.reduce((s, x) => s + x.wajib, 0),
+        rr.reduce((s, x) => s + x.sukarela, 0),
+      ].join(','),
+      '18000,3000,8000'
+    );
+    eq('R6f3: SUM(total) = grand total simpanan (29000)', rr.reduce((s, x) => s + x.total, 0), 29000);
+    ok(
+      'R6g: merge NOCASE (m1+m2 SATU grup; label = Rumpun A, bukan "rumpun a")',
+      gA.member_count === 2 && !rr.some((x) => x.rumpun === 'rumpun a')
+    );
+    db6.close();
+  }
+
   console.log(passes + ' passed, ' + failures + ' failed');
   if (failures > 0) {
     console.log('HAS_FAILURE');
