@@ -321,8 +321,8 @@ body{background:#fff}
 <h3>Ringkasan modul</h3>
 <p style="margin-top:0">Koperasi = unit usaha: simpanan anggota (pokok, wajib, sukarela; setor / tarik / keluar) plus distribusi <b>SHU (Sisa Hasil Usaha)</b> per periode. Wewenang <b>tulis</b>: Admin &amp; Manajer. Pengurus dan peran lain <b>baca</b> lewat rekap. Halaman: /admin/koperasi.</p>
 
-<h3>Operasi Koperasi (setor / tarik / keluar / modal / closing)</h3>
-<p style="margin-top:0">Delapan operasi <b>tulis</b> melalui satu route (POST /api/koperasi, dispatch op):</p>
+<h3>Operasi Koperasi (setor / tarik / keluar / modal / closing / jasa / tunai)</h3>
+<p style="margin-top:0">Sepuluh operasi <b>tulis</b> melalui satu route (POST /api/koperasi, dispatch op):</p>
 <table>
 <tr><th>op</th><th>Apa</th><th>Akun</th><th>GL</th><th>Error</th></tr>
 <tr><td><b>member_create</b></td><td>Daftar anggota koperasi baru (status awal aktif)</td><td>-</td><td>Tanpa jurnal</td><td>409 nama duplikat</td></tr>
@@ -333,6 +333,8 @@ body{background:#fff}
 <tr><td><b>shu</b></td><td>Distribusi SHU rasio input (W4.4)</td><td>D3020 &gt; C3030 / 3040 / 3050 / 3060</td><td>Hanya saat GL on</td><td>409 periode sudah tercatat</td></tr>
 <tr><td><b>modal</b></td><td>Modal anggota (W4.5a) -- penyertaan, BUKAN simpanan: tak masuk 2050 / 2060 / 2070, tak bisa ditarik, tak dikembalikan saat keluar</td><td>D1010 &gt; K3010</td><td>Hanya saat GL on</td><td>409 event duplikat, 400 nominal</td></tr>
 <tr><td><b>closing</b></td><td>Jurnal closing (W4.5a): nol-kan net P&amp;L kumulatif (4010 / 4020 / 4030 / 5010 / 5020 / 5030 / 5040; 4040 &amp; 4090 dikecualikan) ke 3020; laba = K3020, rugi = D3020</td><td>D40xx / 50xx &gt; C3020 (atau D3020 bila rugi)</td><td>Hanya saat GL on; khusus Admin</td><td>409 periode sudah di-close, 400 tanpa aktivitas</td></tr>
+<tr><td><b>jasa</b></td><td>Jasa per anggota (W4.5b): bagikan SELURUH pool jasa 3050 rata-rata ke anggota aktif (bukan bunga; sisa pembulatan ke urutan nama A-Z); 1 distribusi per periode</td><td>D3050 &gt; K2070 (jurnal agregat; 1 kaki per anggota)</td><td>Hanya saat GL on (gl-off = porsi tetap tercatat)</td><td>409 periode sudah dibagikan, 400 tanpa pool / tanpa anggota aktif, 404 SHU belum tercatat</td></tr>
+<tr><td><b>tunai</b></td><td>Pencairan tunai/transfer SHU dibagi (W4.5b): cairkan 3060 ke kas 1010 atau bank 1020; nominal tak melebihi saldo 3060; 1 pencairan per periode; akun 5080 tidak dipakai</td><td>D3060 &gt; C1010 / 1020</td><td>Hanya saat GL on (guard saldo; gl-off = selalu 400)</td><td>409 periode sudah dicairkan, 400 tanpa pool / nominal melebihi</td></tr>
 </table>
 <div class="note"><b>Akses peran:</b> tulis (semua op) = <b>Admin &amp; Manajer</b> (tier koperasi), kecuali <b>closing</b> yang khusus <b>Admin</b> (Manajer ditolak 403). Baca / read-only = <b>Pengurus</b> (tier laporan; form disembunyikan). Anggota koperasi <b>BUKAN</b> member loyalty -- dua entitas terpisah (Sek.7.3). Auto-jurnal hanya saat <b>GL aktif</b>; GL off = tercatat saja.</div>
 
@@ -347,10 +349,12 @@ body{background:#fff}
 <tr><td><b>Rasio alokasi</b></td><td>Persen (cadangan umum / khusus / jasa) yang diisi admin; "dibagi" = residu agar total pas. Tanpa angka default.</td><td>-</td></tr>
 <tr><td><b>Modal</b></td><td>Uang dititipkan anggota sebagai kekuatan kooperasi; tidak kembali per anggota saat keluar.</td><td>3010</td></tr>
 <tr><td><b>Jurnal closing</b></td><td>Menol-kan net P&amp;L (subset akun 4010 - 4030, 5010 - 5040) ke 3020; kumulatif sejak awal pembukuan (self-healing); satu closing per periode.</td><td>3020</td></tr>
+<tr><td><b>Jasa per anggota</b></td><td>W4.5b: bagi SELURUH pool jasa 3050 rata-rata ke anggota aktif (bukan bunga; sisa pembulatan ke urutan nama A-Z); satu distribusi per periode; porsi tercatat di rekap simpanan sukarela (jenis <i>jasa</i>).</td><td>3050 &gt; 2070</td></tr>
+<tr><td><b>Pencairan tunai/transfer</b></td><td>W4.5b: cairkan "SHU dibagi" 3060 ke kas 1010 atau bank 1020; nominal tak melebihi saldo 3060; satu pencairan per periode; akun 5080 tidak dipakai (pencairan bukan beban).</td><td>3060 &gt; 1010 / 1020</td></tr>
 </table>
 
 <h3>Mekanisme</h3>
-<div class="note">Distribusi SHU = input rasio + <b>satu jurnal alokasi</b> (Debit 3020 SHU; Kredit 3030 / 3040 / 3050 / 3060) saat GL aktif; GL off = tercatat saja. Periode unik (dicatat sekali); koreksi via <b>jurnal pembalik</b>. Pencairan tunai / transfer SHU dibagi menyusul (W4.5b). W4.5a menambahkan: <b>modal anggota</b> (D1010 &gt; K3010) dan <b>jurnal closing periode</b> (nol-kan net P&amp;L kumulatif ke 3020; laba = K3020, rugi = D3020; satu closing per periode; tanggal jurnal = hari terakhir periode).</div>
+<div class="note">Distribusi SHU = input rasio + <b>satu jurnal alokasi</b> (Debit 3020 SHU; Kredit 3030 / 3040 / 3050 / 3060) saat GL aktif; GL off = tercatat saja. Periode unik (dicatat sekali); koreksi via <b>jurnal pembalik</b>. W4.5a menambahkan: <b>modal anggota</b> (D1010 &gt; K3010) dan <b>jurnal closing periode</b> (nol-kan net P&amp;L kumulatif ke 3020; laba = K3020, rugi = D3020; satu closing per periode; tanggal jurnal = hari terakhir periode). W4.5b menambahkan: <b>jasa per anggota</b> (op jasa -- bagi SELURUH pool 3050 rata-rata ke anggota aktif; jurnal agregat D3050 &gt; K2070; 1 distribusi per periode; porsi tercatat di rekap sukarela) dan <b>pencairan tunai/transfer</b> (op tunai -- D3060 &gt; C1010 / C1020; nominal tak melebihi saldo 3060; 1 pencairan per periode; akun 5080 tidak dipakai).</div>
 </div>
 
 </div>

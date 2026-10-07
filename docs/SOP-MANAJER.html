@@ -192,7 +192,7 @@ body{background:#fff}
 <h2><span class="n">7</span>Koperasi &amp; SHU (wewenang tulis)</h2>
 <div class="card">
 <h3>Operasi Koperasi (tulis)</h3>
-<p style="margin-top:0">Sejajar Admin, Manajer dapat <b>menulis</b> seluruh operasi Koperasi di /admin/koperasi: <b>anggota baru</b> (form tab Anggota), <b>setor</b> simpanan pokok / wajib / sukarela, <b>tarik</b> sukarela, <b>status</b> aktif / nonaktif, <b>keluar</b> (terminal -- refund pokok bila GL aktif), dan <b>modal</b> anggota (3010 -- penyertaan, bukan simpanan). Form di tab Anggota &amp; Simpanan tersedia untuk Anda; distribusi <b>SHU</b> dijelaskan di bawah. <b>Jurnal closing</b> periode (ke 3020) khusus <b>Admin</b> -- formnya tidak tersedia untuk Anda.</p>
+<p style="margin-top:0">Sejajar Admin, Manajer dapat <b>menulis</b> seluruh operasi Koperasi di /admin/koperasi: <b>anggota baru</b> (form tab Anggota), <b>setor</b> simpanan pokok / wajib / sukarela, <b>tarik</b> sukarela, <b>status</b> aktif / nonaktif, <b>keluar</b> (terminal -- refund pokok bila GL aktif), <b>modal</b> anggota (3010 -- penyertaan, bukan simpanan), <b>bagi jasa</b> (pool 3050 &gt; saldo sukarela 2070), dan <b>pencairan tunai/transfer</b> (3060 &gt; kas 1010 / bank 1020). Form di tab Anggota &amp; Simpanan tersedia untuk Anda; distribusi <b>SHU</b> dijelaskan di bawah. <b>Jurnal closing</b> periode (ke 3020) khusus <b>Admin</b> -- formnya tidak tersedia untuk Anda.</p>
 <h3>Akses</h3>
 <p style="margin-top:0">Manajer punya wewenang <b>tulis</b> yang sama dengan Admin untuk distribusi SHU: halaman <b>Koperasi</b> (/admin/koperasi), tab <b>SHU</b>. Gunakan saat memasukkan atau menyetujui alokasi SHU per periode.</p>
 
@@ -211,6 +211,10 @@ body{background:#fff}
 <h3>Periode unik &amp; koreksi</h3>
 <div class="note">Periode yang sudah terisi tidak bisa diinput ulang (pesan <i>"SHU periode ini sudah tercatat"</i>). Koreksi via <b>jurnal pembalik</b> di Kas, bukan hapus.</div>
 
+<h3>Jasa per Anggota (3050 &gt; 2070)</h3>
+<p style="margin-top:0">Kartu <b>Jasa per Anggota</b> di tab SHU (W4.5b): isi periode YYYY-MM, lalu tombol <b>Bagikan Jasa</b>. Sistem membagikan <b>seluruh pool jasa</b> periode itu (akun 3050, berasal dari rasio Alokasi SHU) <b>rata-rata</b> ke semua anggota berstatus <b>aktif</b> (bukan bunga; sisa pembulatan dipas ke urutan nama A-Z). Satu distribusi per periode (409 bila sudah dibagikan; koreksi = jurnal pembalik). Jurnal (GL aktif): <b>satu jurnal agregat</b> Debit 3050 &gt; Kredit 2070 (satu kaki debit + satu kaki kredit per anggota); porsi per anggota tercatat di rekap simpanan sukarela (jenis <i>jasa</i>, tanggal = hari terakhir periode). GL off = porsi tetap tercatat, tanpa jurnal. <b>Akun 5080 tidak dipakai</b> (saldo tetap 0).</p>
+<h3>Pencairan Tunai / Transfer (3060)</h3>
+<p style="margin-top:0">Kartu <b>Pencairan Tunai / Transfer</b> di tab SHU (W4.5b): isi periode YYYY-MM, nominal rupiah bulat &gt; 0, akun pencairan (1010 Kas atau 1020 Bank/Transfer), lalu tombol <b>Catat Pencairan</b>. Mencairkan bagian "SHU dibagi" (akun 3060) ke kas/bank. Satu pencairan per periode (409; koreksi = jurnal pembalik). Nominal tidak boleh melebihi saldo 3060 (400). Jurnal (GL aktif): Debit 3060 &gt; Kredit 1010 atau 1020. GL off = tanpa jurnal, dan karena saldo 3060 tak teramati, pencairan selalu ditolak (400 tanpa pool). <b>Akun 5080 tidak dipakai</b> (pencairan bukan beban; saldo tetap 0).</p>
 <p>Tabel Riwayat SHU (tab SHU / Rekap) menampilkan semua periode + rasio 4 porsi. Baris sebelum fitur ini ada menampilkan <b>distribusi = W4.4</b> (masih distribusi lama).</p>
 </div>
 

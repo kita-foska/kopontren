@@ -208,7 +208,7 @@ body{background:#fff}
 <h2><span class="n">7</span>Koperasi &amp; SHU (melihat saja)</h2>
 <div class="card">
 <h3>Koperasi (read-only)</h3>
-<p style="margin-top:0">Pengurus <b>melihat</b> seluruh data Koperasi: daftar anggota, saldo simpanan (pokok / wajib / sukarela), rekap akun (2050 / 2060 / 2070 + 30xx), dan riwayat SHU. <b>Semua form dan tombol</b> (anggota baru, setor, tarik, status, keluar, catat SHU, catat modal, posting closing) <b>disembunyikan</b> untuk peran baca -- hanya <b>Admin</b> &amp; <b>Manajer</b> yang menulis (pengecualian: <b>posting closing</b> khusus <b>Admin</b>).</p>
+<p style="margin-top:0">Pengurus <b>melihat</b> seluruh data Koperasi: daftar anggota, saldo simpanan (pokok / wajib / sukarela), rekap akun (2050 / 2060 / 2070 + 30xx), dan riwayat SHU. <b>Semua form dan tombol</b> (anggota baru, setor, tarik, status, keluar, catat SHU, catat modal, posting closing, bagi jasa, catat pencairan tunai) <b>disembunyikan</b> untuk peran baca -- hanya <b>Admin</b> &amp; <b>Manajer</b> yang menulis (pengecualian: <b>posting closing</b> khusus <b>Admin</b>).</p>
 <h3>Akses</h3>
 <p style="margin-top:0">Pengurus <b>melihat</b> distribusi SHU (riwayat + rekap) tetapi <b>tidak menginput</b>. Form input dan tombol "Catat Alokasi SHU" tersembunyi untuk peran baca; yang bisa mencatat SHU hanya <b>Admin</b> dan <b>Manajer</b>.</p>
 
@@ -217,6 +217,7 @@ body{background:#fff}
 <li>Tab <b>Rekap</b> Koperasi: saldo simpanan anggota (pokok / wajib / sukarela) + ringkasan, baca saja. Rekap juga menampilkan akun modal 3010, SHU ditahan 3020, dan baris jurnal closing (bila sudah ada).</li>
 <li>Tab <b>SHU</b> Koperasi: tabel Riwayat SHU per periode (total, rasio 4 porsi, tanggal).</li>
 <li>Baris berlabel <b>distribusi = W4.4</b> adalah pencatatan sebelum fitur rasio ada.</li>
+<li>Kartu <b>Jasa per Anggota</b> dan <b>Pencairan Tunai / Transfer</b> (W4.5b, tab SHU): tampil <b>baca saja</b> -- form "Bagikan Jasa" dan "Catat Pencairan" disembunyikan. Hasil bagi jasa terlihat di rekap simpanan sukarela (jenis <i>jasa</i>, Debit 3050 &gt; Kredit 2070) dan pencairan di riwayat jurnal kas (Debit 3060 &gt; Kredit 1010 / 1020; akun 5080 tidak dipakai).</li>
 </ul>
 
 <h3>Koreksi angka</h3>
