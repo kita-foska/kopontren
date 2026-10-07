@@ -1895,10 +1895,17 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
            4 docs + 4 sync public/tutorial; glosarium 6 istilah
            baru. commit `a141211`; detail: MEMORY.md seksi
            2026-10-06.
+    - [x] **W4.4b LEPAS** (7 Okt): backfill tutorial W4.3 Koperasi
+           (setor/tarik/keluar) ke 4 SOP peran + DOKUMENTASI -- 8 file
+           docs-only (4 docs + 4 mirror public/tutorial, byte-identik):
+           tabel ops 6 op (member_create, setor, tarik, status, keluar,
+           shu); akun D2050/2060/2070 + K1010/3020/3030/3040/3050/3060;
+           KELUAR terminal + refund pokok D2050 -> K1010; wajib/sukarela
+           tidak dikembalikan; error 400/409; form SHU tersembunyi utk
+           pengurus. commit `cde17ac`; detail: MEMORY.md seksi 2026-10-07.
    - NEXT: **W4.5** (modal akun 3010 + closing journal Sek.3.2.6
           + jasa per anggota rata-rata (Q5) + tunai 5080; rekon
-          #16 ke W5.2). W4.4b = backfill tutorial W4.3 Koperasi
-          (commit terpisah). W4.6 = rekap per rumpun. Setelah
+          #16 ke W5.2). W4.6 = rekap per rumpun. Setelah
           W4 habis = **W5 penguatan** (PINJ-1 pinjaman anggota
           -- tashih qardh/murabahah, akun COA baru, sumber dana).
 

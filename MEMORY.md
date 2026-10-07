@@ -1,5 +1,34 @@
 # MEMORY
 
+## 2026-10-07
+### W4.4b LEPAS -- backfill tutorial W4.3 Koperasi (setor/tarik/keluar) ke 4 SOP peran + DOKUMENTASI (7 Okt 2026)
+- **Commit `cde17ac`** (full `cde17ac80294543d24ea1d83db554c567ad5ece5`;
+  8 file +52/-4 = 8 M, docs-only; dual-push master+main; ACC Gus Fi
+  via DeepSeek -- audit independen PASSED, 0 must-fix):
+  Menutup gap tutorial W4.3 Koperasi (instruksi permanen) di
+  4 docs peran (docs/) + 4 mirror public/tutorial (byte-identik,
+  diverifikasi hash):
+  (a) Tabel ops lengkap: 6 op (member_create, setor, tarik,
+  status, keluar, shu) + rekap akun D2050/2060/2070 +
+  K1010/3020/3030/3040/3050/3060; GL on/off konsisten; error
+  code 400 (validasi) / 409 (konflik).
+  (b) KELUAR = status terminal + refund pokok D2050 -> K1010;
+  setoran wajib + sukarela TIDAK dikembalikan.
+  (c) "Anggota koperasi" != "member" loyalty (Sek.7.3)
+  tercatat eksplisit.
+  (d) Form SHU tersembunyi utk pengurus (write-guard
+  admin/manajer); penomoran seksi stabil (tanpa #8/#10).
+  Jumlah baris tambahan per file: SOP-ADMIN +8, SOP-MANAJER +2,
+  SOP-PENGURUS +3, DOKUMENTASI-APLIKASI +13 (docs; mirror
+  identik). 0 tag <script> di 4 docs; semua baris tambahan
+  murni ASCII; ikon hanya inline SVG.
+- **Gate lulus**: sync-tutorial OK (byte-identik 4 pasang);
+  `public/sw.js` UNCHANGED; engine `src/lib/coop.ts`
+  UNCHANGED; V1 `laporan-admin-client.tsx` UNCHANGED.
+- NEXT = **W4.5** (modal akun 3010 + closing journal
+  Sek.3.2.6 + jasa per anggota rata-rata (Q5) + tunai 5080;
+  rekon #16 ke W5.2). W4.6 = rekap per rumpun.
+
 ## 2026-10-06
 ### W4.4 LEPAS -- SHU distribusi (rasio input admin + 1 jurnal alokasi) (6 Okt 2026)
 - **Commit `a141211`** (full `a141211abe8c4b9a09d725ce14e3907397e9ca46`;
