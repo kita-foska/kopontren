@@ -29,7 +29,7 @@ export default async function KoperasiPage() {
         </h1>
         <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
           Anggota, simpanan (pokok/wajib/sukarela, Sek.7.1/7.2; skema v24), dan rekap (2050/2060/2070
-          + modal/SHU 30xx; distribusi SHU = W4.4). Anggota koperasi BUKAN member loyalty
+          + modal/SHU 30xx; distribusi SHU = W4.4, modal = W4.5a, jasa &amp; tunai = W4.5b). Anggota koperasi BUKAN member loyalty
           (Sek.7.3; dua entitas terpisah). Jurnal auto hanya saat GL aktif (D1).
           Pengurus: read-only (pola Q3 akad).
         </p>

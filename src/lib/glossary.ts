@@ -257,7 +257,7 @@ export const GLOSSARY: GlossaryTerm[] = [
   // -- Koperasi & SHU (W4.4)
   {
     term: 'SHU',
-    desc: 'Sisa Hasil Usaha: hasil usaha koperasi dalam satu periode (laba/rugi) setelah semua beban. Di aplikasi dihitung dari input admin plus rasio alokasi, lalu dicatat sebagai jurnal alokasi. Pembagian jasa anggota (per orang) dan tunai dikerjakan tahap berikutnya.',
+    desc: 'Sisa Hasil Usaha: hasil usaha koperasi dalam satu periode (laba/rugi) setelah semua beban. Di aplikasi dihitung dari input admin plus rasio alokasi, lalu dicatat sebagai jurnal alokasi (W4.4); pembagian jasa per anggota dan pencairan tunai = W4.5b.',
     group: 'Koperasi & SHU',
   },
   {
@@ -272,12 +272,12 @@ export const GLOSSARY: GlossaryTerm[] = [
   },
   {
     term: 'Jasa Anggota',
-    desc: 'Sebagian SHU sebagai imbal jasa/modal anggota (akun 3050). Ditetapkan dengan bobot rata-rata (konservatif, bukan bunga); pembagian per anggota dan tunai dikerjakan tahap berikutnya.',
+    desc: 'Sebagian SHU sebagai imbal jasa/modal anggota (akun 3050). W4.5b: dibagikan per anggota dengan rata-rata (floor + sisa ke urutan nama; konservatif, bukan bunga); satu distribusi per periode, jurnal agregat D3050 -> K2070 saat GL aktif.',
     group: 'Koperasi & SHU',
   },
   {
     term: 'SHU Dibagi',
-    desc: 'Sebagian SHU yang dibagikan kepada anggota (akun 3060). Pencairan tunai atau transfer memakai akun distribusi (tahap berikutnya).',
+    desc: 'Sebagian SHU yang dibagikan kepada anggota (akun 3060). W4.5b: pencairan tunai/transfer = jurnal D3060 -> kas (1010) atau bank/transfer (1020); akun 5080 (label "Distribusi SHU") tidak dipakai jurnal. Satu pencairan per periode; nominal tidak melebihi saldo 3060.',
     group: 'Koperasi & SHU',
   },
   {

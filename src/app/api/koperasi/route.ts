@@ -37,6 +37,28 @@
  *             net-0 ditiada (OQ9); 1 periode = 1 closing -> 409
  *             closing_period_exists; periode tanpa aktivitas -> 400
  *             closing_no_activity; ADMIN-ONLY (OQ7-B); gl-off -> 400).
+ *           - jasa          : recordCoopJasaInTx W4.5b (jasa per
+ *             anggota; pool = SELURUH coop_shu.jasa_anggota periode,
+ *             tanpa input nominal (OQ10); rata-rata Q5 = floor +
+ *             sisa per urut nama COLLATE NOCASE (OQ4/OQ5); N baris
+ *             coop_savings kind 'jasa' saved_at = hari terakhir
+ *             periode (OQ6/OQ11) + SATU jurnal agregat D3050 ->
+ *             K2070 (N kaki, OQ9) saat gl-on; SHU periode tak
+ *             tercatat -> 404 shu_period_missing; pool = 0 -> 400
+ *             jasa_no_pool; N aktif = 0 -> 400 jasa_no_active; 1
+ *             periode = 1 distribusi (pre-check event-level --
+ *             gl-off pun, OQ15) -> 409 jasa_period_exists; tier
+ *             koperasi (OQ14)).
+ *           - tunai         : recordCoopTunaiInTx W4.5b (pencairan
+ *             SHU dibagi 3060; nominal input admin <= saldo GL 3060
+ *             (OQ12; saldo <= 0 -> 400 tunai_no_pool; lebih -> 400
+ *             tunai_exceeds_balance); SATU jurnal D3060 -> C1010
+ *             (kas) / C1020 (bank/transfer), akun default 1010
+ *             (OQ7-A/OQ13: 5080 TAK PERNAH jadi leg -- saldo tetap
+ *             0; entry_date = hari posting); 1 periode = 1
+ *             pencairan (guard jurnal, pola closing) -> 409
+ *             tunai_period_exists; gl-off = tanpa jurnal (OQ15 D1;
+ *             konsekuensi: 400 tunai_no_pool); tier koperasi (OQ14)).
  *           Semua op tulis: SATU transaksi (db + logAudit + engine InTx,
  *           pola W2.7/W3.3) + invalidate('coop:') dan invalidate('gl:')
  *           (OQ4 W4.3: auto-jurnal coop mencemari cache /api/gl).
@@ -71,6 +93,8 @@ import {
 } from '@/lib/shu';
 import { recordCoopModalInTx } from '@/lib/coop-modal';
 import { postCoopClosingInTx, validateClosingPeriod } from '@/lib/coop-closing';
+import { recordCoopJasaInTx } from '@/lib/coop-jasa';
+import { recordCoopTunaiInTx, TUNAI_ACCTS } from '@/lib/coop-tunai';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,6 +150,16 @@ export type CoopActionResult = {
   entryId?: string | null;
   gl_enabled?: boolean;
   status?: string;
+  // -- respons ops lainnya (W4.5a/W4.5b; mirror PostResult client) ----
+  uuid?: string; // modal (W4.5a)
+  period?: string; // shu/closing/jasa/tunai
+  shu?: number; // shu (W4.4)
+  profit?: boolean; // shu (W4.4)
+  jasa_total?: number; // jasa (W4.5b)
+  member_count?: number; // jasa (W4.5b)
+  per_member?: { member_id: string; name: string; amount: number }[]; // jasa (W4.5b)
+  amount?: number; // tunai (W4.5b)
+  acct?: string; // tunai (W4.5b)
 };
 
 /** Akun rekap (OQ6 W4.3): simpanan 2050/2060/2070 (kewajiban -- memo kaki,
@@ -659,11 +693,186 @@ export async function POST(req: Request) {
       }
     }
 
+    // -- op: jasa (W4.5b: jasa per anggota; rata-rata Q5; OQ4-OQ11) --
+    // OQ14: tier koperasi (admin+manajer).
+    case 'jasa': {
+      if (!canAccess(user, 'koperasi'))
+        return NextResponse.json({ error: 'Hanya admin/manajer (bagi jasa per anggota)' }, { status: 403 });
+      const periodJasa = String(b.period ?? '').trim();
+      if (!/^\d{4}-\d{2}$/.test(periodJasa))
+        return NextResponse.json(
+          { error: 'Periode jasa harus YYYY-MM', code: 'coop_jasa_period_invalid' },
+          { status: 400 }
+        );
+      try {
+        const out = await tx(d, async () => {
+          const r = await recordCoopJasaInTx(d, {
+            period: periodJasa,
+            gl_enabled: glOn,
+            createdBy: String(user.id),
+          });
+          await logAudit(user, 'coop:jasa', 'coop_shu', null, undefined, {
+            period: periodJasa,
+            jasa_total: r.jasaTotal,
+            member_count: r.perMember.length,
+            entry_id: r.entryId,
+            gl_enabled: glOn,
+          });
+          return r;
+        });
+        invalidate('coop:');
+        invalidate('gl:');
+        return NextResponse.json(
+          {
+            ok: true,
+            period: out.period,
+            jasa_total: out.jasaTotal,
+            member_count: out.perMember.length,
+            per_member: out.perMember.map((m) => ({
+              member_id: m.memberId,
+              name: m.name,
+              amount: m.amount,
+            })),
+            entryId: out.entryId,
+            gl_enabled: glOn,
+          } satisfies CoopActionResult
+        );
+      } catch (e) {
+        const m = e instanceof Error ? e.message : String(e);
+        if (m === 'JASA_PERIOD_EXISTS' || isUniqueViolation(e))
+          return NextResponse.json(
+            {
+              error: 'Jasa periode ini sudah dibagikan (1 periode = 1 distribusi; koreksi via jurnal pembalik)',
+              code: 'jasa_period_exists',
+            },
+            { status: 409 }
+          );
+        if (m === 'JASA_SHU_MISSING')
+          return NextResponse.json(
+            { error: 'SHU periode ini belum tercatat (hitung alokasi SHU dulu)', code: 'shu_period_missing' },
+            { status: 404 }
+          );
+        if (m === 'JASA_NO_POOL')
+          return NextResponse.json(
+            { error: 'Pool jasa periode ini = 0 (rasio jasa 0; tak ada yang dibagikan)', code: 'jasa_no_pool' },
+            { status: 400 }
+          );
+        if (m === 'JASA_NO_ACTIVE')
+          return NextResponse.json(
+            { error: 'Belum ada anggota berstatus aktif (N = 0)', code: 'jasa_no_active' },
+            { status: 400 }
+          );
+        if (m.startsWith('coop_jasa:') || m.startsWith('coop:'))
+          return NextResponse.json(
+            { error: 'Validasi jasa: ' + m, code: 'coop_jasa_invalid' },
+            { status: 400 }
+          );
+        return NextResponse.json({ error: 'Gagal membagi jasa: ' + m }, { status: 500 });
+      }
+    }
+
+    // -- op: tunai (W4.5b: pencairan SHU dibagi 3060; OQ7-A) -----------
+    // OQ14: tier koperasi (admin+manajer).
+    case 'tunai': {
+      if (!canAccess(user, 'koperasi'))
+        return NextResponse.json({ error: 'Hanya admin/manajer (pencairan tunai/transfer)' }, { status: 403 });
+      const periodTunai = String(b.period ?? '').trim();
+      if (!/^\d{4}-\d{2}$/.test(periodTunai))
+        return NextResponse.json(
+          { error: 'Periode tunai harus YYYY-MM', code: 'coop_tunai_period_invalid' },
+          { status: 400 }
+        );
+      let amountTunai: number;
+      try {
+        amountTunai = coopValidateAmount(b.amount);
+      } catch {
+        return NextResponse.json(
+          { error: 'Amount harus rupiah integer > 0', code: 'coop_tunai_amount_invalid' },
+          { status: 400 }
+        );
+      }
+      let acct = '1010';
+      if (b.acct != null && String(b.acct).trim() !== '') {
+        const a = String(b.acct).trim();
+        if (!TUNAI_ACCTS.includes(a))
+          return NextResponse.json(
+            {
+              error: 'Akun pencairan harus 1010 (kas) atau 1020 (bank/transfer)',
+              code: 'coop_tunai_acct_invalid',
+            },
+            { status: 400 }
+          );
+        acct = a;
+      }
+      try {
+        const out = await tx(d, async () => {
+          const r = await recordCoopTunaiInTx(d, {
+            period: periodTunai,
+            amount: amountTunai,
+            acct,
+            gl_enabled: glOn,
+            createdBy: String(user.id),
+            entryDate: nowWib(),
+          });
+          await logAudit(user, 'coop:tunai', 'coop', null, undefined, {
+            period: periodTunai,
+            amount: amountTunai,
+            acct,
+            entry_id: r.entryId,
+            gl_enabled: glOn,
+          });
+          return r;
+        });
+        invalidate('coop:');
+        invalidate('gl:');
+        return NextResponse.json(
+          {
+            ok: true,
+            period: periodTunai,
+            amount: amountTunai,
+            acct,
+            entryId: out.entryId,
+            gl_enabled: glOn,
+          } satisfies CoopActionResult
+        );
+      } catch (e) {
+        const m = e instanceof Error ? e.message : String(e);
+        if (m === 'TUNAI_PERIOD_EXISTS' || isUniqueViolation(e))
+          return NextResponse.json(
+            {
+              error: 'Pencairan periode ini sudah dilakukan (1 periode = 1 pencairan; koreksi via jurnal pembalik)',
+              code: 'tunai_period_exists',
+            },
+            { status: 409 }
+          );
+        if (m === 'TUNAI_NO_POOL')
+          return NextResponse.json(
+            {
+              error: 'Saldo SHU dibagi (3060) tak tersedia (GL off / belum ada distribusi) -- tidak bisa dicairkan',
+              code: 'tunai_no_pool',
+            },
+            { status: 400 }
+          );
+        if (m.startsWith('coop_tunai:'))
+          return NextResponse.json(
+            {
+              error:
+                m === 'coop_tunai:exceeds_balance'
+                  ? 'Nominal melebihi saldo SHU dibagi (3060)'
+                  : 'Validasi tunai: ' + m,
+              code: m === 'coop_tunai:exceeds_balance' ? 'tunai_exceeds_balance' : 'coop_tunai_invalid',
+            },
+            { status: 400 }
+          );
+        return NextResponse.json({ error: 'Gagal mencatat pencairan tunai: ' + m }, { status: 500 });
+      }
+    }
+
     default:
       return NextResponse.json(
         {
           error:
-            'op tidak dikenal (ops: member_create/setor/tarik/status/keluar/shu/modal/closing)',
+            'op tidak dikenal (ops: member_create/setor/tarik/status/keluar/shu/modal/closing/jasa/tunai)',
         },
         { status: 400 }
       );

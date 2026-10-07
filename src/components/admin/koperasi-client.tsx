@@ -87,6 +87,11 @@ type PostResult = {
   shu?: number;
   profit?: boolean;
   period?: string;
+  // W4.5b op jasa/tunai (respons server).
+  jasa_total?: number;
+  member_count?: number;
+  amount?: number;
+  acct?: string;
 };
 
 const KINDS = ['pokok', 'wajib', 'sukarela'] as const;
@@ -94,6 +99,8 @@ const KIND_LABEL: Record<string, string> = {
   pokok: 'Pokok',
   wajib: 'Wajib',
   sukarela: 'Sukarela',
+  modal: 'Modal (3010)',
+  jasa: 'Jasa (3050)',
 };
 
 /** Tips TermTip (bahasa awam, ringkas; definisi lengkap di /admin/glosarium). */
@@ -104,15 +111,15 @@ const TIPS = {
     'Simpanan wajib: setoran rutin yang ditentukan koperasi. Tetap milik anggota; tidak dikembalikan saat anggota keluar.',
   sukarela:
     'Simpanan sukarela: setoran bebas atas keinginan anggota. Bisa ditarik selama masih tersisa; tidak perlu refund saat keluar.',
-  shu: 'SHU (Sisa Hasil Usaha): keuntungan koperasi per periode; dialokasikan via jurnal (W4.4). Jasa per orang + tunai = W4.5.',
+  shu: 'SHU (Sisa Hasil Usaha): keuntungan koperasi per periode; dialokasikan via jurnal (W4.4). Jasa per orang + tunai = W4.5b.',
   rumpun:
     'Rumpun: lingkaran keluarga/pesantren; pengelompokan anggota koperasi (opsional, utk laporan).',
   cad_umum:
     'Cadangan umum: bagian SHU yang ditahan memperkuat permodalan koperasi (akun 3030); tidak dibagikan.',
   cad_khusus:
     'Cadangan khusus: bagian SHU yang ditahan utk kebutuhan tertentu koperasi (akun 3040).',
-  jasa: 'Jasa anggota: bagian SHU utk imbal jasa/modal anggota (akun 3050); bobot rata-rata (konservatif, bukan bunga).',
-  dibagi: 'SHU dibagi: bagian SHU utk dibagikan ke anggota (akun 3060); pencairan tunai/transfer = W4.5.',
+  jasa: 'Jasa anggota: bagian SHU utk imbal jasa/modal anggota (akun 3050); bobot rata-rata (konservatif, bukan bunga). W4.5b: dibagikan per anggota; jurnal D3050 -> K2070.',
+  dibagi: 'SHU dibagi: bagian SHU utk dibagikan ke anggota (akun 3060); pencairan tunai/transfer (W4.5b) = jurnal D3060 -> kas 1010 / bank 1020 (akun 5080 tidak dipakai).',
   rasio: 'Rasio alokasi SHU (persen) cad um/khusus/jasa; porsi "dibagi" = sisa 100 - lainnya agar total pas. Diisi admin, tanpa angka default.',
   modal:
     'Modal: setoran uang anggota sebagai kekuatan kooperasi (akun 3010) -- bukan simpanan: tidak masuk 2050/2060/2070 dan tidak di-refund saat keluar. Jurnal D1010 -> K3010 hanya saat GL aktif.',
@@ -184,6 +191,13 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
 
   // -- form: jurnal closing 3020 (W4.5a; tab Rekap; admin-only) -----
   const [cPeriod, setCPeriod] = useState('');
+
+  // -- form: jasa per anggota + pencairan tunai (W4.5b; tab SHU;
+  //    tier koperasi; OQ14) -------------------------------------------
+  const [jsPeriod, setJsPeriod] = useState('');
+  const [tnPeriod, setTnPeriod] = useState('');
+  const [tnAmount, setTnAmount] = useState('');
+  const [tnAcct, setTnAcct] = useState('1010');
 
   // W4.4 E.5: keyboard nav tablist koperasi (pola APG, sama dgn POS via useTablistNav).
   const { onTabKeyDown } = useTablistNav<Tab>((i) => COOP_TABS[i] ?? 'anggota', setTab);
@@ -429,6 +443,57 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
       setCPeriod('');
     } else if (!r) showToast('Gagal posting jurnal closing', 'error');
     else showToast(r.error || 'Gagal posting jurnal closing', 'error');
+    setBusy(false);
+  }
+
+  /** op: jasa (W4.5b: pool = jasa_anggota periode; rata-rata Q5; 1 jurnal agregat). */
+  async function submitJasa(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(jsPeriod.trim())) {
+      showToast('Periode harus format YYYY-MM', 'error');
+      return;
+    }
+    setBusy(true);
+    const r = await post({ op: 'jasa', period: jsPeriod.trim() });
+    if (r?.ok) {
+      showToast(
+        'Jasa ' +
+          (r.period ?? jsPeriod) +
+          ': ' +
+          rp(r.jasa_total ?? 0) +
+          ' ke ' +
+          (r.member_count ?? 0) +
+          ' anggota' +
+          postNote(r),
+        'success'
+      );
+      setJsPeriod('');
+    } else if (!r) showToast('Gagal membagi jasa', 'error');
+    else showToast(r.error || 'Gagal membagi jasa', 'error');
+    setBusy(false);
+  }
+
+  /** op: tunai (W4.5b: D3060 -> kas 1010 / bank 1020; guard saldo 3060). */
+  async function submitTunai(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(tnPeriod.trim())) {
+      showToast('Periode harus format YYYY-MM', 'error');
+      return;
+    }
+    const amt = Math.round(Number(tnAmount) || 0);
+    if (amt <= 0) {
+      showToast('Nominal harus rupiah > 0', 'error');
+      return;
+    }
+    setBusy(true);
+    const r = await post({ op: 'tunai', period: tnPeriod.trim(), amount: amt, acct: tnAcct });
+    if (r?.ok) {
+      showToast('Pencairan ' + rp(amt) + ' (' + tnAcct + ') tercatat' + postNote(r), 'success');
+      setTnPeriod('');
+      setTnAmount('');
+      setTnAcct('1010');
+    } else if (!r) showToast('Gagal mencatat pencairan', 'error');
+    else showToast(r.error || 'Gagal mencatat pencairan', 'error');
     setBusy(false);
   }
 
@@ -1008,7 +1073,7 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
             <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
               Hitung dari input admin + rasio alokasi (PKGF sisi-pasif). Distribusi tercatat
               otomatis: jurnal D3020 -&gt; C3030/3040/3050/3060 saat GL on. Jasa per anggota +
-              tunai (akun 5080) = W4.5.
+              tunai = W4.5b (form di bawah).
             </p>
             {canWrite ? (
               <form onSubmit={submitShu} className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -1167,6 +1232,102 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
                   ))}
                 </tbody>
               </Table>
+            )}
+          </div>
+
+          <div className="card p-4">
+            <h2 className="mb-2 font-bold">
+              <TermTip term="Jasa Anggota" tip={TIPS.jasa}>
+                Jasa per Anggota (3050 -&gt; 2070)
+              </TermTip>{' '}
+              <Badge tone="blue">W4.5b</Badge>
+            </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Bagikan SELURUH jasa periode (akun 3050) rata-rata ke anggota aktif (bukan bunga;
+              sisa dipas ke urutan nama A-Z). Satu distribusi per periode; jurnal agregat D3050
+              -&gt; K2070 saat GL aktif.
+            </p>
+            {canWrite ? (
+              <form onSubmit={submitJasa} className="grid gap-3 md:grid-cols-2">
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  Periode (YYYY-MM)
+                  <input
+                    className="input mt-1"
+                    type="text"
+                    placeholder="mis. 2026-09"
+                    maxLength={7}
+                    value={jsPeriod}
+                    onChange={(e) => setJsPeriod(e.target.value)}
+                  />
+                </label>
+                <div className="flex items-end md:col-span-1">
+                  <Button type="submit" loading={busy}>
+                    Bagikan Jasa
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Mode baca (bagi jasa hanya admin/manajer).
+              </p>
+            )}
+          </div>
+
+          <div className="card p-4">
+            <h2 className="mb-2 font-bold">
+              <TermTip term="SHU Dibagi" tip={TIPS.dibagi}>
+                Pencairan Tunai / Transfer (3060)
+              </TermTip>{' '}
+              <Badge tone="blue">W4.5b</Badge>
+            </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Cairkan bagian 'SHU dibagi' (akun 3060) ke kas (1010) atau bank/transfer (1020).
+              Satu pencairan per periode; nominal tak melebihi saldo 3060.
+            </p>
+            {canWrite ? (
+              <form onSubmit={submitTunai} className="grid gap-3 md:grid-cols-3">
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  Periode (YYYY-MM)
+                  <input
+                    className="input mt-1"
+                    type="text"
+                    placeholder="mis. 2026-09"
+                    maxLength={7}
+                    value={tnPeriod}
+                    onChange={(e) => setTnPeriod(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  Nominal (Rp)
+                  <input
+                    className="input mt-1"
+                    inputMode="numeric"
+                    placeholder="mis. 250000"
+                    value={tnAmount}
+                    onChange={(e) => setTnAmount(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  Akun Pencairan
+                  <select
+                    className="input mt-1"
+                    value={tnAcct}
+                    onChange={(e) => setTnAcct(e.target.value)}
+                  >
+                    <option value="1010">1010 - Kas</option>
+                    <option value="1020">1020 - Bank/Transfer</option>
+                  </select>
+                </label>
+                <div className="flex items-end md:col-span-3">
+                  <Button type="submit" loading={busy}>
+                    Catat Pencairan
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Mode baca (pencairan hanya admin/manajer).
+              </p>
             )}
           </div>
         </div>
