@@ -1946,14 +1946,19 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
            `88824a7` (docs 4 + 4 mirror, C2); detail: MEMORY.md
            seksi 2026-10-07.
 
-   - NEXT: **W4.6** = rekap per rumpun. W4.5b (op jasa + op tunai)
-          sudah LEPAS (`e7bba07` + `88824a7`): D3050 -> K2070
-          rata-rata + D3060 -> C1010/1020; akun 5080 TIDAK
-          terpakai (OQ7-A, invariant saldo 0) -- rekon #16 tetap
-          ke W5.2; detail: MEMORY.md seksi 2026-10-07.
-          Setelah
-          W4 habis = **W5 penguatan** (PINJ-1 pinjaman anggota
-          -- tashih qardh/murabahah, akun COA baru, sumber dana).
+   - W4.6 LEPAS (7 Okt 2026): rekap per rumpun -- agregasi SERVER
+     GET /api/koperasi (rincian simpanan pokok/wajib/sukarela +
+     total + member_count per rumpun; label no-case "Rumpun A"=
+     "rumpun a"; null rumpun = "Tanpa rumpun" paling bawah). Baca
+     saja (semua peran; tak ada op POST). + kartu UI tab Rekap 6
+     kol (Rumpun|Anggota|Pokok|Wajib|Sukarela|Total) + baris TOTAL;
+     glosarium group "Koperasi & SHU". + test R6 (16 asersi;
+     test-coop kini 132/0). 3 commit C1 feat + C2 docs/mirror +
+     C3 record (dual-push master+main SETELAH setiapa commit;
+     hash: git log W4.6). W4.5b (op jasa + op tunai) LEPAS
+     (`e7bba07` + `88824a7`).
+   - NEXT: **W5 penguatan** (PINJ-1 pinjaman anggota -- tashih
+     qardh/murabahah, akun COA baru, sumber dana).
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.

@@ -1,6 +1,52 @@
 # MEMORY
 
 ## 2026-10-07
+### W4.6 LEPAS -- rekap per rumpun: agregasi server GET /api/koperasi + kartu UI tab Rekap + test R6a-R6g (7 Okt 2026)
+- **3 commit (kontrak STEP 2, bukan 1)** + dual-push master+main
+  SETELAH SETIAP commit (verify ls-remote + rev-list 0 0):
+  - C1 `feat(W4.6)`: `route.ts` + `koperasi-client.tsx` +
+    `test-coop.ts`.
+  - C2 `docs(W4.6)`: glossary (group "Koperasi & SHU") + 4 SOP/DOK
+    source + 4 mirror public/tutorial (SYNC-TUTORIAL-OK).
+  - C3 `docs(W4.6)`: MEMORY.md + TODO.md (record ini).
+  Hash C1/C2/C3 diisi di git log (pasca-commit).
+- (a) **route.ts**: GET /api/koperasi return `rekap_rumpun:
+  RekapRumpunRow[]` = { rumpun, member_count, pokok, wajib, sukarela,
+  total } (6 field; OQ4/OQ6 -- rincian per jenis simpanan, bukan
+  cuma total). Agregasi DILAKUKAN DI SERVER (satu sumber: balances
+  per anggota dari `coopRekapBalances`; OQ2/OQ4 no-case: "Rumpun A"
+  = "rumpun a"). Rincian pokok/wajib/sukarela + total DIKUMPULKAN
+  per rumpun (accumulate per-kind, bukan cuma total). Anggota tanpa
+  rumpun = baris `rumpun:null` = label "Tanpa rumpun", DIURUTKAN
+  PALING BAWAH. Baca saja (semua peran; TIDAK ada op POST).
+- (b) **koperasi-client.tsx**: kartu "Rekap per Rumpun" di tab
+  Rekap (antara "Rekap Akun" & "Jurnal Closing"); + tipe
+  `RumpunRow` (6 field) + `rekap_rumpun` di `CoopData` + TIPS.
+  KARTU 6 KOL: Rumpun | Jumlah Anggota | Pokok | Wajib | Sukarela |
+  Total (Rp) + baris TOTAL (<tfoot>) menjumlah semua rumpun (OQ5).
+  Glosarium "Rekap per Rumpun" group = "Koperasi & SHU" (fitur
+  koperasi, bukan akad).
+- (c) **test-coop.ts R6** (db6 terisolasi; 4 anggota m1-m4 =
+  "Rumpun A", "rumpun a", "Rumpun B", null; simpanan m1 10000
+  pokok+5000 sukarela, m2 3000 wajib+2000 sukarela, m3 8000 pokok,
+  m4 1000 sukarela; grand total 29000): 16 asersi -- R6a-R6e (3
+  baris, member_count, tanpa rumpun, urutan), R6f1-f3 (SUM
+  member_count=4; SUM per-jenis 18000/3000/8000; SUM total 29000),
+  R6g (merge no-case + label "Rumpun A"), R6h-R6n (rincian
+  pokok/wajib/sukarela per rumpun). test-coop kini 132/0.
+- **Gate**: `tsc --noEmit` exit 0; `test:all` 24/24 exit 0;
+  `node scripts/test-coop.ts` 132 passed / 0 failed; `gate`
+  (check:routes) OK; 0 non-ASCII di file kode; `public/sw.js` +
+  V1 `laporan-admin-client.tsx` + engine `src/lib/coop.ts` TIDAK
+  tersentuh.
+- **Pemeriksaan ulang sesi ini (P3 rulings dicatat)**:
+  P3-1 `test:all` = **24** suite (regex sederhana undercount 21 --
+  nama ber-hyphen tak match `test-[a-z0-9]+`); P3-2 DDL test-shu
+  divergen vs engine; P3-3 asymmetry per_member (ops tulis admin/
+  manajer, read semua); P3-4 fallback PowerShell exec-policy ->
+  jalankan `node node_modules/tsx/dist/cli.mjs` (bukan npx);
+  P3-5 hapus ~25 file `_audit_*.txt` + `tmp_*.txt` pra-commit
+  (untracked, tak ikut `git add` eksplisit).
 ### W4.5b LEPAS -- jasa per-anggota 3050 > 2070 + pencairan tunai/transfer 3060 > 1010/1020 (7 Okt 2026)
 - **Commit C1 `e7bba07`** (full
   `e7bba07e6078d006cfd125cb6838ba5d7e7a568a`;
