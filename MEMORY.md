@@ -1,6 +1,58 @@
 # MEMORY
 
 ## 2026-10-07
+### W4.5a LEPAS -- modal anggota 3010 + jurnal closing 3020 (7 Okt 2026)
+- **Commit `42cf80c`** (full `42cf80c497eaf867866ddd7ddc0d2ed8d8ee9a1f`;
+  7 file +1023/-3 = 4 M + 3 A; dual-push master+main; ACC Gus Fi
+  via DeepSeek -- audit independen PASSED, 0 must-fix):
+  (a) **`src/lib/coop-modal.ts` (BARU, 114 baris)**: op `modal` =
+  modal anggota (akun 3010; OQ9: BUKAN simpanan -- tak masuk
+  2050/2060/2070, tak bisa ditarik, TIDAK di-refund saat keluar).
+  SATU jurnal D1010 -> K3010 hanya saat GL aktif (GL off = tercatat
+  saja, pola D1; entryId null). ref_id = 'coop#<member>:md#<savedAt>
+  @<amt>#<uuid>' (uuid = DeepSeek NOTE 1, anti-kolisi event
+  detik-satu); pre-check event duplikat -> COOP_MODAL_DUPLICATE
+  (409); entry_date = saved_at. Validasi amount -> 400 'coop:'.
+  (b) **`src/lib/coop-closing.ts` (BARU, 166 baris)**: op `closing`
+  (Sek.3.2.6): nol-kan net P&L KUMULATIF all-time (self-healing,
+  F-flag2) subset akun 4010/4020/4030 + 5010/5020/5030/5040 --
+  4040 (PKGF wakaf) & 4090 (ZIS) DIKECUALIKAN (OQ1/F-flag1) -- ke
+  3020 SHU Ditahan; laba = K3020, rugi = D3020 (3020 boleh
+  negatif, OQ2); legs net-0 di-skip (OQ9); 1 closing/periode ->
+  CLOSING_PERIOD_EXISTS (409), re-post = no-op idempoten, koreksi =
+  jurnal pembalik manual (F-flag3, v1); CLOSING_NO_ACTIVITY (400)
+  saat semua net = 0 (DeepSeek NOTE 2 -- bukan jurnal kosong);
+  entry_date = hari terakhir periode (leap-aware, uji 2024-02-29);
+  closing = ADMIN-ONLY (OQ7-B; Manajer 403) + GL off -> 400 gl_off
+  (compute saja). Engine `src/lib/coop.ts` TIDAK disentuh
+  (ruling W4.5; logika baru di 2 lib terpisah).
+  (c) Route `/api/koperasi`: +2 op (modal, closing) + guard
+  admin-only closing; UI `/admin/koperasi`: form "Modal Anggota"
+  (tab Simpanan) + kartu "Closing Periode" (tab Rekap, admin-only);
+  glosarium +2 istilah (Modal, Jurnal Closing);
+  `scripts/test-coop5a.ts` (419 baris; M1-M4 + C1-C10 = 56/0,
+  termasuk idempoten C6 & leap C9) + test:all (22 suite) exit 0 +
+  tsc clean + gate GATE=0 + non-ASCII scan bersih. 2 bug tes
+  ditemukan & diperbaiki sebelum commit (asersi M4b, urutan
+  capture spec C6 sebelum post -- self-healing menonolkan nets).
+- **Commit `96c6fb1`** (full
+  `96c6fb13bcc0139576d665336fe629fe5a1d37f6`; 8 file +32/-16,
+  docs-only; dual-push master+main): backfill tutorial W4.5a ke
+  4 docs peran -- SOP-ADMIN (+h3 Modal 3010 + h3 Jurnal Closing
+  3020 + catatan auto-jurnal "+ catat modal"); SOP-MANAJER
+  (modal = write tersedia; closing = khusus Admin, form
+  tidak ada); SOP-PENGURUS (read-only; rekap tampil 3010/3020 +
+  baris closing); DOKUMENTASI-APLIKASI (tabel ops 6 -> 8 + 2 baris
+  modal/closing + note akses (closing 403 utk Manajer) + glosarium
+  2 istilah + mekanisme W4.5a) + 4 mirror public/tutorial
+  (byte-identik, SYNC-TUTORIAL-OK 9 file, 0 script tag).
+- **Gate lulus**: `public/sw.js` UNCHANGED; engine
+  `src/lib/coop.ts` UNCHANGED; V1 `laporan-admin-client.tsx`
+  UNCHANGED.
+- NEXT = **W4.5b** (jasa per anggota rata-rata (Q5; konservatif,
+  BUKAN bunga) + pencairan tunai/transfer SHU (akun 5080)).
+  W4.6 = rekap per rumpun.
+
 ### W4.4b LEPAS -- backfill tutorial W4.3 Koperasi (setor/tarik/keluar) ke 4 SOP peran + DOKUMENTASI (7 Okt 2026)
 - **Commit `cde17ac`** (full `cde17ac80294543d24ea1d83db554c567ad5ece5`;
   8 file +52/-4 = 8 M, docs-only; dual-push master+main; ACC Gus Fi

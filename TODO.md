@@ -1903,9 +1903,32 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
            KELUAR terminal + refund pokok D2050 -> K1010; wajib/sukarela
            tidak dikembalikan; error 400/409; form SHU tersembunyi utk
            pengurus. commit `cde17ac`; detail: MEMORY.md seksi 2026-10-07.
-   - NEXT: **W4.5** (modal akun 3010 + closing journal Sek.3.2.6
-          + jasa per anggota rata-rata (Q5) + tunai 5080; rekon
-          #16 ke W5.2). W4.6 = rekap per rumpun. Setelah
+    - [x] **W4.5a LEPAS** (7 Okt): modal anggota (akun 3010) + jurnal
+           closing periode (Sek.3.2.6) -- 2 file lib baru
+           `src/lib/coop-modal.ts` (114) + `src/lib/coop-closing.ts`
+           (166), engine `src/lib/coop.ts` TIDAK disentuh; op koperasi
+           kini 8. Modal = D1010 -> K3010 (GL off = tercatat saja),
+           BUKAN simpanan (OQ9: tak masuk 2050/2060/2070, tak bisa
+           ditarik, tak di-refund saat keluar); ref_id uuid
+           anti-kolisi event detik-satu; duplikat ->
+           COOP_MODAL_DUPLICATE (409).
+           nol-kan net P&L kumulatif all-time (self-healing) subset
+           4010/4020/4030 + 5010/5020/5030/5040 (4040/4090 dikecualikan,
+           OQ1) ke 3020; laba = K3020, rugi = D3020 (3020 boleh negatif,
+           OQ2); 1 closing/periode -> 409; CLOSING_NO_ACTIVITY -> 400;
+           entry_date = akhir periode; closing = admin-only (OQ7-B).
+           UI: form "Modal Anggota" (tab Simpanan) + kartu "Closing
+           Periode" (tab Rekap); glosarium +2 istilah; test:coop5a
+           (56/0) + test:all (22 suite) exit 0 + tsc clean + gate
+           GATE=0. commit `42cf80c` (feat) + `96c6fb1` (docs); detail:
+           MEMORY.md seksi 2026-10-07.
+
+   - NEXT: **W4.5b** (jasa per anggota rata-rata (Q5; porsi 3050;
+          konservatif -- BUKAN bunga) + pencairan tunai/transfer
+          SHU (akun 5080); rekon #16 ke W5.2). W4.5a (modal 3010 +
+          jurnal closing 3020) sudah LEPAS (`42cf80c` + `96c6fb1`);
+          detail: MEMORY.md seksi 2026-10-07. W4.6 = rekap per rumpun.
+          Setelah
           W4 habis = **W5 penguatan** (PINJ-1 pinjaman anggota
           -- tashih qardh/murabahah, akun COA baru, sumber dana).
 
