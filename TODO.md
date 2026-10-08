@@ -1963,10 +1963,32 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       `MENU_ITEMS` punya `icon`; system lock 16px/viewBox 24/
       stroke-2/currentColor/aria-hidden; no sub-menu; group +
       render tak berubah; gate tsc 0 + test:all 24/24 + gate
-      (next build 59/59) + 0 non-ASCII; next = W5.3a B1+B2).
+      (next build 59/59) + 0 non-ASCII; next = W5.3a B1+B2
+       (SELESAI, entri di bawah)).
+     - [x] **W5.3a LEPAS 8 Okt -- B1 period-picker URL + B2 zis
+       inflight guard** (commit `1961a4f`, 5 file +209/-34,
+       dual-push master+main): B1 = 5 panel formal (posisi/lka/
+       lpe/lak/calk) berbagi hook `useAsOfPeriod()` -- URL state
+       `?periode=` (valid `YYYY-MM-DD` dipakai, selain itu
+       fallback todayWibStr; ganti tanggal = router.replace tanpa
+       reload; kunci API tetap `?as_of=`; panel V1 lazy TIDAK
+       ikut). B2 = guard sinkron `createInFlightGuard()`
+       (`src/lib/inflight.ts` BARU) di zis-client -- klik ganda
+       selagi POST in-flight dibuang; `release()` di finally;
+       form logic byte-identik. `test:inflight` = suite ke-25
+       (test:all chain exit 0, 25/25). Gate: tsc 0 + test:all
+       25/25 + gate build 0 + 0 non-ASCII; sw.js / coop.ts /
+       file V1 tak tersentuh. Rulings GO: guard = PRIMITIF
+       TIDAK BER-TIMER (jendela proteksi = selagi POST in-flight;
+       pemanggilan berurutan pasca-release dibolehkan) +
+       module-level singleton aman (ZisClient single-mount).
+       Detail: MEMORY.md seksi "W5.3a Eksekusi".
 
-   - NEXT: **W5 penguatan** (PINJ-1 pinjaman anggota -- tashih
-     qardh/murabahah, akun COA baru, sumber dana).
+   - NEXT: **W5.3b** (OQ13: flip COA `6030` pending -> open +
+     OQ14: rekon #16 `GL_CASH`), lalu **W5.4** (OFF-1 P2/P3).
+   - NEXT: **W5.1 PINJ-1 (pinjaman anggota) -- TUNDA,
+     tashih-gated** (qardh/murabahah, akun COA baru, sumber
+     dana; mulai HANYA setelah ruling Gus Fi).
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.

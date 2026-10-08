@@ -56,9 +56,11 @@
   `.bat` (`cmd /c`) + marker `.txt` (`.gate_build_done.txt`) +
   poll via READ-FILE (bukan run_commands, agar tidak membunuh
   tree). Insert editor >6000 char dipotong jadi 3 chunk.
-- **NEXT: W5.3a (kode) = B1 + B2** (W5 penguatan):
-  B1 `pilihPeriode()` mengabaikan `?periode=`; B2 zis-client
-  double-POST. (Ruling 4 Okt, dicatat di TODO.md.)
+- **W5.3a (kode B1+B2) = SELESAI 8 Okt** (commit C1 `1961a4f` +
+  C2 record, hash di git log pasca-commit; detail = seksi W5.3a
+  di bawah).
+- **NEXT: W5.3b** (OQ13: flip `6030` pending -> open + OQ14:
+  rekon #16 `GL_CASH`).
 
 ## 2026-10-07
 ### W4.6 LEPAS -- rekap per rumpun: agregasi server GET /api/koperasi + kartu UI tab Rekap + test R6a-R6g (7 Okt 2026)
@@ -4374,3 +4376,42 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
 - Lesson: migrasi harus bump SCHEMA_VERSION (jiran v16) -- tanpa
   bump, DB existing skip fullInit dan kolom tak pernah dibuat.
 - Turso snapshot manual SEBELUM deploy v25 (lesson v16).
+
+## W5.3a Eksekusi (8 Okt 2026, GO Gus Fi via DeepSeek: C1 kode + C2 docs)
+
+- **C1 `1961a4f` (5 file, +209/-34, dual-push master+main):**
+  - **B1** `laporan-formal-client.tsx`: hook `useAsOfPeriod()` --
+    state URL `?periode=` (lazy init: valid `YYYY-MM-DD` dipakai,
+    selain itu fallback `todayWibStr()`); ganti tanggal = state
+    lokal + `router.replace('/admin/laporan?periode=...')` (tanpa
+    reload; halaman force-dynamic -> `useSearchParams` aman tanpa
+    Suspense boundary). 5 panel formal (posisi/lka/lpe/lak/calk)
+    `useState(todayWibStr)` -> `useAsOfPeriod()` (drop-in); kunci
+    API tetap `?as_of=`; input date panel tak berubah. V1 (lazy)
+    + page.tsx TIDAK disentuh.
+  - **B2** `zis-client.tsx`: inflight guard modul-level
+    (`createInFlightGuard()` dari `src/lib/inflight.ts` BARU) --
+    `tryStart()` di awal `submit()`, `release()` di `finally`;
+    klik ganda selagi POST in-flight dibuang. 12 guard pre-existing
+    + form logic byte-identik (hanya re-indent dalam try).
+  - `scripts/test-inflight.ts` BARU (suite ke-25 `test:all`;
+    test:inflight standalone di package.json).
+- **Gate bersih**: tsc exit 0; test:all 25/25 chain exit 0; gate
+  (check-route-exports + next build) exit 0; 0 non-ASCII 5 file;
+  `public/sw.js` + `coop.ts` + file V1 tak tersentuh; HEAD pre =
+  `ca8d9b3`; rev-list master...main = 0 0 pasca-push.
+- **Rulings/decision point (GO audit)**: (1) inflight guard =
+  PRIMITIF TIDAK BER-TIMER; jendela proteksi = selagi POST in
+  flight (setelah `finally` release, pemanggilan berurutan DILIHAT
+  = perilaku benar -- di-cover test); (2) guard module-level
+  singleton = aman (ZisClient single-mount); (3) Suspense
+  fallback TIDAK diperlukan (build tanpa fallback OK);
+  (4) `todayWibStr` di-CALL (function, bukan reference) +
+  narrowing `p !== null` utk strict-TS.
+- **Note proses**: terminal flaky (shell-integration tak bisa
+  capture) -> seluruh langkah via `.bat` detached (VBS, path
+  ter-quote karena spasi) + marker file + verifikasi via
+  READ-FILE.
+- **NEXT: W5.3b** (OQ13: flip COA `6030` pending -> open + OQ14:
+  rekon #16 `GL_CASH`), lalu W5.4 (OFF-1 P2/P3). W5.1 PINJ-1
+  tetap tashih-gated.
