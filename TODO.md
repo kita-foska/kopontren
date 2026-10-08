@@ -1984,8 +1984,23 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
        module-level singleton aman (ZisClient single-mount).
        Detail: MEMORY.md seksi "W5.3a Eksekusi".
 
-   - NEXT: **W5.3b** (OQ13: flip COA `6030` pending -> open +
-     OQ14: rekon #16 `GL_CASH`), lalu **W5.4** (OFF-1 P2/P3).
+   - [x] **W5.3b LEPAS 10 Okt -- OQ13 flip COA `6030` pending ->
+     open (skema v25 -> v26) + OQ14 rekon #16 `GL_CASH`**:
+     C1 skema `src/db.ts` (seed 6030 open/0 + `UPDATE ... '6030'`
+     eksplisit di upgrade path + SCHEMA_VERSION 25 -> 26;
+     migrasi 26 murni additif; test-zis/test-gl/test-akad/
+     test-coop counts disinkron: open 29/pending 22 (zis/gl),
+     38/13 (akad), 44/7 (coop)); C2 kode `rekonsiliasi.ts`
+     (cek #16 `GL_CASH` gated `settings.gl_enabled`: neto kas
+     COA 1010/1020/1100 vs neto `cash_entries` + segregasi 1100
+     anti-campur dgn 1010/1020; `GL_TZ` renumber #17;
+     `rekonsiliasi-client.tsx` COLS `GL_CASH`;
+     test-rekonsiliasi 17 cek + `settings` table + 4 fixture
+     gl on/off; DATA-INVARIANTS GL-3). Gate: tsc 0 + test:all
+     25/25 (ALL_EXIT=0) + gate build (GATE_EXIT=0) +
+     0 non-ASCII (perubahan). Detail: MEMORY.md seksi
+     "W5.3b Eksekusi".
+   - NEXT: **W5.4** (OFF-1 P2/P3).
    - NEXT: **W5.1 PINJ-1 (pinjaman anggota) -- TUNDA,
      tashih-gated** (qardh/murabahah, akun COA baru, sumber
      dana; mulai HANYA setelah ruling Gus Fi).

@@ -4415,3 +4415,55 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
 - **NEXT: W5.3b** (OQ13: flip COA `6030` pending -> open + OQ14:
   rekon #16 `GL_CASH`), lalu W5.4 (OFF-1 P2/P3). W5.1 PINJ-1
   tetap tashih-gated.
+
+## W5.3b Eksekusi (10 Okt 2026)
+
+- **OQ13 (skema v25 -> v26, `src/db.ts`):** flip COA `6030`
+  "Zakat Tijarah Dibayar" `pending/1` -> `open/0` -- jembatan
+  zakat P3 resmi dipakai alur P5. Upgrade path = `UPDATE`
+  eksplisit (migrate26) setelah seed `ON CONFLICT DO NOTHING`
+  (tak menimpa baris v25; fresh install = no-op). 7 akun
+  pending lainnya tak berubah. SCHEMA_VERSION 25 -> 26
+  (purely additive; DB stempel lama menjalankan ulang fullInit;
+  backup Turso WAJIB sebelum deploy).
+- **OQ14 (rekon #16 `GL_CASH`, `src/lib/rekonsiliasi.ts`):**
+  cek ke-16 di-insert di antara `JOURNAL_BAL` (#15) & `GL_TZ`
+  (renumber #17; gap penomoran lama "milik W5.2" tertutup).
+  Gated `settings.gl_enabled`: '0' (default) = status `ok` +
+  skip note; saat on: (a) neto kas GL (SUM debit-credit
+  journal_lines akun 1010/1020/1100, tanpa saldo awal) harus =
+  neto `cash_entries` (income - expense); (b) segregasi 1100:
+  satu entry jurnal TIDAK BOLEH mem-post 1100 (Kas ZIS)
+  berpasangan dgn 1010/1020 (kas usaha) -- anti-campur
+  (mitigasi R9, flag-only). Detail drift = selisih numerik +
+  top-20 entry mencampur; format id-ID (selaras konvensi file).
+- **Test counts (mirror seed, 4 suite):** test-zis M1
+  open 29/pending 22/nd 22 + assert 6030 flip; test-gl
+  open 29/pending 22/nd 22 + 6030 = open; test-akad
+  open 38/pending 13/nd 13 + ctrl 6030 open/0 (M1 & M2);
+  test-coop M1 open 44/pending 7/nd 7 + M2 baseline 38/13 +
+  pasca FLIP6 44/7/7.
+- **test-rekonsiliasi:** 16 -> 17 cek; `settings` table
+  (key/value) ditambahkan ke SCHEMA; Fase 1 + Fase 2 assert
+  GL_CASH ok + skip note (db utama gl-off; korup = 16 cek
+  drift, bukan 17); Fase 5 BARU: 4 fixture gl on/off
+  (selaras 110.000=110.000 / kas mismatch selisih -10.000
+  baris agregat expected/recorded 110000/120000 / segregasi
+  1100 -> baris entry je-g3 / gl-off tetap ok + skip note).
+  BUG yang ketemu: `CASE WHEN ... THEN x, 0` tanpa `END`
+  (syntax error `near ","` di node:sqlite) -- fix `ELSE 0 END`.
+- **Client/docs:** `rekonsiliasi-client.tsx` COLS `GL_CASH`
+  (id/ref_table/ref_id/expected/recorded/selisih --expected/
+  recorded/selisih sudah masuk MONEY) + label "17 kartu cek";
+  `DATA-INVARIANTS.md` baris GL-3 + paragraf defer-W5.2
+  diganti "delivered W5.3b".
+- **Gate bersih:** tsc exit 0; test:all 25/25 chain
+  ALL_EXIT=0 (0 HAS_FAILURE); gate (check-route-exports +
+  next build) GATE_EXIT=0; perubahan baris = ASCII (test
+  file pre-existing non-ASCII tak disentuh gaya baris baru
+  kecuali pemisah "─" fase yang mengikuti gaya file itu).
+- **Note proses:** terminal echo flaky + kill-on-foreground
+  -> test:all & gate dijalankan detached via
+  `_w53b_runall.vbs` (wscript, window 0) + marker
+  `_w53b_all.done` / `_w53b_gate.done` + verifikasi READ-FILE.
+- **NEXT: W5.4** (OFF-1 P2/P3). W5.1 PINJ-1 tetap tashih-gated.
