@@ -42,7 +42,8 @@ const STAMP_DDL =
   'CREATE TABLE IF NOT EXISTS schema_version(id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER NOT NULL)';
 
 // Seed COA v23 (mirror coaSeed src/db.ts skema v23: 52 akun;
-// open=37 / pending=14 / closed=1; flip W2.7 + W3.1 sudah 'open').
+// open=38 / pending=13 / closed=1; flip W2.7 + W3.1 sudah 'open';
+// 6030 open sejak flip W5.3b v26).
 type CoaRow = [string, string, string, string, string, number];
 const COA_V23: CoaRow[] = [
   ['1010', 'Kas Toko', '10xx', 'aset', 'open', 0],
@@ -96,7 +97,7 @@ const COA_V23: CoaRow[] = [
   ['5100', 'Infak/Sedekah Keluar', '50xx', 'beban', 'open', 0],
   ['6010', 'Dana Pesantren (memo)', '60xx', 'syariah', 'pending', 1],
   ['6020', 'Aset Wakaf (memo)', '60xx', 'syariah', 'open', 0],
-  ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'pending', 1],
+  ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'open', 0], // W5.3b (v26): flip open (OQ-13)
 ];
 // Seed COA v24 = v23 + 6 flip W4.1 (open/0). Diturunkan (bukan
 // disalin) agar konsisten persis dengan coaSeed src/db.ts.
@@ -236,12 +237,12 @@ async function main(): Promise<void> {
       'M1: idx_coop_savings ada',
       (db1.prepare('PRAGMA index_list(coop_savings)').all() as Array<{ name: string }>).some((x) => x.name === 'idx_coop_savings')
     );
-    // 6 flip + kontrol (state akhir fresh v24 = open43/pending8/nd8).
+    // 6 flip + kontrol (state akhir fresh v24 = open44/pending7/nd7; flip 6030 v26).
     eq('M1: coa COUNT = 52', cnt0(db1, 'SELECT COUNT(*) c FROM coa'), 52);
-    eq('M1: coa open = 43 (37 v23 + 6 flip)', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 43);
-    eq('M1: coa pending = 8 (14 - 6 flip)', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='pending'"), 8);
+    eq('M1: coa open = 44 (38 v23 + 6 flip)', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 44);
+    eq('M1: coa pending = 7 (13 - 6 flip)', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='pending'"), 7);
     eq('M1: coa closed = 1', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='closed'"), 1);
-    eq('M1: coa needs_decision=1 = 8', cnt0(db1, 'SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 8);
+    eq('M1: coa needs_decision=1 = 7', cnt0(db1, 'SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 7);
     for (const code of FLIP6) {
       const r = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
       ok('M1: coa ' + code + ' flip open/0', r.s === 'open' && r.n === 0, 'status=' + r.s + ' nd=' + r.n);
@@ -253,7 +254,7 @@ async function main(): Promise<void> {
     ctrl('2080', 'pending', 1); // ruling Q6: SHU Berjalan tak dipakai alur Sek.7
     ctrl('1060', 'pending', 1);
     ctrl('5050', 'closed', 0);
-    ctrl('6030', 'pending', 1);
+    ctrl('6030', 'open', 0); // flip W5.3b (OQ-13)
     ctrl('4040', 'open', 0); // flip v22
     ctrl('1070', 'open', 0); // flip v23
     ctrl('2050', 'open', 0);
@@ -264,7 +265,7 @@ async function main(): Promise<void> {
     db1.exec(DDL_COOP_MEM);
     db1.exec(FLIP6_SQL);
     eq('M1: re-run DDL/flip idempoten (coop_members tetap 2)', cnt0(db1, 'SELECT COUNT(*) c FROM coop_members'), 2);
-    eq('M1: re-run flip open tetap 43', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 43);
+    eq('M1: re-run flip open tetap 44', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 44);
     // Stamp v24.
     db1.exec(STAMP_DDL);
     db1.exec('INSERT INTO schema_version(id, version) VALUES (1, 24) ON CONFLICT(id) DO UPDATE SET version = excluded.version');
@@ -278,8 +279,8 @@ async function main(): Promise<void> {
     db2.exec(DDL_COA);
     const insCoa = db2.prepare(INSERT_COA);
     for (const r of COA_V23) insCoa.run(r[0], r[1], r[2], r[3], r[4], r[5]);
-    eq('M2: awal (v23) coa open = 37', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 37);
-    eq('M2: awal (v23) coa pending = 14', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='pending'"), 14);
+    eq('M2: awal (baseline v26) coa open = 38', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 38);
+    eq('M2: awal (baseline v26) coa pending = 13', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='pending'"), 13);
     // DB v23: tabel coop BELUM ada -> CREATE IF NOT EXISTS = path upgrade.
     db2.exec(DDL_COOP_MEM);
     db2.exec(DDL_COOP_SV);
@@ -290,14 +291,14 @@ async function main(): Promise<void> {
       (db2.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'coop_%'").all() as Array<{ name: string }>).length === 3
     );
     db2.exec(FLIP6_SQL);
-    eq('M2: pasca FLIP6 coa open = 43', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 43);
-    eq('M2: pasca FLIP6 coa pending = 8', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='pending'"), 8);
-    eq('M2: pasca FLIP6 coa nd = 8', cnt0(db2, 'SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 8);
+    eq('M2: pasca FLIP6 coa open = 44', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 44);
+    eq('M2: pasca FLIP6 coa pending = 7', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='pending'"), 7);
+    eq('M2: pasca FLIP6 coa nd = 7', cnt0(db2, 'SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 7);
     const r2080 = db2.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get('2080') as { s: string; n: number };
     ok('M2: coa 2080 TIDAK ter-flip (Q6)', r2080.s === 'pending' && r2080.n === 1, 'status=' + r2080.s + ' nd=' + r2080.n);
     // FLIP6 ulangan = no-op; baris lama (1070 flip v23) tak tersentuh.
     db2.exec(FLIP6_SQL);
-    eq('M2: FLIP6 ulang tetap open 43 (idempoten)', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 43);
+    eq('M2: FLIP6 ulang tetap open 44 (idempoten)', cnt0(db2, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 44);
     const r1070 = db2.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get('1070') as { s: string; n: number };
     ok('M2: coa 1070 (flip v23) tetap open/0', r1070.s === 'open' && r1070.n === 0);
     db2.close();

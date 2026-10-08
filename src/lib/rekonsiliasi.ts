@@ -21,11 +21,13 @@
  *    'Kon. …'/'Ujrah Kon. …') bisa sah-saja memicu flag: modul ini
  *    MELAPORKAN, tidak memutuskan.
  *
- * 16 cek: SALES_PAY, SALES_MONEY, SPLIT, SHIFT, RETURN, STOCK, DEBTS,
+ * 17 cek: SALES_PAY, SALES_MONEY, SPLIT, SHIFT, RETURN, STOCK, DEBTS,
  * PAYABLES, POINTS, CASHBACK, KONSIN, KONSIN_UJRAH, KONSIN_PAY,
- * RETURN_COGS (V2-2), JOURNAL_BAL (GL rekon #15), GL_TZ (GL rekon #17).
- * Cek #16 (GL_CASH) sengaja tidak ada: milik W5.2 (kas COA 10xx vs
- * cash_entries) - gap penomoran disengaja.
+ * RETURN_COGS (V2-2), JOURNAL_BAL (GL rekon #15), GL_CASH (GL rekon
+ * #16, W5.3b), GL_TZ (GL rekon #17). GL_CASH gated
+ * settings.gl_enabled: bila '0' cek 'ok' + skip note (tak ada data GL
+ * utk dibanding); saat on: neto kas COA (1010/1020/1100) vs neto
+ * cash_entries + segregasi 1100 (anti-campur dgn 1010/1020).
  */
 
 import type { QueryDb } from './keuangan.ts';
@@ -47,6 +49,7 @@ export type RekCheckId =
   | 'KONSIN_PAY'
   | 'RETURN_COGS'
   | 'JOURNAL_BAL'
+  | 'GL_CASH'
   | 'GL_TZ';
 
 export type RekCheck = {
@@ -79,6 +82,7 @@ export const REKONSILIASI_NOTES: string[] = [
   '/api/neraca V1 off-balance (konsinyasi) kini membaca consignments (outstanding payable opsi a: agree_price * qty_sold - amount_paid, settled_at IS NULL) sebagai OFF-BALANCE memo; BUKAN GL 2020 (laporan GL formal terpisah), tidak double-count. (Sebelumnya tabel legacy consignment_items yang sudah dihapus).',
   'COGS retur (V2-2): baris retur dgn snapshot HPP item > 0 (sale_items.cost_price) harus cogs = HPP item × qty retur; baris snapshot 0 (fallback harga beli produk saat write) tak dapat diverifikasi ulang, dikecualikan; baris pre-V2-2 cogs = 0 (konservatif).',
   'Jurnal GL (F3.4+, rekon #15 JOURNAL_BAL): tiap journal_entries harus total debit = total credit (double-entry D=K); jurnal_lines yatim (tanpa entry induk) ikut flagged; cross-check global total debit - total credit seluruh jurnal_lines harus 0.',
+  'Kas GL vs kas V1 (rekon #16 GL_CASH, W5.3b): hanya dievaluasi bila settings.gl_enabled=1 - neto kas COA (Sigma debit-credit akun 1010/1020/1100) harus = neto cash_entries (income - expense); satu entry jurnal TIDAK BOLEH mem-post 1100 (Kas ZIS) berpasangan dgn 1010/1020 (kas usaha; segregasi anti-campur). gl off (default) -> cek status ok + skip note.',
   'Zona waktu jurnal (F3.4+, rekon #17 GL_TZ): semua journal_entries.entry_date berakhiran +07:00 (satu zona waktu, mitigasi R1); tanggal UTC/Z atau offset lain adalah drift.',
 ];
 
@@ -605,7 +609,85 @@ export async function queryRekonsiliasi(d: QueryDb): Promise<RekPayload> {
     );
   }
 
-  // ==== 16. GL_TZ: satu zona waktu +07:00 (GL rekon #17) ============
+  // ==== 16. GL_CASH: kas COA vs kas V1 + segregasi 1100 (GL rekon #16) =
+  // (W5.3b; mitigasi R9: selisih kas V1 vs GL = bug posting, flag-only).
+  // Gated settings.gl_enabled: bila '0' (default) tak ada data GL ->
+  // status 'ok' + skip note. Saat on: (a) neto kas GL =
+  // SUM(debit) - SUM(credit) baris journal_lines akun 1010/1020/1100
+  // harus = neto cash_entries (income - expense); (b) segregasi 1100:
+  // satu entry jurnal TIDAK BOLEH mem-post 1100 berpasangan dgn
+  // 1010/1020 (anti-campur kas ZIS vs kas usaha).
+  {
+    const glRow = (await d
+      .prepare("SELECT value v FROM settings WHERE key = 'gl_enabled'")
+      .get()) as { v: string } | undefined;
+    if (glRow?.v !== '1') {
+      checks.push(
+        chk(
+          'GL_CASH',
+          'Kas GL vs kas V1 + segregasi 1100 (rekon #16)',
+          0,
+          'GL dinonaktifkan (settings.gl_enabled off) - cek di-skip; aktifkan gl_enabled utk mengaktifkan rekon #16',
+          []
+        )
+      );
+    } else {
+      const seg = await num(
+        d,
+        `SELECT COUNT(*) c FROM journal_entries e
+         WHERE EXISTS (SELECT 1 FROM journal_lines l WHERE l.entry_id = e.id AND l.account_code = '1100')
+           AND EXISTS (SELECT 1 FROM journal_lines l2 WHERE l2.entry_id = e.id AND l2.account_code IN ('1010', '1020'))`
+      );
+      const v1 = await num(
+        d,
+        `SELECT COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0)
+               - COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) c
+         FROM cash_entries`
+      );
+      const gl = await num(
+        d,
+        `SELECT COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) c
+         FROM journal_lines WHERE account_code IN ('1010', '1020', '1100')`
+      );
+      const mismatch = v1 === gl ? 0 : 1;
+      const drift = seg + mismatch;
+      const selisih = v1 - gl;
+      checks.push(
+        chk(
+          'GL_CASH',
+          'Kas GL vs kas V1 + segregasi 1100 (rekon #16)',
+          drift,
+          drift
+            ? [
+                selisih !== 0
+                  ? `kas GL ${gl.toLocaleString('id-ID')} vs kas V1 ${v1.toLocaleString('id-ID')} (selisih ${selisih.toLocaleString('id-ID')})`
+                  : '',
+                seg > 0 ? `${seg} entry mencampur 1100 dgn 1010/1020` : '',
+              ]
+                .filter(Boolean)
+                .join('; ')
+            : `kas GL ${gl.toLocaleString('id-ID')} = kas V1 ${v1.toLocaleString('id-ID')}; 0 entry mencampur 1100`,
+          drift
+            ? [
+                ...(seg > 0
+                  ? await topRows(
+                      d,
+                      `SELECT e.id, e.ref_table, e.ref_id, e.entry_date
+                       FROM journal_entries e
+                       WHERE EXISTS (SELECT 1 FROM journal_lines l WHERE l.entry_id = e.id AND l.account_code = '1100')
+                         AND EXISTS (SELECT 1 FROM journal_lines l2 WHERE l2.entry_id = e.id AND l2.account_code IN ('1010', '1020'))
+                       ORDER BY e.id DESC LIMIT ${TOP}`
+                    )
+                  : []),
+                ...(mismatch > 0 ? [{ expected: v1, recorded: gl, selisih }] : []),
+              ]
+            : []
+        )
+      );
+    }
+  }
+
+  // ==== 17. GL_TZ: satu zona waktu +07:00 (GL rekon #17) ============
   // Mitigasi R1 (F3.4+): semua entry_date jurnal GL berakhiran +07:00
   // (WIB). Munculnya tanggal UTC (akhiran 'Z') atau offset lain
   // menandakan bug timezone di auto-posting - drift.

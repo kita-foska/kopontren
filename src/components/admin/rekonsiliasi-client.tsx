@@ -127,6 +127,14 @@ const COLS: Record<string, { k: string; t: string }[]> = {
     { k: 'credit', t: 'Credit' },
     { k: 'selisih', t: 'Selisih' },
   ],
+  GL_CASH: [
+    { k: 'id', t: 'ID entry' },
+    { k: 'ref_table', t: 'Ref' },
+    { k: 'ref_id', t: 'Ref #' },
+    { k: 'expected', t: 'Kas V1 (neto)' },
+    { k: 'recorded', t: 'Kas GL (neto)' },
+    { k: 'selisih', t: 'Selisih' },
+  ],
   GL_TZ: [
     { k: 'id', t: 'ID entry' },
     { k: 'ref_table', t: 'Ref' },
@@ -224,7 +232,7 @@ export function RekonsiliasiClient() {
         </Button>
       </div>
 
-      {/* 16 kartu cek (drift di-ring merah + tabel detail baris) */}
+      {/* 17 kartu cek (drift di-ring merah + tabel detail baris) */}
       {data.checks?.map((c) => {
         const cols = COLS[c.id] ?? [];
         const bad = c.status === 'drift';

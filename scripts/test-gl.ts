@@ -3,10 +3,10 @@
  * Node langsung (type-stripping, Node >= 23.6/v24): npm run test:gl.
  * Harness in-memory (node:sqlite), pola sama dgn scripts/test-neraca.ts.
  * Cakupan W1.1 (Phase 1, skema+seed): (1) DDL coa/journal_entries/
- * journal_lines + 2 index; (2) seed 52: COUNT=52, open=28/pending=23/
- * closed=1, needs_decision=1 total 23, 5050 closed, ON CONFLICT
- * idempoten. (W2.7 v22: flip 2090/5090/4040 pending -> open; 6030
- * tetap pending W5.1 -- jumlah diperbarui di sini, mirror seed db.ts.)
+ * journal_lines + 2 index; (2) seed 52: COUNT=52, open=29/pending=22/
+ * closed=1, needs_decision=1 total 22, 5050 closed, ON CONFLICT
+ * idempoten. (W2.7 v22: flip 2090/5090/4040 pending -> open;
+ * W5.3b v26: flip 6030 pending -> open -- jumlah mirror seed db.ts.)
  * (3) jurnal UNIQUE(ref_table,ref_id,type) + composite PK.
  * (settings gl_enabled/coop_registered default '0' diverifikasi tsc+diff,
  *  bukan di harness ini agar tetap import-free / strip-only safe.)
@@ -121,7 +121,7 @@ const COA: Array<[string, string, string, string, string, number]> = [
   // 60xx syariah/PAP
   ['6010', 'Dana Pesantren (memo)', '60xx', 'syariah', 'pending', 1],
   ['6020', 'Aset Wakaf (memo)', '60xx', 'syariah', 'open', 0],
-  ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'pending', 1],
+  ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'open', 0], // W5.3b (v26): flip open (OQ-13)
 ];
 
 async function main(): Promise<void> {
@@ -146,17 +146,17 @@ async function main(): Promise<void> {
   for (const r of COA) insCoa.run(r[0], r[1], r[2], r[3], r[4], r[5]);
   eq('coa COUNT(*) = 52', cnt('SELECT COUNT(*) c FROM coa'), 52);
   eq('coa DISTINCT code = 52', cnt('SELECT COUNT(DISTINCT code) c FROM coa'), 52);
-  eq('coa status open = 28', cnt("SELECT COUNT(*) c FROM coa WHERE status='open'"), 28);
-  eq('coa status pending = 23', cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'"), 23);
+  eq('coa status open = 29', cnt("SELECT COUNT(*) c FROM coa WHERE status='open'"), 29);
+  eq('coa status pending = 22', cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'"), 22);
   eq('coa status closed = 1', cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'"), 1);
-  eq('coa needs_decision=1 = 23', cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 23);
+  eq('coa needs_decision=1 = 22', cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 22);
   eq('coa 5050 = closed', (db!.prepare("SELECT status FROM coa WHERE code='5050'").get() as { status: string }).status, 'closed');
-  // W2.7: flip 2090/5090/4040 -> open; 6030 tetap pending (W5.1).
+  // W2.7: flip 2090/5090/4040 -> open; 6030 = open (flip W5.3b v26).
   for (const code of ['2090', '5090', '4040']) {
     const st = (db!.prepare('SELECT status, needs_decision FROM coa WHERE code=?').get(code) as { status: string; needs_decision: number });
     ok(`coa ${code} open/nd=0 (flip W2.7)`, st.status === 'open' && st.needs_decision === 0);
   }
-  eq('coa 6030 = pending (W5.1)', (db!.prepare("SELECT status FROM coa WHERE code='6030'").get() as { status: string }).status, 'pending');
+  eq('coa 6030 = open (flip W5.3b)', (db!.prepare("SELECT status FROM coa WHERE code='6030'").get() as { status: string }).status, 'open');
 
   // 3. constraint jurnal (fungsional).
   const TZ = '2026-10-01T00:00:00.000+07:00';

@@ -4,7 +4,8 @@
  * Node langsung (type-stripping, Node >= 23.6/v24): npm run test:zis.
  * In-memory node:sqlite, DDL mirror src/db.ts (v22). Cakupan:
  *  - M1 (fresh install): seed v22 -> 3 akun flip 'open'; jumlah
- *    open=28/pending=23/closed=1, needs_decision=23, COUNT=52.
+ *    open=29/pending=22/closed=1, needs_decision=22, COUNT=52
+ *    (6030 flip open W5.3b/v26).
  *  - M2 (upgrade v21->v22): state coa v21 (3 akun pending) + seed v22
  *    (DO NOTHING, baris lama tak ter-impa) + UPDATE flip -> 3 akun
  *    open; 6030/5050 & lainnya tidak berubah (idempoten).
@@ -109,7 +110,7 @@ const COA_V22: CoaRow[] = [
   ['5100', 'Infak/Sedekah Keluar', '50xx', 'beban', 'open', 0],
   ['6010', 'Dana Pesantren (memo)', '60xx', 'syariah', 'pending', 1],
   ['6020', 'Aset Wakaf (memo)', '60xx', 'syariah', 'open', 0],
-  ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'pending', 1],
+  ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'open', 0], // W5.3b (v26): flip open (OQ-13)
 ];
 
 /** Adapter node:sqlite -> TxDb (permukaan async jurnal.ts). */
@@ -149,16 +150,16 @@ async function main(): Promise<void> {
   // UPDATE flip (mirror seed() src/db.ts; fresh install = no-op).
   db1.exec(`UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('2090', '5090', '4040')`);
   eq('M1: coa COUNT(*) = 52', cnt('SELECT COUNT(*) c FROM coa', db1), 52);
-  eq("M1: coa status open = 28", cnt("SELECT COUNT(*) c FROM coa WHERE status='open'", db1), 28);
-  eq("M1: coa status pending = 23", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db1), 23);
+  eq("M1: coa status open = 29", cnt("SELECT COUNT(*) c FROM coa WHERE status='open'", db1), 29);
+  eq("M1: coa status pending = 22", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db1), 22);
   eq("M1: coa status closed = 1", cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'", db1), 1);
-  eq("M1: coa needs_decision=1 = 23", cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1', db1), 23);
+  eq("M1: coa needs_decision=1 = 22", cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1', db1), 22);
   for (const code of ['2090', '5090', '4040']) {
     const r = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
     ok(`M1: coa ${code} flip open/0`, r.s === 'open' && r.n === 0, `status=${r.s} nd=${r.n}`);
   }
   const r6030 = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=\'6030\'').get() as { s: string; n: number };
-  ok('M1: coa 6030 tetap pending/1 (jembatan P3, W5.1)', r6030.s === 'pending' && r6030.n === 1);
+  ok('M1: coa 6030 flip open/0 (W5.3b, OQ-13)', r6030.s === 'open' && r6030.n === 0);
   eq("M1: coa 5050 tetap closed", String((db1.prepare('SELECT status s FROM coa WHERE code=\'5050\'').get() as { s: string }).s), 'closed');
   db1.close();
 

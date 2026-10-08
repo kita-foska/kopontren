@@ -15,9 +15,9 @@
  * In-memory node:sqlite, DDL mirror src/db.ts (v23 + journal W1.1).
  * Cakupan M1/M2: kolom akad/akad_events persis Sek.6.1 (PRAGMA
  * table_info, per kolom); UNIQUE(type, counterparty, opened_at,
- * amount); idx_akad_opened + idx_akad_events; coa open=37/pending=14/
- * closed=1, nd=14, COUNT=52; 9 flip open; kontrol 6030/5050/1060/
- * 2080 & flip v22 tak berubah; stamp 22->23.
+ * amount); idx_akad_opened + idx_akad_events; coa open=38/pending=13/
+ * closed=1, nd=13, COUNT=52; 9 flip open + 6030 flip open (W5.3b);
+ * kontrol 5050/1060/2080 & flip v22 tak berubah; stamp 22->23.
  */
 
 import {
@@ -103,8 +103,9 @@ function lineVal(
   return r ? Number(r.v) : 0;
 }
 
-// Seed COA v22 (mirror COA_V22 test-zis.ts: 52 akun; 28 open /
-// 23 pending / 1 closed; flip W2.7 2090/5090/4040 sudah 'open').
+// Seed COA v22 (mirror COA_V22 test-zis.ts: 52 akun; 29 open /
+// 22 pending / 1 closed; flip W2.7 2090/5090/4040 + W5.3b 6030
+// sudah 'open').
 type CoaRow = [string, string, string, string, string, number];
 const COA_V22: CoaRow[] = [
   ['1010', 'Kas Toko', '10xx', 'aset', 'open', 0],
@@ -158,7 +159,7 @@ const COA_V22: CoaRow[] = [
   ['5100', 'Infak/Sedekah Keluar', '50xx', 'beban', 'open', 0],
   ['6010', 'Dana Pesantren (memo)', '60xx', 'syariah', 'pending', 1],
   ['6020', 'Aset Wakaf (memo)', '60xx', 'syariah', 'open', 0],
-  ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'pending', 1],
+  ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'open', 0], // W5.3b (v26): flip open (OQ-13)
 ];
 // Seed COA v23 = v22 + 9 flip W3.1 (open/0). Diturunkan (bukan
 // disalin) agar konsisten persis dengan coaSeed src/db.ts.
@@ -217,10 +218,10 @@ async function main(): Promise<void> {
     eq('M1: akad = 2 baris (duplikat tertolak, tanggal beda boleh)', cnt('SELECT COUNT(*) c FROM akad', db1), 2);
     // 9 flip + kontrol.
     eq('M1: coa COUNT = 52', cnt('SELECT COUNT(*) c FROM coa', db1), 52);
-    eq("M1: coa open = 37 (28 v22 + 9 flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='open'", db1), 37);
-    eq("M1: coa pending = 14 (23 - 9 flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db1), 14);
+    eq("M1: coa open = 38 (29 v22 + 9 flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='open'", db1), 38);
+    eq("M1: coa pending = 13 (22 - 9 flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db1), 13);
     eq("M1: coa closed = 1", cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'", db1), 1);
-    eq('M1: coa needs_decision=1 = 14', cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1', db1), 14);
+    eq('M1: coa needs_decision=1 = 13', cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1', db1), 13);
     for (const code of FLIP9) {
       const r = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
       ok(`M1: coa ${code} flip open/0`, r.s === 'open' && r.n === 0, `status=${r.s} nd=${r.n}`);
@@ -229,7 +230,7 @@ async function main(): Promise<void> {
       const r = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
       ok(`M1: coa ${code} tetap ${status}${nd == null ? '' : '/nd=' + nd} (di luar flip)`, r.s === status && (nd == null || r.n === nd));
     };
-    ctrl('6030', 'pending', 1); // jembatan zakat P3 (W5.1)
+    ctrl('6030', 'open', 0); // flip W5.3b (OQ-13)
     ctrl('5050', 'closed', 0);
     ctrl('1060', 'pending', 1);
     ctrl('2080', 'pending', 1);
@@ -263,13 +264,13 @@ async function main(): Promise<void> {
       const r = db2.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
       ok(`M2: coa ${code} upgrade -> open/0`, r.s === 'open' && r.n === 0, `status=${r.s} nd=${r.n}`);
     }
-    eq("M2: coa open = 37 (setelah flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='open'", db2), 37);
-    eq("M2: coa pending = 14 (setelah flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db2), 14);
+    eq("M2: coa open = 38 (setelah flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='open'", db2), 38);
+    eq("M2: coa pending = 13 (setelah flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db2), 13);
     const ctrl2 = (code: string, status: string): void => {
       const r = db2.prepare('SELECT status s FROM coa WHERE code=?').get(code) as { s: string };
       ok(`M2: coa ${code} tetap ${status} (di luar flip)`, r.s === status, `status=${r.s}`);
     };
-    ctrl2('6030', 'pending');
+    ctrl2('6030', 'open'); // flip W5.3b
     ctrl2('5050', 'closed');
     ctrl2('1060', 'pending');
     ctrl2('2080', 'pending');

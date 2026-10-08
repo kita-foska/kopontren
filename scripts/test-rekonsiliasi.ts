@@ -1,5 +1,5 @@
 /**
- * P0-C3 - test 16 cek rekonsiliasi (modul src/lib/rekonsiliasi.ts, flag-only).
+ * P0-C3 - test 17 cek rekonsiliasi (modul src/lib/rekonsiliasi.ts, flag-only).
  *
  * Dijalankan LANGSUNG oleh Node (type-stripping, Node >= 23.6 / v24):
  *     npm run test:rekon     (== node scripts/test-rekonsiliasi.ts)
@@ -8,11 +8,13 @@
  * scripts/test-neraca.ts.
  *
  * Alur:
- *   1. Seed sehat (selaras dgn guard tulis app) - SEMUA 16 cek 'ok',
+ *   1. Seed sehat (selaras dgn guard tulis app) - SEMUA 17 cek 'ok',
  *      clean=true, drift_total=0.
  *   2. Korup (edits manual/DB) - cek target drift dgn jumlah persis;
  *      drift_total=19, clean=false.
  *   3. DB kosong → semua cek 'ok' (nol), clean=true.
+ *   4. GL_CASH (rekon #16, W5.3b): 4 fixture gl on/off
+ *      (selaras / kas mismatch / segregasi 1100 / gl off di-skip).
  */
 import { queryRekonsiliasi, REKONSILIASI_NOTES, type RekCheck, type RekPayload } from '../src/lib/rekonsiliasi.ts';
 import type { QueryDb } from '../src/lib/keuangan.ts';
@@ -37,7 +39,7 @@ function find(p: RekPayload, id: string): RekCheck {
   return c;
 }
 
-/** Skema minimal: hanya kolom yang dibaca 16 cek. */
+/** Skema minimal: hanya kolom yang dibaca 17 cek. */
 const SCHEMA = `
 CREATE TABLE sales (
   id INTEGER PRIMARY KEY,
@@ -140,10 +142,14 @@ CREATE TABLE journal_lines (
   debit INTEGER NOT NULL DEFAULT 0,
   credit INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT ''
+);
 `;
 
 /**
- * Seed sehat: setiap baris selaras dgn guard tulis app - 16 cek 'ok'.
+ * Seed sehat: setiap baris selaras dgn guard tulis app - 17 cek 'ok'.
  *  - Shif 1 (kasir 1, [06:00,09:00)): 2 sales (100.000 + 50.000), kas
  *    120.000 (sales tunai 100.000 + porsi split 20.000).
  *  - Konsinyasi: ujrah tercatat = 8.000 + 10.000 (rate 20%, floor/unit);
@@ -233,15 +239,16 @@ async function main(): Promise<void> {
   db.exec(SCHEMA);
   db.exec(SEED);
 
-  // ===== Fase 1: DB sehat - SEMUA 16 cek 'ok' ========================
+  // ===== Fase 1: DB sehat - SEMUA 17 cek 'ok' ========================
   const p1 = await queryRekonsiliasi(makeShim(db));
-  eq('sehat: 16 cek', p1.checks.length, 16);
+  eq('sehat: 17 cek', p1.checks.length, 17);
   eq(
     'sehat: JOURNAL_BAL selaras',
     find(p1, 'JOURNAL_BAL').detail,
     '2 entry jurnal seimbang (D=K); 0 baris yatim; selisih global 0'
   );
   eq('sehat: GL_TZ selaras', find(p1, 'GL_TZ').detail, 'semua entry jurnal +07:00 (satu zona waktu)');
+  ok('sehat: GL_CASH ok + skip note (gl off)', find(p1, 'GL_CASH').status === 'ok' && String(find(p1, 'GL_CASH').detail).includes('di-skip'), find(p1, 'GL_CASH').detail);
   eq('sehat: RETURN_COGS selaras', find(p1, 'RETURN_COGS').detail, 'semua cogs retur selaras dgn snapshot HPP item (V2-2)');
   eq('sehat: drift_total = 0', p1.drift_total, 0);
   eq('sehat: clean = true', p1.clean, true);
@@ -283,13 +290,14 @@ async function main(): Promise<void> {
   eq('JOURNAL_BAL selisih 10.000', Number(find(p2, 'JOURNAL_BAL').rows[0].selisih), 10000);
   eq('GL_TZ = 1 (1 entry UTC/Z)', find(p2, 'GL_TZ').drift_count, 1);
   eq('GL_TZ baris memuat tanggal Z', String(find(p2, 'GL_TZ').rows[0].entry_date), '2026-09-28T03:30:00.000Z');
-  ok('korup: SETIAP cek drift memuat baris detail', p2.checks.every((c) => c.status === 'drift' && c.rows.length > 0));
+  ok('korup: SETIAP cek drift memuat baris detail (16; GL_CASH gl-off)', p2.checks.filter((c) => c.status === 'drift').length === 16 && p2.checks.filter((c) => c.status === 'drift').every((c) => c.rows.length > 0));
+  eq('korup: GL_CASH tetap ok + skip note (gl off)', find(p2, 'GL_CASH').status, 'ok');
 
   // ── Fase 3: DB kosong (skema saja) → semua nol, clean ─────────────
   const dbEmpty = new (await import('node:sqlite')).DatabaseSync(':memory:');
   dbEmpty.exec(SCHEMA);
   const p3 = await queryRekonsiliasi(makeShim(dbEmpty));
-  eq('kosong: 16 cek', p3.checks.length, 16);
+  eq('kosong: 17 cek', p3.checks.length, 17);
   eq('kosong: clean = true', p3.clean, true);
   eq('kosong: drift_total = 0', p3.drift_total, 0);
   ok('kosong: semua cek ok + baris kosong', p3.checks.every((c) => c.status === 'ok' && c.rows.length === 0));
@@ -298,6 +306,70 @@ async function main(): Promise<void> {
   ok('NOTES ≥ 5 baris', REKONSILIASI_NOTES.length >= 5, 'panjang ' + REKONSILIASI_NOTES.length);
   ok('NOTES menyebut flag-only', REKONSILIASI_NOTES.some((n) => n.toLowerCase().includes('flag-only')));
   ok('NOTES menyebut split', REKONSILIASI_NOTES.some((n) => n.toLowerCase().includes('split')));
+
+  // ── Fase 5: GL_CASH (rekon #16, W5.3b) - 4 fixture gl on/off ──────
+  // Basis: kas V1 neto = 150.000 (income) - 40.000 (expense) = 110.000;
+  // GL neto kas = D1010 150.000 - K1020 40.000 = 110.000 (selaras).
+  const GLBASE = `
+INSERT INTO cash_entries (type, label, amount) VALUES
+  ('income', 'Kas masuk', 150000),
+  ('expense', 'Kas keluar', 40000);
+INSERT INTO journal_entries (id, ref_table, ref_id, entry_date, type) VALUES
+  ('je-g1', 'sales', '1', '2026-09-27T07:00:00+07:00', 'normal'),
+  ('je-g2', 'payables', '1', '2026-09-27T08:00:00+07:00', 'normal');
+INSERT INTO journal_lines (entry_id, account_code, debit, credit) VALUES
+  ('je-g1', '1010', 150000, 0),
+  ('je-g1', '4010', 0, 150000),
+  ('je-g2', '2010', 40000, 0),
+  ('je-g2', '1020', 0, 40000);
+`;
+  {
+    const db5 = new (await import('node:sqlite')).DatabaseSync(':memory:');
+    db5.exec(SCHEMA);
+    db5.exec("INSERT INTO settings (key, value) VALUES ('gl_enabled', '1');");
+    db5.exec(GLBASE);
+    const p5 = await queryRekonsiliasi(makeShim(db5));
+    eq('gl-on: GL_CASH selaras', find(p5, 'GL_CASH').detail, 'kas GL 110.000 = kas V1 110.000; 0 entry mencampur 1100');
+  }
+  {
+    const db6 = new (await import('node:sqlite')).DatabaseSync(':memory:');
+    db6.exec(SCHEMA);
+    db6.exec("INSERT INTO settings (key, value) VALUES ('gl_enabled', '1');");
+    db6.exec(GLBASE);
+    db6.exec("UPDATE journal_lines SET credit = 30000 WHERE entry_id = 'je-g2' AND account_code = '1020';");
+    const p6 = await queryRekonsiliasi(makeShim(db6));
+    eq('gl-on: GL_CASH drift (kas mismatch)', find(p6, 'GL_CASH').drift_count, 1);
+    eq('gl-on: selisih = -10000', Number(find(p6, 'GL_CASH').rows[0].selisih), -10000);
+    eq(
+      'gl-on: baris agregat expected/recorded',
+      Number(find(p6, 'GL_CASH').rows[0].expected) + '/' + Number(find(p6, 'GL_CASH').rows[0].recorded),
+      '110000/120000'
+    );
+  }
+  {
+    const db7 = new (await import('node:sqlite')).DatabaseSync(':memory:');
+    db7.exec(SCHEMA);
+    db7.exec("INSERT INTO settings (key, value) VALUES ('gl_enabled', '1');");
+    db7.exec(GLBASE);
+    db7.exec(
+      "INSERT INTO journal_entries (id, ref_table, ref_id, entry_date, type) VALUES ('je-g3', 'cash_entries', '9', '2026-09-27T09:00:00+07:00', 'normal');"
+    );
+    db7.exec(
+      "INSERT INTO journal_lines (entry_id, account_code, debit, credit) VALUES ('je-g3', '1100', 50000, 0), ('je-g3', '1010', 0, 50000);"
+    );
+    const p7 = await queryRekonsiliasi(makeShim(db7));
+    eq('gl-on: GL_CASH drift (segregasi 1100)', find(p7, 'GL_CASH').drift_count, 1);
+    eq('gl-on: baris = entry je-g3', String(find(p7, 'GL_CASH').rows[0].id), 'je-g3');
+  }
+  {
+    const db8 = new (await import('node:sqlite')).DatabaseSync(':memory:');
+    db8.exec(SCHEMA);
+    db8.exec(GLBASE);
+    db8.exec("UPDATE journal_lines SET credit = 30000 WHERE entry_id = 'je-g2' AND account_code = '1020';");
+    const p8 = await queryRekonsiliasi(makeShim(db8));
+    eq('gl-off: GL_CASH tetap ok', find(p8, 'GL_CASH').status, 'ok');
+    ok('gl-off: skip note disebut', String(find(p8, 'GL_CASH').detail).includes('di-skip'), find(p8, 'GL_CASH').detail);
+  }
 
   console.log('---');
   console.log('PASS: ' + passes + '  FAIL: ' + failures);
