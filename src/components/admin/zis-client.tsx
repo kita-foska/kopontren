@@ -12,6 +12,7 @@ import { api, Badge, Button, Empty, Table, Td, Th, TermTip, Trow, Toast, useToas
 import { fetchTimeout } from '@/lib/fetch-util';
 import { fmtDateTime, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
+import { createInFlightGuard } from '@/lib/inflight';
 
 type ZisRow = {
   id: string;
@@ -75,6 +76,10 @@ function statusBadge(r: ZisRow, glOn: boolean) {
   return <Badge tone="red">Tanpa jurnal</Badge>;
 }
 
+/** W5.3a (B2): inflight guard modul -- cegah double-POST /api/zis
+ *  bila tombol "Simpan" diklik ganda; disable-busy UI tetap jalan. */
+const zisInFlight = createInFlightGuard();
+
 export function ZisClient() {
   const [data, setData] = useState<ZisData | null>(null);
   const [busy, setBusy] = useState(false);
@@ -126,40 +131,48 @@ export function ZisClient() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    // W5.3a B2: inflight guard sinkron -- selagi POST berjalan,
+    // klik berikutnya dibuang (re-arm lewat release di finally).
+    if (!zisInFlight.tryStart()) return;
     const amt = Number(amount);
     if (!Number.isFinite(amt) || amt <= 0) {
+      zisInFlight.release();
       showToast('Jumlah harus rupiah integer > 0');
       return;
     }
     setBusy(true);
-    const body: Record<string, unknown> = { kind, direction, amount: amt };
-    if (payer.trim()) body.payer = payer.trim();
-    // tanggal input (WIB) -> ISO tengah-malam WIB hari tsb (entry_date GL).
-    if (occurred) body.occurred_at = occurred + 'T00:00:00.000+07:00';
-    const r = await api<{ ok?: boolean; posted?: string | null; error?: string }>('/api/zis', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
-    if (r.ok) {
-      const label =
-        (KIND_LABELS[kind] ?? kind) +
-        ' ' +
-        (direction === 'in' ? 'masuk' : 'keluar') +
-        ' tercatat' +
-        (r.data?.posted
-          ? ' - jurnal ' + String(r.data.posted).slice(0, 8) + '...'
-          : data && !data.gl_enabled
-            ? ' - GL off (tanpa jurnal)'
-            : '');
-      showToast(label);
-      setAmount('');
-      setPayer('');
-      setOccurred('');
-      await load();
-    } else {
-      showToast(r.error || 'Gagal mencatat ZIS', 'error');
+    try {
+      const body: Record<string, unknown> = { kind, direction, amount: amt };
+      if (payer.trim()) body.payer = payer.trim();
+      // tanggal input (WIB) -> ISO tengah-malam WIB hari tsb (entry_date GL).
+      if (occurred) body.occurred_at = occurred + 'T00:00:00.000+07:00';
+      const r = await api<{ ok?: boolean; posted?: string | null; error?: string }>('/api/zis', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      if (r.ok) {
+        const label =
+          (KIND_LABELS[kind] ?? kind) +
+          ' ' +
+          (direction === 'in' ? 'masuk' : 'keluar') +
+          ' tercatat' +
+          (r.data?.posted
+            ? ' - jurnal ' + String(r.data.posted).slice(0, 8) + '...'
+            : data && !data.gl_enabled
+              ? ' - GL off (tanpa jurnal)'
+              : '');
+        showToast(label);
+        setAmount('');
+        setPayer('');
+        setOccurred('');
+        await load();
+      } else {
+        showToast(r.error || 'Gagal mencatat ZIS', 'error');
+      }
+    } finally {
+      zisInFlight.release();
+      setBusy(false);
     }
-    setBusy(false);
   }
 
   const d = data;

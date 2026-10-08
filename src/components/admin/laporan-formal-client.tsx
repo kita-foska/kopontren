@@ -3,12 +3,16 @@
 /**
  * W2.2 -- UI admin Laporan Formal: tab shell + panel Posisi (Neraca)
  * + lazy-load Laporan V1 (laba/rugi simplifikasi). Baca via
- * GET /api/laporan/formal (tier 'laporan'). Gaya meniru gl-client.tsx:
+ * GET /api/laporan/formal (tier 'laporan'). W5.3a B1: 5 panel formal
+ * berbagi period picker -- URL state ?periode= (hook useAsOfPeriod),
+ * kunci API tetap ?as_of=. V1 (lazy) tidak ikut.
+ * Gaya meniru gl-client.tsx:
  * container pakai class 'card' (ui.tsx TIDAK punya komponen Card),
  * PageSkeleton tanpa prop, ErrorState text/tech, Badge tone, Button.
  */
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { api, Badge, Button, ErrorState, PageSkeleton, Td, Table, TermTip, Th, Trow } from '@/components/ui';
 import { rp, todayWibStr } from '@/lib/format';
 import type { PosisiPayload } from '@/lib/laporan/posisi';
@@ -145,9 +149,34 @@ export function LaporanFormalClient() {
   );
 }
 
+/**
+ * W5.3a (B1) -- period picker 5 panel formal.
+ * Baca-on-mount: ?periode= valid YYYY-MM-DD -> dipakai; tak valid /
+ * tidak ada -> fallback hari ini (WIB). Ganti (setAsOf): state lokal
+ * + router.replace ?periode= (tanpa reload; halaman /admin/laporan
+ * force-dynamic jadi useSearchParams aman tanpa Suspense boundary).
+ * Kunci API tetap ?as_of= (GET /api/laporan/formal).
+ */
+function useAsOfPeriod() {
+  const sp = useSearchParams();
+  const router = useRouter();
+  const [asOf, setAsOfState] = useState(() => {
+    const p = sp.get('periode');
+    return p !== null && /^\d{4}-\d{2}-\d{2}$/.test(p) ? p : todayWibStr();
+  });
+  const setAsOf = useCallback(
+    (v: string) => {
+      setAsOfState(v);
+      void router.replace('/admin/laporan?periode=' + v);
+    },
+    [router],
+  );
+  return [asOf, setAsOf] as const;
+}
+
 /** Panel W2.2: pilih as_of, muat GET /api/laporan/formal, render neraca. */
 function PositionPanel() {
-  const [asOf, setAsOf] = useState(todayWibStr);
+  const [asOf, setAsOf] = useAsOfPeriod();
   const [data, setData] = useState<FormalResp | null>(null);
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(true);
@@ -370,7 +399,7 @@ function PosisiStatement({ p }: { p: FormalResp }) {
 
 /** W2.3 -- panel Laba-Rugi: pilih as_of, muat ?report=lka, render P&L Sek.5.2. */
 function LkaPanel() {
-  const [asOf, setAsOf] = useState(todayWibStr);
+  const [asOf, setAsOf] = useAsOfPeriod();
   const [data, setData] = useState<LkaResp | null>(null);
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(true);
@@ -545,7 +574,7 @@ function LkaStatement({ p }: { p: LkaResp }) {
 
 /** W2.4 -- panel Perubahan Ekuitas: pilih as_of, muat ?report=lpe, render LPE Sek.5.3. */
 function LpePanel() {
-  const [asOf, setAsOf] = useState(todayWibStr);
+  const [asOf, setAsOf] = useAsOfPeriod();
   const [data, setData] = useState<LpeResp | null>(null);
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(true);
@@ -728,7 +757,7 @@ function LpeStatement({ p }: { p: LpeResp }) {
 
 /** W2.5 -- panel Arus Kas: pilih as_of, muat ?report=lak, render LAK Sek.5.4. */
 function LakPanel() {
-  const [asOf, setAsOf] = useState(todayWibStr);
+  const [asOf, setAsOf] = useAsOfPeriod();
   const [data, setData] = useState<LakResp | null>(null);
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(true);
@@ -1035,7 +1064,7 @@ function CalkPeristiwa({ asOf }: { asOf: string }) {
 /** Panel W2.6: CALK template Sek.5.5 -- as_of + item 1-3 kebijakan +
  *  item 4-8 dari GL + item 9 input manual. Baca GET /api/laporan/formal?report=calk. */
 function CalkPanel() {
-  const [asOf, setAsOf] = useState(todayWibStr);
+  const [asOf, setAsOf] = useAsOfPeriod();
   const [data, setData] = useState<CalkResp | null>(null);
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(true);
