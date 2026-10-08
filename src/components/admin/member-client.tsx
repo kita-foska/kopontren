@@ -64,6 +64,10 @@ export function MemberClient() {
   const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
   const [loadingMore, setLoadingMore] = useState(false);
+  // W5.4 (OFF-1 P2): galat eksplisit saat load awal gagal (offline /
+  // "Kesalahan jaringan.") -- sebelumnya daftar kosong tampil diam-diam
+  // ("data hilang diam-diam"); kini state error + tombol "Coba lagi".
+  const [loadErr, setLoadErr] = useState('');
   // Guard busy: cegah double-submit saat request dalam perjalanan.
   const [busy, setBusy] = useState(false);
   const [scrollTop, setScrollTop] = useState(0);
@@ -107,6 +111,12 @@ export function MemberClient() {
       lastLimitRef.current = limit;
       hasMoreRef.current =
         limit === 50 && (r.data.members?.length || 0) >= limit && (r.data.total || 0) > 0;
+      setLoadErr('');
+    } else if (!append) {
+      // W5.4: load awal gagal -> tampilkan state error (bukan daftar kosong
+      // tanpa informasi). "Muat lebih banyak" (append) tetap silent,
+      // sesuai pola lama -- daftar yang sudah termuat tetap ada.
+      setLoadErr(r.error || 'Gagal memuat daftar member.');
     }
   }
 
@@ -120,6 +130,21 @@ export function MemberClient() {
   useEffect(() => {
     load(qDeb);
   }, [qDeb, load]);
+
+  // W5.4 (OFF-1 P2): auto-reload view yang terbuka (termasuk pencarian
+  // aktif) saat internet pulih. Ref load + qDeb agar listener cukup
+  // terdaftar sekali (pola loadRef lokal, sama dengan POS & laporan).
+  const loadRef = useRef(load);
+  loadRef.current = load;
+  const qDebRef = useRef('');
+  qDebRef.current = qDeb;
+  useEffect(() => {
+    const onOn = () => {
+      void loadRef.current(qDebRef.current);
+    };
+    window.addEventListener('online', onOn);
+    return () => window.removeEventListener('online', onOn);
+  }, []);
 
   async function loadMore() {
     if (loadingMore || qDeb.trim() || !hasMoreRef.current) return;
@@ -387,18 +412,30 @@ export function MemberClient() {
                 <Td colSpan={6} />
               </Trow>
             )}
-            {members.length === 0 && (
-              <TEmpty colSpan={6}>
-                <Empty
-                  compact
-                  icon={<Users className="h-6 w-6" />}
-                  text={qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
-                  {...(!qDeb
-                    ? { ctaLabel: 'Tambah member', ctaOnClick: () => openEdit() }
-                    : {})}
-                />
-              </TEmpty>
-            )}
+            {members.length === 0 &&
+              (loadErr ? (
+                // W5.4: load awal gagal -- ganti "Belum ada member" yang
+                // menyesatkan dengan pesan galat + retry eksplisit.
+                <TEmpty colSpan={6}>
+                  <div role="alert" className="px-4 py-6 text-center">
+                    <p className="text-sm font-semibold text-red-600 dark:text-red-400">{loadErr}</p>
+                    <Button variant="ghost" size="sm" className="mt-2" onClick={() => load(qDeb)}>
+                      Coba lagi
+                    </Button>
+                  </div>
+                </TEmpty>
+              ) : (
+                <TEmpty colSpan={6}>
+                  <Empty
+                    compact
+                    icon={<Users className="h-6 w-6" />}
+                    text={qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
+                    {...(!qDeb
+                      ? { ctaLabel: 'Tambah member', ctaOnClick: () => openEdit() }
+                      : {})}
+                  />
+                </TEmpty>
+              ))}
           </tbody>
         </Table>
         </div>
@@ -443,15 +480,24 @@ export function MemberClient() {
             </div>
           ))}
           {padBottom > 0 && <div aria-hidden="true" style={{ height: padBottom }} />}
-          {members.length === 0 && (
-            <Empty
-              compact
-              text={qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
-              {...(!qDeb
-                ? { ctaLabel: 'Tambah member', ctaOnClick: () => openEdit() }
-                : {})}
-            />
-          )}
+          {members.length === 0 &&
+            (loadErr ? (
+              // W5.4: versi mobile dari state galat load awal (mirror tabel).
+              <div role="alert" className="p-4 text-center">
+                <p className="text-sm font-semibold text-red-600 dark:text-red-400">{loadErr}</p>
+                <Button variant="ghost" size="sm" className="mt-2" onClick={() => load(qDeb)}>
+                  Coba lagi
+                </Button>
+              </div>
+            ) : (
+              <Empty
+                compact
+                text={qDeb ? 'Tidak ada member yang cocok.' : 'Belum ada member terdaftar.'}
+                {...(!qDeb
+                  ? { ctaLabel: 'Tambah member', ctaOnClick: () => openEdit() }
+                  : {})}
+              />
+            ))}
         </div>
         </div>
         {!qDeb.trim() && hasMoreRef.current && (

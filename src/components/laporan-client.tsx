@@ -92,6 +92,19 @@ export function LaporanClient({
     load();
   }, [load]);
 
+  // W5.4 (OFF-1 P2): auto-refresh saat internet pulih -- reload periode &
+  // filter status yang sedang aktif (read-only; apiRetry tahan cold start).
+  // Ref load agar listener cukup terdaftar sekali.
+  const loadRef = useRef(load);
+  loadRef.current = load;
+  useEffect(() => {
+    const onOn = () => {
+      void loadRef.current();
+    };
+    window.addEventListener('online', onOn);
+    return () => window.removeEventListener('online', onOn);
+  }, []);
+
   // UX-7E: simpan preferensi periode (debounce 300ms) ke saved view.
   useEffect(() => {
     if (scope === 'today') return;

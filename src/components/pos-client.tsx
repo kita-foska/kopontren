@@ -412,7 +412,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [memberSettings, setMemberSettings] = useState<Record<string, string> | null>(null);
   const memberSettingsRef = useRef<Record<string, string> | null>(null);
   memberSettingsRef.current = memberSettings;
-  useEffect(() => {
+  const loadSettings = useCallback(() => {
     api<{ settings: Record<string, string> }>('/api/member-settings').then((r) => {
       if (r.ok && r.data?.settings) {
         setMemberSettings(r.data.settings);
@@ -437,6 +437,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       }
     });
   }, []);
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
   const pointsEvery = Math.max(1000, Math.floor(Number(memberSettings?.points_every) || 10000));
   const numSetting = (k: string) => {
     const v = Math.floor(Number(memberSettings?.[k]));
@@ -869,6 +872,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         void load();
       });
       void loadMembers();
+      // W5.4 (OFF-1 P2, gap F3): refresh settings member saat reconnect --
+      // bila admin mengubah pengaturan (poin/cashback/grosir/ultah) saat
+      // perangkat offline, preview POS tak lagi basi. Aman paralel dengan
+      // flushQueue (flush hanya POST /api/sales; ini GET read-only).
+      void loadSettings();
     };
     const onOff = () => setIsOnline(false);
     window.addEventListener('online', onOn);
