@@ -175,6 +175,444 @@ const IconGlosarium = (
   </svg>
 );
 
+/**
+ * Plan A (8 Okt, ruling Gus Fi via DeepSeek, Q1=A / Q2=C): SEMUA item nav
+ * dapat ikon inline SVG -- 25 baru (di bawah) + 6 lama = 31/31.
+ * System LOCK: render 16px (width/height "16"), viewBox 24, stroke-2,
+ * currentColor, aria-hidden="true"; tanpa emoji/unicode/ikon-font;
+ * geometry gaya Lucide (baca jelas di 16px). No sub-menu (Q2=C):
+ * group + render TIDAK berubah.
+ */
+const IconGauge = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M5 19a9 9 0 1 1 14 0" />
+    <path d="M12 13l3.5-3.5" />
+    <circle cx="12" cy="13" r="1.5" />
+  </svg>
+);
+const IconChart = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M5 20v-5" />
+    <path d="M12 20V7" />
+    <path d="M19 20v-8" />
+  </svg>
+);
+const IconGlobe = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18" />
+    <path d="M12 3a14.5 14.5 0 0 1 0 18a14.5 14.5 0 0 1 0-18" />
+  </svg>
+);
+const IconCart = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="9" cy="20" r="1.5" />
+    <circle cx="18" cy="20" r="1.5" />
+    <path d="M2 3h3l2.5 12.5h11l2-8.5H6.6" />
+  </svg>
+);
+const IconFileChart = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M6 2h9l5 5v15H6z" />
+    <path d="M15 2v5h5" />
+    <path d="M9.5 17v-3.5" />
+    <path d="M14.5 17v-6" />
+  </svg>
+);
+const IconBox = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M3.3 7L12 12l8.7-5L12 2 3.3 7z" />
+    <path d="M3.3 7v10L12 22V12" />
+    <path d="M20.7 7v10L12 22" />
+  </svg>
+);
+const IconBag = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M5.5 8h13l-1.3 13H6.8z" />
+    <path d="M8.5 8a3.5 3.5 0 0 1 7 0" />
+  </svg>
+);
+const IconSwap = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M7.5 4.5L3 9l4.5 4.5" />
+    <path d="M3 9h18" />
+    <path d="M16.5 19.5L21 15l-4.5-4.5" />
+    <path d="M21 15H3" />
+  </svg>
+);
+const IconClock = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3.5 2" />
+  </svg>
+);
+const IconUndo = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M8.5 4.5L3.5 9.5l5 5" />
+    <path d="M3.5 9.5H15a6 6 0 0 1 0 12h-3" />
+  </svg>
+);
+const IconWallet = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H4" />
+    <path d="M17.5 13.5h3" />
+  </svg>
+);
+const IconQr = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="3" y="3" width="7" height="7" />
+    <rect x="14" y="3" width="7" height="7" />
+    <rect x="3" y="14" width="7" height="7" />
+    <path d="M14 14h3v3h-3z" />
+    <path d="M21 14v7h-4" />
+  </svg>
+);
+const IconStar = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 2.5l2.85 5.85 6.45 0.95-4.7 4.55 1.1 6.4L12 17.15l-5.7 3.05 1.1-6.4L2.7 9.3l6.45-0.95z" />
+  </svg>
+);
+const IconHandCoins = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="17.5" cy="6.5" r="2.5" />
+    <circle cx="10.5" cy="9" r="2.5" />
+    <path d="M3.5 21h12.5l2.5-2.5c1.2-1.2 1.2-3.3 0-4.5l-2-2" />
+    <path d="M3.5 14l4.5 4.5" />
+  </svg>
+);
+const IconCap = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 3.5L2 8.5l10 5 10-5z" />
+    <path d="M6.5 11v5c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3v-5" />
+    <path d="M22 8.5v5.5" />
+  </svg>
+);
+const IconGift = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="3" y="8" width="18" height="4" />
+    <path d="M5 12v8.5h14V12" />
+    <path d="M12 8v12.5" />
+    <path d="M12 8a3 3 0 1 1 0-6 3 3 0 1 1 0 6" />
+  </svg>
+);
+const IconPercent = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M19 5L5 19" />
+    <circle cx="7" cy="7" r="2.5" />
+    <circle cx="17" cy="17" r="2.5" />
+  </svg>
+);
+const IconUsers = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+    <path d="M16 4.8a3.5 3.5 0 0 1 0 6.4" />
+    <path d="M17.5 14.4A6.5 6.5 0 0 1 21.5 20" />
+  </svg>
+);
+const IconClipboard = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="5" y="4" width="14" height="17" rx="2" />
+    <rect x="9" y="2.5" width="6" height="3" />
+    <path d="M9 11h6" />
+    <path d="M9 15h6" />
+  </svg>
+);
+const IconBell = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M6 9a6 6 0 1 1 12 0c0 5 2 7 2 7H4s2-2 2-7" />
+    <path d="M10 19.5a2 2 0 0 0 4 0" />
+  </svg>
+);
+const IconShield = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 2.5l7.5 3v6c0 5-3.2 8.4-7.5 10-4.3-1.6-7.5-5-7.5-10v-6z" />
+    <path d="M8.8 12l2.2 2.2 4.2-4.2" />
+  </svg>
+);
+const IconScale = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 3.5v17" />
+    <path d="M8.5 20.5h7" />
+    <path d="M5 6.5h14" />
+    <path d="M5 6.5L2.5 12.5h5z" />
+    <path d="M19 6.5l-2.5 6h5z" />
+  </svg>
+);
+const IconUserCog = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="9" cy="8.5" r="3.5" />
+    <path d="M2.5 21a6.5 6.5 0 0 1 13 0" />
+    <circle cx="18.5" cy="18" r="2.5" />
+    <path d="M22.5 18h-2" />
+    <path d="M18.5 22v-2" />
+  </svg>
+);
+const IconDatabase = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <ellipse cx="12" cy="5" rx="8" ry="3" />
+    <path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5" />
+    <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" />
+  </svg>
+);
+const IconUpload = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 15V3.5" />
+    <path d="M7.5 8L12 3.5 16.5 8" />
+    <path d="M4.5 15v5.5h15V15" />
+  </svg>
+);
+
 export function levelOk(role: Role, lv: MenuLevel): boolean {
   if (role === 'admin') return true; // mirror canAccess: admin selalu lolos
   if (lv === 'ops') return role === 'manajer'; // mirror isManager
@@ -183,24 +621,24 @@ export function levelOk(role: Role, lv: MenuLevel): boolean {
 }
 
 export const MENU_ITEMS: MenuDef[] = [
-  { href: '/', label: 'Ringkasan', level: 'personal' },
-  { href: '/admin/dashboard', label: 'Dashboard', level: 'laporan' },
-  { href: '/pengurus/dashboard', label: 'Dashboard Global', level: 'laporan' },
-  { href: '/kasir', label: 'Kasir', level: 'pos' },
-  { href: '/laporan', label: 'Laporan & Rekap', level: 'laporan' },
-  { href: '/admin/produk', label: 'Produk', roleLabel: { gudang: 'Produk & Stok (Opname)' }, level: 'stock' },
-  { href: '/admin/belanja', label: 'Belanja', level: 'supplier' },
-  { href: '/admin/konsinyasi', label: 'Konsinyasi', level: 'ops' },
-  { href: '/admin/shift', label: 'Shift & Kasir', level: 'shift' },
-  { href: '/retur', label: 'Retur', level: 'pos' },
-  { href: '/admin/kas', label: 'Kas', level: 'ops' },
-  { href: '/admin/qris', label: 'QRIS', level: 'ops' },
-  { href: '/piutang', label: 'Poin & Piutang', level: 'piutang' },
-  { href: '/admin/hutang', label: 'Hutang', roleLabel: { pembelian: 'Hutang Supplier' }, level: 'supplier' },
-  { href: '/tutorial', label: 'Tutorial', level: 'personal' },
+  { href: '/', label: 'Ringkasan', icon: IconGauge, level: 'personal' },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: IconChart, level: 'laporan' },
+  { href: '/pengurus/dashboard', label: 'Dashboard Global', icon: IconGlobe, level: 'laporan' },
+  { href: '/kasir', label: 'Kasir', icon: IconCart, level: 'pos' },
+  { href: '/laporan', label: 'Laporan & Rekap', icon: IconFileChart, level: 'laporan' },
+  { href: '/admin/produk', label: 'Produk', icon: IconBox, roleLabel: { gudang: 'Produk & Stok (Opname)' }, level: 'stock' },
+  { href: '/admin/belanja', label: 'Belanja', icon: IconBag, level: 'supplier' },
+  { href: '/admin/konsinyasi', label: 'Konsinyasi', icon: IconSwap, level: 'ops' },
+  { href: '/admin/shift', label: 'Shift & Kasir', icon: IconClock, level: 'shift' },
+  { href: '/retur', label: 'Retur', icon: IconUndo, level: 'pos' },
+  { href: '/admin/kas', label: 'Kas', icon: IconWallet, level: 'ops' },
+  { href: '/admin/qris', label: 'QRIS', icon: IconQr, level: 'ops' },
+  { href: '/piutang', label: 'Poin & Piutang', icon: IconStar, level: 'piutang' },
+  { href: '/admin/hutang', label: 'Hutang', icon: IconHandCoins, roleLabel: { pembelian: 'Hutang Supplier' }, level: 'supplier' },
+  { href: '/tutorial', label: 'Tutorial', icon: IconCap, level: 'personal' },
   // UX-1: Glosarium (E37/E39) -- daftar istilah bahasa awam, semua role.
   { href: '/admin/glosarium', label: 'Glosarium', icon: IconGlosarium, level: 'personal' },
-  { href: '/admin/zakat', label: 'Zakat', level: 'zakat' },
+  { href: '/admin/zakat', label: 'Zakat', icon: IconGift, level: 'zakat' },
   // W2.7: modul ZIS (skema v22; tier zis = admin + manajer, D2).
   { href: '/admin/zis', label: 'ZIS', icon: IconZis, level: 'zis' },
   // W3.3: modul akad syariah (skema v23; tulis = tier akad admin/manajer;
@@ -209,18 +647,18 @@ export const MENU_ITEMS: MenuDef[] = [
   // W4.3: modul koperasi (skema v24, Sek.7.1/7.3; tulis = tier koperasi
   // admin/manajer; pengurus = read-only via tier laporan -- pola Q3 akad).
   { href: '/admin/koperasi', label: 'Koperasi', icon: IconKoperasi, level: 'laporan' },
-  { href: '/admin/pengaturan-member', label: 'Keuntungan Member', level: 'admin' },
-  { href: '/admin/member', label: 'Member', level: 'member' },
-  { href: '/admin/laporan', label: 'Laporan Pengurus', level: 'laporan' },
-  { href: '/admin/notifications', label: 'Notifikasi', level: 'admin' }, // H5: buka untuk pengurus (read-only)
-  { href: '/admin/audit', label: 'Audit', level: 'audit' },
-  { href: '/admin/rekonsiliasi', label: 'Rekonsiliasi', level: 'laporan' },
+  { href: '/admin/pengaturan-member', label: 'Keuntungan Member', icon: IconPercent, level: 'admin' },
+  { href: '/admin/member', label: 'Member', icon: IconUsers, level: 'member' },
+  { href: '/admin/laporan', label: 'Laporan Pengurus', icon: IconClipboard, level: 'laporan' },
+  { href: '/admin/notifications', label: 'Notifikasi', icon: IconBell, level: 'admin' }, // H5: buka untuk pengurus (read-only)
+  { href: '/admin/audit', label: 'Audit', icon: IconShield, level: 'audit' },
+  { href: '/admin/rekonsiliasi', label: 'Rekonsiliasi', icon: IconScale, level: 'laporan' },
   // W1.4: GL (read-only, tier laporan) + Jurnal GL (tulis, tier admin).
   { href: '/admin/gl', label: 'GL', icon: IconGL, level: 'laporan' },
   { href: '/admin/jurnal', label: 'Jurnal GL', icon: IconJurnal, level: 'admin' },
-  { href: '/admin/pengguna', label: 'Pengguna', level: 'admin' },
-  { href: '/admin/data', label: 'Data & Backup', level: 'admin' },
-  { href: '/admin/migrate', label: 'Import CSV', level: 'admin' },
+  { href: '/admin/pengguna', label: 'Pengguna', icon: IconUserCog, level: 'admin' },
+  { href: '/admin/data', label: 'Data & Backup', icon: IconDatabase, level: 'admin' },
+  { href: '/admin/migrate', label: 'Import CSV', icon: IconUpload, level: 'admin' },
 ];
 
 /** 4 grup (Q1 27 Sep: Loyalty fold ke OPERASIONAL - 4 grup, bukan 5). */
