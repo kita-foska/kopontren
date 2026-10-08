@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS products (
   stock INTEGER NOT NULL DEFAULT 0,
   active INTEGER NOT NULL DEFAULT 1,
   barcode TEXT NOT NULL DEFAULT '',
+  is_consignment INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 CREATE TABLE IF NOT EXISTS sales (
@@ -1067,6 +1068,13 @@ export async function saveZakatSettings(
     );
   }
 
+  // v25 (W5.2 NEG-1): kolom products.is_consignment (0/1, default 0) --
+  // "barang titipan" (konsinyasi). Hanya baris ber-flag 1 yang boleh
+  // stock < 0 (import/POS/opname flag-gated); INV-1 di-rescope accordingly.
+  async function migrate29(d: Db) {
+    await execColumn(d, 'ALTER TABLE products ADD COLUMN is_consignment INTEGER NOT NULL DEFAULT 0');
+  }
+
 // Bump v10 (2026): notifikasi admin — tabel notifications,
 // notification_settings, notification_logs (+ index). Idempotent, aman
 // utk DB existing.
@@ -1150,7 +1158,10 @@ export async function saveZakatSettings(
 // additive; DB stempel v23 menjalankan fullInit sekali lagi saat cold
 // start berikutnya. BACKUP DB WAJIB sebelum deploy.
 
-const SCHEMA_VERSION = 24;
+// Bump v25 (W5.2 NEG-1): kolom products.is_consignment (barang titipan)
+// + INV-1 di-rescope. execColumn idempoten di migrate29(); DB existing
+// (stempel v24) menjalankan fullInit sekali lagi saat cold start.
+const SCHEMA_VERSION = 25;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
@@ -1174,6 +1185,7 @@ async function fullInit(d: Db) {
     );
   }
   await migrate28(d);
+  await migrate29(d);
   await d.exec(
     `UPDATE sales SET reported_at = strftime('%Y-%m-%dT%H:%M:%fZ', reported_at) WHERE reported_at IS NOT NULL AND instr(reported_at, ' ') > 0;`
   );

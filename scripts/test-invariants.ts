@@ -390,7 +390,10 @@ async function seedMoney(base: string, refs: Refs, adminJar: Jar): Promise<void>
 /** Money-critical DATA INVARIANTS, asserted read-only against the DB file. */
 async function checkInvariants(db: DbReader, label: string): Promise<void> {
   section(label + ' — data invariants (read-only SQL)');
-  ok('INV-1 no negative stock', (await db.count('SELECT COUNT(*) c FROM products WHERE stock < 0')) === 0);
+  ok(
+    'INV-1 no negative stock (non-consignment; W5.2 NEG-1: titipan boleh negatif)',
+    (await db.count('SELECT COUNT(*) c FROM products WHERE stock < 0 AND COALESCE(is_consignment, 0) = 0')) === 0
+  );
   ok(
     'INV-2 no orphan sale_items',
     (await db.count('SELECT COUNT(*) c FROM sale_items si LEFT JOIN sales s ON s.id = si.sale_id WHERE s.id IS NULL')) === 0
