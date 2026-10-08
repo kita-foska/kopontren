@@ -745,6 +745,32 @@ async function migrate(d: Db) {
       ')'
   );
   await d.exec('CREATE INDEX IF NOT EXISTS idx_coop_savings ON coop_savings(member_id, saved_at)');
+  // W5.1 (PINJ-1, tashih OQ7-OQ9): coop_pinjaman -- pinjaman anggota qardh
+  // (F3.2 #5): akad qardh margin 0 selamanya (pokok = jumlah utuh kembali);
+  // status aktif|lunas; bayar = lunas SEKALIGUS (sisa -> 0, OQ9-1); denda
+  // bila lewat jatuh tempo = sadaqah, HANYA di kolom catatan (memo, F3.3 #6,
+  // OQ8 -- tak pernah jadi pendapatan); pinjam ganda diizinkan (OQ9-2);
+  // anggota keluar tak memblokir pelunasan (OQ9-3). Jurnal gl-on:
+  // pinjam D1130 -> K1010; bayar D1010 -> K1130 (OQ7: akun 1130; 1030
+  // Piutang Penjualan TIDAK dipakai, tetap live). FK member_id diverifikasi
+  // level aplikasi (pola coop_savings).
+  await d.exec(
+    'CREATE TABLE IF NOT EXISTS coop_pinjaman(' +
+      'id TEXT PRIMARY KEY, ' +
+      'member_id TEXT NOT NULL, ' +
+      "akad TEXT NOT NULL DEFAULT 'qardh', " +
+      'margin INTEGER NOT NULL DEFAULT 0, ' +
+      'pokok INTEGER NOT NULL, ' +
+      'sisa INTEGER NOT NULL, ' +
+      'tanggal_mulai TEXT NOT NULL, ' +
+      'tanggal_jatuh_tempo TEXT NOT NULL, ' +
+      "status TEXT NOT NULL DEFAULT 'aktif', " +
+      'catatan TEXT, ' +
+      'created_by TEXT, ' +
+      'created_at TEXT NOT NULL' +
+      ')'
+  );
+  await d.exec('CREATE INDEX IF NOT EXISTS idx_coop_pinjaman ON coop_pinjaman(member_id, status)');
   // COA seed: 52 akun. pap_ref dibiarkan NULL sampai teks PAP final.
   // ON CONFLICT(code) DO NOTHING -> non-destruktif: akun yang sudah ada
   // (mis. ditambahkan admin) tidak ditimpa.
@@ -763,6 +789,7 @@ async function migrate(d: Db) {
       ['1100', 'Kas ZIS', '10xx', 'aset', 'open', 0],
       ['1110', 'Piutang Zakat', '10xx', 'aset', 'pending', 1],
       ['1120', 'Aset Wakaf', '10xx', 'aset', 'open', 0],
+      ['1130', 'Piutang Anggota (Koperasi)', '10xx', 'aset', 'open', 0], // W5.1 (v27): open (qardh pinjaman anggota; OQ7 -- 1030 Piutang Penjualan tetap live)
       // 20xx kewajiban
       ['2010', 'Hutang Pembelianan', '20xx', 'kewajiban', 'open', 0],
       ['2020', 'Hutang Ujrah Konsinyasi', '20xx', 'kewajiban', 'open', 0],
@@ -1174,7 +1201,13 @@ export async function saveZakatSettings(
 // = no-op). Purely additive; DB stempel v25 menjalankan fullInit
 // sekali lagi saat cold start berikutnya. BACKUP DB WAJIB sebelum
 // deploy.
-const SCHEMA_VERSION = 26;
+// Bump v27 (W5.1, PINJ-1): tabel coop_pinjaman (qardh pinjaman anggota;
+// tashih OQ7-OQ9: akun COA 1130 'Piutang Anggota (Koperasi)', 1030 Piutang
+// Penjualan TIDAK dipakai) + COA seed 1130 open/0. Purely additive:
+// CREATE TABLE IF NOT EXISTS + seed INSERT ON CONFLICT DO NOTHING. DB
+// stempel v26 menjalankan fullInit sekali lagi saat cold start berikutnya.
+// BACKUP DB WAJIB sebelum deploy (lesson v16).
+const SCHEMA_VERSION = 27;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

@@ -116,20 +116,20 @@ export default function PinSetupPage() {
       <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-accent-400/20 blur-3xl" />
 
-      <div className="fade-up card w-full max-w-sm border-white/40 bg-white/85 p-6 backdrop-blur-xl dark:border-white/10 dark:bg-white/10 sm:p-7">
+      <div className="fade-up card w-full max-w-sm border-white/60 bg-white/95 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-navy-900/90 sm:p-7">
         <div className="mb-5 flex items-center gap-3">
           <Image
             src="/logo-kopontren.svg"
             alt="Kopontren"
             width={64}
             height={64}
-            className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain shadow-sm ring-1 ring-black/5"
+            className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain shadow-md ring-1 ring-black/5"
           />
           <div>
-            <h1 className="text-lg font-extrabold leading-tight tracking-tight text-accent-700 dark:text-white">
+            <h1 className="text-xl font-extrabold leading-tight tracking-tight text-accent-600 dark:text-accent-300">
               {step === 'pin' ? 'Atur PIN Anda' : 'Konfirmasi PIN'}
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-300">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
               4–6 digit, untuk masuk cepat setelah sesi entek
             </p>
           </div>

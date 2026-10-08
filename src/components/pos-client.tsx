@@ -1869,7 +1869,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             )}
 
             {/* Totals & Change */}
-            <div className="tabular-nums space-y-1 border-t border-slate-200 pt-2 text-xs dark:border-navy-700">
+            <div className="tabular-nums space-y-1.5 rounded-xl bg-slate-50 p-3 text-xs dark:bg-navy-900/60 border border-slate-200/70 dark:border-navy-700/60">
               <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>Subtotal</span>
                 <span>{rp(subtotal)}</span>
@@ -1892,14 +1892,14 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   <span>-{rp(redeemAmt)}</span>
                 </div>
               )}
-              <div className="flex items-center justify-between text-base font-extrabold text-slate-900 dark:text-slate-100">
+              <div className="flex items-center justify-between border-t border-slate-200/80 pt-2 text-base font-extrabold text-slate-900 dark:border-navy-700 dark:text-slate-100">
                 <span>Total Belanja</span>
-                <span className="text-accent-500 dark:text-accent-300">{rp(total)}</span>
+                <span className="text-xl text-accent-600 dark:text-accent-300">{rp(total)}</span>
               </div>
               {!mix && pay === 'cash' && received.trim() !== '' && (
                 <div
                   className={
-                    'flex items-center justify-between text-sm font-bold ' +
+                    'flex items-center justify-between border-t border-dashed border-slate-200 pt-1.5 text-sm font-bold dark:border-navy-700 ' +
                     (receivedNum < total ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400')
                   }
                 >
@@ -1910,18 +1910,17 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             </div>
 
             {/* Petunjuk hotkey (desktop) */}
-            <p className="hidden text-2xs font-medium text-slate-500 lg:block dark:text-slate-500">
+            <p className="hidden text-center text-2xs font-medium text-slate-400 lg:block dark:text-slate-500">
               F1 Cari | F2 Pembeli | F3 Bayar | F4 Simpan | F5 Cetak | F6 Split | F7 Shift
-              | 1-4 Metode | ? Semua
             </p>
 
             {/* Checkout Button */}
-            <Button variant="primary" size="md" full
+            <Button variant="primary" size="lg" full
               onClick={checkout}
               disabled={cart.length === 0}
               loading={busy}
               loadingLabel="Menyimpan Transaksi..."
-              className="font-bold"
+              className="font-bold text-base shadow-lg shadow-accent-500/25 transition-transform active:scale-[0.99]"
             >
               Bayar {rp(total)} (F4)
             </Button>

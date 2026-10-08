@@ -7,6 +7,16 @@ import { Shell } from '@/components/shell';
 import { LowStockClient } from '@/components/admin/low-stock-client';
 import { ActivityFeed, type FeedItem, type KpiMover } from '@/components/activity-feed';
 import { Button, TermTip } from '@/components/ui';
+import {
+  TrendingUp,
+  Clock,
+  Wallet,
+  Users,
+  CreditCard,
+  Building2,
+  ArrowUpRight,
+  Sparkles,
+} from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -134,6 +144,7 @@ export default async function AdminDashboardPage() {
     value: string;
     sub: string;
     href: string;
+    icon: React.ReactNode;
     warn?: boolean;
     delta?: KpiDelta & { tip: string };
   };
@@ -171,6 +182,7 @@ export default async function AdminDashboardPage() {
       value: rp(salesToday.t),
       sub: salesToday.c + ' transaksi · laba ' + rp(salesToday.t - cogsToday),
       href: '/admin/laporan',
+      icon: <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />,
       delta: deltaSales ? { ...deltaSales, tip: TIP_SALES } : undefined,
     },
     {
@@ -178,6 +190,7 @@ export default async function AdminDashboardPage() {
       value: String(unreported.c),
       sub: rp(unreported.t) + ' menunggu laporan',
       href: '/laporan',
+      icon: <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />,
       warn: unreported.c > 0,
     },
     {
@@ -185,6 +198,7 @@ export default async function AdminDashboardPage() {
       value: rp(cash7.inn - cash7.out),
       sub: 'masuk ' + rp(cash7.inn) + ' / keluar ' + rp(cash7.out),
       href: '/admin/kas',
+      icon: <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
       delta: deltaCash ? { ...deltaCash, tip: TIP_CASH } : undefined,
     },
     {
@@ -192,34 +206,58 @@ export default async function AdminDashboardPage() {
       value: String(memberCount),
       sub: 'loyalty & poin',
       href: '/admin/member',
+      icon: <Users className="h-5 w-5 text-violet-600 dark:text-violet-400" />,
     },
     {
       label: 'Piutang Buka',
       value: rp(debtOpen.t),
       sub: debtOpen.c + ' pelanggan',
       href: '/piutang',
+      icon: <CreditCard className="h-5 w-5 text-rose-600 dark:text-rose-400" />,
     },
     {
       label: 'Hutang Supplier Buka',
       value: rp(payableOpen.t),
       sub: payableOpen.c + ' supplier',
       href: '/admin/hutang',
+      icon: <Building2 className="h-5 w-5 text-orange-600 dark:text-orange-400" />,
     },
   ];
 
   return (
     <Shell user={user}>
-      {/* Hero flat (design system: tanpa gradient/shadow — PHASE 1) */}
-      <div className="card-hero mb-5">
-        <h1 className="text-2xl font-extrabold tracking-tight">
-          Dashboard <span className="text-white/80">Admin</span>
-        </h1>
-        <p className="mt-1 text-sm text-white/70">
-          {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
-            new Date()
-          )}{' '}
-          · ringkasan operasional Kopontren
-        </p>
+      {/* Hero modern dengan aksen soft glass depth */}
+      <div className="card-hero relative mb-5 overflow-hidden shadow-lg shadow-accent-700/10">
+        <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-2xs font-bold uppercase tracking-wider text-white">
+                <Sparkles className="h-3 w-3" /> Kopontren
+              </span>
+            </div>
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight">
+              Dashboard <span className="text-white/85">Admin</span>
+            </h1>
+            <p className="mt-1 text-xs text-white/80 sm:text-sm">
+              {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
+                new Date()
+              )}{' '}
+              · Ringkasan operasional real-time Kopontren Al Ittihad
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              as="a"
+              href="/kasir"
+              className="bg-white/90 text-slate-800 hover:bg-white shadow-sm"
+            >
+              Buka Kasir POS
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
@@ -228,31 +266,43 @@ export default async function AdminDashboardPage() {
             key={c.label}
             href={c.href}
             className={
-              'card fade-up p-4 tile-hover ' +
-              (c.warn ? 'border-amber-500/50' : '')
+              'group card fade-up relative flex flex-col justify-between p-4.5 tile-hover border-slate-200/80 transition-all hover:border-accent-400/50 hover:shadow-lg dark:border-navy-700 ' +
+              (c.warn ? 'border-amber-500/60 ring-1 ring-amber-500/30' : '')
             }
           >
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              {c.label}
-            </p>
-            <p className="mt-1 text-2xl font-extrabold text-accent-500 dark:text-accent-300">
-              {c.value}
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{c.sub}</p>
-            {c.delta && (
-              <p
-                className={
-                  'mt-0.5 text-xs font-semibold tabular-nums ' +
-                  (c.delta.tone === 'down'
-                    ? 'text-rose-600 dark:text-rose-400'
-                    : c.delta.tone === 'flat'
-                      ? 'text-slate-500 dark:text-slate-400'
-                      : 'text-emerald-600 dark:text-emerald-400')
-                }
-              >
-                <TermTip tip={c.delta.tip}>{c.delta.text}</TermTip>
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  {c.label}
+                </span>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 ring-1 ring-black/5 transition group-hover:scale-110 dark:bg-navy-900/90 dark:ring-white/10">
+                  {c.icon}
+                </span>
+              </div>
+              <p className="mt-2 text-2xl font-extrabold tracking-tight text-accent-600 dark:text-accent-300">
+                {c.value}
               </p>
-            )}
+            </div>
+            <div className="mt-3 border-t border-slate-100 pt-2.5 dark:border-navy-700/60">
+              <div className="flex items-center justify-between gap-1 text-xs">
+                <p className="text-slate-500 dark:text-slate-400 truncate">{c.sub}</p>
+                <ArrowUpRight className="h-3.5 w-3.5 text-slate-400 opacity-0 transition group-hover:opacity-100 group-hover:text-accent-500 shrink-0" />
+              </div>
+              {c.delta && (
+                <p
+                  className={
+                    'mt-1 text-xs font-bold tabular-nums ' +
+                    (c.delta.tone === 'down'
+                      ? 'text-rose-600 dark:text-rose-400'
+                      : c.delta.tone === 'flat'
+                        ? 'text-slate-500 dark:text-slate-400'
+                        : 'text-emerald-600 dark:text-emerald-400')
+                  }
+                >
+                  <TermTip tip={c.delta.tip}>{c.delta.text}</TermTip>
+                </p>
+              )}
+            </div>
           </Link>
         ))}
       </div>
