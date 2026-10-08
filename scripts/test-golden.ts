@@ -282,6 +282,9 @@ type Refs = {
   gp03UserId: number;
   gp07SaleId: number;
   gp07SaleTotal: number;
+  gp08ConsignmentId: number;
+  gp08SaleId: number;
+  gp08SaleTotal: number;
 };
 
 async function gp01(base: string, refs: Refs): Promise<void> {
@@ -519,6 +522,54 @@ async function gp07(base: string, refs: Refs, adminJar: Jar): Promise<void> {
   refs.gp07SaleId = Number(s?.id ?? 0);
   ok('sale id returned', refs.gp07SaleId > 0, 'id ' + refs.gp07SaleId);
 }
+
+/**
+ * GP-08 (W5.2 NEG-1): flag-gated negative stock for consignment items
+ * ("barang titipan"). All steps go through the PUBLIC HTTP API on a fresh
+ * local file DB (no direct DB writes):
+ *  1. POST /api/products { is_consignment: 1, stock: 1 } -> 200;
+ *  2. POST /api/sales qty 3 (> stock 1) -> 200 (allowed ONLY via the flag;
+ *     the guarded decrement is bypassed for titipan rows);
+ *  3. control: the same oversell on a regular seeded product must still be
+ *     rejected (guard intact for non-consignment rows).
+ * Read-back (in verifyDb): product row stock = -2, is_consignment = 1.
+ */
+async function gp08(base: string, refs: Refs, adminJar: Jar): Promise<void> {
+  section('GP-08 · NEG-1 consignment (flag-gated negative stock)');
+  const cons = await call(base, 'POST', '/api/products', {
+    jar: adminJar,
+    body: { name: 'GP-Titipan 6030', category: 'Uji', unit: 'pcs', base_price: 1000, cost_price: 0, stock: 1, is_consignment: 1 },
+    tries: 3,
+  });
+  ok('POST /api/products (is_consignment=1, stock 1) -> 200 ok', cons.status === 200 && cons.json?.ok === true, 'got ' + cons.status);
+  refs.gp08ConsignmentId = Number(cons.json?.id ?? 0);
+  ok('consignment product id returned', refs.gp08ConsignmentId > 0, 'id ' + String(refs.gp08ConsignmentId));
+
+  const qty = 3; // more than stock (1) -- allowed ONLY because is_consignment
+  const total = 1000 * qty;
+  refs.gp08SaleTotal = total;
+  const sale = await call(base, 'POST', '/api/sales', {
+    jar: adminJar,
+    body: { items: [{ product_id: refs.gp08ConsignmentId, qty }], pay_method: 'cash', amount_paid: total, customer: 'GP08' },
+    tries: 3,
+  });
+  ok('oversell consignment item -> 200 (flag-gated, NEG-1)', sale.status === 200 && sale.json?.ok === true, 'got ' + sale.status);
+  refs.gp08SaleId = Number((sale.json?.sale as Record<string, unknown> | undefined)?.id ?? 0);
+  ok('gp08 sale id returned', refs.gp08SaleId > 0, 'id ' + String(refs.gp08SaleId));
+
+  const water = refs.product['Air Mineral 600ml'];
+  if (water) {
+    // Control: same oversell on a REGULAR (non-consignment) product must
+    // still be rejected -- the oversell guard is intact outside the flag.
+    const blockedQty = water.stock + 50;
+    const blocked = await call(base, 'POST', '/api/sales', {
+      jar: adminJar,
+      body: { items: [{ product_id: water.id, qty: blockedQty }], pay_method: 'cash', amount_paid: 3000 * blockedQty, customer: 'GP08-C' },
+      tries: 3,
+    });
+    ok('oversell regular item still blocked (guard intact)', blocked.status !== 200, 'got ' + blocked.status);
+  }
+}
 // ── read-back invariants (executed AFTER the server is stopped) ────────────
 async function verifyDb(refs: Refs, dbRel: string): Promise<void> {
   section('SQL read-back · business invariants (read-only)');
@@ -582,6 +633,17 @@ async function verifyDb(refs: Refs, dbRel: string): Promise<void> {
     );
     ok('GP-07 sale_items rows = 1', (await db.count('SELECT COUNT(*) c FROM sale_items WHERE sale_id = ?', [refs.gp07SaleId])) === 1);
 
+    // GP-08 (W5.2 NEG-1): flag-gated negative stock, verified read-only.
+    const gp08Row = await db.one('SELECT stock, is_consignment FROM products WHERE id = ?', [refs.gp08ConsignmentId]);
+    ok('GP-08 consignment product stock = -2 (negative allowed, flag-gated)', gp08Row?.stock === -2, 'got ' + String(gp08Row?.stock));
+    ok('GP-08 is_consignment persisted = 1', gp08Row?.is_consignment === 1, 'got ' + String(gp08Row?.is_consignment));
+    const gp08SaleRow = await db.one('SELECT total, status FROM sales WHERE id = ?', [refs.gp08SaleId]);
+    ok(
+      'GP-08 sale row (total 3000 / unreported)',
+      gp08SaleRow?.total === refs.gp08SaleTotal && gp08SaleRow?.status === 'unreported',
+      JSON.stringify(gp08SaleRow)
+    );
+
     ok('zakat_history row recorded', (await db.count('SELECT COUNT(*) c FROM zakat_history')) >= 1);
     ok('audit: zakat:record fired', (await db.count("SELECT COUNT(*) c FROM audit_log WHERE action = 'zakat:record'")) >= 1);
     ok('audit: sales:create fired', (await db.count("SELECT COUNT(*) c FROM audit_log WHERE action = 'sales:create'")) >= 1);
@@ -610,6 +672,9 @@ async function main(): Promise<void> {
     gp03UserId: 0,
     gp07SaleId: 0,
     gp07SaleTotal: 0,
+    gp08ConsignmentId: 0,
+    gp08SaleId: 0,
+    gp08SaleTotal: 0,
   };
 
   let handle: ServerHandle | null = null;
@@ -635,6 +700,7 @@ async function main(): Promise<void> {
     await gp05(handle.base, refs, adminJar);
     await gp06(handle.base, refs, adminJar);
     await gp07(handle.base, refs, adminJar);
+    await gp08(handle.base, refs, adminJar);
     ran = true;
   } finally {
     if (handle) await stopServer(handle);

@@ -13,6 +13,9 @@ export type ImportRow = {
   cost_price: number;
   stock: number;
   barcode: string;
+  /** W5.2 NEG-1: 1 = barang titipan (konsinyasi) -> stok boleh negatif.
+   *  Kolom CSV opsional ke-8 (`is_consignment`); default 0. */
+  is_consignment: number;
 };
 
 export type RowError = { line: number; code: string; message: string };
@@ -121,9 +124,12 @@ export function parseImport(text: string): {
   for (let i = start; i < raw.length; i++) {
     const cells = raw[i];
     const line = i + 1; // 1-based file line incl. header
-    const [cName, cCat, cUnit, cBase, cCost, cStock, cBarcode] = cells;
+    const [cName, cCat, cUnit, cBase, cCost, cStock, cBarcode, cCons] = cells;
     const name = String(cName ?? '').trim();
     const barcode = String(cBarcode ?? '').trim();
+    // W5.2 NEG-1: kolom opsional ke-8 `is_consignment` (1/0; default 0).
+    // Stok negatif hanya legal pada baris titipan (flag=1).
+    const isConsignment = String(cCons ?? '').trim() === '1' ? 1 : 0;
     const base = toNum(cBase);
     const cost = toNum(cCost);
     const stock = toNum(cStock);
@@ -141,7 +147,8 @@ export function parseImport(text: string): {
       if (Number.isNaN(v)) {
         errors.push({ line, code: `invalid-${label}`, message: `Baris ${line} (${name}): "${label}" bukan angka.` });
         bad = true;
-      } else if (v < 0) {
+      } else if (v < 0 && !(label === 'stock' && isConsignment === 1)) {
+        // NEG-1: stok negatif tetap ditolak utk baris NON-titipan.
         errors.push({ line, code: `negative-${label}`, message: `Baris ${line} (${name}): "${label}" negatif (${v}).` });
         bad = true;
       }
@@ -167,6 +174,7 @@ export function parseImport(text: string): {
       cost_price: Math.round(Number(cost)),
       stock: Math.round(Number(stock)),
       barcode,
+      is_consignment: isConsignment,
     });
   }
   return { rows, errors, hadHeader };
@@ -200,6 +208,8 @@ export type ExcelMapping = {
   unitPrice: number | null;
   stock?: number | null;
   category?: string;
+  /** W5.2 NEG-1: flag titipan (1/0) -- stok negatif sah bila 1. */
+  isConsignment?: number | string | null;
 };
 
 export function excelToRow(line: number, e: ExcelMapping): ImportRow | RowError {
@@ -210,6 +220,8 @@ export function excelToRow(line: number, e: ExcelMapping): ImportRow | RowError 
   const cost = Number(e.cost ?? 0);
   const base = Number(e.unitPrice ?? 0);
   const stock = Number(e.stock ?? 0) || 0;
+  // W5.2 NEG-1: flag titipan (peta kolom Excel opsional) -> stok negatif sah.
+  const isConsignment = e.isConsignment === 1 || e.isConsignment === '1' ? 1 : 0;
   if (Number.isNaN(cost) || Number.isNaN(base) || Number.isNaN(stock)) {
     return {
       line,
@@ -224,7 +236,9 @@ export function excelToRow(line: number, e: ExcelMapping): ImportRow | RowError 
     unit: String(e.uom ?? '').trim() || 'pcs',
     base_price: Math.max(0, Math.round(base)),
     cost_price: Math.max(0, Math.round(cost)),
-    stock: Math.max(0, Math.round(stock)),
+    // NEG-1: clamp floor-0 HANYA utk baris non-titipan.
+    stock: isConsignment === 1 ? Math.round(stock) : Math.max(0, Math.round(stock)),
     barcode: String(e.code ?? '').trim(),
+    is_consignment: isConsignment,
   };
 }

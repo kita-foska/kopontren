@@ -169,6 +169,11 @@ export function MigrateClient() {
           )}
         </div>
         {parseError && <p className="mt-2 text-sm text-rose-500">{parseError}</p>}
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Kolom opsional ke-8 <code>is_consignment</code> (0/1): barang titipan
+          (konsinyasi). Stok negatif hanya sah utk baris titipan; produk biasa
+          tetap floor 0 (W5.2 NEG-1).
+        </p>
       </div>
 
       {phase === 'preview' && (
@@ -187,6 +192,11 @@ export function MigrateClient() {
                 {w.lowMargin.length} margin &lt; 5%
               </span>
             )}
+            {rows.filter((r) => r.is_consignment === 1).length > 0 && (
+              <span className="rounded-full bg-violet-500/15 px-3 py-1 font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                {rows.filter((r) => r.is_consignment === 1).length} baris titipan (stok boleh negatif)
+              </span>
+            )}
           </div>
           {rows.length > 0 && (
             <div className="max-h-72 overflow-auto rounded-lg border border-slate-200 dark:border-navy-600">
@@ -199,6 +209,7 @@ export function MigrateClient() {
                     <Th>HSL</Th>
                     <Th>HPP</Th>
                     <Th>Stok</Th>
+                    <Th>Titipan</Th>
                     <Th>Barcode</Th>
                   </tr>
                 </thead>
@@ -211,6 +222,7 @@ export function MigrateClient() {
                       <Td>{rp(r.base_price)}</Td>
                       <Td>{rp(r.cost_price)}</Td>
                       <Td>{r.stock}</Td>
+                      <Td>{r.is_consignment === 1 ? 'ya' : ''}</Td>
                       <Td>{r.barcode || '-'}</Td>
                     </Trow>
                   ))}

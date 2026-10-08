@@ -88,10 +88,17 @@ export async function POST(req: Request) {
   if (!name) return NextResponse.json({ error: 'Nama produk wajib' }, { status: 400 });
   const d = await db();
   const barcode = String(b.barcode || '').trim();
+  // W5.2 NEG-1: flag "barang titipan" (konsinyasi). Stok negatif HANYA
+  // valid utk titipan; produk biasa tetap floor 0 (stok negatif = bug).
+  const isConsignment = b.is_consignment ? 1 : 0;
+  const stockValue =
+    isConsignment === 1
+      ? Math.floor(Number(b.stock) || 0)
+      : Math.max(0, Math.floor(Number(b.stock) || 0));
   const info = await d
     .prepare(
-      `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode)
-       VALUES (?, ?, ?, ?, ?, ?, 1, ?)`
+      `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode, is_consignment)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`
     )
     .run(
       name,
@@ -99,15 +106,17 @@ export async function POST(req: Request) {
       String(b.unit || 'pcs').trim() || 'pcs',
       Math.max(0, Math.floor(Number(b.base_price) || 0)),
       Math.max(0, Math.floor(Number(b.cost_price) || 0)),
-      Math.max(0, Math.floor(Number(b.stock) || 0)),
-      barcode
+      stockValue,
+      barcode,
+      isConsignment
     );
   const id = Number(info.lastInsertRowid);
   await logAudit(user, 'product:create', 'products', id, undefined, {
     name,
     base_price: Math.max(0, Math.floor(Number(b.base_price) || 0)),
-    stock: Math.max(0, Math.floor(Number(b.stock) || 0)),
+    stock: stockValue,
     barcode: barcode || undefined,
+    is_consignment: isConsignment === 1 ? 1 : undefined,
   }, req);
   invalidate('products:');
   return NextResponse.json({ ok: true, id });

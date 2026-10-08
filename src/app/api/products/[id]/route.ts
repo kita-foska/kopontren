@@ -27,15 +27,21 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         barcode: string;
         unit: string;
         category: string;
+        is_consignment: number;
       }
     | undefined;
   if (!prod) return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 });
 
   // quick stock adjust: { stock: n }
   if (b.stock !== undefined && b.name === undefined) {
-    const v = Number(b.stock);
-    if (Number.isNaN(v) || v < 0)
-      return NextResponse.json({ error: 'Stok tidak valid' }, { status: 400 });
+    const v = Math.floor(Number(b.stock));
+    // W5.2 NEG-1: opname negatif HANYA utk barang titipan (flag=1).
+    // Gudang/produk biasa tetap floor 0 (JC-1).
+    if (Number.isNaN(v) || (v < 0 && prod.is_consignment !== 1))
+      return NextResponse.json(
+        { error: 'Stok tidak valid (negatif hanya utk barang titipan)' },
+        { status: 400 }
+      );
     await d.prepare('UPDATE products SET stock = ? WHERE id = ?').run(v, prod.id);
     invalidate('products:');
     await logAudit({
@@ -73,6 +79,23 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     });
     return NextResponse.json({ ok: true });
   }
+  // W5.2 NEG-1: toggle "barang titipan": { is_consignment: 0|1 }
+  if (b.is_consignment !== undefined && b.name === undefined) {
+    const consignment = b.is_consignment ? 1 : 0;
+    await d.prepare('UPDATE products SET is_consignment = ? WHERE id = ?').run(consignment, prod.id);
+    invalidate('products:');
+    await logAudit({
+      userId: user.id,
+      userName: user.display_name,
+      userRole: user.role,
+      action: 'product:consignment',
+      entity: 'products',
+      entityId: prod.id,
+      fieldChanges: { is_consignment: { before: prod.is_consignment, after: consignment } },
+      req,
+    });
+    return NextResponse.json({ ok: true });
+  }
   // full form update
   const newName = String(b.name || '').trim() || prod.name;
   const newBarcode =
@@ -82,11 +105,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   // Clamp ≥0: harga/HPP negatif akan merusak laba, COGS & kalkulasi zakat.
   const newBasePrice = Math.max(0, Math.floor(Number(b.base_price) || 0));
   const newCostPrice = Math.max(0, Math.floor(Number(b.cost_price) || 0));
+  // W5.2 NEG-1: flag titipan ikut form update; bila klien lama tidak
+  // mengirim field, nilai lama dipertahankan (tanpa clobber).
+  const newConsignment = b.is_consignment !== undefined ? (b.is_consignment ? 1 : 0) : prod.is_consignment;
   await d
     .prepare(
-      `UPDATE products SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, barcode = ? WHERE id = ?`
+      `UPDATE products SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, barcode = ?, is_consignment = ? WHERE id = ?`
     )
-    .run(newName, newCategory, newUnit, newBasePrice, newCostPrice, newBarcode, prod.id);
+    .run(newName, newCategory, newUnit, newBasePrice, newCostPrice, newBarcode, newConsignment, prod.id);
   invalidate('products:');
   // Audit trail diff per-field: hanya field yang benar-benar berubah
   // yang tercatat (mis. "harga 10000 -> 12000").
@@ -101,6 +127,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     changes.cost_price = { before: prod.cost_price, after: newCostPrice };
   if (newBarcode !== prod.barcode)
     changes.barcode = { before: prod.barcode, after: newBarcode };
+  if (newConsignment !== prod.is_consignment)
+    changes.is_consignment = { before: prod.is_consignment, after: newConsignment };
   await logAudit({
     userId: user.id,
     userName: user.display_name,

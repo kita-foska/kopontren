@@ -231,6 +231,9 @@ export async function POST(req: Request) {
       const decStmt = d.prepare(
         'UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?'
       );
+      // W5.2 NEG-1: barang titipan (is_consignment = 1) boleh negatif --
+      // decrement TANPA guard (stok = indikator titipan, bukan stok kita).
+      const decFreeStmt = d.prepare('UPDATE products SET stock = stock - ? WHERE id = ?');
       // [qty, name, pid, unit, price, sub, lineDisc, cost]
       const insertItems: [number, string, number, string, number, number, number, number][] = [];
       for (const it of items) {
@@ -244,11 +247,15 @@ export async function POST(req: Request) {
               cost_price: number;
               stock: number;
               active: number;
+              is_consignment: number;
             }
           | undefined;
         if (!prod || prod.active !== 1)
           throw new Error('Produk tidak tersedia: ' + (prod?.name || it.product_id));
-        if (prod.stock < qty)
+        // W5.2 NEG-1: barang titipan (is_consignment=1) BOLEH dijual saat
+        // stok <= 0 (stok negatif = indikator titipan); produk biasa tetap
+        // diblokir (oversell = bug inventori).
+        if (prod.stock < qty && prod.is_consignment !== 1)
           throw new Error('Stok ' + prod.name + ' tidak cukup (sisa ' + prod.stock + ')');
         // Manager may override the price per line; only accept a finite
         // positive value, anything else falls back to the catalog price
@@ -268,7 +275,11 @@ export async function POST(req: Request) {
           if (Number.isFinite(dv) && dv > 0) lineDisc = Math.min(Math.floor(dv), sub);
         }
         lineDiscSum += lineDisc;
-        const decRes = await decStmt.run(qty, prod.id, qty);
+        // NEG-1: titipan memakai decrement tanpa guard (boleh negatif).
+        const decRes =
+          prod.is_consignment === 1
+            ? await decFreeStmt.run(qty, prod.id)
+            : await decStmt.run(qty, prod.id, qty);
         if (Number(decRes.changes) !== 1)
           throw new Error(
             'Stok ' + prod.name + ' tidak cukup (stok berubah — sisa ' + prod.stock + ')'

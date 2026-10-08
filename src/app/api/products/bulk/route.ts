@@ -7,11 +7,15 @@ import { invalidate } from '@/lib/ref-cache';
 /**
  * Operasi massal produk (import/export & kelola massal untuk admin).
  * POST {
- *   action: 'stock' | 'category' | 'active' | 'delete',
+ *   action: 'stock' | 'category' | 'active' | 'delete' | 'consignment',
  *   ids: number[],
- *   value?: string,   // utk category / active
+ *   value?: string,   // utk category / active / consignment ('1'|'0')
  *   delta?: number,   // utk stock (stok += delta, floor 0)
  * }
+ * 'consignment' (W5.2 NEG-1) = set flag is_consignment massal
+ * (barang titipan). Opname (stock) tetap floor 0: stok negatif tidak
+ * bisa di-set lewat opname massal, hanya lewat opname per-produk
+ * utk baris titipan atau import (JC-1).
  * Batas 500 id/request (cap Turso round-trip aman). Semua perubahan
  * direkap dalam 1 audit log (bukan per-baris) agar log audit tetap sehat.
  */
@@ -33,7 +37,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Pilih minimal 1 produk (ids)' }, { status: 400 });
 
   const action = String(b.action || '');
-  if (!['stock', 'category', 'active', 'delete'].includes(action))
+  if (!['stock', 'category', 'active', 'delete', 'consignment'].includes(action))
     return NextResponse.json({ error: 'Action tidak dikenal' }, { status: 400 });
   // Opname massal (stock) boleh tier 'stock' (admin, manajer, gudang);
   // aksi data produk (category/active/delete) = tier 'products' (admin, manajer).
@@ -70,6 +74,14 @@ export async function POST(req: Request) {
         const value = String(b.value ?? '').trim() === '1' ? 1 : 0;
         const res = await d
           .prepare(`UPDATE products SET active = ? WHERE id IN (${inList})`)
+          .run(value, ...ids);
+        changed = res.changes;
+      } else if (action === 'consignment') {
+        // W5.2 NEG-1: flag titipan massal (1 = barang titipan, 0 = biasa).
+        // TIDAK menyentuh stok: opname negatif tetap jalur per-produk/import.
+        const value = String(b.value ?? '').trim() === '1' ? 1 : 0;
+        const res = await d
+          .prepare(`UPDATE products SET is_consignment = ? WHERE id IN (${inList})`)
           .run(value, ...ids);
         changed = res.changes;
       } else {

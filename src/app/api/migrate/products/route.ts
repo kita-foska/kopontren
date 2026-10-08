@@ -15,7 +15,9 @@ import { invalidate } from '@/lib/ref-cache';
  * Upsert rule (per user spec):
  *  - barcode present  -> UPDATE by barcode, else INSERT (barcode unique).
  *  - no barcode       -> UPDATE by lower(name), else INSERT.
- *  - strict: name required; base_price/cost_price/stock >= 0 and numeric.
+ *  - strict: name required; base_price/cost_price/stock numeric.
+ *    W5.2 NEG-1: stock negatif sah HANYA bila r.is_consignment = 1
+ *    (barang titipan; kolom CSV opsional ke-8).
  *
  * Response: { ok, inserted, updated, failed, errors, total_products,
  *             warn_cost_zero: {count, items}, warn_low_margin: {count, items} }
@@ -58,7 +60,8 @@ export async function POST(req: Request) {
           bad.add(r.line);
           break;
         }
-        if (v < 0) {
+        if (v < 0 && !(k === 'stock' && r.is_consignment === 1)) {
+          // NEG-1: stok negatif ditolak kecuali baris titipan (flag=1).
           rowErrors.push({ line: r.line, code: `negative-${k}`, message: `${k} negatif` });
           bad.add(r.line);
           break;
@@ -95,40 +98,42 @@ export async function POST(req: Request) {
         const base = Math.round(Number(r.base_price));
         const cost = Math.round(Number(r.cost_price));
         const stock = Math.round(Number(r.stock));
+        // NEG-1: persist flag titipan (kolom opsional; default 0).
+        const consignment = r.is_consignment === 1 ? 1 : 0;
         if (r.barcode) {
           const info = await d
             .prepare(
               `UPDATE products
-               SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, stock = ?, barcode = ?
+               SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, stock = ?, barcode = ?, is_consignment = ?
                WHERE barcode = ?`
             )
-            .run(name, category, unit, base, cost, stock, r.barcode, r.barcode);
+            .run(name, category, unit, base, cost, stock, r.barcode, consignment, r.barcode);
           if (info.changes > 0) updated++;
           else {
             await d
               .prepare(
-                `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode)
-                 VALUES (?, ?, ?, ?, ?, ?, 1, ?)`
+                `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode, is_consignment)
+                 VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`
               )
-              .run(name, category, unit, base, cost, stock, r.barcode);
+              .run(name, category, unit, base, cost, stock, r.barcode, consignment);
             inserted++;
           }
         } else {
           const info = await d
             .prepare(
               `UPDATE products
-               SET category = ?, unit = ?, base_price = ?, cost_price = ?, stock = ?
+               SET category = ?, unit = ?, base_price = ?, cost_price = ?, stock = ?, is_consignment = ?
                WHERE lower(name) = lower(?)`
             )
-            .run(category, unit, base, cost, stock, name);
+            .run(category, unit, base, cost, stock, consignment, name);
           if (info.changes > 0) updated++;
           else {
             await d
               .prepare(
-                `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode)
-                 VALUES (?, ?, ?, ?, ?, ?, 1, '')`
+                `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode, is_consignment)
+                 VALUES (?, ?, ?, ?, ?, ?, 1, '', ?)`
               )
-              .run(name, category, unit, base, cost, stock);
+              .run(name, category, unit, base, cost, stock, consignment);
             inserted++;
           }
         }

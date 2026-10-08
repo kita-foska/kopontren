@@ -163,6 +163,8 @@ type Product = {
   base_price: number;
   stock: number;
   barcode?: string;
+  /** W5.2 NEG-1: 1 = barang titipan (stok boleh negatif, jualan tak diblokir). */
+  is_consignment?: number;
   /** Grosir v1: tier per produk, JSON string [{min_qty, discount_percent}]
    *  (subquery kolom `wholesale` di /api/products; '[]' bila tak ada). */
   wholesale?: string;
@@ -514,14 +516,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   }, [products, cat, qDeb]);
 
   function add(p: Product) {
-    if (p.stock <= 0) {
+    if (p.stock <= 0 && p.is_consignment !== 1) {
       showToast('Stok produk habis: ' + p.name);
       return;
     }
     setCart((c) => {
       const ex = c.find((l) => l.product.id === p.id);
       if (ex) {
-        if (ex.qty >= p.stock) {
+        // NEG-1: batas qty = sisa stok, KECUALI barang titipan (boleh melebihi).
+        if (ex.qty >= p.stock && p.is_consignment !== 1) {
           showToast('Jumlah melebihi sisa stok (' + p.stock + ')');
           return c;
         }
@@ -607,7 +610,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       c
         .map((l) => {
           if (l.product.id !== id) return l;
-          const q = Math.max(0, Math.min(qty, l.product.stock));
+          // NEG-1: cap qty = sisa stok utk produk biasa; titipan tak ber-cap.
+          const q =
+            l.product.is_consignment === 1
+              ? Math.max(0, qty)
+              : Math.max(0, Math.min(qty, l.product.stock));
           // Ubah qty: harga otomatis recompute (naik ambang grosir -> turun,
           // turun ambang -> naik lagi); harga manual tetap tidak disentuh.
           return { ...l, qty: q, price: l.manual ? l.price : autoPrice(l.product, q) };
@@ -1379,7 +1386,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 <button type="button"
                   key={p.id}
                   onClick={() => add(p)}
-                  disabled={p.stock <= 0}
+                  disabled={p.stock <= 0 && p.is_consignment !== 1}
                   className={
                     'card relative p-3 text-left transition hover:border-accent-400 active:scale-[0.98] disabled:opacity-40 ' +
                     (inCart ? 'border-accent-500/60 ring-2 ring-accent-500/20' : '')
@@ -1407,6 +1414,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       {hasGrosirTier && (
                         <span className="rounded bg-emerald-500/15 px-1 py-0.5 text-2xs font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
                           Grosir
+                        </span>
+                      )}
+                      {/* W5.2 NEG-1: barang titipan (konsinyasi) -- jualan
+                          tetap jalan saat stok <= 0 (stok boleh negatif). */}
+                      {p.is_consignment === 1 && (
+                        <span className="rounded bg-violet-500/15 px-1 py-0.5 text-2xs font-bold text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
+                          Titipan
                         </span>
                       )}
                     </div>
@@ -1516,10 +1530,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     </span>
                     <button
                       type="button"
-                      disabled={l.qty >= l.product.stock}
+                      disabled={l.qty >= l.product.stock && l.product.is_consignment !== 1}
                       className="grid h-11 w-11 place-items-center text-slate-600 transition active:scale-90 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-300 dark:hover:bg-navy-700 sm:h-9 sm:w-9"
                       onClick={() => setQty(l.product.id, l.qty + 1)}
-                      title={l.qty >= l.product.stock ? 'Sudah maksimum stok' : 'Tambah jumlah'}
+                      title={l.qty >= l.product.stock && l.product.is_consignment !== 1 ? 'Sudah maksimum stok' : 'Tambah jumlah'}
                       aria-label="Tambah jumlah"
                     >
                       <Plus className="h-5 w-5" />

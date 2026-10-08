@@ -18,6 +18,8 @@ type Product = {
   stock: number;
   active: number;
   barcode?: string;
+  /** W5.2 NEG-1: 1 = barang titipan (konsinyasi) -- stok boleh negatif. */
+  is_consignment?: number;
   /** Grosir v1: tier per produk, JSON string [{min_qty, discount_percent}]
    *  (subquery kolom `wholesale` di /api/products; '[]' bila tak ada). */
   wholesale?: string;
@@ -41,6 +43,7 @@ const emptyForm = {
   stock: 0,
   active: 1,
   barcode: '',
+  is_consignment: 0,
 };
 
 export function ProdukClient() {
@@ -124,7 +127,7 @@ export function ProdukClient() {
 
   function openEdit(p?: Product) {
     if (p) {
-      setForm({ ...p, barcode: p.barcode ?? '' });
+      setForm({ ...p, barcode: p.barcode ?? '', is_consignment: p.is_consignment === 1 ? 1 : 0 });
       // Muat tier grosir dari kolom `wholesale` produk (diisi subquery
       // /api/products) -- bila field tidak ada (klien/cache lama), fetch
       // langsung dari endpoint prices supaya form tetap utuh.
@@ -209,7 +212,8 @@ export function ProdukClient() {
   async function setStock(p: Product) {
     if (stockBusy) return;
     const v = Number(stockEdits[p.id]);
-    if (Number.isNaN(v) || v < 0) return;
+    // W5.2 NEG-1: opname negatif hanya utk barang titipan.
+    if (Number.isNaN(v) || (v < 0 && p.is_consignment !== 1)) return;
     setStockBusy(true);
     try {
       await api('/api/products/' + p.id, {
@@ -294,7 +298,7 @@ export function ProdukClient() {
     });
   }
   async function bulk(
-    action: 'stock' | 'category' | 'delete' | 'active',
+    action: 'stock' | 'category' | 'delete' | 'active' | 'consignment',
     extra?: Record<string, unknown>
   ) {
     // I-2: ids bisa datang dari `extra` (jalur undo memakai snapshot yang
@@ -461,6 +465,13 @@ export function ProdukClient() {
           >
             Terapkan Kategori
           </Button>
+          {/* W5.2 NEG-1: flag titipan massal (barang konsinyasi). */}
+          <Button variant="ghost" size="sm" disabled={bulkBusy} onClick={() => void bulk('consignment', { value: '1' })}>
+            Jadikan Titipan
+          </Button>
+          <Button variant="ghost" size="sm" disabled={bulkBusy} onClick={() => void bulk('consignment', { value: '0' })}>
+            Bukan Titipan
+          </Button>
           <Button
             variant="danger"
             size="sm"
@@ -590,6 +601,11 @@ export function ProdukClient() {
                       ) : (
                         <StatusBadge status="aman" />
                       )}
+                      {p.is_consignment === 1 && (
+                        <span className="rounded bg-violet-500/15 px-1.5 py-0.5 text-2xs font-bold text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
+                          Titipan
+                        </span>
+                      )}
                     </div>
                   </Td>
                   <Td>
@@ -702,6 +718,11 @@ export function ProdukClient() {
                 ) : (
                   <StatusBadge status="aman" />
                 )}
+                {p.is_consignment === 1 && (
+                  <span className="rounded bg-violet-500/15 px-1.5 py-0.5 text-2xs font-bold text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
+                    Titipan
+                  </span>
+                )}
               </div>
               <div className="mt-2 flex gap-2">
                 <Button variant="secondary" size="md" className="flex-1" onClick={() => openLabel(p)}>
@@ -764,9 +785,25 @@ export function ProdukClient() {
           </div>
           {form.id === 0 && (
             <div className="col-span-2">
-              {F('stock', { numeric: true, label: 'Stok awal' })}
+              {F('stock', {
+                numeric: true,
+                label: form.is_consignment === 1 ? 'Stok awal (boleh negatif utk titipan)' : 'Stok awal',
+              })}
             </div>
           )}
+          {/* W5.2 NEG-1: barang titipan (konsinyasi) -- stok boleh negatif,
+              penjualan tak diblokir saat stok habis (flag server-side). */}
+          <div className="col-span-2">
+            <label className="flex items-start gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={form.is_consignment === 1}
+                onChange={(e) => setForm((f) => ({ ...f, is_consignment: e.target.checked ? 1 : 0 }))}
+              />
+              Barang titipan (konsinyasi) -- penjualan jalan walau stok habis
+            </label>
+          </div>
           {/* -- Grosir v1: tier harga per produk (min_qty -> discount%) -- */}
           <div className="col-span-2">
             <div className="mb-1 flex items-center justify-between">
