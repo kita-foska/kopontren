@@ -807,7 +807,7 @@ async function migrate(d: Db) {
       // 60xx syariah/PAP
       ['6010', 'Dana Pesantren (memo)', '60xx', 'syariah', 'pending', 1],
       ['6020', 'Aset Wakaf (memo)', '60xx', 'syariah', 'open', 0],
-      ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'pending', 1],
+      ['6030', 'Zakat Tijarah Dibayar', '60xx', 'syariah', 'open', 0], // W5.3b (v26): flip open (OQ-13)
     ];
     for (const [code, name, grp, kind, status, nd] of coaSeed) {
       await d
@@ -841,6 +841,13 @@ async function migrate(d: Db) {
     await d.exec(
       `UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('3020', '3030', '3040', '3050', '3060', '5080')`
     );
+    // W5.3b (skema v26) -- upgrade path: flip COA 6030 'Zakat Tijarah
+    // Dibayar' 'pending' -> 'open' (OQ-13; jembatan zakat P3 resmi
+    // dipakai alur P5). UPDATE eksplisit karena seed di atas DO
+    // NOTHING (DB v25: baris coa sudah ada, seed tidak menimpa).
+    // Idempoten; fresh install = no-op. 7 akun pending lainnya
+    // (1060/1110/2080/2100/5040/5070/6010) tetap 'pending'.
+    await d.exec(`UPDATE coa SET status = 'open', needs_decision = 0 WHERE code = '6030'`);
   }
 }
 
@@ -1161,7 +1168,13 @@ export async function saveZakatSettings(
 // Bump v25 (W5.2 NEG-1): kolom products.is_consignment (barang titipan)
 // + INV-1 di-rescope. execColumn idempoten di migrate29(); DB existing
 // (stempel v24) menjalankan fullInit sekali lagi saat cold start.
-const SCHEMA_VERSION = 25;
+// Bump v26 (W5.3b, OQ-13): flip COA 6030 'Zakat Tijarah Dibayar'
+// 'pending' -> 'open' (UPDATE eksplisit di seed = upgrade path; seed
+// INSERT ON CONFLICT DO NOTHING tak menimpa baris v25, fresh install
+// = no-op). Purely additive; DB stempel v25 menjalankan fullInit
+// sekali lagi saat cold start berikutnya. BACKUP DB WAJIB sebelum
+// deploy.
+const SCHEMA_VERSION = 26;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
