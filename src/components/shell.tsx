@@ -14,6 +14,7 @@ import { fetchTimeout } from '@/lib/fetch-util';
 import { useHotkeys } from '@/lib/useHotkeys';
 import { CommandPalette } from '@/components/command-palette';
 import { KeyCheatsheet } from '@/components/key-cheatsheet';
+import { Radio } from 'lucide-react';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   const router = useRouter();
@@ -165,6 +166,24 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
     };
   }, []);
 
+  // W5.4 (OFF-1 P2, 2026-10-08): indikator offline global -- strip tipis di
+  // header pada semua halaman autentikasi (OQ15/OQ19). Disembunyikan di
+  // /kasir: POS sudah punya banner offline sendiri yang lebih informatif
+  // (stale-data + antrean + tombol Sinkronisasi). Pola deteksi online/
+  // offline identik dengan pos-client.tsx.
+  const [offline, setOffline] = useState(false);
+  useEffect(() => {
+    const onOn = () => setOffline(false);
+    const onOff = () => setOffline(true);
+    window.addEventListener('online', onOn);
+    window.addEventListener('offline', onOff);
+    setOffline(!(typeof navigator === 'undefined' || navigator.onLine));
+    return () => {
+      window.removeEventListener('online', onOn);
+      window.removeEventListener('offline', onOff);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen">
       {/* UX-8C: skip-link (a11y): tersembunyi sampai di-focus via Tab —
@@ -176,6 +195,17 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
         Lewati navigasi
       </a>
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-navy-700 dark:bg-navy-900/90">
+        {/* W5.4 (OFF-1 P2): strip status offline -- copy tetap OQ19. */}
+        {offline && pathname !== '/kasir' && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center justify-center gap-1.5 border-b border-amber-200 bg-amber-50 px-3 py-1 text-2xs font-semibold text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+          >
+            <Radio size={12} aria-hidden="true" />
+            OFFLINE -- koneksi terputus. Data mungkin tidak dapat dimuat.
+          </div>
+        )}
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
           <div className="flex min-w-0 flex-1 items-center gap-2.5">
             <HamburgerNav
