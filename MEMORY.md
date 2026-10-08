@@ -4467,3 +4467,45 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   `_w53b_runall.vbs` (wscript, window 0) + marker
   `_w53b_all.done` / `_w53b_gate.done` + verifikasi READ-FILE.
 - **NEXT: W5.4** (OFF-1 P2/P3). W5.1 PINJ-1 tetap tashih-gated.
+
+## W5.4 Eksekusi (8 Okt 2026)
+
+- **OFF-1 P2 (offline UX lanjutan) -- 4 file (+119/-22)**:
+  - `src/components/shell.tsx` (+30): indikator offline global --
+    strip tipis di header (`role=status`, copy OQ19 "OFFLINE --
+    koneksi terputus. Data mungkin tidak dapat dimuat."), listener
+    online/offline + `navigator.onLine` saat mount; disembunyikan
+    di /kasir (banner offline POS lebih informatif: stale-data +
+    antrean + tombol Sinkronisasi). Pola deteksi identik dgn
+    pos-client.tsx.
+  - `src/components/pos-client.tsx` (+10/-3): ekstrak
+    settings-fetch `useEffect` jadi `loadSettings` (useCallback;
+    isi sama: live ok -> setMemberSettings + savePosCache; gagal
+    -> hydrasi cache + cacheInfo) + dipanggil di handler `onOn`
+    (gap F3: bila admin mengubah pengaturan member saat offline,
+    preview POS tak lagi basi). Aman paralel dgn flushQueue
+    (GET read-only vs POST /api/sales).
+  - `src/components/admin/member-client.tsx` (+88/-22):
+    silent-failure fix -- state `loadErr`: load awal gagal
+    (non-append) -> pesan galat eksplisit + tombol "Coba lagi"
+    (blok desktop tabel + blok mobile; dulu "Belum ada member
+    terdaftar." menyesatkan saat fetch gagal); "Muat lebih
+    banyak" (append) tetap silent sesuai pola lama; auto-reload
+    saat 'online' (loadRef + qDebRef, termasuk query pencarian
+    aktif).
+  - `src/components/laporan-client.tsx` (+13): auto-reload saat
+    'online' -- refresh periode + filter status aktif (pola
+    loadRef, sama dgn POS).
+- **OQ18**: konten tutorial TIDAK di-ubah (tanpa edit /tutorial;
+  gate = cek no-change saja). `laporan-formal-client` = defer
+  Wave 6.
+- **Gate**: `tsc --noEmit` exit 0; manual checklist (a-d)
+  tertunda -- browser test oleh Gus Fi sebelum deploy (bukan
+  blocker commit); `public/sw.js`, V1 `laporan-admin-client.tsx`,
+  `src/lib/coop.ts`, API, DB, tests = tak tersentuh
+  (`git status` = 4 file saja).
+- **Commit**: C1 `5740004` (shell banner, +30) + C2 `888eb3f`
+  (reconnect + silent-fix, 3 file +89/-22) + C3 (entry ini);
+  dual-push master+main setelah tiap commit.
+- **NEXT: Wave 5 close audit** + W5.1 PINJ-1 (tetap tashih-gated)
+  + Wave 6 (migrasi + SOP).

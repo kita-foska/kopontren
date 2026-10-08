@@ -1869,9 +1869,16 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
          (detail: MEMORY.md seksi 5 Okt). Verifikasi lanjut
          opsional (Gus Fi): scan barcode + cart offline,
          checkout -> queue, back-online -> sinkron.
-   - [ ] **PHASE 2 (ditunda)**: Plan B banner global `shell.tsx`;
-         F3 refresh member-settings saat reconnect; offline
-         lebih luas (member/reports).
+   - [x] **PHASE 2 = W5.4 LEPAS 8 Okt (C1 `5740004` + C2 `888eb3f`, dual-push master+main): Plan B banner global `shell.tsx`;
+         F3 = `loadSettings()` di handler reconnect POS (settings tak lagi
+          basi bila admin ubah saat offline); offline lebih
+         luas = silent-failure fix `/admin/member` (load awal gagal -> galat
+          eksplisit + tombol "Coba lagi" desktop+mobile; auto-reload saat
+          'online' termasuk query aktif) + `/laporan` auto-reload periode/
+          filter aktif saat reconnect. Detail: MEMORY.md seksi "W5.4
+          Eksekusi". Gate: tsc exit 0; sw.js/V1/coop.ts tak tersentuh;
+          OQ18 konten tutorial tanpa ubah; manual test (a-d) Gus Fi
+          sebelum deploy.
    - [x] **W4.2 LEPAS** (6 Okt): `src/lib/coop.ts` engine simpanan
           koperasi (setor/tarik/keluar, Option A baris negatif,
           C-suite C1-C6) -- commit `fce2531`; detail: MEMORY.md
@@ -2000,7 +2007,11 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
      25/25 (ALL_EXIT=0) + gate build (GATE_EXIT=0) +
      0 non-ASCII (perubahan). Detail: MEMORY.md seksi
      "W5.3b Eksekusi".
-   - NEXT: **W5.4** (OFF-1 P2/P3).
+   - [x] **W5.4 LEPAS 8 Okt** (OFF-1 P2: banner offline global shell +
+      refresh reconnect POS settings / admin-member / laporan +
+      silent-failure fix daftar member; commit C1 `5740004` +
+      C2 `888eb3f`).
+    - NEXT: **Wave 5 close audit** + Wave 6 (migrasi + SOP).
    - NEXT: **W5.1 PINJ-1 (pinjaman anggota) -- TUNDA,
      tashih-gated** (qardh/murabahah, akun COA baru, sumber
      dana; mulai HANYA setelah ruling Gus Fi).
