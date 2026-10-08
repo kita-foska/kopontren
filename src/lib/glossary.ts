@@ -300,6 +300,11 @@ export const GLOSSARY: GlossaryTerm[] = [
     desc: 'Jurnal akhir periode yang menol-kan net akun laba-rugi (omzet, HPP, beban, dst) ke 3020 SHU Ditahan: laba menambah 3020, rugi mengurangi 3020 (3020 boleh negatif). Satu closing per periode.',
     group: 'Koperasi & SHU',
   },
+  {
+    term: 'Barang Titipan',
+    desc: 'Produk konsinyasi (titipan supplier/pihak lain). W5.2 NEG-1: flag is_consignment (kolom v25) = produk titipan: stok BOLEH negatif (indikator titipan yang belum diinput atau terjual lewat fisik), penjualan POS tidak diblokir saat stok habis. Non-titipan tetap floor 0 (INV-1). Opname negatif hanya per-produk; opname massal tetap floor 0. Pembayaran pemilik titipan dihitung modul Konsinyasi dari qty terjual.',
+    group: 'Toko & Transaksi',
+  },
 ];
 
 /** Cari definisi dari kamus (untuk TermTip konteks; fallback = tip lokal). */

@@ -4279,3 +4279,38 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   10.000/pcs (katalog sudah benar, confirm-only).
 
 - Q1 opsi (a) 4 Okt: 9 kode negatif (49,111,113,136,140,143,148,152,234) di-zero nang CSV upload stok-2026-10-03.csv (242 baris, 100% ASCII, 0 negative -- upload-ready); nilai riil -1/-16/-10/-12/-5/-17/-4/-10/-2 di-backup stok-2026-10-03.source-negatives.csv (audit trail); manual adjustment (stok opname) SABANJUNE. Harga kunci produk: sabun pack 50.000/45.000/42.500/41.000 cost 40.000 (Q2), nasi jagung 10.000/pcs cost 9.000 (149). Urutan upload: produk DULU, stok KEMUDIAN (upsert by barcode, last-wins).
+
+## W5.2 NEG-1 Eksekusi (8 Okt 2026, GO Gus Fi via DeepSeek: 3 commits)
+
+- C1 skema: `products.is_consignment` (INTEGER NOT NULL DEFAULT 0),
+  SCHEMA_VERSION 24 -> 25, `migrate29()` async `execColumn` idempoten
+  (patron `migrate28`), di-rantai `fullInit`. INV-1 test-invariants
+  di-RE-SCOPE single-line: `WHERE stock < 0 AND COALESCE(is_consignment,0)=0`
+  (dulu `WHERE stock < 0` mutlak).
+- C2 fitur (flag-gated; titipan = is_consignment=1):
+  - products POST: field `is_consignment`; stok negatif sah hanya
+    bila flag=1 (non-titipan tetap floor 0).
+  - products/[id] PUT: quick stock adjust negatif hanya utk baris
+    titipan; toggle flag via `PUT {is_consignment}`; form full update
+    persist flag (tanpa clobber klien lama).
+  - bulk: aksi baru `consignment` (Jadikan/Bukan Titipan, tier
+    'products'); opname massal (stock) TETAP floor 0 (JC-1/OQ7).
+  - sales POST: guard `prod.stock < qty` dilewati utk titipan +
+    decrement tanpa guard (`decFreeStmt`); produk biasa tetap
+    diblokir oversell.
+  - import: kolom CSV opsional ke-8 `is_consignment` (parseImport +
+    ExcelMapping.isConsignment + persist api/migrate/products
+    UPDATE/INSERT + re-validasi server-side negatif hanya utk baris
+    titipan). OQ9: 6030 "TPI-01" = manual via UI admin, bukan CSV.
+  - POS: kartu produk + cap qty di-gate flag; chip "Titipan".
+  - produk-client: ceklis "Barang titipan (konsinyasi)" di form,
+    chip baris desktop/mobile, tombol bulk titipan, setStock gate.
+  - GP-08 golden (API-driven, fresh file: DB): create titipan
+    (stock 1) -> jual qty 3 -> 200 -> read-back stock=-2,
+    is_consignment=1; kontrol oversell produk biasa tetap ditolak.
+- C3 docs: SOP-ADMIN (form note + do/don't ops), glossary
+  ("Barang Titipan"), TODO (NEG-1.1/1.2/1.3 = [x] + rulings
+  OQ7/OQ8/OQ9), MEMORY ini.
+- Lesson: migrasi harus bump SCHEMA_VERSION (jiran v16) -- tanpa
+  bump, DB existing skip fullInit dan kolom tak pernah dibuat.
+- Turso snapshot manual SEBELUM deploy v25 (lesson v16).

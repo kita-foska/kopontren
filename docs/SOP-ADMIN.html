@@ -155,6 +155,7 @@ body{background:#fff}
 <li>Catat belanja <b>segera</b> saat barang masuk — stok &amp; hutang otomatis benar.</li>
 <li>Verifikasi stok fisik <b>acak mingguan</b> (stock opname), selaraskan dengan aplikasi.</li>
 <li>Backup <b>minimal mingguan</b>, simpan 2 tempat (flashdisk + email/Drive pengurus).</li>
+<li>Sebelum deploy migrasi skema versi baru (contoh: <b>v25</b> = kolom titipan <code>is_consignment</code>), <b>backup manual Turso</b> lebih dulu (lesson v16).</li>
 <li>Pakai log <b>Audit</b> untuk cek perubahan mencurigakan (harga, stok, pengguna).</li>
 <li>Member baru: daftarkan <b>sebelum</b> belanja pertama agar poin langsung jalan.</li>
 </ul></div>
@@ -166,6 +167,7 @@ body{background:#fff}
 <li>Jangan abai kartu <b>"Belum Direkap"</b> yang membesar — artinya kasir belum tutup shift.</li>
 <li>Jangan <b>menjalankan migrasi</b> tanpa backup baru (halaman Migrasi berisiko — hanya saat instruksi versi).</li>
 <li>Jangan hapus <b>backup lama</b> sebelum versi terbaru terbukti stabil.</li>
+<li>Jangan set <b>stok negatif utk produk biasa</b> -- negatif sah HANYA utk barang titipan (flag "Titipan"); stok negatif non-titipan = indikasi bug inventori (INV-1).</li>
 </ul></div>
 </div>
 
@@ -278,7 +280,7 @@ body{background:#fff}
 <h3>Anotasi — "Ini tombol untuk apa, di sini Anda bisa apa"</h3>
 <div class="anno"><span class="ch">⓵</span><div><b>Kartu KPI Dashboard</b> — angka inti hari ini; ada panah naik/turun vs periode sebelumnya. Kartu kuning = perlu tindakan (rekap tertunda, hutang besar).</div></div>
 <div class="anno"><span class="ch">⓶</span><div><b>Prediksi stok menipis</b> — aplikasi hitung sendiri dari penjualan 14 hari: "stok habis dalam N hari". Di sini Anda tahu <i>kapan</i> harus belanja.</div></div>
-<div class="anno"><span class="ch">⓷</span><div><b>Form Tambah/Ubah Produk</b> — isian wajib: nama, harga jual, stok, satuan. Harga modal = dasar hitung laba. Grosir opsional (mis. 24+ dapat −10%). Simpan → langsung bisa dijual di POS.</div></div>
+<div class="anno"><span class="ch">⓷</span><div><b>Form Tambah/Ubah Produk</b> — isian wajib: nama, harga jual, stok, satuan. Harga modal = dasar hitung laba. Grosir opsional (mis. 24+ dapat −10%). <b>W5.2 NEG-1 -- Barang titipan (konsinyasi)</b>: centang "Barang titipan (konsinyasi)" di form = stok BOLEH negatif (indikator titipan yang belum diinput / terjual lewat fisik); POS tetap jalan saat stok habis, dan pembayaran pemilik titipan dihitung modul Konsinyasi dari qty terjual. Flag bisa juga di-set massal lewat tombol "Jadikan Titipan / Bukan Titipan" di bar kelola massal produk. Opname negatif hanya per-produk utk baris titipan; opname massal tetap floor 0. Simpan → langsung bisa dijual di POS.</div></div>
 <div class="anno"><span class="ch">⓸</span><div><b>Tab Laba-Rugi / Neraca</b> — Laba-Rugi: omzet − HPP − pengeluaran = laba bersih. Neraca: aset vs kewajiban + ekuitas (harus seimbang). Ganti periode lewat pil di atas.</div></div>
 
 <div class="legend"><b>Keterangan warna:</b> maroon = utama/brand · hijau = baik/aktif · kuning = peringatan (stok menipis, rekap tertunda) · merah = masalah (habis, defisit). Halaman ini sudah <b>siap cetak A4</b> — tekan Ctrl+P untuk salinan fisik.</div>

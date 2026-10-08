@@ -2037,21 +2037,39 @@ bikin keputusan fiqih baru demi kebutuhan coding.
   layar, terbaca, dan bisa ditutup; bila perlu fallback bottom-sheet di HP.
 
 ## NEG-1: Dukungan stok negatif utk konsinyasi -- tugas TERPISAH (ACC Gus Fi 4 Okt 2026, Q1 ruling (b))
-- [!] NEG-1.1: izinkan `stock < 0` pada import produk.
-      Saat ini `src/lib/product-import.ts` baris 139-146 menolak baris
-      negatif (RowError `negative-stock`), path Excel malah clamp
-      `Math.max(0, stock)`. Perlu ruling desain: negative-stock
-      di-izinkan untuk import produk ber-flag titipan / semua?
-      (Lihat "Negative Stock -- Business Context" di MEMORY.md, 4 Okt 2026.)
-- [m] NEG-1.2: POS mengizinkan penjualan saat stok <= 0 utk barang
-      konsinyasi. Saat ini: `sales/route.ts` hard-reject
-      `prod.stock < qty` + guarded decrement `WHERE stock >= ?`;
-      `pos-client.tsx` disable tombol `p.stock <= 0` + clamp qty.
-- [r] NEG-1.3 (opsional): flag per-produk "barang titipan"
-      (kolom baru `products` + migrasi skema Turso) utk membatasi
-      produk mana yg boleh negatif/dijual-nol.
+- [x] NEG-1.1: izinkan `stock < 0` pada import produk.
+      W5.2 NEG-1 (8 Okt 2026): kolom opsional ke-8 `is_consignment`
+      (CSV + peta Excel); baris titipan (flag=1) sah stok negatif,
+      baris non-titipan tetap ditolak (negative-stock). Persist di
+      api/migrate/products (UPDATE/INSERT + re-validasi server-side).
+- [x] NEG-1.2: POS mengizinkan penjualan saat stok <= 0 utk barang
+      konsinyasi. W5.2 NEG-1 (8 Okt 2026): sales/route.ts guard
+      `prod.stock < qty` dilewati bila `is_consignment=1` + decrement
+      tanpa guard (`decFreeStmt`); pos-client.tsx tombol/cap qty
+      di-gate flag + chip "Titipan" di kartu produk.
+- [x] NEG-1.3: flag per-produk "barang titipan"
+      (kolom `products.is_consignment`, migrasi v24 -> v25,
+      migrate29 async execColumn idempoten). INV-1 di-re-scope
+      (single-line): `stock < 0 AND COALESCE(is_consignment,0)=0`.
+      Titipan bisa di-set: form produk (ceklis) + opname per-produk
+      (PUT /api/products/[id]) + bulk action `consignment`
+      (Jadikan/Bukan Titipan).
 - Modul `api/konsinyasi` SUDAH menghitung pembayaran supplier berbasis
   qty terjual -- tidak perlu perubahan.
+- Rulings W5.2 (8 Okt 2026, dicatat utk audit):
+  - OQ7: opname MASSAL (bulk stock) tetap floor-0; stok negatif hanya
+    lewat per-produk PUT/import (JC-1).
+  - OQ8: verifikasi E2E = golden test local (file: DB disposabel,
+    GP-08 API-driven, tanpa db-write langsung) + INV-1 re-scope;
+    JANGAN tambah invarian global baru (JC-2).
+  - OQ9: barcode 6030 "TPI-01" didaftarkan manual via UI admin
+    (ceklis titipan + stok awal boleh negatif), bukan via CSV;
+    CSV tetap boleh pakai kolom opsional ke-8 bila diperlukan.
+- Eksekusi: W5.2 NEG-1 selesai 8 Okt 2026 (3 commit: C1 skema v25 +
+  INV-1 re-scope; C2 fitur import/POS/opname/UI + GP-08; C3 docs
+  SOP/glossary/TODO/MEMORY). Golden GP-08: POST /api/products
+  (is_consignment=1, stock 1) -> POST /api/sales qty 3 -> 200,
+  read-back stock=-2; kontrol: oversell produk biasa tetap ditolak.
 - Scheduling: W5 penguatan ATAU wave baru -- menunggu ruling Gus Fi.
   **TIDAK mulai eksekusi sebelum approval.**
 
