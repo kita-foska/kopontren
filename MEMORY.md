@@ -1,5 +1,65 @@
 # MEMORY
 
+## 2026-10-08
+### PLAN A LEPAS -- ikon inline SVG semua item nav sidebar admin (8 Okt 2026)
+- **1 commit feat (`feat(sidebar)`) + 1 commit docs (`docs(sidebar)`)** +
+  dual-push master+main SETELAH commit (verify ls-remote + rev-list 0 0).
+- (a) **`src/components/sidebar.tsx`** (SATU-SATUNYA file kode,
+  diff +-518):
+  - **Icon system LOCK**: render 16px (width/height "16"),
+    viewBox 24, stroke-2 (strokeWidth 2, linecap/linejoin round),
+    fill none, currentColor, aria-hidden="true"; TIDAK ada
+    emoji/Unicode/ikon-font (konsisten dgn ikon baris lama).
+  - **25 konstanta `Icon*` BARU** (block header `/** Plan A ... */`
+    dlm file) + **6 ikon lama** (IconGL, IconJurnal, IconZis,
+    IconAkad, IconKoperasi, IconGlosarium) = **31/31 item
+    `MENU_ITEMS` punya `icon`** (tipe `MenuDef` = { href, label,
+    level, roleLabel?, icon? } -- property `icon?` sudah ada,
+    TANPA break; render nav sudah mendukung `it.icon`).
+  - **TANPA sub-menu (ruling Q2=C)**: `ADMIN_GROUP_DEFS` (4 grup) +
+    render TIDAK berubah; semua item tetap 1-level.
+  - 25 ikon baru (nama konstanta): IconGauge, IconChart,
+    IconGlobe, IconCart, IconFileChart, IconBox, IconBag,
+    IconSwap, IconClock, IconUndo, IconWallet, IconQr, IconStar,
+    IconHandCoins, IconCap, IconGift, IconPercent, IconUsers,
+    IconClipboard, IconBell, IconShield, IconScale, IconUserCog,
+    IconDatabase, IconUpload.
+  - Pemetaan 31 item MENU_ITEMS (ikon bertanda * = 6 lama):
+    / Ringkasan=IconGauge; /admin/dashboard Dashboard=IconChart;
+    /pengurus/dashboard Dashboard Global=IconGlobe; /kasir
+    Kasir=IconCart; /laporan Laporan & Rekap=IconFileChart;
+    /admin/produk Produk=IconBox; /admin/belanja Belanja=IconBag;
+    /admin/konsinyasi Konsinyasi=IconSwap; /admin/shift Shift &
+    Kasir=IconClock; /retur Retur=IconUndo; /admin/kas
+    Kas=IconWallet; /admin/qris QRIS=IconQr; /piutang Poin &
+    Piutang=IconStar; /admin/hutang Hutang=IconHandCoins;
+    /tutorial Tutorial=IconCap; /admin/glosarium Glosarium=
+    IconGlosarium*; /admin/zakat Zakat=IconGift; /admin/zis
+    ZIS=IconZis*; /admin/akad Akad=IconAkad*; /admin/koperasi
+    Koperasi=IconKoperasi*; /admin/pengaturan-member Keuntungan
+    Member=IconPercent; /admin/member Member=IconUsers;
+    /admin/laporan Laporan Pengurus=IconClipboard;
+    /admin/notifications Notifikasi=IconBell; /admin/audit
+    Audit=IconShield; /admin/rekonsiliasi Rekonsiliasi=IconScale;
+    /admin/gl GL=IconGL*; /admin/jurnal Jurnal GL=IconJurnal*;
+    /admin/pengguna Pengguna=IconUserCog; /admin/data Data &
+    Backup=IconDatabase; /admin/migrate Import CSV=IconUpload.
+- **Gate (semua lulus)**: `tsc --noEmit` exit 0; `test:all` 24/24
+  suite exit 0 (semua 0-fail); `gate` = check-route-exports OK +
+  next build (compile + types + 59/59 page) exit 0; 0 non-ASCII
+  (scan byte: sidebar.tsx = 0); guard TIDAK tersentuh
+  (`public/sw.js`, engine `src/lib/coop.ts` intact --
+  `git status` cuma sidebar.tsx M).
+- **Catatan proses sesi ini (flaky terminal)**: output
+  foreground tak bisa di-capture (shell integration rusak);
+  proses background mati bila terminal ditutup. Fix: pakai
+  `.bat` (`cmd /c`) + marker `.txt` (`.gate_build_done.txt`) +
+  poll via READ-FILE (bukan run_commands, agar tidak membunuh
+  tree). Insert editor >6000 char dipotong jadi 3 chunk.
+- **NEXT: W5.3a (kode) = B1 + B2** (W5 penguatan):
+  B1 `pilihPeriode()` mengabaikan `?periode=`; B2 zis-client
+  double-POST. (Ruling 4 Okt, dicatat di TODO.md.)
+
 ## 2026-10-07
 ### W4.6 LEPAS -- rekap per rumpun: agregasi server GET /api/koperasi + kartu UI tab Rekap + test R6a-R6g (7 Okt 2026)
 - **3 commit (kontrak STEP 2, bukan 1)** + dual-push master+main

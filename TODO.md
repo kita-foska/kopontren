@@ -1957,6 +1957,14 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
      C3 record (dual-push master+main SETELAH setiapa commit;
      hash: git log W4.6). W4.5b (op jasa + op tunai) LEPAS
      (`e7bba07` + `88824a7`).
+    - [x] **PLAN A LEPAS 8 Okt -- ikon inline SVG semua item nav
+      sidebar admin** (1 file `src/components/sidebar.tsx`:
+      25 konstanta `Icon*` baru + 6 lama = 31/31 item
+      `MENU_ITEMS` punya `icon`; system lock 16px/viewBox 24/
+      stroke-2/currentColor/aria-hidden; no sub-menu; group +
+      render tak berubah; gate tsc 0 + test:all 24/24 + gate
+      (next build 59/59) + 0 non-ASCII; next = W5.3a B1+B2).
+
    - NEXT: **W5 penguatan** (PINJ-1 pinjaman anggota -- tashih
      qardh/murabahah, akun COA baru, sumber dana).
 
