@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import crypto from 'node:crypto';
-import { db } from '@/db';
+import { db, tx } from '@/db';
 import { currentUser, hashPassword, randomSalt, normRole, parseUserRoles, ROLES } from '@/lib/auth';
 import type { Role } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
+import { createRequest } from '@/lib/approvals';
+import { notify } from '@/lib/notify';
 
 function publicUser(r: Record<string, unknown>) {
   const role = normRole(String(r.role ?? ''));
@@ -60,6 +62,44 @@ export async function POST(req: Request) {
   const d = await db();
   const exists = await d.prepare('SELECT id FROM users WHERE username = ?').get(username);
   if (exists) return NextResponse.json({ error: 'Username sudah dipakai' }, { status: 409 });
+  // P2/Q62: pembuatan akun ADMIN lewat approval flow (dua orang).
+  // Password langsung di-hash ke payload (salt + pass_hash, BUKAN
+  // plaintext). Role selain admin tetap tulis langsung (perilaku lama).
+  if (role === 'admin') {
+    const salt = randomSalt();
+    const rid = await tx(d, () =>
+      createRequest(
+        d,
+        { id: user.id, username: user.username },
+        'user:create_admin',
+        {
+          username,
+          display_name: String(b.display_name || '').trim(),
+          salt,
+          pass_hash: hashPassword(password, salt),
+          created_by: user.id,
+        },
+        ''
+      )
+    );
+    await logAudit(user, 'user:create_requested', 'users', null, undefined, { username, role }, req);
+    try {
+      await notify({
+        type: 'approval_pending',
+        title: 'Permintaan persetujuan baru',
+        message: 'Buat akun admin "' + username + '" (oleh ' + user.username + ')',
+        link: '/admin/persetujuan',
+      });
+    } catch {
+      /* best-effort */
+    }
+    return NextResponse.json({
+      ok: true,
+      pending: true,
+      request_id: rid,
+      message: 'Tercatat. Menunggu persetujuan di /admin/persetujuan.',
+    });
+  }
   const salt = randomSalt();
   const info = await d
     .prepare(
@@ -92,7 +132,7 @@ export async function PUT(req: Request) {
   if (!id) return NextResponse.json({ error: 'id tidak valid' }, { status: 400 });
   const d = await db();
   const target = (await d.prepare('SELECT * FROM users WHERE id = ?').get(id)) as
-    | { id: number; salt: string; pass_hash: string; username: string; role: string; roles: string | null }
+    | { id: number; salt: string; pass_hash: string; username: string; role: string; roles: string | null; active: number }
     | undefined;
   if (!target) return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 });
 
@@ -133,18 +173,48 @@ export async function PUT(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // Aktif / nonaktif (tidak boleh ke diri sendiri)
+  // Aktif / nonaktif (tidak boleh ke diri sendiri). P2/Q62: lewat
+  // approval flow (aksi user:active); eksekusi saat apply di
+  // lib/approvals.ts (update active + bersihkan sesi bila nonaktif).
   if (b.active !== undefined) {
     if (id === user.id)
       return NextResponse.json({ error: 'Tidak bisa nonaktifkan akun sendiri' }, { status: 400 });
-    await d.prepare('UPDATE users SET active = ? WHERE id = ?').run(b.active ? 1 : 0, id);
-    if (!b.active) {
-      await d.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
+    const active = b.active ? 1 : 0;
+    const rid = await tx(d, () =>
+      createRequest(
+        d,
+        { id: user.id, username: user.username },
+        'user:active',
+        { user_id: id, username: target.username, active },
+        ''
+      )
+    );
+    await logAudit(
+      user,
+      'user:active_requested',
+      'users',
+      id,
+      { active: Number(target.active) },
+      { active },
+      req
+    );
+    try {
+      await notify({
+        type: 'approval_pending',
+        title: 'Permintaan persetujuan baru',
+        message:
+          'Status akun ' + target.username + ' -> ' + (active ? 'aktif' : 'nonaktif') + ' (oleh ' + user.username + ')',
+        link: '/admin/persetujuan',
+      });
+    } catch {
+      /* best-effort */
     }
-    await logAudit(user, 'user:active', 'users', id, { active: 1 }, {
-      active: b.active ? 1 : 0,
-    }, req);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      pending: true,
+      request_id: rid,
+      message: 'Tercatat. Menunggu persetujuan di /admin/persetujuan.',
+    });
   }
 
   // M1-4: edit role/roles. primary = users.role; roles = JSON array (primary selalu masuk set).
@@ -187,6 +257,8 @@ export async function PUT(req: Request) {
     pushRole(newPrimary);
     for (const r of desired) pushRole(r);
     // Guard 3: tak boleh mendemote admin terakhir (admin = role='admin' ATAU roles memuat 'admin').
+    // Dilewati di request-time (fail cepat); guard RE-VALIDATE lagi saat
+    // apply (lib/approvals.ts) karena state bisa berubah di antre.
     if (curRoles.includes('admin') && !finalRoles.includes('admin')) {
       const cnt = (await d
         .prepare("SELECT COUNT(*) AS c FROM users WHERE role = 'admin' OR roles LIKE '%\"admin\"%'")
@@ -194,19 +266,51 @@ export async function PUT(req: Request) {
       if (Number(cnt.c) <= 1)
         return NextResponse.json({ error: 'Tidak bisa mendemote admin terakhir' }, { status: 400 });
     }
-    await d
-      .prepare('UPDATE users SET role = ?, roles = ? WHERE id = ?')
-      .run(newPrimary, JSON.stringify(finalRoles), id);
+    // P2/Q62: ubah peran lewat approval flow (aksi user:role). Payload
+    // menyimpan set final; eksekusi (UPDATE role + roles JSON) terjadi
+    // saat apply setelah guard re-validation.
+    const rid = await tx(d, () =>
+      createRequest(
+        d,
+        { id: user.id, username: user.username },
+        'user:role',
+        {
+          user_id: id,
+          username: target.username,
+          new_primary: newPrimary,
+          new_roles: finalRoles,
+          cur_primary: curPrimary,
+          cur_roles: curRoles,
+        },
+        ''
+      )
+    );
     await logAudit(
       user,
-      'user:roles',
+      'user:roles_requested',
       'users',
       id,
       { role: curPrimary, roles: curRoles },
       { role: newPrimary, roles: finalRoles },
       req
     );
-    return NextResponse.json({ ok: true, role: newPrimary, roles: finalRoles });
+    try {
+      await notify({
+        type: 'approval_pending',
+        title: 'Permintaan persetujuan baru',
+        message:
+          'Peran ' + target.username + ': ' + curPrimary + ' -> ' + newPrimary + ' (oleh ' + user.username + ')',
+        link: '/admin/persetujuan',
+      });
+    } catch {
+      /* best-effort */
+    }
+    return NextResponse.json({
+      ok: true,
+      pending: true,
+      request_id: rid,
+      message: 'Tercatat. Menunggu persetujuan di /admin/persetujuan.',
+    });
   }
 
   return NextResponse.json({ error: 'Tindakan tidak dikenal' }, { status: 400 });

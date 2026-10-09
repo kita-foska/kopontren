@@ -595,6 +595,25 @@ const IconDatabase = (
     <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" />
   </svg>
 );
+// P2/Q62: ikon alur persetujuan (clip + centang -- inline SVG, 16px,
+// stroke currentColor; tanpa emoji/unicode/ikon-font).
+const IconApprovals = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="5" y="4" width="14" height="17" rx="2" />
+    <rect x="9" y="2.5" width="6" height="3" />
+    <path d="m9 13.5 2 2 4-4" />
+  </svg>
+);
 const IconUpload = (
   <svg
     width="16"
@@ -657,6 +676,8 @@ export const MENU_ITEMS: MenuDef[] = [
   { href: '/admin/gl', label: 'GL', icon: IconGL, level: 'laporan' },
   { href: '/admin/jurnal', label: 'Jurnal GL', icon: IconJurnal, level: 'admin' },
   { href: '/admin/pengguna', label: 'Pengguna', icon: IconUserCog, level: 'admin' },
+  // P2/Q62: alur persetujuan (antrean 5 aksi besar; tier admin, matriks).
+  { href: '/admin/persetujuan', label: 'Persetujuan', icon: IconApprovals, level: 'approvals' },
   { href: '/admin/data', label: 'Data & Backup', icon: IconDatabase, level: 'admin' },
   { href: '/admin/migrate', label: 'Import CSV', icon: IconUpload, level: 'admin' },
 ];
@@ -701,6 +722,7 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
       '/admin/gl',
       '/admin/jurnal',
       '/admin/pengguna',
+      '/admin/persetujuan', // P2/Q62: alur persetujuan (tier admin)
       '/admin/data',
       '/admin/migrate',
     ],

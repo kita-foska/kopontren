@@ -58,7 +58,8 @@ export type Feature =
   | 'koperasi' // W4.3: modul koperasi (skema v24; tulis operasional admin/manajer)
   | 'shu' // W4.4: distribusi SHU rasio input (tulis operasional admin/manajer)
   | 'member'
-  | 'personal';
+  | 'personal'
+  | 'approvals'; // P2/Q62: alur persetujuan (queue + decide; tier admin)
 
 export const FEATURE_MATRIX: Readonly<Record<Feature, readonly Role[]>> = {
   pos: ['admin', 'manajer', 'kasir'],
@@ -76,6 +77,7 @@ export const FEATURE_MATRIX: Readonly<Record<Feature, readonly Role[]>> = {
   shu: ['admin', 'manajer'], // W4.4: distribusi SHU rasio input (tulis admin/manajer; read via tier koperasi)
   member: ['admin', 'manajer'],
   personal: ['admin', 'manajer', 'pengurus', 'kasir', 'gudang', 'pembelian', 'member'],
+  approvals: ['admin'], // P2/Q62: alur persetujuan -- admin saja (dua orang)
 };
 
 /** Cek apakah role punya akses ke fitur tertentu (admin selalu lolos). */

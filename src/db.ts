@@ -1118,6 +1118,35 @@ export async function saveZakatSettings(
     await execColumn(d, 'ALTER TABLE products ADD COLUMN is_consignment INTEGER NOT NULL DEFAULT 0');
   }
 
+  // Q62 (P2, 2026-10-10, ruling Gus Fi): approval flow -- antrean request
+  // keputusan utk 5 aksi allow-list (lib/approvals.ts): user:create_admin,
+  // user:role, user:active, jurnal:reverse, kas:delete. Status state
+  // machine: pending -> approved -> applied | rejected | withdrawn.
+  // `target` = kunci alami per aksi (dedupe: satu request terbuka per
+  // target). Purely additive (CREATE TABLE IF NOT EXISTS + index); DB
+  // stempel v28 menjalankan fullInit sekali lagi saat cold start.
+  async function migrate30(d: Db) {
+    await d.exec(
+      'CREATE TABLE IF NOT EXISTS approval_requests(' +
+        'id INTEGER PRIMARY KEY, ' +
+        'action TEXT NOT NULL, ' +
+        'payload TEXT NOT NULL, ' +
+        "target TEXT NOT NULL DEFAULT '', " +
+        "status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected','applied','withdrawn')), " +
+        'request_user_id INTEGER NOT NULL, ' +
+        'request_username TEXT NOT NULL, ' +
+        "reason TEXT NOT NULL DEFAULT '', " +
+        'decided_by INTEGER, ' +
+        "decided_username TEXT NOT NULL DEFAULT '', " +
+        'decided_at TEXT, ' +
+        'applied_at TEXT, ' +
+        "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))" +
+        ')'
+    );
+    await d.exec('CREATE INDEX IF NOT EXISTS idx_approval_status ON approval_requests(status, created_at)');
+    await d.exec('CREATE INDEX IF NOT EXISTS idx_approval_pending ON approval_requests(action, target, status)');
+  }
+
 // Bump v10 (2026): notifikasi admin — tabel notifications,
 // notification_settings, notification_logs (+ index). Idempotent, aman
 // utk DB existing.
@@ -1221,7 +1250,14 @@ export async function saveZakatSettings(
 // di seed = upgrade path. Purely additive; DB stempel v27 menjalankan
 // fullInit sekali lagi saat cold start berikutnya. BACKUP DB WAJIB
 // sebelum deploy.
-const SCHEMA_VERSION = 28;
+// Bump v29 (Q62 P2, 2026-10-10): approval flow -- tabel approval_requests
+// (antrean request 5 aksi allow-list; state machine
+// pending -> approved -> applied | rejected | withdrawn; dispatcher
+// re-validate guard saat apply) + idx_approval_status +
+// idx_approval_pending. migrate30(): CREATE TABLE IF NOT EXISTS + index,
+// purely additive; DB stempel v28 menjalankan fullInit sekali lagi saat
+// cold start berikutnya. BACKUP DB WAJIB sebelum deploy (lesson v16).
+const SCHEMA_VERSION = 29;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
@@ -1246,6 +1282,7 @@ async function fullInit(d: Db) {
   }
   await migrate28(d);
   await migrate29(d);
+  await migrate30(d); // Q62 (P2): tabel approval_requests + index
   await d.exec(
     `UPDATE sales SET reported_at = strftime('%Y-%m-%dT%H:%M:%fZ', reported_at) WHERE reported_at IS NOT NULL AND instr(reported_at, ' ') > 0;`
   );

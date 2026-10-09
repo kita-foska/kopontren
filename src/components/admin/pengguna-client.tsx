@@ -96,9 +96,16 @@ export function PenggunaClient() {
     }
     setCreateBusy(true);
     try {
-      const r = await api('/api/users', { method: 'POST', body: JSON.stringify(form) });
+      const r = await api<{ pending?: boolean; request_id?: number } | undefined>('/api/users', {
+        method: 'POST',
+        body: JSON.stringify(form),
+      });
       if (r.ok) {
-        showToast('Akun ' + form.username + ' dibuat');
+        // P2/Q62: pembuatan admin lewat approval flow (pending; aplikasi
+        // terjadi setelah keputusan di /admin/persetujuan).
+        if (r.data?.pending)
+          showToast('Pembuatan admin ' + form.username + ' menunggu persetujuan (lihat /admin/persetujuan)');
+        else showToast('Akun ' + form.username + ' dibuat');
         setForm({ username: '', display_name: '', role: 'kasir', password: '' });
         load();
       } else showToast(r.error || 'Gagal membuat akun', 'error');
@@ -134,13 +141,20 @@ export function PenggunaClient() {
     if (toggleBusyId !== null) return;
     setToggleBusyId(u.id);
     try {
-      const r = await api('/api/users', {
+      const r = await api<{ pending?: boolean; request_id?: number } | undefined>('/api/users', {
         method: 'PUT',
         body: JSON.stringify({ id: u.id, active: u.active ? 0 : 1 }),
       });
+      // P2/Q62: perubahan status akun lewat approval flow.
       showToast(
         r.ok
-          ? 'Akun ' + u.username + (u.active ? ' dinonaktifkan' : ' diaktifkan')
+          ? r.data?.pending
+            ? 'Perubahan status ' +
+              u.username +
+              ' menunggu persetujuan (lihat /admin/persetujuan)'
+            : 'Akun ' +
+              u.username +
+              (u.active ? ' dinonaktifkan' : ' diaktifkan')
           : r.error || 'Gagal mengubah status'
       );
       load();
@@ -264,12 +278,20 @@ export function PenggunaClient() {
     }
     setRoleBusy(true);
     try {
-      const r = await api<{ ok: boolean }>('/api/users', {
-        method: 'PUT',
-        body: JSON.stringify({ id: roleModal.id, role: rolePrimary, roles: [rolePrimary, ...roleExtra] }),
-      });
+      const r = await api<{ ok?: boolean; pending?: boolean; request_id?: number } | undefined>(
+        '/api/users',
+        {
+          method: 'PUT',
+          body: JSON.stringify({ id: roleModal.id, role: rolePrimary, roles: [rolePrimary, ...roleExtra] }),
+        }
+      );
       if (r.ok) {
-        showToast('Peran ' + roleModal.username + ' diperbarui');
+        // P2/Q62: ubah peran lewat approval flow.
+        showToast(
+          r.data?.pending
+            ? 'Perubahan peran ' + roleModal.username + ' menunggu persetujuan (lihat /admin/persetujuan)'
+            : 'Peran ' + roleModal.username + ' diperbarui'
+        );
         setRoleModal(null);
         load();
       } else showToast(r.error || 'Gagal memperbarui peran', 'error');

@@ -36,7 +36,10 @@ export type NotifyType =
   | 'report_weekly'
   | 'report_monthly'
   | 'rekap_debt'
-  | 'rekap_payable';
+  | 'rekap_payable'
+  // P2 / Q62: approval flow -- request baru + hasil keputusan (semua
+  // notifikasi approval memakai jenis ini; link default /admin/persetujuan).
+  | 'approval_pending';
 
 export const NOTIFY_TYPES: {
   key: NotifyType;
@@ -65,6 +68,8 @@ export const NOTIFY_TYPES: {
   { key: 'report_monthly', label: 'Laporan Bulanan', priority: 3, link: '/admin/laporan' },
   { key: 'rekap_debt', label: 'Rekap Piutang', priority: 3, link: '/piutang' },
   { key: 'rekap_payable', label: 'Rekap Hutang', priority: 3, link: '/admin/hutang' },
+  // P2 / Q62: approval flow (tier admin; 5 aksi allow-list lib/approvals.ts).
+  { key: 'approval_pending', label: 'Permintaan Persetujuan', priority: 1, link: '/admin/persetujuan' },
 ];
 
 const NOTIFY_TYPE_MAP = new Map(NOTIFY_TYPES.map((t) => [t.key, t]));

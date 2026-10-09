@@ -68,8 +68,18 @@ export function KasClient() {
         if (busy) return;
         setBusy(true);
         try {
-          const r = await api('/api/kas?entry_id=' + id, { method: 'DELETE' });
-          showToast(r.ok ? 'Jurnal manual dihapus' : r.error || 'Gagal menghapus');
+          const r = await api<{ ok?: boolean; pending?: boolean; error?: string } | undefined>(
+            '/api/kas?entry_id=' + id,
+            { method: 'DELETE' }
+          );
+          // P2/Q62: hapus jurnal kas lewat approval flow (dua orang).
+          showToast(
+            r.ok
+              ? r.data?.pending
+                ? 'Permintaan hapus jurnal kas menunggu persetujuan (lihat /admin/persetujuan)'
+                : 'Jurnal manual dihapus'
+              : r.error || 'Gagal menghapus'
+          );
           load();
         } finally {
           setBusy(false);

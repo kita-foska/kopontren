@@ -22,8 +22,10 @@ import { db, tx } from '@/db';
 import { currentUser } from '@/lib/auth';
 import { invalidate } from '@/lib/ref-cache';
 import { logAudit } from '@/lib/audit';
-import { isBalanced, postJournalInTx, reverseJournalInTx, round } from '@/lib/jurnal';
+import { isBalanced, postJournalInTx, round } from '@/lib/jurnal';
 import { wibToday } from '@/lib/zakat-period';
+import { createRequest } from '@/lib/approvals';
+import { notify } from '@/lib/notify';
 
 export async function POST(req: Request) {
   const user = await currentUser();
@@ -130,26 +132,51 @@ export async function POST(req: Request) {
         { error: 'Alasan pembalikan wajib diisi' },
         { status: 400 }
       );
-    const revId = await tx(d, async () => reverseJournalInTx(d, entryId, reason, user.username));
-    if (!revId)
-      return NextResponse.json(
-        { error: 'Jurnal tidak ditemukan, tidak memiliki baris, atau sudah dibalik' },
-        { status: 404 }
-      );
-    invalidate('gl:');
-    await logAudit({
-      userId: user.id,
-      userName: user.display_name || user.username,
-      userRole: user.role,
-      action: 'jurnal_reverse',
-      entity: 'journal_entries',
-      entityId: null,
-      fieldChanges: {
-        reversal: { before: null, after: { entry_id: entryId, rev_id: revId, reason } },
-      },
-      req,
+    // P2/Q62: jurnal pembalik lewat approval flow (dua orang). Pre-check
+    // request-time (UX): entry ada + belum dibalik. Guard di lib/approvals.ts
+    // re-validate lagi saat apply (dispatcher); eksekusi reversal
+    // (reverseJournalInTx) terjadi di /api/approvals.
+    const je = (await d
+      .prepare('SELECT id, reversed_by FROM journal_entries WHERE id = ?')
+      .get(entryId)) as { id: string; reversed_by: string | null } | undefined;
+    if (!je)
+      return NextResponse.json({ error: 'Jurnal tidak ditemukan' }, { status: 404 });
+    if (je.reversed_by)
+      return NextResponse.json({ error: 'Jurnal sudah dibalik' }, { status: 400 });
+    const rid = await tx(d, () =>
+      createRequest(
+        d,
+        { id: user.id, username: user.username },
+        'jurnal:reverse',
+        { entry_id: entryId, reason },
+        ''
+      )
+    );
+    await logAudit(
+      user,
+      'jurnal_reverse_requested',
+      'journal_entries',
+      null,
+      undefined,
+      { entry_id: entryId, reason },
+      req
+    );
+    try {
+      await notify({
+        type: 'approval_pending',
+        title: 'Permintaan persetujuan baru',
+        message: 'Jurnal pembalik #' + entryId + ' (oleh ' + user.username + ')',
+        link: '/admin/persetujuan',
+      });
+    } catch {
+      /* best-effort */
+    }
+    return NextResponse.json({
+      ok: true,
+      pending: true,
+      request_id: rid,
+      message: 'Tercatat. Menunggu persetujuan di /admin/persetujuan.',
     });
-    return NextResponse.json({ ok: true, entry_id: revId });
   }
 
   return NextResponse.json(

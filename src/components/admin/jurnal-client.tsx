@@ -133,15 +133,21 @@ export function JurnalClient() {
     if (busy || !revFor || !revReason.trim()) return;
     setBusy(true);
     setMsg(null);
-    const r = await api<{ ok?: boolean; entry_id?: string; error?: string }>('/api/jurnal', {
-      method: 'POST',
-      body: JSON.stringify({ action: 'reverse', entry_id: revFor, reason: revReason.trim() }),
-    });
+    const r = await api<{ ok?: boolean; entry_id?: string; pending?: boolean; error?: string }>(
+      '/api/jurnal',
+      {
+        method: 'POST',
+        body: JSON.stringify({ action: 'reverse', entry_id: revFor, reason: revReason.trim() }),
+      }
+    );
     setBusy(false);
     if (r.ok && r.data?.ok) {
+      // P2/Q62: jurnal pembalik lewat approval flow (dua orang).
       setMsg({
         ok: true,
-        text: 'Jurnal pembalik dibuat: ' + String(r.data.entry_id ?? '') + ' (asli: ' + revFor + ')',
+        text: r.data.pending
+          ? 'Jurnal pembalik #' + revFor + ' menunggu persetujuan (lihat /admin/persetujuan).'
+          : 'Jurnal pembalik dibuat: ' + String(r.data.entry_id ?? '') + ' (asli: ' + revFor + ')',
       });
       setRevFor(null);
       setRevReason('');

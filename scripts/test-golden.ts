@@ -331,9 +331,11 @@ async function gp02(base: string, refs: Refs, adminJar: Jar): Promise<void> {
  * GP-03 encodes the session-cache resolution on a DEDICATED multi-role
  * account (created via `POST /api/users`), NOT the seeded admin. Flow:
  * create user (role `kasir`) -> login -> admin extends roles to
- * `[kasir, pembelian]` -> the SAME session is still gated out of the
- * just-added role because `PUT /api/users` writes users.roles + fires the
- * `user:roles` audit but does NOT invalidate the 30 s session cache ->
+ * `[kasir, pembelian]` LEWAT approval flow (P2/Q62: PUT /api/users kini
+ * membuat request pending `user:role`; admin memutus via POST
+ * /api/approvals -- golden DB hanya 1 admin, jadi bootstrap
+ * self-decide diizinkan) -> the SAME session is still gated out of the
+ * just-added role because apply does NOT invalidate the 30 s session cache ->
  * MANDATORY re-login (createSession re-reads users.roles) -> switch-role now
  * succeeds. Acting-role gates apply on the very next request (switch-role
  * re-reads the role set). The stale pre-relogin 403 is logged as a
@@ -372,14 +374,30 @@ async function gp03(base: string, refs: Refs, adminJar: Jar): Promise<void> {
   const warm = await call(base, 'GET', '/api/sales', { jar, tries: 2 });
   ok('warm cache: kasir CAN read sales (pos tier) -> 200', warm.status === 200, 'got ' + warm.status);
 
-  // Admin extends the dedicated user to multi-role [kasir, pembelian].
+  // P2/Q62: Admin extends the dedicated user to multi-role [kasir, pembelian]
+  // LEWAT approval flow: PUT /api/users kini membuat request pending
+  // (user:role) -- eksekusi terjadi setelah admin memutus (decide) di
+  // /api/approvals. Golden DB hanya punya 1 admin, maka decider = admin
+  // yang sama = bootstrap self-decide (diizinkan lib/approvals.ts).
   const put = await call(base, 'PUT', '/api/users', {
     jar: adminJar,
     body: { id: refs.gp03UserId, roles: ['kasir', 'pembelian'] },
     tries: 3,
   });
-  ok('PUT /api/users (add pembelian) -> 200 ok', put.status === 200 && put.json?.ok === true, 'got ' + put.status);
-  const putRoles = (put.json?.roles as string[] | undefined) ?? [];
+  ok('PUT /api/users (add pembelian) -> 200 pending', put.status === 200 && put.json?.ok === true && put.json?.pending === true, 'got ' + put.status);
+  const putReqId = Number((put.json?.request_id as number | undefined) ?? 0);
+  ok('role change tercatat sbg request (id > 0)', putReqId > 0, 'id ' + putReqId);
+  const dec = await call(base, 'POST', '/api/approvals', {
+    jar: adminJar,
+    body: { op: 'decide', id: putReqId, approve: true },
+    tries: 3,
+  });
+  ok('decide approve -> applied', dec.status === 200 && dec.json?.ok === true && dec.json?.status === 'applied', 'got ' + dec.status + ' ' + JSON.stringify(dec.json));
+  const usersAfter = await call(base, 'GET', '/api/users', { jar: adminJar, tries: 3 });
+  const gp03After = ((usersAfter.json?.users as { id?: number; roles?: string[] }[] | undefined) ?? []).find(
+    (u) => u.id === refs.gp03UserId
+  );
+  const putRoles = gp03After?.roles ?? [];
   ok('updated role set = [kasir, pembelian]', JSON.stringify(putRoles.sort()) === '["kasir","pembelian"]', JSON.stringify(putRoles));
 
   // Non-fatal, timing-bound to the 30s cache window: the pre-relogin session
@@ -590,7 +608,8 @@ async function verifyDb(refs: Refs, dbRel: string): Promise<void> {
     ok('gp03 user roles persisted [kasir, pembelian]', gp03RolesJson.includes('"kasir"') && gp03RolesJson.includes('"pembelian"'), gp03RolesJson);
 
     ok('audit: auth:switch-role fired', (await db.count("SELECT COUNT(*) c FROM audit_log WHERE action = 'auth:switch-role'")) >= 1);
-    ok('audit: user:roles fired', (await db.count("SELECT COUNT(*) c FROM audit_log WHERE action = 'user:roles'")) >= 1);
+    ok('audit: user:roles_requested fired', (await db.count("SELECT COUNT(*) c FROM audit_log WHERE action = 'user:roles_requested'")) >= 1);
+    ok('audit: approval:decide fired', (await db.count("SELECT COUNT(*) c FROM audit_log WHERE action = 'approval:decide'")) >= 1);
     ok('audit: user:create fired', (await db.count("SELECT COUNT(*) c FROM audit_log WHERE action = 'user:create'")) >= 1);
     ok('purchase row recorded (GP Supplier)', (await db.count("SELECT COUNT(*) c FROM purchases WHERE supplier = 'GP Supplier'")) >= 1);
     ok('gp03 purchase row recorded (GP03 Purch)', (await db.count("SELECT COUNT(*) c FROM purchases WHERE supplier = 'GP03 Purch'")) >= 1);

@@ -4,8 +4,9 @@ import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
 import { journalForCashEntry, postJournalInTx } from '@/lib/jurnal';
-import { notifyCashBalance } from '@/lib/notify';
+import { notify, notifyCashBalance } from '@/lib/notify';
 import { parsePaySplit } from '@/lib/pay-methods';
+import { createRequest } from '@/lib/approvals';
 
 type KasAgg = { sales: number; purchases: number; expenses: number; cashIn: number; cashOut: number };
 
@@ -190,15 +191,36 @@ export async function DELETE(req: Request) {
     .prepare('SELECT type, label, amount FROM cash_entries WHERE id = ?')
     .get(id)) as { type: string; label: string; amount: number } | undefined;
   if (!entry) return NextResponse.json({ error: 'Jurnal tidak ditemukan' }, { status: 404 });
-  await d.prepare('DELETE FROM cash_entries WHERE id = ?').run(id);
-  await logAudit(user, 'kas:delete', 'cash_entries', id, entry, undefined, req);
-  invalidate('kas:');
-  invalidate('reports:');
-  // Cek kas menipis (best-effort, HANYA admin).
+  // P2/Q62: hapus jurnal kas manual lewat approval flow (aksi kas:delete).
+  // Snapshot baris ikut payload (audit); guard re-validate + DELETE terjadi
+  // saat apply di /api/approvals.
+  const rid = await tx(d, () =>
+    createRequest(
+      d,
+      { id: user.id, username: user.username },
+      'kas:delete',
+      {
+        entry_id: id,
+        snapshot: { type: entry.type, label: entry.label, amount: entry.amount },
+      },
+      ''
+    )
+  );
+  await logAudit(user, 'kas:delete_requested', 'cash_entries', id, entry, undefined, req);
   try {
-    await notifyCashBalance();
-  } catch (e) {
-    console.warn('[notify] pemicu kas gagal:', e);
+    await notify({
+      type: 'approval_pending',
+      title: 'Permintaan persetujuan baru',
+      message: 'Hapus jurnal kas "' + entry.label + '" (' + entry.amount + ') (oleh ' + user.username + ')',
+      link: '/admin/persetujuan',
+    });
+  } catch {
+    /* best-effort */
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    pending: true,
+    request_id: rid,
+    message: 'Tercatat. Menunggu persetujuan di /admin/persetujuan.',
+  });
 }
