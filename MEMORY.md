@@ -1,6 +1,23 @@
 # MEMORY
 
 ## 2026-10-10
+### BANNER PWA LEPAS -- ikon inline SVG ganti emoji (audit 10 Okt, commit `a48136d`)
+- **`a48136d`** (1 file, +17/-2, `src/components/sw-register.tsx`;
+  parent `1da3a16`; dual-push `origin/master` + `origin/main` @
+  `a48136d`, kedua ref terverifikasi identik): emoji U+1F195 di
+  banner update PWA diganti ikon refresh inline SVG (16px, viewBox
+  24, stroke-2, currentColor, text-amber-600, shrink-0,
+  aria-hidden); em-dash & ellipsis di baris yang ditulis ulang
+  dinormalkan ASCII; "Memuat..." line tak disentuh (minimal diff).
+- **Audit (10 Okt) -- LULUS, LULUS, SAH, GO COMMIT** (via Gus Fi
+  / DeepSeek): aturan "no emoji/unicode di produk; ikon = inline
+  SVG" dipatuhi. Gate: tsc 0; test:all 27/27 green (per-suite);
+  0 non-ASCII di baris yang ditambah; public/sw.js + V1
+  laporan-admin-client.tsx + coop.ts tak tersentuh.
+- **Catatan harness**: foreground `node` test:all batch ter-kill
+  oleh terminal harness (per-suite kill); hasil = run per-suite
+  terpisah + detached launcher `n_ta_14h_launch.js`.
+
 ### P3a LEPAS -- tutup COA 2080 (SHU Berjalan) + skema v28 (10 Okt 2026)
 - **Ruling**: 2080 (SHU Berjalan) TAK DIPAKAI alur SHU
   (SHU flow = 3020/3030/3040/3050/3060/5080; lanjutan ruling
