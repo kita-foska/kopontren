@@ -1477,7 +1477,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           </div>
 
           {/* Cart items list */}
-          <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+          <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
             {cart.map((l, idx) => {
               // Grosir v1: % diskon aktif utk qty baris ini (tier terbaik
               // MAKS global). Badge tampil hanya utk harga OTOMATIS -- bila
