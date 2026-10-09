@@ -26,8 +26,8 @@
 - **Atribusi defect UI (tabel)**:
   | Commit | Defek | Status |
   |---|---|---|
+  | `5a4c6ce` fix(pos) | POS toolbar: pill + search 1 baris (collapse) | LULUS `8a1dcd3` (Fix A) |
   | `2efa660` feat/ui | KPI tile `p-4.5` (token mati) | LULUS `8a1dcd3` (Fix B) |
-  | `2efa660` feat/ui | POS toolbar: pill + search 1 baris (collapse) | LULUS `8a1dcd3` (Fix A) |
   | `2efa660` feat/ui | import rusak -> `next build` gagal | LULUS `1783bbc` (anak langsung `2efa660`) |
   | residual audit | Fix C+D (P2, kosmetik) | DITUNDA -- nunggu ruling Gus Fi |
 - **Gate C1**: `tsc --noEmit` exit 0; `test:all`
