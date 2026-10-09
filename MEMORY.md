@@ -29,7 +29,8 @@
   | `5a4c6ce` fix(pos) | POS toolbar: pill + search 1 baris (collapse) | LULUS `8a1dcd3` (Fix A) |
   | `2efa660` feat/ui | KPI tile `p-4.5` (token mati) | LULUS `8a1dcd3` (Fix B) |
   | `2efa660` feat/ui | import rusak -> `next build` gagal | LULUS `1783bbc` (anak langsung `2efa660`) |
-  | residual audit | Fix C+D (P2, kosmetik) | DITUNDA -- nunggu ruling Gus Fi |
+  | residual audit | Fix C (P2, kosmetik) | LULUS `e399147` (10 Okt) |
+  | residual audit | Fix D (P2, kosmetik) | DITUNDA -- nunggu feedback pengurus |
 - **Gate C1**: `tsc --noEmit` exit 0; `test:all`
   26/26 (detached cmd.exe polling, bypass timeout
   PowerShell); 0 non-ASCII di +26 baris; residue
@@ -45,6 +46,22 @@
   lagi saat cold start (lesson v16, ~15-20 dtk).
   Verifikasi = manual Gus Fi pasca-deploy (request
   AUTH pertama memicu migrasi).
+
+### W5.1 UI P2 -- Fix C LEPAS (10 Okt 2026)
+- **Ruling Gus Fi (via DeepSeek, 10 Okt)**: Fix C GO
+  (P2, UX, minor); Fix D DEFER (dark mode default acceptable,
+  nunggu feedback pengurus/kasir).
+- **`e399147`** (1 file, +1/-1; dual-push `origin/master`
+  + `origin/main` @ `e399147`):
+  `src/components/pos-client.tsx` L1480 -- `max-h-64` ->
+  `max-h-96` (cart items list: 256px -> 384px, +50%).
+  Prevents cart clipping when >3 line items.
+- **Gate**: `tsc --noEmit` exit 0; `test:all` 26/26;
+  0 non-ASCII; a11y + hotkeys tak berubah (CSS class only).
+  File proteksi tak disentuh: public/sw.js,
+  laporan-admin-client.tsx (V1), src/lib/coop.ts, src/db.ts.
+- **Fix D**: DEFER -- dark mode default acceptable;
+  revisit hanya jika pengurus/kasir file complaint.
 
 ## 2026-10-09
 ### W5.1 (PINJ-1) LEPAS -- pinjaman anggota QARDH (9 Okt 2026)

@@ -2047,8 +2047,10 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       Atribusi defect: `2efa660` (feat/ui); import
       rusak `2efa660` sudah fix `1783bbc`. Detail:
       MEMORY.md seksi "W5.1 UI P1 (FIX A+B) LEPAS".
-- [ ] **W5.1 UI P2 (residual) -- Fix C+D DITUNDA**
-      (P2 kosmetik; nunggu ruling Gus Fi. Turso v27
+- [x] **W5.1 UI P2 -- Fix C LEPAS** (commit e399147, 10 Okt): max-h-64 -> max-h-96 di pos-client.tsx L1480 (cart items 256px->384px). Gate: tsc 0 + test:all 26/26 + 0 non-ASCII. Detail: MEMORY.md seksi W5.1 UI P2.
+- [ ] **W5.1 UI P2 -- Fix D DITUNDA**
+      (P2 kosmetik; dark mode default acceptable;
+      revisit jika pengurus/kasir file complaint. Turso v27
       verification paralel = manual Gus Fi).
 
 **Notifikasi & komunikasi:**
