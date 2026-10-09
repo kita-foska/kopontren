@@ -169,6 +169,9 @@ const INSERT_COA =
   'INSERT INTO coa (code, name, "group", kind, status, needs_decision) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(code) DO NOTHING';
 const FLIP9_SQL =
   "UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('1070', '1080', '1090', '2040', '4050', '4060', '4070', '4080', '5060')";
+// P3a (v28): close 2080 (SHU Berjalan; ruling Q6 W4 tak dipakai alur Sek.7).
+const CLOSE_2080_SQL =
+  "UPDATE coa SET status = 'closed', needs_decision = 0 WHERE code = '2080'";
 
 async function main(): Promise<void> {
   let mod: typeof import('node:sqlite');
@@ -191,6 +194,7 @@ async function main(): Promise<void> {
     const insCoa = db1.prepare(INSERT_COA);
     for (const r of COA_V23) insCoa.run(r[0], r[1], r[2], r[3], r[4], r[5]);
     db1.exec(FLIP9_SQL); // upgrade path; fresh = no-op (seed sudah open)
+    db1.exec(CLOSE_2080_SQL); // P3a (v28): close 2080
     db1.exec(DDL_AKAD);
     db1.exec(DDL_AKAD_EV);
     for (const s of DDL_IDX) db1.exec(s);
@@ -216,12 +220,12 @@ async function main(): Promise<void> {
     ok('M1: UNIQUE(type,counterparty,opened_at,amount) menolak duplikat', dupRejected);
     db1.exec("INSERT INTO akad(id, type, counterparty, amount, opened_at) VALUES ('a3','murabahah','Budi',10000000,'2026-10-03')");
     eq('M1: akad = 2 baris (duplikat tertolak, tanggal beda boleh)', cnt('SELECT COUNT(*) c FROM akad', db1), 2);
-    // 9 flip + kontrol.
+    // 9 flip + close 2080 (P3a v28) + kontrol.
     eq('M1: coa COUNT = 52', cnt('SELECT COUNT(*) c FROM coa', db1), 52);
     eq("M1: coa open = 38 (29 v22 + 9 flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='open'", db1), 38);
-    eq("M1: coa pending = 13 (22 - 9 flip)", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db1), 13);
-    eq("M1: coa closed = 1", cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'", db1), 1);
-    eq('M1: coa needs_decision=1 = 13', cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1', db1), 13);
+    eq("M1: coa pending = 12 (22 - 9 flip - 1 close 2080)", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db1), 12);
+    eq("M1: coa closed = 2 (5050 + 2080 P3a)", cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'", db1), 2);
+    eq('M1: coa needs_decision=1 = 12', cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1', db1), 12);
     for (const code of FLIP9) {
       const r = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
       ok(`M1: coa ${code} flip open/0`, r.s === 'open' && r.n === 0, `status=${r.s} nd=${r.n}`);
@@ -233,7 +237,7 @@ async function main(): Promise<void> {
     ctrl('6030', 'open', 0); // flip W5.3b (OQ-13)
     ctrl('5050', 'closed', 0);
     ctrl('1060', 'pending', 1);
-    ctrl('2080', 'pending', 1);
+    ctrl('2080', 'closed', 0); // P3a (v28): ruling Q6 W4
     ctrl('2090', 'open', 0); // flip v22
     ctrl('4040', 'open', 0); // flip v22
     // Stamp v23.

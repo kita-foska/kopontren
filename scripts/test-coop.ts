@@ -108,6 +108,9 @@ const INSERT_COA =
 // Upgrade path (db.ts W4.1): 2080 TIDAK di-flip (ruling Q6).
 const FLIP6_SQL =
   "UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('3020', '3030', '3040', '3050', '3060', '5080')";
+// P3a (v28): close 2080 (SHU Berjalan; ruling Q6 W4 tak dipakai alur Sek.7).
+const CLOSE_2080_SQL =
+  "UPDATE coa SET status = 'closed', needs_decision = 0 WHERE code = '2080'";
 
 /** Helper: jumlah baris hasil query COUNT(*) c pada DB in-memory. */
 function cnt0(db: import('node:sqlite').DatabaseSync, sql: string): number {
@@ -187,6 +190,7 @@ async function main(): Promise<void> {
     const insCoa = db1.prepare(INSERT_COA);
     for (const r of COA_V24) insCoa.run(r[0], r[1], r[2], r[3], r[4], r[5]);
     db1.exec(FLIP6_SQL); // upgrade path; fresh = no-op (seed sudah open)
+  db1.exec(CLOSE_2080_SQL); // P3a (v28): close 2080
     db1.exec(DDL_COOP_MEM);
     db1.exec(DDL_COOP_SV);
     db1.exec(DDL_COOP_SHU);
@@ -237,12 +241,12 @@ async function main(): Promise<void> {
       'M1: idx_coop_savings ada',
       (db1.prepare('PRAGMA index_list(coop_savings)').all() as Array<{ name: string }>).some((x) => x.name === 'idx_coop_savings')
     );
-    // 6 flip + kontrol (state akhir fresh v24 = open44/pending7/nd7; flip 6030 v26).
+    // 6 flip + close 2080 (P3a v28) + kontrol (fresh v28 = open44/pending6/nd6/closed2).
     eq('M1: coa COUNT = 52', cnt0(db1, 'SELECT COUNT(*) c FROM coa'), 52);
     eq('M1: coa open = 44 (38 v23 + 6 flip)', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 44);
-    eq('M1: coa pending = 7 (13 - 6 flip)', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='pending'"), 7);
-    eq('M1: coa closed = 1', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='closed'"), 1);
-    eq('M1: coa needs_decision=1 = 7', cnt0(db1, 'SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 7);
+    eq('M1: coa pending = 6 (13 - 6 flip - 1 close 2080)', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='pending'"), 6);
+    eq('M1: coa closed = 2 (5050 + 2080 P3a)', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='closed'"), 2);
+    eq('M1: coa needs_decision=1 = 6', cnt0(db1, 'SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 6);
     for (const code of FLIP6) {
       const r = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
       ok('M1: coa ' + code + ' flip open/0', r.s === 'open' && r.n === 0, 'status=' + r.s + ' nd=' + r.n);
@@ -251,7 +255,7 @@ async function main(): Promise<void> {
       const r = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
       ok('M1: coa ' + code + ' tetap ' + status + '/nd=' + nd, r.s === status && r.n === nd);
     };
-    ctrl('2080', 'pending', 1); // ruling Q6: SHU Berjalan tak dipakai alur Sek.7
+    ctrl('2080', 'closed', 0); // P3a (v28): ruling Q6 W4: tak dipakai alur Sek.7
     ctrl('1060', 'pending', 1);
     ctrl('5050', 'closed', 0);
     ctrl('6030', 'open', 0); // flip W5.3b (OQ-13)
@@ -264,6 +268,7 @@ async function main(): Promise<void> {
     // Idempoten: DDL + flip kedua kali tak mengubah apa pun.
     db1.exec(DDL_COOP_MEM);
     db1.exec(FLIP6_SQL);
+    db1.exec(CLOSE_2080_SQL);
     eq('M1: re-run DDL/flip idempoten (coop_members tetap 2)', cnt0(db1, 'SELECT COUNT(*) c FROM coop_members'), 2);
     eq('M1: re-run flip open tetap 44', cnt0(db1, "SELECT COUNT(*) c FROM coa WHERE status='open'"), 44);
     // Stamp v24.

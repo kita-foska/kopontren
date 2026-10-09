@@ -149,11 +149,12 @@ async function main(): Promise<void> {
   for (const r of COA_V22) insCoa.run(r[0], r[1], r[2], r[3], r[4], r[5]);
   // UPDATE flip (mirror seed() src/db.ts; fresh install = no-op).
   db1.exec(`UPDATE coa SET status = 'open', needs_decision = 0 WHERE code IN ('2090', '5090', '4040')`);
+  db1.exec(`UPDATE coa SET status = 'closed', needs_decision = 0 WHERE code = '2080'`); // P3a (v28)
   eq('M1: coa COUNT(*) = 52', cnt('SELECT COUNT(*) c FROM coa', db1), 52);
   eq("M1: coa status open = 29", cnt("SELECT COUNT(*) c FROM coa WHERE status='open'", db1), 29);
-  eq("M1: coa status pending = 22", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db1), 22);
-  eq("M1: coa status closed = 1", cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'", db1), 1);
-  eq("M1: coa needs_decision=1 = 22", cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1', db1), 22);
+  eq("M1: coa status pending = 21", cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'", db1), 21);
+  eq("M1: coa status closed = 2", cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'", db1), 2);
+  eq("M1: coa needs_decision=1 = 21", cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1', db1), 21);
   for (const code of ['2090', '5090', '4040']) {
     const r = db1.prepare('SELECT status s, needs_decision n FROM coa WHERE code=?').get(code) as { s: string; n: number };
     ok(`M1: coa ${code} flip open/0`, r.s === 'open' && r.n === 0, `status=${r.s} nd=${r.n}`);

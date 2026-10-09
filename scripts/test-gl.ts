@@ -85,7 +85,7 @@ const COA: Array<[string, string, string, string, string, number]> = [
   ['2050', 'Simpanan Pokok', '20xx', 'kewajiban', 'open', 0],
   ['2060', 'Simpanan Wajib', '20xx', 'kewajiban', 'open', 0],
   ['2070', 'Simpanan Sukarela', '20xx', 'kewajiban', 'open', 0],
-  ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'pending', 1],
+  ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'closed', 0], // P3a (v28)
   ['2090', 'ZIS Terkumpul Belum Disalurkan', '20xx', 'kewajiban', 'open', 0],
   ['2100', 'Kewajiban Lain-lain', '20xx', 'kewajiban', 'pending', 1],
   // 30xx ekuitas
@@ -147,9 +147,9 @@ async function main(): Promise<void> {
   eq('coa COUNT(*) = 52', cnt('SELECT COUNT(*) c FROM coa'), 52);
   eq('coa DISTINCT code = 52', cnt('SELECT COUNT(DISTINCT code) c FROM coa'), 52);
   eq('coa status open = 29', cnt("SELECT COUNT(*) c FROM coa WHERE status='open'"), 29);
-  eq('coa status pending = 22', cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'"), 22);
-  eq('coa status closed = 1', cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'"), 1);
-  eq('coa needs_decision=1 = 22', cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 22);
+  eq('coa status pending = 21', cnt("SELECT COUNT(*) c FROM coa WHERE status='pending'"), 21);
+  eq('coa status closed = 2', cnt("SELECT COUNT(*) c FROM coa WHERE status='closed'"), 2);
+  eq('coa needs_decision=1 = 21', cnt('SELECT COUNT(*) c FROM coa WHERE needs_decision=1'), 21);
   eq('coa 5050 = closed', (db!.prepare("SELECT status FROM coa WHERE code='5050'").get() as { status: string }).status, 'closed');
   // W2.7: flip 2090/5090/4040 -> open; 6030 = open (flip W5.3b v26).
   for (const code of ['2090', '5090', '4040']) {

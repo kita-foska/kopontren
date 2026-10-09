@@ -798,7 +798,7 @@ async function migrate(d: Db) {
       ['2050', 'Simpanan Pokok', '20xx', 'kewajiban', 'open', 0],
       ['2060', 'Simpanan Wajib', '20xx', 'kewajiban', 'open', 0],
       ['2070', 'Simpanan Sukarela', '20xx', 'kewajiban', 'open', 0],
-      ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'pending', 1], // W4.1 (v24): tetap pending (ruling Q6 5 Okt: tak dipakai alur Sek.7)
+      ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'closed', 0], // W6 P3a (v28): close (ruling Q6 W4 5 Okt: tak dipakai alur Sek.7)
       ['2090', 'ZIS Terkumpul Belum Disalurkan', '20xx', 'kewajiban', 'open', 0], // W2.7 (v22): flip open (ZIS masuk OQ-1)
       ['2100', 'Kewajiban Lain-lain', '20xx', 'kewajiban', 'pending', 1],
       // 30xx ekuitas
@@ -872,9 +872,18 @@ async function migrate(d: Db) {
     // Dibayar' 'pending' -> 'open' (OQ-13; jembatan zakat P3 resmi
     // dipakai alur P5). UPDATE eksplisit karena seed di atas DO
     // NOTHING (DB v25: baris coa sudah ada, seed tidak menimpa).
-    // Idempoten; fresh install = no-op. 7 akun pending lainnya
-    // (1060/1110/2080/2100/5040/5070/6010) tetap 'pending'.
+    // Idempoten; fresh install = no-op. 6 akun pending lainnya
+    // (1060/1110/2100/5040/5070/6010) tetap 'pending'. 2080
+    // di-close di P3a (v28).
     await d.exec(`UPDATE coa SET status = 'open', needs_decision = 0 WHERE code = '6030'`);
+    // W6 P3a (skema v28) -- close COA 2080 'SHU Berjalan' (ruling
+    // Q6 W4 5 Okt: tak dipakai alur Sek.7; SHU flow = 3020/3030/
+    // 3040/3050/3060/5080). UPDATE eksplisit karena seed di atas DO
+    // NOTHING (DB v27: baris coa sudah ada, seed tidak menimpa).
+    // Idempoten; fresh install = no-op (seed sudah 'closed').
+    await d.exec(
+      `UPDATE coa SET status = 'closed', needs_decision = 0 WHERE code = '2080'`
+    );
   }
 }
 
@@ -1207,7 +1216,12 @@ export async function saveZakatSettings(
 // CREATE TABLE IF NOT EXISTS + seed INSERT ON CONFLICT DO NOTHING. DB
 // stempel v26 menjalankan fullInit sekali lagi saat cold start berikutnya.
 // BACKUP DB WAJIB sebelum deploy (lesson v16).
-const SCHEMA_VERSION = 27;
+// Bump v28 (W6 P3a): close COA 2080 'SHU Berjalan' (status pending ->
+// closed; ruling Q6 W4 5 Okt: tak dipakai alur Sek.7). UPDATE eksplisit
+// di seed = upgrade path. Purely additive; DB stempel v27 menjalankan
+// fullInit sekali lagi saat cold start berikutnya. BACKUP DB WAJIB
+// sebelum deploy.
+const SCHEMA_VERSION = 28;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
