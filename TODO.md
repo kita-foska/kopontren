@@ -211,7 +211,9 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       package.json points to scripts/test-wakaf.ts
       (does not exist). Legacy cleanup needed (W5 or W6).
       Ditemukan saat W2.6 verify 2 Okt 2026 (out-of-scope, TIDAK
-      di-fix sekarang).
+      di-fix sekarang). STALE -- 10 Okt 2026 (P3a, skema v28 +
+      COA 2080 closed): script `test-wakaf.ts` tak pernah dibuat;
+      cleanup tetap = hapus entry `test:wakaf` dari package.json.
 - [x] **Phone duplicate guard format-insensitive** -- SELESAI (commit
       `f2b398e`, 23 Sep 2026, dual-push master+main): helper bersama
       `phoneOwner` + `canonicalPhone` di `src/lib/phone.ts` -- duplikat
@@ -1430,7 +1432,7 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
             `pending -> open` 2 layer (seed array fresh + UPDATE
             eksplisit upgrade path v23 -- seed ON CONFLICT DO
             NOTHING tak menimpa baris lama; `2080` SHU Berjalan
-            tetap pending, ruling Q6); SCHEMA_VERSION 23 -> 24;
+            tetap pending, ruling Q6; DITUTUP P3a 10 Okt (skema v28, `3f4a8cf`)); SCHEMA_VERSION 23 -> 24;
             test-coop M-suite (M1 fresh / M2 upgrade / M3 stamp)
             45/0 + test:all 21 suite hijau + tsc 0 + 0 non-ASCII.
             Ops-fix terpisah `30a3ae5` (backup-db.mjs row-index

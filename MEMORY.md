@@ -1,6 +1,35 @@
 # MEMORY
 
 ## 2026-10-10
+### P3a LEPAS -- tutup COA 2080 (SHU Berjalan) + skema v28 (10 Okt 2026)
+- **Ruling**: 2080 (SHU Berjalan) TAK DIPAKAI alur SHU
+  (SHU flow = 3020/3030/3040/3050/3060/5080; lanjutan ruling
+  Q6 W4.1 5 Okt) -> ditutup.
+- **`3f4a8cf`** (5 file, +45/-21; dual-push `origin/master` +
+  `origin/main` @ `3f4a8cf`; kedua ref remote terverifikasi
+  identik):
+  (a) `src/db.ts` -- seed 2080 `pending/1 -> closed/0` +
+  UPDATE eksplisit di upgrade path (DB v27: seed ON CONFLICT
+  DO NOTHING tak menimpa baris lama; idempoten, fresh =
+  no-op) + komentar blok 6030 (7 -> 6 akun pending) +
+  `SCHEMA_VERSION 27 -> 28`. Murni aditif; DB stempel v27
+  menjalankan fullInit sekali lagi saat cold start (lesson
+  v16; BACKUP DB WAJIB sebelum deploy).
+  (b) 4 test file -- asersi COA disinkron (P3a mirror seed):
+  test-akad `CLOSE_2080_SQL` di M1 + M2; pending 13 -> 12,
+  closed 1 -> 2 (5050 + 2080), nd 13 -> 12; ctrl 2080 =
+  closed/0. test-coop `CLOSE_2080_SQL` M1 + M2. test-zis +
+  test-gl counts disesuaikan.
+- **Gate lulus**: `tsc --noEmit` exit 0; test-gl 102/0;
+  test-zis 68/0; test-akad 175/0; test-coop 132/0;
+  `test:all` 26/26 exit 0 (full-suite); 0 non-ASCII di 4
+  test file (db.ts = existing, tak berubah).
+- **Turso v28**: skema v28 (close COA 2080) murni aditif
+  (UPDATE eksplisit + seed). DB prod stempel v27 -> fullInit
+  sekali lagi saat cold start (lesson v16). Verifikasi =
+  manual Gus Fi pasca-deploy.
+- NEXT = **P3b** (ZIS Rekap -- planning menyusul).
+
 ### W5.1 UI P1 (FIX A+B) LEPAS -- POS toolbar overflow + dashboard p-4.5 (10 Okt 2026)
 - **Ruling Gus Fi (via audit DeepSeek)**: diff Fix A+B
   LULUS; koreksi commit plan = A+B digabung 1 commit
