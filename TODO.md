@@ -2035,6 +2035,22 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       (lesson v16); DB stempel v26 menjalankan fullInit sekali lagi.
       Detail: MEMORY.md seksi "W5.1 (PINJ-1) LEPAS".
 
+- [x] **W5.1 UI P1 (10 Okt) -- Fix A+B LEPAS**
+      commit `8a1dcd3` (dual-push master+main):
+      (A) POS `pos-client.tsx` -- pill kategori ke
+      baris sendiri (sibling baris search + Scan
+      Barcode), input search tak lagi collapse, a11y
+      + hotkey F1 utuh; (B) `admin/dashboard/page.tsx`
+      -- token mati `p-4.5` -> `p-4` (KPI tile
+      padding uniform 16px). Gate: tsc 0 + test:all
+      26/26 + 0 non-ASCII + residue p-4.5 = 0.
+      Atribusi defect: `2efa660` (feat/ui); import
+      rusak `2efa660` sudah fix `1783bbc`. Detail:
+      MEMORY.md seksi "W5.1 UI P1 (FIX A+B) LEPAS".
+- [ ] **W5.1 UI P2 (residual) -- Fix C+D DITUNDA**
+      (P2 kosmetik; nunggu ruling Gus Fi. Turso v27
+      verification paralel = manual Gus Fi).
+
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.
 - [ ] Q50 Kategori notifikasi -- risiko, sukses, pengingat, update sistem.

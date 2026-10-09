@@ -1,5 +1,51 @@
 # MEMORY
 
+## 2026-10-10
+### W5.1 UI P1 (FIX A+B) LEPAS -- POS toolbar overflow + dashboard p-4.5 (10 Okt 2026)
+- **Ruling Gus Fi (via audit DeepSeek)**: diff Fix A+B
+  LULUS; koreksi commit plan = A+B digabung 1 commit
+  (C1), docs/record = C2; screenshot checklist
+  didelegasi ke Gus Fi (manual, post-deploy); Fix C+D
+  (P2 kosmetik) DITUNDA -- nunggu ruling.
+- **C1 `8a1dcd3`** (2 file, +26/-26; dual-push
+  `origin/master` + `origin/main` @ `8a1dcd3`):
+  (A) `src/components/pos-client.tsx` -- pill kategori
+  dipindah ke baris sendiri (sibling dari baris
+  search + Scan Barcode; wrapper search jadi `mb-2`,
+  baris pill = `no-scrollbar mb-3` + `role="tablist"`)
+  -> input `flex-1` tak lagi collapse (akar: pill dulu
+  di baris flex yang sama). A11y utuh: `role=tablist`,
+  `aria-label="Kategori produk"`, `onKeyDown`
+  (nav keyboard), `role="tab"` + `aria-selected`
+  per pill; hotkey F1 (`searchInputRef`) tak
+  disentuh. Logika (`setCat`, `categories.map`,
+  props FilterPill) tak berubah.
+  (B) `src/app/admin/dashboard/page.tsx` -- token
+  mati `p-4.5` -> `p-4` (Tailwind 3.x tak punya
+  `p-4.5`; KPI tile padding uniform 16px).
+- **Atribusi defect UI (tabel)**:
+  | Commit | Defek | Status |
+  |---|---|---|
+  | `2efa660` feat/ui | KPI tile `p-4.5` (token mati) | LULUS `8a1dcd3` (Fix B) |
+  | `2efa660` feat/ui | POS toolbar: pill + search 1 baris (collapse) | LULUS `8a1dcd3` (Fix A) |
+  | `2efa660` feat/ui | import rusak -> `next build` gagal | LULUS `1783bbc` (anak langsung `2efa660`) |
+  | residual audit | Fix C+D (P2, kosmetik) | DITUNDA -- nunggu ruling Gus Fi |
+- **Gate C1**: `tsc --noEmit` exit 0; `test:all`
+  26/26 (detached cmd.exe polling, bypass timeout
+  PowerShell); 0 non-ASCII di +26 baris; residue
+  `p-4.5` = 0; dev: GET /kasir 200 (18.4 KB), GET
+  /admin/dashboard 307 (auth, normal). File
+  proteksi tak disentuh: public/sw.js,
+  laporan-admin-client.tsx (V1), src/lib/coop.ts,
+  src/db.ts.
+- **Turso v27 (paralel, decoupled)**: skema v27
+  (tabel `coop_pinjaman` + COA seed 1130) murni
+  aditif (CREATE IF NOT EXISTS + ON CONFLICT DO
+  NOTHING). DB prod stempel v26 -> fullInit sekali
+  lagi saat cold start (lesson v16, ~15-20 dtk).
+  Verifikasi = manual Gus Fi pasca-deploy (request
+  AUTH pertama memicu migrasi).
+
 ## 2026-10-09
 ### W5.1 (PINJ-1) LEPAS -- pinjaman anggota QARDH (9 Okt 2026)
 - Ruling tashih OQ7-OQ9 GUS FI: (OQ7) akun COA **1130** 'Piutang
