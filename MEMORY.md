@@ -108,6 +108,69 @@
 - NEXT = **P2 / P3d / P1c / P3c** (menunggu arahan
   Gus Fi).
 
+### P2 LEPAS -- Q62 Approval flow (5 aksi, queue, decide; commit `5007f2f`, 10 Okt 2026)
+- **Ruling Gus Fi (via audit DeepSeek)**: P2 GO CODE
+  (10 Okt); Issue 1 ruling = CLOSED (pre-check + LIMIT 5000
+  sudah ada di repo -- tanpa perubahan kode).
+- **C1 `5007f2f`** (17 file, +1876/-72; dual-push
+  `origin/master` + `origin/main` @ `5007f2f`; kedua ref
+  remote terverifikasi identik):
+  (a) `src/db.ts` -- `migrate30()` (konvensi penomoran
+  mengikuti fungsi, bukan versi): tabel
+  `approval_requests` + `idx_approval_status` +
+  `idx_approval_pending`; `SCHEMA_VERSION 28 -> 29`.
+  Purely additive; DB stempel v28 menjalankan fullInit
+  sekali lagi saat cold start (lesson v16; BACKUP DB WAJIB
+  sebelum deploy).
+  (b) `src/lib/approvals.ts` BARU (490 baris, import
+  minimal: `ROLES` dari `lib/features.ts`) -- allow-list
+  5 aksi (user:create_admin, user:role, user:active,
+  jurnal:reverse, kas:delete); state machine pending ->
+  approved -> applied | rejected | withdrawn; dedupe
+  idempoten per (action, target); aturan dua orang +
+  pengecualian bootstrap (self-decide hanya bila pemohon
+  satu-satunya admin aktif); dispatcher RE-VALIDATE guard
+  saat apply (guardAction di dalam tx() route).
+  (c) `src/app/api/approvals/route.ts` BARU (205) --
+  GET tab menunggu/riwayat + POST op=decide / op=withdraw
+  (audit approval:decide / approval:withdraw; invalidate
+  gl:/kas:/reports: + notifyCashBalance saat apply).
+  (d) Route lama kini membuat request pending, TIDAK
+  eksekusi langsung: POST/PUT /api/users (create admin +
+  active + role), POST /api/jurnal reverse, DELETE
+  /api/kas -- password di-hash ke payload (salt +
+  pass_hash, bukan plaintext).
+  (e) UI: /admin/persetujuan (tab Menunggu + Riwayat;
+  ikon inline SVG saja), sidebar menu + fitur
+  'approvals' (tier admin), toast pending di
+  pengguna/jurnal/kas client.
+- test-golden GP-03 disesuaikan semantik P2 (role change
+  via approval flow; audit user:roles_requested +
+  approval:decide; bootstrap self-decide utk DB 1-admin).
+  `scripts/test/approval-flow.mjs` BARU -- suite #27
+  (63 asersi): state machine + guard + aturan dua orang +
+  bootstrap + filter tab. test:all kini **27 suite green**.
+- **Gate lulus**: `tsc --noEmit` exit 0; `test:all` 27/27
+  exit 0; check-route-exports OK; `next build` exit 0
+  (/admin/persetujuan + /api/approvals terdaftar); 0
+  non-ASCII di baris yang ditambah; file proteksi tak
+  disentuh (public/sw.js, V1
+  laporan-admin-client.tsx, src/lib/coop.ts).
+- **Deviation diterima (Gus Fi)**: Riwayat menyertakan
+  status 'withdrawn' (4 status closed); bootstrap
+  self-decide utk instalasi 1-admin (tanpa ini tak bisa
+  menambah admin ke-2 -- deadlock).
+- Turso v29: skema murni aditif (CREATE TABLE IF NOT
+  EXISTS + index) -- migrasi tereksekusi saat cold start
+  pertama setelah deploy; BACKUP DB WAJIB sebelum deploy.
+- **PWA banner audit (10 Okt)**: banner "Versi anyar
+  tersedia" `sw-register.tsx:148` memakai emoji U+1F195
+  (bukan SVG) -- PRE-EXISTING (commit `d3e99f5`, 25 Sep),
+  bukan Wave 6. Fix = ganti SVG refresh inline (amber-600,
+  1 hunk), dijadwalkan SETELAH P2 (kosmetik, LULUS).
+- NEXT = **P3d / P1c / P3c** (menunggu arahan Gus Fi) +
+  fix PWA banner (STEP 3 instruksi 10 Okt).
+
 ### W5.1 UI P1 (FIX A+B) LEPAS -- POS toolbar overflow + dashboard p-4.5 (10 Okt 2026)
 - **Ruling Gus Fi (via audit DeepSeek)**: diff Fix A+B
   LULUS; koreksi commit plan = A+B digabung 1 commit

@@ -2090,7 +2090,9 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [ ] Q59 Audit trail komunikatif -- siapa melakukan apa.
 - [ ] Q60 Immutable log -- log tidak bisa dihapus.
 - [ ] Q61 Diff perubahan -- sebelum/d sesudah.
-- [ ] Q62 Approval flow -- perubahan besar bisa perlu persetujuan.
+- [x] Q62 Approval flow -- perubahan besar bisa perlu persetujuan.
+      (P2 SELESAI 10 Okt 2026, commit `5007f2f` -- allow-list 5
+      aksi + antrean /admin/persetujuan; detail di MEMORY.md).
 - [ ] Q63 Lock record -- data kunci tidak bisa diam-diam berubah.
 - [ ] Q64 Export laporan siap presentasi -- bukan sekadar CSV.
 - [ ] Q65 Dashboard untuk pengurus -- angka penting + interpretasi.
