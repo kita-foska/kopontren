@@ -30,6 +30,84 @@
   manual Gus Fi pasca-deploy.
 - NEXT = **P3b** (ZIS Rekap -- planning menyusul).
 
+### P3b LEPAS -- ZIS Rekap (commit `bd60cc2`, 10 Okt 2026)
+- **Ruling Gus Fi (via audit DeepSeek)**: diff P3b LULUS;
+  2090 OQ-1 = LABEL ONLY (builder `lib/zis.ts` tak diubah);
+  wakaf disposal = baris terpisah (jurnal manual W3.5, tak
+  dijumlah dgn ZIS); tabel bulanan dipertahankan (default
+  scope); C1 (kode) + C2 (docs) = 2 commit.
+- **C1 `bd60cc2`** (4 file, +533/-0; dual-push
+  `origin/master` + `origin/main` `ef9698e..bd60cc2`;
+  kedua ref remote terverifikasi identik @
+  `bd60cc26fd91e54269dbe5353d29d1c53490001f`):
+  (a) `src/lib/zis-rekap.ts` BARU (171 baris) --
+  `buildZisRekap(db, from?, to?)` import-free (type-only
+  QueryDb, pola lib/laporan: posisi/calk/lka): by_kind
+  (zero-fill 4 jenis zakat/infak/sedekah/wakaf) + monthly
+  (bucket 'YYYY-MM' via substr, ASC -- occurred_at
+  seragam ISO-WIB +07:00 sehingga prefix string
+  deterministik; tanpa konversi zona, Turso-safe) +
+  grand + c2090 (gl_balance = all-time
+  SUM(credit)-SUM(debit) akun 2090, JOIN
+  journal_entries anti-orphan pola posisi.ts;
+  posted_in/unposted_in = count baris zis
+  direction='in' dgn/tanpa posted_entry -- OQ-1: hanya
+  'in' menulis 2090; D6: baris gl-off tak di-backfill,
+  tak ikut gl_balance). Filter periode =
+  occurred_at >= from AND occurred_at < to (perbandingan
+  string leksikografis valid karena format seragam).
+  (b) `src/app/api/zis/rekap/route.ts` BARU (54 baris) --
+  GET only + force-dynamic; guard `currentUser` +
+  `canAccess(user,'zis')` (D2: tier admin+manajer, sama
+  /api/zis); `?from`/`?to` terima ISO-WIB atau
+  'YYYY-MM-DD' (dinormalisasi tengah-malam WIB), 400
+  bila format invalid atau from >= to; payload +
+  `gl_enabled` (utk badge status GL di UI).
+  (c) `src/components/admin/zis-client.tsx` -- card
+  "Rekap ZIS" (di atas form Catat ZIS): period picker
+  (Semua / Bulan ini / Tahun ini / Custom -- batas
+  dihitung WIB via `wibToday`; mode custom = 2 input
+  date YYYY-MM-DD; refetch on change) + tabel total per
+  jenis (baris TOTAL) + tabel per bulan (cap 24 baris
+  terakhir; disembunyikan utk mode 'Bulan ini') + 4
+  kartu alokasi: Teralokasi (zakat/infak/sedekah keluar
+  periode, dibook 5090/5100), Belum disalurkan (net
+  operasional -- caption eksplisit "bukan saldo GL
+  2090"), Wakaf disposal (keluar wakaf = disposal aset,
+  jurnal manual 6020/1120 W3.5 -- TIDAK dijumlah),
+  Saldo COA 2090 (GL, all-time; caption OQ-1 kumulatif
+  + badge abu "GL off -- 2090 tidak bertambah" + badge
+  amber "N baris masuk belum jurnal (D6)"). Type
+  payload diduplikasi di client (pola ZisRow); 0
+  emoji/ikon baru; class dark-mode; pakai Table/
+  TermTip/Badge/rp/api existing.
+  (d) `scripts/test-zis.ts` -- blok Z8 (Z8a DB kosong:
+  zero-fill 4 jenis + grand 0 + monthly kosong + c2090
+  nol; Z8b all-time: by_kind/grand/bucket 2 bulan +
+  c2090.gl_balance = 4000000 hanya zakat in gl-on
+  (OQ-1) + posted_in = 2 (HANYA in-row; koreksi
+  ekspektasi test -- library benar) + unposted_in = 1
+  (r2 gl-off, D6); Z8c periode Okt: from inklusif / to
+  eksklusif + invariant c2090 all-time tak ikut filter)
+  + shim `toQueryDb` (DatabaseSync node:sqlite ->
+  QueryDb async, pola makeShim test-laporan.ts).
+  test-zis kini **101 lulus / 0 gagal** (termasuk +20
+  asersi Z8).
+- **OQ-1 (2090) = LABEL ONLY**: semantik ZIS OQ-1
+  (keluar dibook beban 5090/5100 via 1100, TIDAK
+  mengurangi 2090) tetap -- rekap hanya MEMPERJELASKAN
+  via UI; `lib/zis.ts` tak disentuh.
+- **Gate C1**: `tsc --noEmit` exit 0; `test:all` 26/26
+  exit 0; `test:zis` 101/0; 0 non-ASCII di 4 file; file
+  proteksi tak disentuh (public/sw.js, V1
+  laporan-admin-client.tsx, src/lib/coop.ts,
+  src/db.ts, /api/zis GET/POST); **skema v28 tak
+  berubah** (P3b = modul baca-only, tanpa migration).
+- **Housekeeping**: 34 temp file P3a dihapus dari repo
+  root sebelum C1 (commit bersih = 4 file P3b saja).
+- NEXT = **P2 / P3d / P1c / P3c** (menunggu arahan
+  Gus Fi).
+
 ### W5.1 UI P1 (FIX A+B) LEPAS -- POS toolbar overflow + dashboard p-4.5 (10 Okt 2026)
 - **Ruling Gus Fi (via audit DeepSeek)**: diff Fix A+B
   LULUS; koreksi commit plan = A+B digabung 1 commit

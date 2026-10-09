@@ -2054,6 +2054,25 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       (P2 kosmetik; dark mode default acceptable;
       revisit jika pengurus/kasir file complaint. Turso v27
       verification paralel = manual Gus Fi).
+- [x] **P3b LEPAS (10 Okt) -- ZIS Rekap** commit `bd60cc2`
+      (C1, dual-push master+main `ef9698e..bd60cc2`; 4 file,
+      +533/-0): `src/lib/zis-rekap.ts` BARU (buildZisRekap:
+      by_kind zero-fill 4 jenis + bucket bulanan + grand +
+      c2090.gl_balance all-time + posted/unposted, import-free
+      pola lib/laporan) + `src/app/api/zis/rekap/route.ts`
+      BARU (GET only, tier zis D2, ?from/?to ISO-WIB |
+      YYYY-MM-DD, gl_enabled di payload) + `zis-client.tsx`
+      (card Rekap: period picker WIB, tabel per jenis + per
+      bulan (cap 24), 4 kartu alokasi: Teralokasi / Belum
+      disalurkan (bukan saldo GL) / Wakaf disposal (W3.5,
+      terpisah -- tak dijumlah) / Saldo 2090 GL (OQ-1
+      all-time, labeled + badge GL-off/unposted D6)) +
+      `test-zis.ts` (blok Z8 +20 asersi + shim toQueryDb).
+      OQ-1 2090 = label only (lib/zis.ts tak diubah); skema
+      v28 tak berubah (baca-only, tanpa migration). Gate:
+      tsc 0 + test:all 26/26 + test-zis 101/0 + 0
+      non-ASCII; 34 temp file P3a dibersihkan sebelum C1.
+      Detail: MEMORY.md seksi "P3b LEPAS -- ZIS Rekap".
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.
