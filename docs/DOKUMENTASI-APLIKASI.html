@@ -324,8 +324,8 @@ body{background:#fff}
 <h3>Rekap per Rumpun (W4.6)</h3>
 <p style="margin-top:0">Kartu <b>Rekap per Rumpun</b> di tab Rekap (baca saja; semua peran yang bisa buka Koperasi): saldo simpanan anggota (pokok / wajib / sukarela) dikumpulkan per rumpun (keluarga / pesantren). Kolom: nama rumpun, jumlah anggota, pokok, wajib, sukarela, dan total simpanan; baris TOTAL menjumlah semua rumpun. Anggota tanpa rumpun dikelompokkan di baris <b>Tanpa rumpun</b> (diurutkan paling bawah). Nama rumpun dihitung tidak peka huruf besar/kecil ("Rumpun A" dan "rumpun a" = satu rumpun; label = yang pertama ditemui). Agregasi dihitung <b>server</b> (GET /api/koperasi, satu sumber -- tidak ada form input, tak ada op POST).</p>
 
-<h3>Operasi Koperasi (setor / tarik / keluar / modal / closing / jasa / tunai)</h3>
-<p style="margin-top:0">Sepuluh operasi <b>tulis</b> melalui satu route (POST /api/koperasi, dispatch op):</p>
+<h3>Operasi Koperasi (setor / tarik / keluar / modal / closing / jasa / tunai / pinjam / bayar)</h3>
+<p style="margin-top:0">Dua belas operasi <b>tulis</b> melalui satu route (POST /api/koperasi, dispatch op):</p>
 <table>
 <tr><th>op</th><th>Apa</th><th>Akun</th><th>GL</th><th>Error</th></tr>
 <tr><td><b>member_create</b></td><td>Daftar anggota koperasi baru (status awal aktif)</td><td>-</td><td>Tanpa jurnal</td><td>409 nama duplikat</td></tr>
@@ -338,6 +338,8 @@ body{background:#fff}
 <tr><td><b>closing</b></td><td>Jurnal closing (W4.5a): nol-kan net P&amp;L kumulatif (4010 / 4020 / 4030 / 5010 / 5020 / 5030 / 5040; 4040 &amp; 4090 dikecualikan) ke 3020; laba = K3020, rugi = D3020</td><td>D40xx / 50xx &gt; C3020 (atau D3020 bila rugi)</td><td>Hanya saat GL on; khusus Admin</td><td>409 periode sudah di-close, 400 tanpa aktivitas</td></tr>
 <tr><td><b>jasa</b></td><td>Jasa per anggota (W4.5b): bagikan SELURUH pool jasa 3050 rata-rata ke anggota aktif (bukan bunga; sisa pembulatan ke urutan nama A-Z); 1 distribusi per periode</td><td>D3050 &gt; K2070 (jurnal agregat; 1 kaki per anggota)</td><td>Hanya saat GL on (gl-off = porsi tetap tercatat)</td><td>409 periode sudah dibagikan, 400 tanpa pool / tanpa anggota aktif, 404 SHU belum tercatat</td></tr>
 <tr><td><b>tunai</b></td><td>Pencairan tunai/transfer SHU dibagi (W4.5b): cairkan 3060 ke kas 1010 atau bank 1020; nominal tak melebihi saldo 3060; 1 pencairan per periode; akun 5080 tidak dipakai</td><td>D3060 &gt; C1010 / 1020</td><td>Hanya saat GL on (guard saldo; gl-off = selalu 400)</td><td>409 periode sudah dicairkan, 400 tanpa pool / nominal melebihi</td></tr>
+<tr><td><b>pinjam</b></td><td>Pinjaman anggota qardh (W5.1): pinjaman kebajikan <b>tanpa margin</b> (jumlah kembali utuh); jatuh tempo wajib; pinjam ganda diizinkan; pinjaman tetap aktif walau anggota keluar; akun 1130 (1030 Piutang Penjualan tak dipakai &amp; tetap live)</td><td>D1130 &gt; K1010</td><td>Hanya saat GL on</td><td>400 pokok / tanggal, 404 anggota tak ada</td></tr>
+<tr><td><b>bayar</b></td><td>Pelunasan qardh lunas <b>SEKALIGUS</b> (W5.1): sisa dilunasi menjadi 0 + status lunas (1 pinjaman = 1 pelunasan); denda bila lewat jatuh tempo = <b>sadaqah</b> manual -- HANYA di catatan pinjaman (memo, F3.3 #6: tak pernah jadi pendapatan)</td><td>D1010 &gt; K1130</td><td>Hanya saat GL on</td><td>409 sudah lunas, 404 pinjaman tak ada</td></tr>
 </table>
 <div class="note"><b>Akses peran:</b> tulis (semua op) = <b>Admin &amp; Manajer</b> (tier koperasi), kecuali <b>closing</b> yang khusus <b>Admin</b> (Manajer ditolak 403). Baca / read-only = <b>Pengurus</b> (tier laporan; form disembunyikan). Anggota koperasi <b>BUKAN</b> member loyalty -- dua entitas terpisah (Sek.7.3). Auto-jurnal hanya saat <b>GL aktif</b>; GL off = tercatat saja.</div>
 
