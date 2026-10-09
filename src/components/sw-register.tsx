@@ -144,8 +144,23 @@ export function SwRegister() {
         className="print:hidden fixed inset-x-0 bottom-0 z-50 border-t border-amber-300 bg-amber-50 px-3 py-2.5 text-sm text-amber-900 shadow-[0_-2px_8px_rgba(0,0,0,0.08)]"
       >
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-2">
-          <span className="flex-1 font-medium">
-            🆕 Versi anyar tersedia{applying ? ' — perbarui…' : ''}
+          <span className="flex flex-1 items-center gap-1.5 font-medium">
+            <svg
+              className="shrink-0 text-amber-600"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+              <polyline points="21 3 21 9 15 9" />
+            </svg>
+            Versi anyar tersedia{applying ? ' - perbarui...' : ''}
           </span>
           <button
             type="button"
