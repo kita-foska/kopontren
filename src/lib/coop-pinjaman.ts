@@ -18,12 +18,9 @@
  *
  * 0 emoji/unicode; semua label/definisi bahasa Indonesia.
  */
-import type { TxDb } from './tx.ts';
-import { type GlLine, recordJurnalEntryInTx } from './gl-engine.ts';
-import { nowWib } from './wib.ts';
+import { nowWib, postJournalInTx } from './jurnal.ts';
+import type { JLine, JSpec, TxDb } from './jurnal.ts';
 import { coopValidateAmount } from './coop.ts';
-
-export type { GlLine };
 
 /** Akun piutang qardh (OQ7: 1130, BUKAN 1030 Piutang Penjualan). */
 export const COOP_PINJAMAN_ACCT = '1130';
@@ -31,7 +28,7 @@ export const COOP_PINJAMAN_ACCT = '1130';
 export const COOP_PINJAMAN_CASH_ACCT = '1010';
 
 export interface CoopLoanInput {
-  /** uuid pinjaman (caller = route; ref_id jurnal idempoten). */
+  /** uuid pinjaman (caller = route; kunci ref_id jurnal idempoten). */
   id: string;
   /** Anggota tujuan (route cek eksistensi -> 404 pinjaman_member_not_found). */
   memberId: string;
@@ -44,7 +41,7 @@ export interface CoopLoanInput {
   tanggalJatuh: string;
   /** Catatan bebas (opsional). */
   catatan: string | null;
-  /** User yang mencatat (logAudit). */
+  /** User yang mencatat (logAudit / created_by jurnal). */
   createdBy: string;
   /** W4.3: true = auto-jurnal D 1130 -> K 1010; false = tercatat tanpa jurnal. */
   gl_enabled: boolean;
@@ -52,14 +49,34 @@ export interface CoopLoanInput {
   createdAt?: string;
 }
 
-/** Baris jurnal pencairan qardh (D aset piutang 1130 -> K kas 1010; OQ7;
- *  qardh tanpa margin: jumlah utuh kembali, margin = 0 selamanya). */
-export function loanDisbursementLines(pokok: number, glOn: boolean): GlLine[] {
-  if (!glOn) return [];
-  return [
-    { code: COOP_PINJAMAN_ACCT, name: 'Piutang Anggota (Koperasi)', debit: pokok },
-    { code: COOP_PINJAMAN_CASH_ACCT, name: 'Kas', credit: pokok },
+/** Jurnal pencairan qardh (murni, teruji suite): D 1130 -> K 1010.
+ *  Qardh tanpa margin: jumlah utuh kembali, margin = 0 selamanya. */
+export function buildCoopLoanDisbursementSpec(inp: CoopLoanInput, pokok: number): JSpec {
+  const createdAt = inp.createdAt ?? nowWib();
+  const lines: JLine[] = [
+    {
+      account_code: COOP_PINJAMAN_ACCT,
+      debit: pokok,
+      credit: 0,
+      source: 'pinjaman qardh ' + inp.memberId + ' ' + pokok,
+    },
+    {
+      account_code: COOP_PINJAMAN_CASH_ACCT,
+      debit: 0,
+      credit: pokok,
+      source: 'kas keluar qardh ' + inp.memberId + ' ' + pokok,
+    },
   ];
+  return {
+    id: 'JE-cooppinjaman-pnj-' + inp.id,
+    ref_table: 'coop',
+    ref_id: 'coop#' + inp.memberId + ':pnj#' + inp.id,
+    entry_date: createdAt,
+    type: 'auto',
+    desc: 'Pinjaman qardh W5.1: pokok ' + pokok + ' ke anggota ' + inp.memberId,
+    created_by: inp.createdBy || undefined,
+    lines,
+  };
 }
 
 /** op pinjam: insert pinjaman + (gl-on) jurnal pencairan; 1 transaksi. */
@@ -67,11 +84,9 @@ export async function recordCoopLoanInTx(
   db: TxDb,
   in_: CoopLoanInput
 ): Promise<{ entryId: string | null }> {
-  // OQ-validasi nominal (pola coop.ts W4.2: throw MessageError).
+  // Validasi nominal (pola coop.ts W4.2: throw galat).
   const pokok = coopValidateAmount(in_.pokok);
-  const createdAt = in_.createdAt ?? nowWib();
 
-  const lines = loanDisbursementLines(pokok, in_.gl_enabled);
   await db
     .prepare(
       `INSERT INTO coop_pinjaman (
@@ -88,21 +103,12 @@ export async function recordCoopLoanInTx(
       in_.tanggalJatuh,
       in_.catatan,
       in_.createdBy,
-      createdAt
+      in_.createdAt ?? nowWib()
     );
 
-  if (lines.length === 0) return { entryId: null };
-  const entry = await recordJurnalEntryInTx(db, {
-    date: createdAt,
-    lines,
-    ref_id: `coop#${in_.memberId}:pnj#${in_.id}`,
-    source: 'coop',
-    notes:
-      'Pencairan pinjaman qardh W5.1: pokok ' +
-      rupiah(pokok) +
-      ' ke anggota (D 1130 / K 1010)',
-  });
-  return { entryId: entry.id };
+  if (in_.gl_enabled !== true) return { entryId: null };
+  const entryId = await postJournalInTx(db, buildCoopLoanDisbursementSpec(in_, pokok));
+  return { entryId };
 }
 
 export interface CoopLoanPayInput {
@@ -118,14 +124,33 @@ export interface CoopLoanPayInput {
   gl_enabled: boolean;
 }
 
-/** Baris jurnal pelunasan qardh (D kas 1010 -> K aset piutang 1130; OQ7).
+/** Jurnal pelunasan qardh (murni, teruji suite): D 1010 -> K 1130.
  *  Sadaqah/denda TIDAK masuk jurnal (F3.3 #6, OQ8) -- memo di catatan saja. */
-export function loanPaybackLines(sisa: number, glOn: boolean): GlLine[] {
-  if (!glOn || sisa <= 0) return [];
-  return [
-    { code: COOP_PINJAMAN_CASH_ACCT, name: 'Kas', debit: sisa },
-    { code: COOP_PINJAMAN_ACCT, name: 'Piutang Anggota (Koperasi)', credit: sisa },
+export function buildCoopLoanPaybackSpec(inp: CoopLoanPayInput, sisa: number): JSpec {
+  const lines: JLine[] = [
+    {
+      account_code: COOP_PINJAMAN_CASH_ACCT,
+      debit: sisa,
+      credit: 0,
+      source: 'kas masuk lunas qardh ' + inp.memberId + ' ' + sisa,
+    },
+    {
+      account_code: COOP_PINJAMAN_ACCT,
+      debit: 0,
+      credit: sisa,
+      source: 'lunas qardh ' + inp.memberId + ' ' + sisa,
+    },
   ];
+  return {
+    id: 'JE-cooppinjaman-byr-' + inp.id,
+    ref_table: 'coop',
+    ref_id: 'coop#' + inp.memberId + ':byr#' + inp.id,
+    entry_date: nowWib(),
+    type: 'auto',
+    desc: 'Pelunasan pinjaman qardh W5.1 lunas sekaligus: ' + sisa,
+    created_by: inp.createdBy || undefined,
+    lines,
+  };
 }
 
 /** op bayar: lunas SEKALIGUS (OQ9-1) -- sisa -> 0 + status 'lunas' +
@@ -142,22 +167,10 @@ export async function closeCoopLoanInTx(
        WHERE id = ? AND status = 'aktif'`
     )
     .run(in_.catatan, in_.id);
-  if (Number(r.changes ?? 0) !== 1)
+  if (Number((r as { changes?: unknown }).changes ?? 0) !== 1)
     throw new Error('PINJAMAN_NOT_ACTIVE (sudah lunas / tak ditemukan)');
 
-  const lines = loanPaybackLines(in_.sisa, in_.gl_enabled);
-  if (lines.length === 0) return { entryId: null };
-  const entry = await recordJurnalEntryInTx(db, {
-    date: nowWib(),
-    lines,
-    ref_id: `coop#${in_.memberId}:byr#${in_.id}`,
-    source: 'coop',
-    notes: 'Pelunasan pinjaman qardh W5.1 lunas sekaligus (D 1010 / K 1130)',
-  });
-  return { entryId: entry.id };
-}
-
-/** Rp + ribuan (pola lokal coop.ts W4.2; 0 state modul, tetap murni). */
-function rupiah(n: number): string {
-  return 'Rp ' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  if (in_.gl_enabled !== true || in_.sisa <= 0) return { entryId: null };
+  const entryId = await postJournalInTx(db, buildCoopLoanPaybackSpec(in_, in_.sisa));
+  return { entryId };
 }

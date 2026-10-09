@@ -301,6 +301,21 @@ export const GLOSSARY: GlossaryTerm[] = [
     group: 'Koperasi & SHU',
   },
   {
+    term: 'Qardh',
+    desc: 'Pinjaman kebajikan koperasi kepada anggota: tanpa margin atau unggun, jumlah kembali utuh. Di aplikasi (W5.1) dicatat di akun 1130 Piutang Anggota (Koperasi); pencairan dan pelunasan dibuatkan jurnal otomatis saat GL aktif.',
+    group: 'Koperasi & SHU',
+  },
+  {
+    term: 'Pinjaman Anggota',
+    desc: 'Qardh koperasi ke anggota (W5.1). Pinjam = uang keluar kas (D 1130 / K 1010); bayar = lunas sekaligus (D 1010 / K 1130). Boleh lebih dari satu pinjaman per anggota; pinjaman tetap aktif meskipun anggota keluar.',
+    group: 'Koperasi & SHU',
+  },
+  {
+    term: 'Denda Sadaqah',
+    desc: 'Bila pelunasan qardh melewati jatuh tempo, admin dapat mengisi denda sebagai sadaqah (kepedulian sosial). Nilainya HANYA tercatat di catatan pinjaman (memo) dan tidak pernah dibukukan sebagai pendapatan koperasi (F3.3 #6; v1: input manual, tanpa rumus).',
+    group: 'Koperasi & SHU',
+  },
+  {
     term: 'Barang Titipan',
     desc: 'Produk konsinyasi (titipan supplier/pihak lain). W5.2 NEG-1: flag is_consignment (kolom v25) = produk titipan: stok BOLEH negatif (indikator titipan yang belum diinput atau terjual lewat fisik), penjualan POS tidak diblokir saat stok habis. Non-titipan tetap floor 0 (INV-1). Opname negatif hanya per-produk; opname massal tetap floor 0. Pembayaran pemilik titipan dihitung modul Konsinyasi dari qty terjual.',
     group: 'Toko & Transaksi',

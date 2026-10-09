@@ -59,6 +59,23 @@
  *             pencairan (guard jurnal, pola closing) -> 409
  *             tunai_period_exists; gl-off = tanpa jurnal (OQ15 D1;
  *             konsekuensi: 400 tunai_no_pool); tier koperasi (OQ14)).
+ *           - pinjam        : recordCoopLoanInTx W5.1 (PINJ-1: pinjaman
+ *             anggota QARDH, F3.2 #5 -- kebajikan, margin = 0 selamanya;
+ *             OQ7: akun 1130 Piutang Anggota (Koperasi), 1030 PIUTANG
+ *             PENJUALAN tak dipakai & tetap live; jurnal D 1130 -> K 1010
+ *             saat gl-on; ref_id coop#<member>:pnj#<loan> idempoten;
+ *             anggota tak ada -> 404 pinjaman_member_not_found; pokok
+ *             harus rupiah integer > 0, jatuh tempo wajib & >= mulai ->
+ *             400; pinjam ganda diizinkan (OQ9-2); tier koperasi).
+ *           - bayar         : closeCoopLoanInTx W5.1 (pelunasan lunas
+ *             SEKALIGUS (OQ9-1): sisa -> 0 + status 'lunas'; jurnal
+ *             D 1010 -> K 1130 saat gl-on, nominal = sisa; OQ8: denda
+ *             bila lewat jatuh tempo = SADAQAH manual input, HANYA di
+ *             kolom catatan pinjaman (memo, F3.3 #6 -- tanpa kaki
+ *             jurnal); sudah lunas -> 409 pinjaman_already_lunas
+ *             (1 pinjaman = 1 pelunasan); pinjaman tak ada -> 404
+ *             pinjaman_not_found; anggota keluar TIDAK memblokir
+ *             pelunasan (OQ9-3); tier koperasi).
  *           Semua op tulis: SATU transaksi (db + logAudit + engine InTx,
  *           pola W2.7/W3.3) + invalidate('coop:') dan invalidate('gl:')
  *           (OQ4 W4.3: auto-jurnal coop mencemari cache /api/gl).
@@ -95,6 +112,7 @@ import { recordCoopModalInTx } from '@/lib/coop-modal';
 import { postCoopClosingInTx, validateClosingPeriod } from '@/lib/coop-closing';
 import { recordCoopJasaInTx } from '@/lib/coop-jasa';
 import { recordCoopTunaiInTx, TUNAI_ACCTS } from '@/lib/coop-tunai';
+import { recordCoopLoanInTx, closeCoopLoanInTx } from '@/lib/coop-pinjaman';
 
 export const dynamic = 'force-dynamic';
 
@@ -148,6 +166,21 @@ export type RekapRumpunRow = {
   total: number;
 };
 
+/** W5.1 (PINJ-1): baris pinjaman anggota qardh (akun 1130; OQ7-OQ9). */
+export type PinjamanRow = {
+  id: string;
+  member_id: string;
+  member_name: string | null;
+  akad: string;
+  pokok: number;
+  sisa: number;
+  tanggal_mulai: string;
+  tanggal_jatuh_tempo: string;
+  status: string;
+  catatan: string | null;
+  created_at: string;
+};
+
 export type CoopRekap = {
   members: CoopMemberRow[];
   balances: Record<string, CoopBalance>;
@@ -155,6 +188,7 @@ export type CoopRekap = {
   history: CoopHistoryRow[];
   accounts: CoopAccountRow[];
   shu: CoopShuRow[];
+  loans: PinjamanRow[]; // W5.1 (PINJ-1)
   gl_enabled: boolean;
 };
 
@@ -178,8 +212,9 @@ export type CoopActionResult = {
 
 /** Akun rekap (OQ6 W4.3): simpanan 2050/2060/2070 (kewajiban -- memo kaki,
  *  TIDAK dijumlah ke ekuitas, konsisten W2.4) + modal/SHU 30xx.
- *  2080 = pending, tak ditampil. */
-const REKAP_ACCOUNTS = ['2050', '2060', '2070', '3010', '3020', '3030', '3040', '3050', '3060'];
+ *  2080 = pending, tak ditampil. W5.1 (PINJ-1, OQ7): +1130 Piutang
+ *  Anggota (Koperasi) = aset lancar (baris rekap ke-10; neraca V2 ikut). */
+const REKAP_ACCOUNTS = ['1130', '2050', '2060', '2070', '3010', '3020', '3030', '3040', '3050', '3060'];
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
@@ -264,6 +299,17 @@ export async function GET() {
         )
         .all()) as CoopShuRow[];
 
+      // W5.1 (PINJ-1): daftar pinjaman qardh (akun 1130; 100 terbaru;
+      // JOIN nama anggota -- baris yatim (FK idempoten) tetap tampil).
+      const loans = (await d
+        .prepare(
+          'SELECT cp.id, cp.member_id, cm.name AS member_name, cp.akad, cp.pokok, cp.sisa, ' +
+            'cp.tanggal_mulai, cp.tanggal_jatuh_tempo, cp.status, cp.catatan, cp.created_at ' +
+            'FROM coop_pinjaman cp LEFT JOIN coop_members cm ON cm.id = cp.member_id ' +
+            'ORDER BY cp.created_at DESC LIMIT 100'
+        )
+        .all()) as PinjamanRow[];
+
       // W4.6: rekap per rumpun -- kumpul ulang saldo simpanan per keluarga
       // (key NOCASE; bucket 'tanpa rumpun' diurutkan paling bawah). Satu
       // sumber (members + balances di atas), tanpa query tambahan. Rincian
@@ -308,7 +354,7 @@ export async function GET() {
           total: x.total,
         }));
 
-      return { members, balances, rekap_rumpun, history, accounts, shu, gl_enabled: glOn };
+      return { members, balances, rekap_rumpun, history, accounts, shu, loans, gl_enabled: glOn };
     });
     return NextResponse.json(payload as CoopRekap);
   } catch {
@@ -926,11 +972,167 @@ export async function POST(req: Request) {
       }
     }
 
+    // -- op: pinjam (W5.1 PINJ-1: qardh anggota; D 1130 -> K 1010) ----
+    case 'pinjam': {
+      const memberId = String(b.member_id ?? '').trim();
+      if (!memberId) return NextResponse.json({ error: 'member_id wajib' }, { status: 400 });
+      let pokok: number;
+      try {
+        pokok = coopValidateAmount(b.pokok);
+      } catch {
+        return NextResponse.json({ error: 'pokok harus rupiah integer > 0' }, { status: 400 });
+      }
+      const mulai = b.tanggal_mulai ? String(b.tanggal_mulai) : wibToday();
+      if (!DATE_RE.test(mulai))
+        return NextResponse.json({ error: 'tanggal_mulai harus YYYY-MM-DD (WIB)' }, { status: 400 });
+      const jatuh = String(b.tanggal_jatuh_tempo ?? '').trim();
+      if (!DATE_RE.test(jatuh))
+        return NextResponse.json(
+          { error: 'tanggal_jatuh_tempo wajib (YYYY-MM-DD; tanpa preset)' },
+          { status: 400 }
+        );
+      if (jatuh < mulai)
+        return NextResponse.json(
+          { error: 'Jatuh tempo tidak boleh sebelum tanggal mulai' },
+          { status: 400 }
+        );
+      const catatan = b.catatan ? String(b.catatan).trim() : '';
+      if (catatan.length > 200)
+        return NextResponse.json({ error: 'catatan maks 200 karakter' }, { status: 400 });
+      const mem = (await d
+        .prepare('SELECT 1 ok FROM coop_members WHERE id = ?')
+        .get(memberId)) as { ok: number } | undefined;
+      if (!mem)
+        return NextResponse.json(
+          { error: 'Anggota tidak ditemukan', code: 'pinjaman_member_not_found' },
+          { status: 404 }
+        );
+
+      const id = crypto.randomUUID();
+      try {
+        const out = await tx(d, async () => {
+          const r = await recordCoopLoanInTx(d, {
+            id,
+            memberId,
+            pokok,
+            tanggalMulai: mulai,
+            tanggalJatuh: jatuh,
+            catatan: catatan || null,
+            createdBy: String(user.id),
+            gl_enabled: glOn,
+          });
+          await logAudit(user, 'coop:pinjam', 'coop_pinjaman', null, undefined, {
+            id,
+            member_id: memberId,
+            pokok,
+            tanggal_mulai: mulai,
+            tanggal_jatuh_tempo: jatuh,
+            gl_enabled: glOn,
+          });
+          return r;
+        });
+        invalidate('coop:');
+        invalidate('gl:');
+        return NextResponse.json(
+          { ok: true, id, entryId: out.entryId, gl_enabled: glOn } satisfies CoopActionResult
+        );
+      } catch (e) {
+        return NextResponse.json(
+          { error: 'Gagal mencatat pinjaman: ' + (e instanceof Error ? e.message : String(e)) },
+          { status: 500 }
+        );
+      }
+    }
+
+    // -- op: bayar (W5.1 PINJ-1: lunas sekaligus; sadaqah memo-only) ---
+    case 'bayar': {
+      const loanId = String(b.loan_id ?? '').trim();
+      if (!loanId) return NextResponse.json({ error: 'loan_id wajib' }, { status: 400 });
+      let sadaqah = 0;
+      if (b.sadaqah != null) {
+        sadaqah = Number(b.sadaqah);
+        if (!Number.isInteger(sadaqah) || sadaqah < 0)
+          return NextResponse.json({ error: 'sadaqah harus rupiah integer >= 0' }, { status: 400 });
+      }
+      const catatanUser = b.catatan ? String(b.catatan).trim() : '';
+      if (catatanUser.length > 200)
+        return NextResponse.json({ error: 'catatan maks 200 karakter' }, { status: 400 });
+      const loan = (await d
+        .prepare('SELECT id, member_id, sisa, status FROM coop_pinjaman WHERE id = ?')
+        .get(loanId)) as
+        | { id: string; member_id: string; sisa: number; status: string }
+        | undefined;
+      if (!loan)
+        return NextResponse.json(
+          { error: 'Pinjaman tidak ditemukan', code: 'pinjaman_not_found' },
+          { status: 404 }
+        );
+      if (loan.status === 'lunas')
+        return NextResponse.json(
+          {
+            error: 'Pinjaman sudah lunas (1 pinjaman = 1 pelunasan sekaligus)',
+            code: 'pinjaman_already_lunas',
+          },
+          { status: 409 }
+        );
+      // OQ8 (memo-only, F3.3 #6): denda = sadaqah HANYA masuk catatan,
+      // tidak pernah jadi kaki jurnal / pendapatan.
+      const catParts: string[] = [];
+      if (catatanUser) catParts.push(catatanUser);
+      if (sadaqah > 0)
+        catParts.push(
+          'Denda (sadaqah): Rp ' +
+            String(sadaqah) +
+            ' -- memo, TIDAK dicatat sebagai pendapatan (F3.3 #6)'
+        );
+      const catatanFinal = catParts.length ? catParts.join(' | ') : null;
+      try {
+        const out = await tx(d, async () => {
+          const r = await closeCoopLoanInTx(d, {
+            id: loanId,
+            memberId: loan.member_id,
+            sisa: loan.sisa,
+            catatan: catatanFinal,
+            createdBy: String(user.id),
+            gl_enabled: glOn,
+          });
+          await logAudit(user, 'coop:bayar', 'coop_pinjaman', null, undefined, {
+            loan_id: loanId,
+            member_id: loan.member_id,
+            sisa: loan.sisa,
+            sadaqah,
+            gl_enabled: glOn,
+          });
+          return r;
+        });
+        invalidate('coop:');
+        invalidate('gl:');
+        return NextResponse.json(
+          { ok: true, entryId: out.entryId, gl_enabled: glOn } satisfies CoopActionResult
+        );
+      } catch (e) {
+        if (String(e instanceof Error ? e.message : String(e)).includes('PINJAMAN_NOT_ACTIVE'))
+          return NextResponse.json(
+            {
+              error: 'Pinjaman sudah lunas (1 pinjaman = 1 pelunasan sekaligus)',
+              code: 'pinjaman_already_lunas',
+            },
+            { status: 409 }
+          );
+        return NextResponse.json(
+          {
+            error: 'Gagal mencatat pelunasan pinjaman: ' + (e instanceof Error ? e.message : String(e)),
+          },
+          { status: 500 }
+        );
+      }
+    }
+
     default:
       return NextResponse.json(
         {
           error:
-            'op tidak dikenal (ops: member_create/setor/tarik/status/keluar/shu/modal/closing/jasa/tunai)',
+            'op tidak dikenal (ops: member_create/setor/tarik/status/keluar/shu/modal/closing/jasa/tunai/pinjam/bayar)',
         },
         { status: 400 }
       );

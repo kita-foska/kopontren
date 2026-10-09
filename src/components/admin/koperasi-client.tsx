@@ -3,10 +3,14 @@
 /**
  * W4.3 -- komponen client halaman /admin/koperasi (Sek.7.1/7.2/7.3, skema
  * v24; engine W4.2 src/lib/coop.ts -- wiring murni di sini):
- *  - 3 tab: Anggota (daftar + form anggota baru + status + KELUAR),
+ *  - 5 tab: Anggota (daftar + form anggota baru + status + KELUAR),
  *    Simpanan (form setor pokok/wajib/sukarela + tarik sukarela + riwayat),
  *    Rekap (saldo akun 2050/2060/2070 [kewajiban] + modal/SHU 30xx +
- *    riwayat SHU; distribusi SHU jurnal = W4.4).
+ *    pinjaman 1130 + riwayat SHU; distribusi SHU jurnal = W4.4),
+ *    SHU (alokasi W4.4 + jasa/tunai W4.5b),
+ *    Pinjaman (W5.1 PINJ-1: qardh pinjaman anggota, akun 1130; pinjam
+ *    D 1130 -> K 1010, bayar lunas sekaligus D 1010 -> K 1130 saat GL
+ *    aktif; denda = sadaqah memo-only F3.3 #6).
  *  - Q3 (pola akad): prop canWrite (tier koperasi = admin+manajer);
  *    pengurus = read-only (form disembunyikan, data + rekap tetap).
  *  - D1: jurnal auto hanya saat GL aktif (badge); anggota keluar =
@@ -78,6 +82,20 @@ type RumpunRow = {
   total: number;
 };
 
+type PinjamanRow = {
+  id: string;
+  member_id: string;
+  member_name: string | null;
+  akad: string;
+  pokok: number;
+  sisa: number;
+  tanggal_mulai: string;
+  tanggal_jatuh_tempo: string;
+  status: string;
+  catatan: string | null;
+  created_at: string;
+};
+
 type KoperasiData = {
   members: MemberRow[];
   balances: Record<string, CoopBalance>;
@@ -85,6 +103,7 @@ type KoperasiData = {
   history: HistoryRow[];
   accounts: AccountRow[];
   shu: ShuRow[];
+  loans: PinjamanRow[]; // W5.1 (PINJ-1)
   gl_enabled: boolean;
 };
 
@@ -137,12 +156,18 @@ const TIPS = {
     'Jurnal closing: nol-kan net akun operasi & beban (4010-4030, 5010-5040; 4040 & 4090 dikecualikan) ke 3020 SHU Ditahan, kumulatif sejak awal pembukuan (self-healing). Satu closing per periode; laba = kredit 3020, rugi = debit 3020 (3020 boleh negatif).',
   rekap_rumpun:
     'Rekap per rumpun: saldo simpanan dikumpulkan per keluarga (rumpun). Kolom: nama rumpun, jumlah anggota, rincian simpanan pokok/wajib/sukarela, dan total per rumpun; baris TOTAL menjumlah semua rumpun. "Tanpa rumpun" = anggota belum diisi rumpun; diurutkan paling bawah.',
+  qardh:
+    'Qardh: pinjaman kebajikan koperasi ke anggota -- tanpa margin/unggul, jumlah kembali utuh (F3.2 #5). Terlepas dari GL, tercatat di akun 1130 Piutang Anggota (Koperasi).',
+  pinjaman:
+    'Pinjaman anggota (W5.1): qardh koperasi. Pinjam = jurnal D 1130 -> K 1010; bayar = lunas sekaligus, jurnal D 1010 -> K 1130 (hanya saat GL aktif). Boleh beberapa pinjaman per anggota; pinjaman tetap aktif walau anggota keluar.',
+  denda_sadaqah:
+    'Denda (sadaqah): bila pelunasan melewati jatuh tempo, admin mengisi nilai denda sebagai sadaqah (kepedulian sosial). HANYA tercatat di catatan pinjaman (memo), tidak pernah menjadi pendapatan koperasi (F3.3 #6, OQ8).',
 };
 
-type Tab = 'anggota' | 'simpanan' | 'rekap' | 'shu';
+type Tab = 'anggota' | 'simpanan' | 'rekap' | 'shu' | 'pinjaman';
 
-/** Urutan tab koperasi (navigasi keyboard tablist; W4.4 E.5). */
-const COOP_TABS: Tab[] = ['anggota', 'simpanan', 'rekap', 'shu'];
+/** Urutan tab koperasi (navigasi keyboard tablist; W4.4 E.5; W5.1 +pinjaman). */
+const COOP_TABS: Tab[] = ['anggota', 'simpanan', 'rekap', 'shu', 'pinjaman'];
 
 const STATUS_TONE: Record<string, 'green' | 'gray' | 'red'> = {
   aktif: 'green',
@@ -210,6 +235,16 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
   const [tnPeriod, setTnPeriod] = useState('');
   const [tnAmount, setTnAmount] = useState('');
   const [tnAcct, setTnAcct] = useState('1010');
+
+  // -- form: pinjaman qardh (W5.1 PINJ-1; tab Pinjaman; tier koperasi) -
+  const [pnMember, setPnMember] = useState('');
+  const [pnPokok, setPnPokok] = useState('');
+  const [pnMulai, setPnMulai] = useState(wibToday());
+  const [pnJatuh, setPnJatuh] = useState('');
+  const [pnCatatan, setPnCatatan] = useState('');
+  const [byrId, setByrId] = useState('');
+  const [byrSadaqah, setByrSadaqah] = useState('');
+  const [byrCatatan, setByrCatatan] = useState('');
 
   // W4.4 E.5: keyboard nav tablist koperasi (pola APG, sama dgn POS via useTablistNav).
   const { onTabKeyDown } = useTablistNav<Tab>((i) => COOP_TABS[i] ?? 'anggota', setTab);
@@ -509,6 +544,75 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
     setBusy(false);
   }
 
+  /** op: pinjam (W5.1 PINJ-1: qardh koperasi ke anggota; D 1130 -> K 1010). */
+  async function submitPinjam(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pnMember) {
+      showToast('Pilih anggota dulu', 'error');
+      return;
+    }
+    const amt = Number(pnPokok);
+    if (!Number.isInteger(amt) || amt <= 0) {
+      showToast('Pokok harus rupiah integer > 0', 'error');
+      return;
+    }
+    if (!pnJatuh) {
+      showToast('Tanggal jatuh tempo wajib diisi', 'error');
+      return;
+    }
+    setBusy(true);
+    const body: Record<string, unknown> = {
+      op: 'pinjam',
+      member_id: pnMember,
+      pokok: amt,
+      tanggal_mulai: pnMulai || wibToday(),
+      tanggal_jatuh_tempo: pnJatuh,
+    };
+    if (pnCatatan.trim()) body.catatan = pnCatatan.trim();
+    const r = await post(body);
+    if (r?.ok) {
+      showToast('Pinjaman qardh ' + rp(amt) + ' tercatat' + postNote(r), 'success');
+      setPnPokok('');
+      setPnJatuh('');
+      setPnCatatan('');
+      setPnMulai(wibToday());
+    } else if (!r) showToast('Gagal mencatat pinjaman', 'error');
+    else showToast(r.error || 'Gagal mencatat pinjaman', 'error');
+    setBusy(false);
+  }
+
+  /** op: bayar (W5.1: lunas SEKALIGUS; denda bila lateg = sadaqah memo-only OQ8). */
+  function askBayar(l: PinjamanRow) {
+    ask({
+      title: 'Bayar pinjaman',
+      message:
+        'Lunasi pinjaman ' +
+        rp(l.pokok) +
+        ' milik ' +
+        (l.member_name ?? l.member_id) +
+        ' (sisa ' +
+        rp(l.sisa) +
+        ')? Denda bila lateg diisi sebagai sadaqah -- HANYA tercatat, bukan pendapatan.',
+      confirmLabel: 'Bayar Lunas',
+      proceed: async () => {
+        setBusy(true);
+        const sv = byrSadaqah.trim() === '' ? 0 : Number(byrSadaqah);
+        const body: Record<string, unknown> = { op: 'bayar', loan_id: l.id };
+        if (Number.isInteger(sv) && sv > 0) body.sadaqah = sv;
+        if (byrCatatan.trim()) body.catatan = byrCatatan.trim();
+        const r = await post(body);
+        if (r?.ok) {
+          showToast('Pinjaman ' + rp(l.pokok) + ' lunas' + postNote(r), 'success');
+          setByrId('');
+          setByrSadaqah('');
+          setByrCatatan('');
+        } else if (!r) showToast('Gagal mencatat pelunasan', 'error');
+        else showToast(r.error || 'Gagal mencatat pelunasan', 'error');
+        setBusy(false);
+      },
+    });
+  }
+
   const d = data;
   if (!d) {
     return <div className="card p-4 text-sm text-slate-500 dark:text-slate-400">Memuat...</div>;
@@ -563,6 +667,7 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
             ['simpanan', 'Simpanan'],
             ['rekap', 'Rekap'],
             ['shu', 'SHU'],
+            ['pinjaman', 'Pinjaman'],
           ] as [Tab, string][]
         ).map(([t, label]) => (
           <FilterPill key={t} role="tab" aria-selected={tab === t} active={tab === t} onClick={() => setTab(t)}>
@@ -1409,6 +1514,218 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
               </p>
             )}
           </div>
+        </div>
+      )}
+
+      {/* -- Tab PINJAMAN: qardh (W5.1 PINJ-1; akun 1130; OQ7-OQ9) ------ */}
+      {tab === 'pinjaman' && (
+        <div className="space-y-4">
+          <div className="card p-4">
+            <h2 className="mb-3 font-bold">
+              <TermTip term="Qardh" tip={TIPS.qardh}>
+                Pinjaman Anggota (Qardh)
+              </TermTip>{' '}
+              <Badge tone="blue">W5.1</Badge>
+            </h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              Qardh: pinjaman kebajikan tanpa margin (F3.2 #5). Pencairan tercatat di akun
+              1130 Piutang Anggota (jurnal D 1130 -&gt; K 1010 saat GL aktif). Bayar = lunas
+              sekaligus (jurnal D 1010 -&gt; K 1130). Denda bila lewat jatuh tempo diisi
+              sebagai sadaqah: HANYA tercatat di catatan, bukan pendapatan (F3.3 #6, OQ8).
+            </p>
+            {canWrite ? (
+              <form onSubmit={submitPinjam} className="grid gap-3 md:grid-cols-6">
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  Anggota
+                  <select
+                    className="input mt-1"
+                    value={pnMember}
+                    onChange={(e) => setPnMember(e.target.value)}
+                  >
+                    <option value="">-- pilih --</option>
+                    {savable.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  <TermTip term="Qardh" tip={TIPS.qardh}>
+                    Pokok (Rp)
+                  </TermTip>
+                  <input
+                    className="input mt-1"
+                    type="number"
+                    min={100}
+                    step={100}
+                    value={pnPokok}
+                    onChange={(e) => setPnPokok(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  Tanggal Mulai
+                  <input
+                    className="input mt-1"
+                    type="date"
+                    value={pnMulai}
+                    onChange={(e) => setPnMulai(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  <TermTip term="Denda" tip={TIPS.denda_sadaqah}>
+                    Jatuh Tempo (wajib)
+                  </TermTip>
+                  <input
+                    className="input mt-1"
+                    type="date"
+                    value={pnJatuh}
+                    onChange={(e) => setPnJatuh(e.target.value)}
+                  />
+                </label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                  Catatan
+                  <input
+                    className="input mt-1"
+                    placeholder="opsional"
+                    maxLength={200}
+                    value={pnCatatan}
+                    onChange={(e) => setPnCatatan(e.target.value)}
+                  />
+                </label>
+                <div className="flex items-end md:col-span-6">
+                  <Button type="submit" loading={busy}>
+                    Pinjam (Qardh)
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Mode baca (pinjam/bayar hanya admin/manajer).
+              </p>
+            )}
+          </div>
+
+          <div className="card p-4">
+            <h2 className="mb-2 font-bold">
+              <TermTip term="Pinjaman" tip={TIPS.pinjaman}>
+                Daftar Pinjaman
+              </TermTip>
+            </h2>
+            {d.loans.length === 0 ? (
+              <Empty compact text="Belum ada pinjaman anggota (qardh)." />
+            ) : (
+              <div className="overflow-x-auto">
+                <Table minW="min-w-[980px]">
+                  <thead>
+                    <tr>
+                      <Th>Anggota</Th>
+                      <Th className="text-right">Pokok</Th>
+                      <Th className="text-right">Sisa</Th>
+                      <Th>Mulai</Th>
+                      <Th>Jatuh Tempo</Th>
+                      <Th>Status</Th>
+                      <Th>Catatan</Th>
+                      {canWrite ? <Th>Aksi</Th> : null}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {d.loans.map((l) => {
+                      const lateg = l.status === 'aktif' && wibToday() > l.tanggal_jatuh_tempo;
+                      return (
+                        <Trow key={l.id} hover>
+                          <Td>{l.member_name ?? l.member_id}</Td>
+                          <Td className="text-right tabular-nums">{rp(l.pokok)}</Td>
+                          <Td className="text-right tabular-nums">{rp(l.sisa)}</Td>
+                          <Td>{l.tanggal_mulai}</Td>
+                          <Td>
+                            {l.tanggal_jatuh_tempo}
+                            {lateg ? <Badge tone="amber"> lateg</Badge> : null}
+                          </Td>
+                          <Td>
+                            <Badge tone={l.status === 'lunas' ? 'green' : 'gray'}>
+                              {l.status}
+                            </Badge>
+                          </Td>
+                          <Td className="max-w-[220px] text-xs">{l.catatan ?? '-'}</Td>
+                          {canWrite ? (
+                            <Td>
+                              {l.status === 'aktif' ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setByrId(l.id);
+                                    setByrSadaqah('');
+                                    setByrCatatan('');
+                                  }}
+                                >
+                                  Bayar
+                                </Button>
+                              ) : null}
+                            </Td>
+                          ) : null}
+                        </Trow>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              </div>
+            )}
+          </div>
+
+          {canWrite && byrId
+            ? (() => {
+                const l = d.loans.find((x) => x.id === byrId);
+                if (!l || l.status !== 'aktif') return null;
+                return (
+                  <div className="card p-4">
+                    <h2 className="mb-2 font-bold">
+                      <TermTip term="Denda" tip={TIPS.denda_sadaqah}>
+                        Bayar Pinjaman (lunas sekaligus)
+                      </TermTip>{' '}
+                      <Badge tone="blue">W5.1</Badge>
+                    </h2>
+                    <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                      {l.member_name ?? l.member_id} -- pokok {rp(l.pokok)}, sisa {rp(l.sisa)},
+                      jatuh tempo {l.tanggal_jatuh_tempo}. Jurnal saat GL aktif: D 1010
+                      -&gt; K 1130 sebesar sisa. Denda (bila lateg) diisi sebagai sadaqah --
+                      hanya tercatat di catatan pinjaman, bukan pendapatan (F3.3 #6, OQ8).
+                    </p>
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                        <TermTip term="Denda" tip={TIPS.denda_sadaqah}>
+                          Denda (Sadaqah, opsional; Rp)
+                        </TermTip>
+                        <input
+                          className="input mt-1"
+                          type="number"
+                          min={0}
+                          step={100}
+                          value={byrSadaqah}
+                          onChange={(e) => setByrSadaqah(e.target.value)}
+                        />
+                      </label>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
+                        Catatan
+                        <input
+                          className="input mt-1"
+                          placeholder="opsional"
+                          maxLength={200}
+                          value={byrCatatan}
+                          onChange={(e) => setByrCatatan(e.target.value)}
+                        />
+                      </label>
+                      <div className="flex items-end md:col-span-1">
+                        <Button onClick={() => askBayar(l)} loading={busy}>
+                          Bayar Lunas
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
+            : null}
         </div>
       )}
 

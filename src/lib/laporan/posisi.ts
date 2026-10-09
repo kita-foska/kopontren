@@ -92,7 +92,7 @@ export type PosisiPayload = {
 };
 
 // Grup akun Sek.5.1 (kode COA, docs/akuntansi-proposal.md Sek.2).
-const ASET_LANCAR = ['1010', '1020', '1030', '1040', '1070', '1100', '1110'];
+const ASET_LANCAR = ['1010', '1020', '1030', '1040', '1070', '1100', '1110', '1130']; // W5.1 (PINJ-1, OQ7-sub): +1130 Piutang Anggota (Koperasi); 1030 tetap live
 const ASET_TETAP = '1050';
 const AKUM_PENYUSUTAN = '1060';
 const INVESTASI = ['1080', '1090'];
