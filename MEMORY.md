@@ -1,5 +1,52 @@
 # MEMORY
 
+## 2026-10-09
+### W5.1 (PINJ-1) LEPAS -- pinjaman anggota QARDH (9 Okt 2026)
+- Ruling tashih OQ7-OQ9 GUS FI: (OQ7) akun COA **1130** 'Piutang
+  Anggota (Koperasi)' -- **BUKAN 1030** (Piutang Penjualan tetap
+  live, tak terpakai modul ini; audit STEP 1 menaruh OQ3 lama =
+  1030, tashih memperbaiki ke 1130); GL pinjam D1130 > K1010,
+  bayar D1010 > K1130. (OQ7-sub) 1130 masuk `ASET_LANCAR`
+  (src/lib/laporan/posisi.ts, 1 baris) -> ikut neraca V2. (OQ8)
+  denda = **sadaqah memo-only**: kolom `catatan` pinjaman, TIDAK
+  ada kaki jurnal (F3.3 #6: tak pernah jadi pendapatan). (OQ9)
+  semua YA: bayar sekaligus (lump sum; 1 pinjaman = 1 pelunasan,
+  409), pinjam ganda diizinkan, anggota keluar = pinjaman tetap
+  aktif, tabel di coop_members (member_id), sadaqah input manual.
+- **C1 feat**: (1) `src/db.ts` skema v27: tabel `coop_pinjaman`
+  (id, member_id, akad qardh, margin 0, pokok, sisa, tanggal_mulai,
+  tanggal_jatuh_tempo, status aktif|lunas, catatan, created_by/at)
+  + index + COA seed 1130 open/0 + bump v27 (murni aditif: CREATE
+  IF NOT EXISTS + ON CONFLICT DO NOTHING). CATATAN: skema v27 +
+  lib draf pertama sudah masuk history via commit 2efa660
+  (feat/ui batch); C1 ini = fix lib ke API jurnal.ts sebenarnya
+  + seluruh wiring. (2) lib baru `src/lib/coop-pinjaman.ts`
+  (mirror coop-modal; `postJournalInTx` dari jurnal.ts:
+  buildCoopLoanDisbursementSpec/PaybackSpec murni +
+  recordCoopLoanInTx/closeCoopLoanInTx; guard UPDATE status='aktif'
+  -> double pay = PINJAMAN_NOT_ACTIVE). (3) route /api/koperasi:
+  op `pinjam` (validasi: pokok integer > 0, jatuh tempo wajib & >=
+  mulai, catatan <= 200, member ada -> 404) + op `bayar` (sadaqah
+  integer >= 0; memo concatenation ke catatan; 409 lunas; 404
+  tak ada) + GET `loans` (LIMIT 100) + REKAP_ACCOUNTS +1130
+  (baris rekap ke-10). (4) client /admin/koperasi: tab ke-5
+  "Pinjaman" (form pinjam + daftar + badge lateg + form bayar via
+  useConfirm; tier baca: form disembunyikan) + TIPS 3 entri.
+  (5) posisi.ts +glossary.ts (Qardh/Pinjaman Anggota/Denda Sadaqah).
+  (6) suite baru `scripts/test-coop-pinjaman.ts` (29 assert
+  P1-P13, node:sqlite in-memory + DDL mirror v27).
+- **C2 docs**: SOP-ADMIN/SOP-MANAJER/SOP-PENGURUS +
+  DOKUMENTASI-APLIKASI (ops 10 -> 12; tabel +2 baris; glosarium
+  +1 baris; peran baca mention tab Pinjaman).
+- **C3 record**: MEMORY + TODO (W5.1 PINJ-1 TUNDA -> [x] LEPAS).
+- **Gate**: tsc 0 + test:all **26/26** (chain s.d. test-inflight
+  ALL_PASS) + gate (check-route-exports + next build 59/59) +
+  file baru 0 non-ASCII. File proteksi tak disentuh: public/sw.js,
+  src/lib/coop.ts, laporan-admin-client.tsx.
+- **Sesudahnya**: Wave 5 close audit + Wave 6 (migrasi + SOP).
+  Deploy: BACKUP DB manual (lesson v16); DB stempel v26 akan
+  fullInit sekali lagi saat cold start.
+
 ## 2026-10-08
 ### PLAN A LEPAS -- ikon inline SVG semua item nav sidebar admin (8 Okt 2026)
 - **1 commit feat (`feat(sidebar)`) + 1 commit docs (`docs(sidebar)`)** +

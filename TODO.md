@@ -2012,9 +2012,28 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       silent-failure fix daftar member; commit C1 `5740004` +
       C2 `888eb3f`).
     - NEXT: **Wave 5 close audit** + Wave 6 (migrasi + SOP).
-   - NEXT: **W5.1 PINJ-1 (pinjaman anggota) -- TUNDA,
-     tashih-gated** (qardh/murabahah, akun COA baru, sumber
-     dana; mulai HANYA setelah ruling Gus Fi).
+   - [x] **W5.1 LEPAS 9 Okt (PINJ-1: pinjaman anggota QARDH)** --
+      tashih OQ7-OQ9: akun COA **1130** 'Piutang Anggota (Koperasi)'
+      (BUKAN 1030 -- 1030 tetap live, tak terpakai modul ini);
+      denda = **sadaqah memo-only** (kolom catatan, F3.3 #6, tak
+      pernah pendapatan); bayar = **lunas sekaligus**; pinjam ganda
+      diizinkan; anggota keluar = pinjaman tetap aktif; tabel di
+      coop_members (member_id); sadaqah input manual. Eksekusi:
+      tabel `coop_pinjaman` + skema v27 (COA seed 1130 open/0,
+      murni aditif) + lib baru `src/lib/coop-pinjaman.ts` (ala
+      coop-modal: op+logAudit 1 tx; pinjam D 1130 > K 1010 / bayar
+      D 1010 > K 1130, gl-on; ref_id idempoten `coop#<member>:
+      pnj#/byr#<loan>`) + 2 op `pinjam`/`bayar` di /api/koperasi +
+      tab ke-5 "Pinjaman" di /admin/koperasi (form pinjam + daftar
+      + bayar sekaligus via useConfirm + badge lateg) + 1130 masuk
+      `ASET_LANCAR` (laporan V2 ikut) + glosarium 3 entri
+      (Qardh/Pinjaman Anggota/Denda Sadaqah) + suite baru
+      `test:pinjaman` (29 assert P1-P13: gl-on/off, D=K, akun tepat,
+      double-pay guard, memo-only, pinjam ganda, anggota keluar,
+      idempotensi). Gate: tsc 0 + test:all **26/26** + gate build
+      59/59 + 0 non-ASCII (file baru). Deploy: BACKUP DB wajib
+      (lesson v16); DB stempel v26 menjalankan fullInit sekali lagi.
+      Detail: MEMORY.md seksi "W5.1 (PINJ-1) LEPAS".
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.
