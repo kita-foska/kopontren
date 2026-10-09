@@ -25,10 +25,15 @@
  *  - W10 (W3.5): COA verify 1120/4100/6020 'open'/0 + wakaf in auto-post
  *    (idempoten + D=K); wakaf out & gl_off = tercatat tanpa jurnal;
  *    anti-campur #16 (1120/4100 saja, tak pernah 1100/1010/1020).
+ *  - Z8 (P3b): buildZisRekap -- by_kind zero-fill 4 jenis, bucket
+ *    bulanan, c2090.gl_balance all-time (OQ-1: keluar tak kurangi 2090),
+ *    posted/unposted (D6), filter periode (from inklusif / to eksklusif).
  */
 import { recordZisInTx, zisLines, zisJournalFor, zisValidateAmount, ZIS_ACCT } from '../src/lib/zis.ts';
 import { postJournalInTx } from '../src/lib/jurnal.ts';
 import type { TxDb } from '../src/lib/jurnal.ts';
+import { buildZisRekap } from '../src/lib/zis-rekap.ts';
+import type { QueryDb } from '../src/lib/keuangan.ts';
 
 let passes = 0;
 let failures = 0;
@@ -43,6 +48,23 @@ function ok(name: string, cond: boolean, detail = ''): void {
 }
 function eq<T>(name: string, actual: T, expected: T): void {
   ok(name, actual === expected, 'dapat ' + String(actual) + ', seharusnya ' + String(expected));
+}
+
+/** Shim DatabaseSync (node:sqlite sync) -> QueryDb (libsql async) utk
+ * buildZisRekap (Z8, P3b). Pola makeShim scripts/test-laporan.ts. */
+function toQueryDb(db: unknown): QueryDb {
+  const d = db as {
+    prepare: (sql: string) => { get: (...args: unknown[]) => unknown; all: (...args: unknown[]) => unknown[] };
+  };
+  return {
+    prepare(sql: string) {
+      const stmt = d.prepare(sql);
+      return {
+        get: (...args: unknown[]) => Promise.resolve(stmt.get(...args)),
+        all: (...args: unknown[]) => Promise.resolve(stmt.all(...args)),
+      };
+    },
+  };
 }
 
 // DDL mirror src/db.ts (skema v22: coa + journal + zis; tanpa index).
@@ -496,6 +518,77 @@ async function main(): Promise<void> {
     }
 
     db4.close();
+  }
+
+  // ===== Z8 (P3b): buildZisRekap -- by_kind zero-fill, bucket bulanan,
+  // saldo 2090 (GL, all-time), filter periode, posted/unposted (D6).
+  {
+    const db5 = new mod.DatabaseSync(':memory:');
+    db5.exec(DDL_JE);
+    db5.exec(DDL_JL);
+    db5.exec(DDL_ZIS);
+    const tdb5 = toTxDb(db5);
+    const qdb5 = toQueryDb(db5);
+    const bal5 = (a: string): number =>
+      cnt(`SELECT COALESCE(SUM(debit),0) - COALESCE(SUM(credit),0) c FROM journal_lines WHERE account_code='${a}'`, db5);
+
+    // Z8a: DB kosong -> by_kind zero-fill 4 jenis, monthly kosong, c2090 nol.
+    {
+      const p = await buildZisRekap(qdb5);
+      eq('Z8a: by_kind zero-fill 4 jenis', p.by_kind.length, 4);
+      eq('Z8a: by_kind urut zakat...sedekah', p.by_kind[0]?.kind + '/' + p.by_kind[2]?.kind, 'zakat/sedekah');
+      eq('Z8a: grand kosong = 0', p.grand.in_total + p.grand.out_total + p.grand.net, 0);
+      eq('Z8a: monthly kosong', p.monthly.length, 0);
+      eq('Z8a: c2090 nol (0/0/0)', p.c2090.gl_balance + p.c2090.posted_in + p.c2090.unposted_in, 0);
+      ok('Z8a: period echo null (all-time)', p.period.from === null && p.period.to === null);
+    }
+
+    // Seed: 2 bulan (Sep+Oct), mix gl_on/gl_off, mix jenis/arah.
+    await recordZisInTx(tdb5, { id: 'r1', kind: 'zakat', direction: 'in', amount: 4000000, occurred_at: '2026-09-10T08:00:00.000+07:00', gl_enabled: true });
+    await recordZisInTx(tdb5, { id: 'r2', kind: 'infak', direction: 'in', amount: 1000000, occurred_at: '2026-10-05T09:00:00.000+07:00', gl_enabled: false });
+    await recordZisInTx(tdb5, { id: 'r3', kind: 'zakat', direction: 'out', amount: 1500000, occurred_at: '2026-10-06T10:00:00.000+07:00', gl_enabled: true });
+    await recordZisInTx(tdb5, { id: 'r4', kind: 'wakaf', direction: 'in', amount: 2000000, occurred_at: '2026-09-11T11:00:00.000+07:00', gl_enabled: true });
+
+    // Z8b: all-time -- by_kind + grand + bucket bulanan + c2090 (OQ-1/D6).
+    {
+      const p = await buildZisRekap(qdb5);
+      const z = p.by_kind.find((k) => k.kind === 'zakat');
+      eq('Z8b: zakat in = 4000000', z?.in_total, 4000000);
+      eq('Z8b: zakat out = 1500000', z?.out_total, 1500000);
+      eq('Z8b: zakat net = 2500000', z?.net, 2500000);
+      eq('Z8b: infak in = 1000000', p.by_kind.find((k) => k.kind === 'infak')?.in_total, 1000000);
+      eq('Z8b: sedekah nol (zero-fill)', p.by_kind.find((k) => k.kind === 'sedekah')?.in_total, 0);
+      eq('Z8b: wakaf in = 2000000', p.by_kind.find((k) => k.kind === 'wakaf')?.in_total, 2000000);
+      eq('Z8b: grand in = 7000000', p.grand.in_total, 7000000);
+      eq('Z8b: grand out = 1500000', p.grand.out_total, 1500000);
+      eq('Z8b: grand net = 5500000', p.grand.net, 5500000);
+      eq('Z8b: monthly 2 bucket (ASC)', p.monthly.length, 2);
+      eq('Z8b: bucket 0 = 2026-09', p.monthly[0]?.month, '2026-09');
+      eq('Z8b: Sep in = 6000000 (zakat 4jt + wakaf 2jt)', p.monthly[0]?.in_total, 6000000);
+      eq('Z8b: Oct out = 1500000', p.monthly[1]?.out_total, 1500000);
+      eq('Z8b: c2090.gl_balance = 4000000 (hanya zakat in gl-on; OQ-1)', p.c2090.gl_balance, 4000000);
+      eq('Z8b: posted_in = 2 (r1+r4 in gl-on; r3 out tak ikut)', p.c2090.posted_in, 2);
+      eq('Z8b: unposted_in = 1 (r2 gl-off, D6)', p.c2090.unposted_in, 1);
+      eq('Z8b: saldo jurnal 2090 = -4000000 (kredit)', bal5('2090'), -4000000);
+    }
+
+    // Z8c: filter periode Oct (from inklusif / to eksklusif) + invariant
+    // all-time c2090 (tidak ikut periode -- OQ-1).
+    {
+      const p = await buildZisRekap(qdb5, '2026-10-01T00:00:00.000+07:00', '2026-11-01T00:00:00.000+07:00');
+      eq('Z8c: Oct zakat out = 1500000', p.by_kind.find((k) => k.kind === 'zakat')?.out_total, 1500000);
+      eq('Z8c: Oct zakat in = 0 (r1 di Sep)', p.by_kind.find((k) => k.kind === 'zakat')?.in_total, 0);
+      eq('Z8c: Oct infak in = 1000000', p.by_kind.find((k) => k.kind === 'infak')?.in_total, 1000000);
+      eq('Z8c: Oct wakaf in = 0 (r4 di Sep)', p.by_kind.find((k) => k.kind === 'wakaf')?.in_total, 0);
+      eq('Z8c: Oct grand in = 1000000', p.grand.in_total, 1000000);
+      eq('Z8c: Oct grand net = -500000', p.grand.net, -500000);
+      eq('Z8c: Oct monthly 1 bucket', p.monthly.length, 1);
+      eq('Z8c: period.from ter-echo', p.period.from, '2026-10-01T00:00:00.000+07:00');
+      eq('Z8c: c2090.gl_balance tetap all-time = 4000000', p.c2090.gl_balance, 4000000);
+      eq('Z8c: c2090.posted_in tetap all-time = 2', p.c2090.posted_in, 2);
+    }
+
+    db5.close();
   }
 
   db3.close();

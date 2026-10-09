@@ -35,6 +35,27 @@ type ZisData = {
   coop: boolean;
 };
 
+/** Payload GET /api/zis/rekap (mirror ZisRekapPayload lib/zis-rekap.ts
+ * + gl_enabled utk badge status GL). */
+type ZisRekapKind = { kind: string; in_total: number; out_total: number; net: number };
+type ZisRekapMonth = { month: string; in_total: number; out_total: number; net: number };
+type ZisRekapData = {
+  period: { from: string | null; to: string | null };
+  by_kind: ZisRekapKind[];
+  monthly: ZisRekapMonth[];
+  grand: { in_total: number; out_total: number; net: number };
+  c2090: { gl_balance: number; posted_in: number; unposted_in: number };
+  gl_enabled: boolean;
+};
+
+/** Label scope periode utk keterangan kartu rekap. */
+function rekapScopeLabel(mode: string): string {
+  if (mode === 'month') return 'bulan ini';
+  if (mode === 'year') return 'tahun ini';
+  if (mode === 'custom') return 'periode custom';
+  return 'seluruh periode';
+}
+
 /** Label basa-awam jenis ZIS (nilai DB tetap raw). */
 const KIND_LABELS: Record<string, string> = {
   zakat: 'Zakat',
@@ -90,6 +111,12 @@ export function ZisClient() {
   const [payer, setPayer] = useState('');
   const [occurred, setOccurred] = useState('');
   const [toast, showToast, clearToast, toastTone, toastAction] = useToast();
+  // P3b: state Rekap ZIS (period picker + payload + refetch on change).
+  const [rekapMode, setRekapMode] = useState('all');
+  const [rekapFrom, setRekapFrom] = useState('');
+  const [rekapTo, setRekapTo] = useState('');
+  const [rekap, setRekap] = useState<ZisRekapData | null>(null);
+  const [rekapBusy, setRekapBusy] = useState(false);
 
   const load = useCallback(async () => {
     const r = await api<ZisData>('/api/zis?limit=200');
@@ -102,6 +129,46 @@ export function ZisClient() {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // P3b: ambil rekap -- batasan periode dihitung lokal (WIB via wibToday,
+  // sudah diimport W2.7 utk form); date-only 'YYYY-MM-DD' dinormalisasi
+  // route ke tengah-malam WIB (from inklusif, to eksklusif).
+  const loadRekap = useCallback((mode: string, from: string, to: string) => {
+    const t = wibToday();
+    let f = '';
+    let tt = '';
+    if (mode === 'month') {
+      const y = t.slice(0, 4);
+      const mNo = Number(t.slice(5, 7));
+      f = y + '-' + String(mNo).padStart(2, '0') + '-01';
+      tt = mNo === 12 ? String(Number(y) + 1) + '-01-01' : y + '-' + String(mNo + 1).padStart(2, '0') + '-01';
+    } else if (mode === 'year') {
+      const y = Number(t.slice(0, 4));
+      f = t.slice(0, 4) + '-01-01';
+      tt = String(y + 1) + '-01-01';
+    } else if (mode === 'custom') {
+      f = from;
+      tt = to;
+    }
+    const qs = new URLSearchParams();
+    if (f) qs.set('from', f);
+    if (tt) qs.set('to', tt);
+    const url = '/api/zis/rekap' + (qs.toString() ? '?' + qs.toString() : '');
+    setRekapBusy(true);
+    api<ZisRekapData>(url)
+      .then((r) => {
+        if (r.ok && r.data) setRekap(r.data);
+        else if (!r.ok) showToast('Gagal memuat rekap ZIS', 'error');
+      })
+      .catch(() => showToast('Gagal memuat rekap ZIS', 'error'))
+      .finally(() => setRekapBusy(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    loadRekap(rekapMode, rekapFrom, rekapTo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rekapMode, rekapFrom, rekapTo]);
 
   /** Export CSV riwayat -- pola zakat-client (server ?csv=1 + unduh blob). */
   async function exportCsv() {
@@ -128,6 +195,14 @@ export function ZisClient() {
       setCsvBusy(false);
     }
   }
+
+  // P3b: turunan rekap utk kartu alokasi (non-wakaf = ZIS disalurkan
+  // keluar; wakaf = disposal aset, jalur manual W3.5 -- bukan kas 1100).
+  const rekapNonWakaf = rekap ? rekap.by_kind.filter((k) => k.kind !== 'wakaf') : [];
+  const rekapAllocOut = rekapNonWakaf.reduce((a, k) => a + k.out_total, 0);
+  const rekapAllocIn = rekapNonWakaf.reduce((a, k) => a + k.in_total, 0);
+  const rekapUnalloc = rekapAllocIn - rekapAllocOut;
+  const rekapWakafOut = rekap ? rekap.by_kind.find((k) => k.kind === 'wakaf')?.out_total ?? 0 : 0;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -241,6 +316,146 @@ export function ZisClient() {
             Wakaf masuk: auto-jurnal D1120/K4100; wakaf keluar: manual (W3.5).
           </p>
         </div>
+      </div>
+
+      {/* Rekap ZIS (P3b): by_kind + per-bulan + alokasi + saldo 2090. */}
+      <div className="card p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-bold">
+            <TermTip term="Rekap" tip="Rekapitulasi ZIS: total per jenis, per bulan, alokasi, dan saldo COA 2090 (ZIS terkumpul belum disalurkan).">
+              Rekap ZIS
+            </TermTip>
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            {rekapBusy ? <span className="text-xs text-slate-500 dark:text-slate-400">Memuat...</span> : null}
+            <select
+              className="input"
+              value={rekapMode}
+              onChange={(e) => setRekapMode(e.target.value)}
+              aria-label="Periode rekap ZIS"
+            >
+              <option value="all">Semua</option>
+              <option value="month">Bulan ini</option>
+              <option value="year">Tahun ini</option>
+              <option value="custom">Custom</option>
+            </select>
+            {rekapMode === 'custom' ? (
+              <>
+                <input
+                  type="date"
+                  className="input"
+                  value={rekapFrom}
+                  onChange={(e) => setRekapFrom(e.target.value)}
+                  aria-label="Dari"
+                />
+                <input
+                  type="date"
+                  className="input"
+                  value={rekapTo}
+                  onChange={(e) => setRekapTo(e.target.value)}
+                  aria-label="Sampai"
+                />
+              </>
+            ) : null}
+          </div>
+        </div>
+        {rekap ? (
+          <div className="space-y-4">
+            <div>
+              <h3 className="label mb-2">Total per jenis ({rekapScopeLabel(rekapMode)})</h3>
+              <Table minW="min-w-[560px]">
+                <thead>
+                  <tr>
+                    <Th>Jenis</Th>
+                    <Th className="text-right">Masuk</Th>
+                    <Th className="text-right">Keluar</Th>
+                    <Th className="text-right">Net</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rekap.by_kind.map((k) => (
+                    <Trow key={k.kind} hover>
+                      <Td>{KIND_LABELS[k.kind] ?? k.kind}</Td>
+                      <Td className="text-right tabular-nums">{rp(k.in_total)}</Td>
+                      <Td className="text-right tabular-nums">{rp(k.out_total)}</Td>
+                      <Td className="text-right font-bold tabular-nums">{rp(k.net)}</Td>
+                    </Trow>
+                  ))}
+                  <Trow>
+                    <Td className="font-bold">TOTAL</Td>
+                    <Td className="text-right font-bold tabular-nums">{rp(rekap.grand.in_total)}</Td>
+                    <Td className="text-right font-bold tabular-nums">{rp(rekap.grand.out_total)}</Td>
+                    <Td className="text-right font-bold tabular-nums">{rp(rekap.grand.net)}</Td>
+                  </Trow>
+                </tbody>
+              </Table>
+            </div>
+            {rekapMode !== 'month' && rekap.monthly.length > 0 ? (
+              <div>
+                <h3 className="label mb-2">
+                  Per bulan
+                  {rekap.monthly.length > 24 ? ' (menampilkan 24 terakhir dari ' + rekap.monthly.length + ' bulan)' : ''}
+                </h3>
+                <Table minW="min-w-[560px]">
+                  <thead>
+                    <tr>
+                      <Th>Bulan</Th>
+                      <Th className="text-right">Masuk</Th>
+                      <Th className="text-right">Keluar</Th>
+                      <Th className="text-right">Net</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rekap.monthly.slice(-24).map((mo) => (
+                      <Trow key={mo.month} hover>
+                        <Td>{mo.month}</Td>
+                        <Td className="text-right tabular-nums">{rp(mo.in_total)}</Td>
+                        <Td className="text-right tabular-nums">{rp(mo.out_total)}</Td>
+                        <Td className="text-right font-bold tabular-nums">{rp(mo.net)}</Td>
+                      </Trow>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            ) : null}
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <p className="label">Teralokasi (disalurkan)</p>
+                <p className="mt-1 text-lg font-extrabold tabular-nums">{rp(rekapAllocOut)}</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  zakat/infak/sedekah keluar {rekapScopeLabel(rekapMode)} (dibook beban 5090/5100)
+                </p>
+              </div>
+              <div>
+                <p className="label">Belum disalurkan</p>
+                <p className="mt-1 text-lg font-extrabold tabular-nums">{rp(rekapUnalloc)}</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  net masuk-keluar operasional {rekapScopeLabel(rekapMode)} (bukan saldo GL 2090)
+                </p>
+              </div>
+              <div>
+                <p className="label">Wakaf disposal</p>
+                <p className="mt-1 text-lg font-extrabold tabular-nums">{rp(rekapWakafOut)}</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  keluar wakaf = disposal aset (jurnal manual 6020/1120, W3.5)
+                </p>
+              </div>
+              <div>
+                <p className="label">Saldo COA 2090 (GL)</p>
+                <p className="mt-1 text-lg font-extrabold tabular-nums">{rp(rekap.c2090.gl_balance)}</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  all-time -- OQ-1: kumulatif; keluar ZIS tak mengurangi 2090
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {!rekap.gl_enabled ? <Badge tone="gray">GL off -- 2090 tidak bertambah</Badge> : null}
+                  {rekap.c2090.unposted_in > 0 ? (
+                    <Badge tone="amber">{rekap.c2090.unposted_in} baris masuk belum jurnal (D6: tak di-backfill)</Badge>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Form input */}
