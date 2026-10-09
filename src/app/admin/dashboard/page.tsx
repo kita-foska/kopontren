@@ -266,7 +266,7 @@ export default async function AdminDashboardPage() {
             key={c.label}
             href={c.href}
             className={
-              'group card fade-up relative flex flex-col justify-between p-4.5 tile-hover border-slate-200/80 transition-all hover:border-accent-400/50 hover:shadow-lg dark:border-navy-700 ' +
+              'group card fade-up relative flex flex-col justify-between p-4 tile-hover border-slate-200/80 transition-all hover:border-accent-400/50 hover:shadow-lg dark:border-navy-700 ' +
               (c.warn ? 'border-amber-500/60 ring-1 ring-amber-500/30' : '')
             }
           >

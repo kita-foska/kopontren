@@ -1316,7 +1316,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         {/* Left Column: Product catalog & Search */}
         <div className="min-w-0">
           {/* Search bar & Barcode input */}
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-2 flex items-center gap-2">
             <div className="relative min-w-0 flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                 <Search className="h-4 w-4" />
@@ -1353,36 +1353,36 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                 <span className="hidden sm:inline">Scan Barcode</span>
               </span>
             </button>
+          </div>
 
-            {/* Category pills -- Fix 2: 1 baris + scroll horizontal
-                (scrollbar disembunyikan via .no-scrollbar) agar hemat
-                2-3 baris vertikal; kategori tetap bisa digulir. */}
-            <div
-              className="no-scrollbar flex flex-nowrap gap-1.5 overflow-x-auto pb-1"
-              role="tablist"
-              aria-label="Kategori produk"
-              onKeyDown={onCatTabKeyDown}
+          {/* Category pills -- baris mandiri + scroll horizontal
+              (scrollbar disembunyikan via .no-scrollbar); baris tersendiri
+              agar kolom pencarian tidak terjepit; kategori tetap digulir. */}
+          <div
+            className="no-scrollbar mb-3 flex flex-nowrap gap-1.5 overflow-x-auto pb-1"
+            role="tablist"
+            aria-label="Kategori produk"
+            onKeyDown={onCatTabKeyDown}
+          >
+            <FilterPill
+              role="tab"
+              aria-selected={!cat}
+              active={!cat}
+              onClick={() => setCat('')}
             >
+              Semua
+            </FilterPill>
+            {categories.map((c) => (
               <FilterPill
+                key={c}
                 role="tab"
-                aria-selected={!cat}
-                active={!cat}
-                onClick={() => setCat('')}
+                aria-selected={cat === c}
+                active={cat === c}
+                onClick={() => setCat(c)}
               >
-                Semua
+                {c}
               </FilterPill>
-              {categories.map((c) => (
-                <FilterPill
-                  key={c}
-                  role="tab"
-                  aria-selected={cat === c}
-                  active={cat === c}
-                  onClick={() => setCat(c)}
-                >
-                  {c}
-                </FilterPill>
-              ))}
-            </div>
+            ))}
           </div>
 
           {/* Product cards grid */}
