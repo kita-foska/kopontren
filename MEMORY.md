@@ -1,6 +1,37 @@
 # MEMORY
 
 ## 2026-10-10
+### TUTORIAL EMOJI SWEEP LEPAS -- 9 docs + 9 public/tutorial + 2 src komentar (audit 10 Okt, commit `7ba4371`)
+- **`7ba4371`** (20 file, +176/-113; parent `2e7cf6a`; dual-push
+  `origin/master` + `origin/main` @ `7ba4371`, kedua ref remote
+  terverifikasi identik):
+  (a) 9 `docs/*.html` -- semua emoji/glyph diganti ikon inline SVG
+      + blok CSS `.doc-ic`; 0 baris konten non-SVG (pure swap).
+  (b) 9 `public/tutorial/*.html` -- mirror sync:tutorial dari docs
+      (docs = sumber kebenaran); 14 baris drift-resolution
+      pre-existing kini byte-identik dgn docs; 0 konten baru
+      selain SVG.
+  (c) 2 komentar src non-user-facing (zero runtime impact):
+      `src/app/admin/dashboard/page.tsx` up-triangle -> `^`;
+      `src/app/api/backup/route.ts` orange-circle -> `ORANGE`.
+- **Gate lulus**: `tsc --noEmit` exit 0; `test:all` 27/27 green
+  (per-suite, termasuk test-invariants 40/0, test-golden,
+  test-inflight 11/0, approval-flow 63/0); emoji scan bersih
+  semua file in-scope; `sync:tutorial` 9/9 byte-identik; CRLF
+  utuh.
+- **Harness fix (transparansi)**: temuan "test-invariants
+  phase-2 abort" + "test:all FAIL" sebelumnya = ARTIFAKT harness,
+  BUKAN regresi -- (1) cap `execFileSync` 180s membunuh E2E
+  restore-drill yang legitim >180s (2x `next dev` +
+  `removeWithRetry` s.d. 90s) -> naikkan 900s; (2) typo runner
+  `test-coop-penjualan.ts` (tak ada) vs `test-coop-pinjaman.ts`
+  (real) + duplikat `test-laporan.ts` -> koreksi ke 27-entry
+  chain `package.json`. Pasca-fix SEMUA green.
+- NEXT = **P3d** (admin export center: CSV + formal print di
+  `/admin/ekspor`; 3 keputusan Option A: route `/admin/ekspor`
+  terpisah, orkestrasi frontend tanpa endpoint server baru,
+  cetak formal re-use `/api/laporan/formal`).
+
 ### BANNER PWA LEPAS -- ikon inline SVG ganti emoji (audit 10 Okt, commit `a48136d`)
 - **`a48136d`** (1 file, +17/-2, `src/components/sw-register.tsx`;
   parent `1da3a16`; dual-push `origin/master` + `origin/main` @
