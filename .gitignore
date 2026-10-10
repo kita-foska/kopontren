@@ -35,6 +35,10 @@ _prod
 _ts.json
 db.txt
 
+# local DB dump (Turso/SQLite) -- jangan di-commit
+kopontren (1).db
+* (1).db
+
 # scratch/probe sesi Cline (lokal only). Bukti yg di-retain: _txlib.mjs, _probe4.mjs
 _*.cmd
 _*.ps1
