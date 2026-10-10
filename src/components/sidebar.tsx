@@ -24,6 +24,8 @@ const PREFETCH_PATHS = new Set([
   '/admin/kas',
   '/admin/member',
   '/admin/laporan',
+  // P3d: pusat ekspor (unduh CSV + cetak formal).
+  '/admin/ekspor',
   '/admin/zakat',
   '/admin/zis',
   '/admin/akad', // W3.3: modul akad syariah (OQ 2: simetris dgn zis)
@@ -632,6 +634,25 @@ const IconUpload = (
   </svg>
 );
 
+// P3d -- pusat ekspor: kotak + panah keluar (unduh/export data).
+const IconExport = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M15 3h5v5" />
+    <path d="M10 14L21 3" />
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+  </svg>
+);
+
 export function levelOk(role: Role, lv: MenuLevel): boolean {
   if (role === 'admin') return true; // mirror canAccess: admin selalu lolos
   if (lv === 'ops') return role === 'manajer'; // mirror isManager
@@ -680,6 +701,8 @@ export const MENU_ITEMS: MenuDef[] = [
   { href: '/admin/persetujuan', label: 'Persetujuan', icon: IconApprovals, level: 'approvals' },
   { href: '/admin/data', label: 'Data & Backup', icon: IconDatabase, level: 'admin' },
   { href: '/admin/migrate', label: 'Import CSV', icon: IconUpload, level: 'admin' },
+  // P3d: pusat ekspor admin (unduh CSV + cetak formal; level 'admin').
+  { href: '/admin/ekspor', label: 'Ekspor', icon: IconExport, level: 'admin' },
 ];
 
 /** 4 grup (Q1 27 Sep: Loyalty fold ke OPERASIONAL - 4 grup, bukan 5). */
@@ -725,6 +748,8 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
       '/admin/persetujuan', // P2/Q62: alur persetujuan (tier admin)
       '/admin/data',
       '/admin/migrate',
+      // P3d: pusat ekspor (unduh CSV + cetak formal).
+      '/admin/ekspor',
     ],
   },
 ];
