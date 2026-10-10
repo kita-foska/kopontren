@@ -2074,6 +2074,22 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       non-ASCII; 34 temp file P3a dibersihkan sebelum C1.
       Detail: MEMORY.md seksi "P3b LEPAS -- ZIS Rekap".
 
+- [x] **P3d LEPAS (10 Okt) -- Admin Export Center** commit `5363da9`
+      (C1, 8 file +836/-1, dual-push master+main):
+      `src/lib/admin/export-download.ts` BARU (zero-import
+      pembangkit CSV/JSON + unduh Blob + polling /api/reports/csv
+      & /api/keuangan/csv) + `export-progress.tsx` (ikon status
+      inline-SVG) + `export-center-client.tsx` (period picker +
+      unduh per modul + batch sekuensial + abort + link cetak
+      formal) + `src/app/admin/ekspor/{layout,page}.tsx` (guard
+      `isAdmin`, `Shell`) + `sidebar.tsx` (nav "Ekspor" level
+      'admin' + grup Sistem + prefetch, aditif) +
+      `scripts/test-admin-export.ts` (Node type-strip PASS 26/0;
+      test:all jadi 28 suite). Gate: tsc 0 + test:all 28/28 +
+      0 non-ASCII; frozen gate (laporan-admin-client.tsx, sw.js,
+      coop.ts) tak tersentuh. Detail: MEMORY.md seksi "P3d
+      ADMIN EXPORT CENTER".
+
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.
 - [ ] Q50 Kategori notifikasi -- risiko, sukses, pengingat, update sistem.
@@ -2095,6 +2111,8 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       aksi + antrean /admin/persetujuan; detail di MEMORY.md).
 - [ ] Q63 Lock record -- data kunci tidak bisa diam-diam berubah.
 - [ ] Q64 Export laporan siap presentasi -- bukan sekadar CSV.
+      (P3d 10 Okt: unduh CSV + cetak formal via /admin/ekspor --
+      menutup aspek "bukan sekadar CSV"; detail di P3d LEPAS.)
 - [ ] Q65 Dashboard untuk pengurus -- angka penting + interpretasi.
 
 **Peringatan & risiko:**

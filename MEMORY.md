@@ -1,6 +1,41 @@
 # MEMORY
 
 ## 2026-10-10
+### P3d ADMIN EXPORT CENTER -- unduh CSV + cetak formal di /admin/ekspor (LEPAS, commit C1 `5363da9` + C2 docs, dual-push master+main)
+- **Lingkup (Option A, desain 10 Okt)**: pusat ekspor
+  administrasi di route terpisah `/admin/ekspor` (tier admin,
+  guard `isAdmin`), orkestrasi full frontend TANPA endpoint
+  server baru: unduh CSV per modul + batch sekuensial + abort;
+  cetak formal re-use `/api/laporan/formal`. `CSV_MODULES`
+  hard-coded: `/api/reports/csv` + `/api/keuangan/csv`;
+  period default `startOfDayJakarta(-29).slice(0,10)` ..
+  `todayWibStr()`.
+- **File (additive)**:
+  (a) `src/lib/admin/export-download.ts` (~242 br; zero-import;
+      pembangkit CSV/JSON blob + unduh Blob + polling).
+  (b) `src/components/admin/ekspor/export-progress.tsx` (ikon
+      status inline-SVG).
+  (c) `src/components/admin/ekspor/export-center-client.tsx`
+      (period picker + unduh per-modul + batch + abort + link
+      cetak formal -> /admin/laporan).
+  (d) `src/app/admin/ekspor/{layout,page}.tsx` (metadata +
+      guard `isAdmin` + `Shell`).
+  (e) `src/components/sidebar.tsx`: + `IconExport` (inline-SVG)
+      + `MENU_ITEMS` (level 'admin') + grup `Sistem` + prefetch.
+  (f) `package.json`: + `test:admin-export`, `test:all` jadi
+      28 entry (append `node scripts/test-admin-export.ts`).
+  (g) `scripts/test-admin-export.ts` (Node type-strip;
+      PASS 26/0).
+- **Gate lulus**: `tsc --noEmit` exit 0; 28/28 suite green
+  (27 `scripts/test-*.ts` + `approval-flow.mjs`, termasuk
+  `test:admin-export`); 0 non-ASCII semua file P3d + sidebar;
+  frozen gate `laporan-admin-client.tsx`, `public/sw.js`,
+  `coop.ts` tak tersentuh.
+- **STATE**: LEPAS -- C1 `5363da9` (8 file, +836/-1) sudah
+  dual-push master+main (verified `git ls-remote`); C2 docs =
+  commit ini. 465 file temp `n_*.txt` dibersihkan sebelum C1.
+- NEXT = P1c / P3c (menunggu arahan Gus Fi).
+
 ### TUTORIAL EMOJI SWEEP LEPAS -- 9 docs + 9 public/tutorial + 2 src komentar (audit 10 Okt, commit `7ba4371`)
 - **`7ba4371`** (20 file, +176/-113; parent `2e7cf6a`; dual-push
   `origin/master` + `origin/main` @ `7ba4371`, kedua ref remote
