@@ -143,7 +143,7 @@ export async function POST(req: Request) {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       );
       for (const s of (payload.sales as Record<string, unknown>[]) || []) {
-        // Guard import pay_split (review Fitur 3 🟠): JSON harus well-formed,
+        // Guard import pay_split (review Fitur 3 ORANGE): JSON harus well-formed,
         // metode whitelisted (parsePaySplit), Σ bagian === total baris.
         // Gagal validasi → null (baris jadi legacy pay_method) — JSON rusak
         // tidak boleh masuk, supaya json_each di sisi baca tidak pecah.

@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SOP Admin — Kopontren Al Ittihad</title>
 <style>
+.doc-ic{display:inline-block;vertical-align:-3px;margin:0 4px;flex:none}
+td .doc-ic,th .doc-ic{vertical-align:-2px;margin:0 3px}
+
 :root{--maroon:#7a1835;--wine:#7a1c1c;--bg:#faf5f6;--card:#fff;--line:#e9d5d8;--line2:#e2e8f0;--ink:#170a0e;--sub:#6b5a60;--ok:#059669;--bad:#e11d48;--warn:#f59e0b;--gold:#fbbf24;--slate:#f1f5f9}
 *{box-sizing:border-box}
 html{color-scheme:light}
@@ -149,7 +152,7 @@ body{background:#fff}
 </div>
 <h2><span class="n">4</span>Do's &amp; Don'ts</h2>
 <div class="todo">
-<div class="card d"><h3 class="ok">✔ Do's — lakukan</h3>
+<div class="card d"><h3 class="ok"><svg class="doc-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg> Do's — lakukan</h3>
 <ul>
 <li>Baca Dashboard <b>setiap pagi</b>; tangani kartu kuning (stok menipis, rekap tertunda).</li>
 <li>Catat belanja <b>segera</b> saat barang masuk — stok &amp; hutang otomatis benar.</li>
@@ -159,7 +162,7 @@ body{background:#fff}
 <li>Pakai log <b>Audit</b> untuk cek perubahan mencurigakan (harga, stok, pengguna).</li>
 <li>Member baru: daftarkan <b>sebelum</b> belanja pertama agar poin langsung jalan.</li>
 </ul></div>
-<div class="card k"><h3 class="bad">✘ Don'ts — jangan</h3>
+<div class="card k"><h3 class="bad"><svg class="doc-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg> Don'ts — jangan</h3>
 <ul>
 <li>Jangan <b>hapus produk yang pernah terjual</b> (riwayat rusak) — nonaktifkan saja.</li>
 <li>Jangan ubah <b>harga/stok massal tanpa catatan</b> — catat alasannya di jurnal.</li>
@@ -191,9 +194,9 @@ body{background:#fff}
 <div class="repl-body"><div class="app">
 <div class="hero2"><b>Dashboard <span style="opacity:.8">Admin</span></b><div>Selasa, 22 September 2026 · ringkasan operasional Kopontren</div></div>
 <div class="kpig">
-<div class="kpi"><span class="chipm">⓵</span> <div class="l">Penjualan Hari Ini</div><div class="v">Rp 1.240.000</div><div class="s">38 transaksi</div><div class="d up">▲ +12% vs kemarin</div></div>
-<div class="kpi"><div class="l">Belum Direkap</div><div class="v">2</div><div class="s">Rp 86.000 menunggu rekap</div><div class="d dn">▼ rekap tertunda</div></div>
-<div class="kpi"><div class="l">Arus Kas 7 Hari</div><div class="v">Rp 2.150.000</div><div class="s">masuk 3,4 jt − keluar 1,3 jt</div><div class="d up">▲ sehat</div></div>
+<div class="kpi"><span class="chipm">⓵</span> <div class="l">Penjualan Hari Ini</div><div class="v">Rp 1.240.000</div><div class="s">38 transaksi</div><div class="d up"><svg class="doc-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> +12% vs kemarin</div></div>
+<div class="kpi"><div class="l">Belum Direkap</div><div class="v">2</div><div class="s">Rp 86.000 menunggu rekap</div><div class="d dn"><svg class="doc-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg> rekap tertunda</div></div>
+<div class="kpi"><div class="l">Arus Kas 7 Hari</div><div class="v">Rp 2.150.000</div><div class="s">masuk 3,4 jt − keluar 1,3 jt</div><div class="d up"><svg class="doc-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> sehat</div></div>
 <div class="kpi"><div class="l">Member Aktif</div><div class="v">126</div><div class="s">41 Silver · 12 Gold</div></div>
 <div class="kpi warn"><div class="l">Piutang Buka</div><div class="v">Rp 150.000</div><div class="s">3 pelanggan</div></div>
 <div class="kpi warn"><div class="l">Hutang Supplier Buka</div><div class="v">Rp 420.000</div><div class="s">2 supplier</div></div>
@@ -272,8 +275,8 @@ body{background:#fff}
 <div class="rrow"><span>Ekuitas (Modal + Laba ditahan)</span><span>Rp 14.380.000</span></div>
 </div>
 <div style="display:flex;gap:8px;margin-top:10px">
-<span class="btn sm">⬇ Unduh CSV (arsip rapat)</span>
-<span class="btn sm">🖨 Cetak / PDF</span>
+<span class="btn sm"><svg class="doc-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Unduh CSV (arsip rapat)</span>
+<span class="btn sm"><svg class="doc-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg> Cetak / PDF</span>
 </div>
 </div></div></div>
 

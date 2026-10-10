@@ -118,7 +118,7 @@ export default async function AdminDashboardPage() {
   });
 
   // I-3 UX-6: delta konteks KPI — nilai periode vs periode sebelumnya
-  // ("▲ 12% · vs kemarin"), dihitung di server; TermTip menjelaskan pakan.
+  // ("^ 12% · vs kemarin"), dihitung di server; TermTip menjelaskan pakan.
   const salesY = (
     (await d
       .prepare(
