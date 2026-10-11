@@ -608,14 +608,22 @@ konsistensi.
   non-ASCII 0 baru. Detail di MEMORY.md (seksi "UI/UX Phase 2a
   Eksekusi"). Lanjutan = Phase 2b (audit masih tunggu
   approval).
-- [ ] **BUG UX (Gus Fi 12 Okt): tema gelap/terang berubah
-  saat klik asal -- audit read-only SELESAI** (mekanisme
-  kandidat: command palette "Ganti tema" tap/Enter +
-  auto-focus input; tanpa cookie `theme` => full reload ikut
-  preferensi OS; H1/H4/H5 ditolak). TUNGGU RULING: skema fix
-  + scope (usulan: item aksi palette tidak auto-active /
-  hanya lewat query eksplisit; `layout.tsx` tulis cookie
-  theme saat boot agar preferensi terkunci).
+- [x] **BUG UX (Gus Fi 12 Okt): tema gelap/terang berubah
+  saat klik asal -- RESOLVED 2b-0 (12 Okt, C1 `cc2be46`)**:
+  ruling default LIGHT (bukan preferensi OS) -- boot script
+  `layout.tsx`: cookie `theme` ada -> ikut cookie; tak ada ->
+  'light' + tulis cookie sekali; `matchMedia` fallback
+  DIHAPUS; palette: baris Aksi hanya q >= 2 (idle = nav-only)
+  + a11y `type="button"`. Sub-item (d) visual regression test
+  tema ke release gate = masih open, masuk W5.1/2b/5.5.
+- [ ] 2b-1 (P1 kasir): **BUG nominal -- "0" nyangkut di input
+  nominal tak bisa dihapus** (H1+H4/H6: state numerik default
+  0 + `Number()` di onChange; field kosong -> 0 -> "0"
+  nyangkut). Ruling: DISPLAY-SHIM
+  (`value={x === 0 ? '' : x}` + parse `Number(x) || 0` saat
+  submit); scope ~12 input numerik / 11 file (audit 35 input
+  `type="number"` -- mayoritas sudah string-state, aman).
+  Page terkonfirmasi: `pos-client.tsx` L1564-1567 (harga).
 
 ### Global / shell / komponen bersama
 - P1 [bug] **Double-submit tanpa guard** di form pencatatan:

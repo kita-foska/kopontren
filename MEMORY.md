@@ -4955,5 +4955,44 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   (listener bersih), H5 ditolak (tak ada hotkey tema;
   useHotkeys hanya ctrl+k/escape/?). **TUNGGU RULING skema
   fix + scope.**
-- **NEXT**: Phase 2b (batch UI/UX lanjutan) + W5.1 PINJ-1
-  (tetap tunggu GO terpisah).
+- **NEXT**: 2b-0 (theme fix C1 GO) -> 2b-1 (nominal) -> Phase
+  2b + W5.1 PINJ-1 (tetap tunggu GO terpisah).
+
+## 2b-0 Eksekusi (12 Okt 2026) -- theme bug fix + default LIGHT
+
+- **RULING Gus Fi (via DeepSeek, 12 Okt): DEFAULT TEMA = LIGHT**
+  (bukan preferensi OS; tanpa auto-dark / deteksi HP). M2
+  (audit): **DIPERBAIKI** -- skrip boot `layout.tsx`: cookie
+  `theme` ada -> ikut cookie (pilihan manual menang); cookie
+  tak ada -> 'light' + tulis cookie SEKALI (atribut sama dgn
+  penulis shell.tsx: max-age=31536000; samesite=lax) sehingga
+  load berikutnya stabil; catch -> light; fallback
+  `matchMedia` (ditambahkan P2 26 Sep -- konsisten dgn onset
+  bug) **DIHAPUS (call terakhir di kodebase)**. Edge:
+  private browsing (tulis cookie gagal sunyi) -> default
+  light tiap load, sesuai ruling.
+- **M1/P3: command palette idle = nav-only** -- baris Aksi
+  ("Ganti tema", "notifikasi", "backup") hanya tampil saat
+  q >= 2; idle Enter/tap/backdrop tak lagi bisa menyentuh
+  "Ganti tema" (mekanisme theme-acak); tetap discoverable
+  via query.
+- **a11y P3**: item button command-palette kini
+  `type="button"` (button mentah terakhir tanpa type eksplisit).
+- **C1 `cc2be46`** "fix(ui): theme default light + palette
+  action exclude + a11y" (layout.tsx +10/-4;
+  command-palette.tsx +8/-0). Gates: tsc 0; test:all 29/29
+  ALL_PASS; tutorial unchanged; non-ASCII 0; scope 2 file.
+  Catatan: 1 defect self-caught (brace M1) tertangkap gate
+  tsc, diperbaiki, re-gated.
+- **C2 (commit ini)**: rekam jejak MEMORY + TODO.
+- **2b-1 RULING (hari yg sama)**: BUG "nominal 0 nyangkut"
+  (Gus Fi: ngetik nominal ada 0 yg tak bisa dihapus) =
+  H1+H4/H6 terkonfirmasi: state numerik `useState(0)` +
+  `Number()` di onChange -> field kosong = 0 -> "0" nyangkut.
+  35 input `type="number"` di 12 file; fix class =
+  display-shim (`value={x === 0 ? '' : x}` + parse
+  `Number(x) || 0` saat submit), P1 kasir. Page terkonfirmasi:
+  pos-client.tsx L1564-1567 (setPrice `|| 0`). Batch 2b-1
+  setelah commit 2b-0.
+- **NEXT**: GO 2b-1 (plan display-shim) -> W5.1 PINJ-1 +
+  Phase 2b.
