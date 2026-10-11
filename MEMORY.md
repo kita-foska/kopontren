@@ -4912,3 +4912,48 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   dual-push master+main setelah tiap commit.
 - **NEXT: Wave 5 close audit** + W5.1 PINJ-1 (tetap tashih-gated)
   + Wave 6 (migrasi + SOP).
+
+## UI/UX Phase 2a Eksekusi (12 Okt 2026)
+
+- **PHASE 2a (audit DeepSeek PASSED, GO Gus Fi) -- 4 file
+  (+139/-140):**
+  1. P1 #1 Flat hero (admin + pengurus dashboard):
+     `.card-hero` flat `var(--accent)`; hapus shadow-lg,
+     blur blob, shadow-sm tombol -- lebih cepat + rapi.
+  2. P1 #2 KPI token colors (UX-4): success-600/400
+     (Penjualan), attention-600/400 (Belum Direkap),
+     info-600/400 (Arus Kas), accent-600/300 (Member Aktif),
+     risk-600/400 (Piutang + Hutang).
+  3. P1 #3 shared KpiCard: `src/components/kpi-card.tsx`
+     (server component; `KpiCardDef` single source + `KpiGrid`
+     default `lg:grid-cols-3`) menggantikan markup KPI
+     duplikat di 2 dashboard (DRY).
+  4. P1 #4 member menu icons: `IconCard` (geometri Lucide
+     credit-card, inline SVG di `sidebar.tsx` -- pola rumah:
+     tanpa library ikon di sidebar); menu member:
+     Ringkasan=IconGauge, Kartu Saya=IconCard,
+     Tutorial=IconCap, Glosarium=IconGlosarium.
+- **Gate**: tsc --noEmit exit 0; test:all 29/29 ALL_PASS;
+  non-ASCII 0 baru; scope 3 M + 1 new; file proteksi
+  (`public/sw.js`, V1 `laporan-admin-client.tsx`,
+  `src/lib/coop.ts`) tak tersentuh.
+- **Commit**: C1 `0191a5e` ("ui(2a): flat hero + KPI token
+  colors + shared KpiCard + member menu icons"); dual-push
+  master+main; rev-list 0/0 (kedua ref =
+  `0191a5e2930938a71951a135d64ea3b172e9e1e3`).
+- **Filosofi desain (panduan batch 2b/2c)**: apik, keren,
+  canggih, modern, komunikatif, gampang -- teknis:
+  token-first, komponen bersama (DRY), flat & cepat, ikon
+  inline SVG, aksesibilitas tetap dijaga.
+- **BUG UX (laporan Gus Fi 12 Okt): tema gelap/terang berubah
+  saat klik asal** -- audit read-only SELESAI: kandidat
+  mekanisme = (a) item "Ganti tema (light/dark)" di command
+  palette (baris tinggi di list + input auto-focus saat open;
+  tap/Enter = jalan), (b) tanpa cookie `theme` => full reload
+  ikut `prefers-color-scheme` OS (PWA HP), (c) H1 ditolak
+  (`Button` ui.tsx default `type="button"`), H4 ditolak
+  (listener bersih), H5 ditolak (tak ada hotkey tema;
+  useHotkeys hanya ctrl+k/escape/?). **TUNGGU RULING skema
+  fix + scope.**
+- **NEXT**: Phase 2b (batch UI/UX lanjutan) + W5.1 PINJ-1
+  (tetap tunggu GO terpisah).

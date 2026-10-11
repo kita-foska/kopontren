@@ -599,6 +599,24 @@ P1 = fungsional/menyesatkan, P2 = UX/mobil, P3 = konsistensi/kosmetik).
 Tag: [kom] komunikasi, [bug] UX-fungsional, [mobil], [a11y], [kons]
 konsistensi.
 
+- [x] **PHASE 2a (12 Okt): DITERAPKAN -- commit `0191a5e`
+  (4 file +139/-140; dual-push master+main, rev-list 0/0):**
+  P1 #1 flat hero (admin + pengurus), P1 #2 KPI token colors
+  (success/attention/info/accent/risk), P1 #3 shared KpiCard
+  (`src/components/kpi-card.tsx`), P1 #4 member menu icons
+  (+ `IconCard` inline SVG). Gate: tsc 0, test:all 29/29,
+  non-ASCII 0 baru. Detail di MEMORY.md (seksi "UI/UX Phase 2a
+  Eksekusi"). Lanjutan = Phase 2b (audit masih tunggu
+  approval).
+- [ ] **BUG UX (Gus Fi 12 Okt): tema gelap/terang berubah
+  saat klik asal -- audit read-only SELESAI** (mekanisme
+  kandidat: command palette "Ganti tema" tap/Enter +
+  auto-focus input; tanpa cookie `theme` => full reload ikut
+  preferensi OS; H1/H4/H5 ditolak). TUNGGU RULING: skema fix
+  + scope (usulan: item aksi palette tidak auto-active /
+  hanya lewat query eksplisit; `layout.tsx` tulis cookie
+  theme saat boot agar preferensi terkunci).
+
 ### Global / shell / komponen bersama
 - P1 [bug] **Double-submit tanpa guard** di form pencatatan:
   piutang (create/pay), hutang (create/pay), belanja (addPurchase/
