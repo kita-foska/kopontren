@@ -92,6 +92,13 @@ export function CommandPalette({
           }))
         : [];
       s.push({ title: 'Pintar | Navigasi', items: nav });
+    }
+    // 2b-0 (M1, 12 Okt): baris Aksi ("Ganti tema" dkk.) HANYA tampil
+    // saat mode cari (q >= 2). Idle = nav-only -- tap backdrop /
+    // Enter / auto-focus pada palette baru dibuka tak lagi bisa
+    // menyentuh "Ganti tema" (mekanisme bug tema acak). Tetap
+    // discoverable via query: "tema", "notifikasi", "backup".
+    if (q.trim().length >= 2) {
       const actions: PaletteItem[] = [
         { kind: 'action', label: 'Ganti tema (light/dark)', sub: 'Pref lokal', run: onToggleTheme },
       ];
@@ -212,6 +219,7 @@ export function CommandPalette({
                 return (
                   <button
                     key={sec.title + i}
+                    type="button"
                     data-palette-item
                     id={'palette-opt-' + i}
                     role="option"

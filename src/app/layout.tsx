@@ -36,10 +36,16 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-// P2 (audit UI 26 Sep): default tema kini ikut preferensi OS bila user
-// belum pernah memilih eksplisit (dulu: selalu paksa 'dark'). Pilihan
-// eksplisit (cookie `theme`) tetap menang; fallback catch = dark.
-const themeInit = `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)theme=(dark|light)/);var t=m?m[1]:(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.classList.toggle('dark',t==='dark');}catch(e){document.documentElement.classList.add('dark');}})();`;
+// 2b-0 (12 Okt 2026, ruling Gus Fi): DEFAULT TEMA = LIGHT (terang),
+// bukan preferensi OS -- tak ada auto-dark / deteksi HP. Urutan boot:
+// (1) cookie `theme` ada -> ikut cookie (pilihan manual menang);
+// (2) cookie tak ada -> 'light' + tulis cookie SEKALI (atribut sama
+//     dgn shell.tsx toggleTheme) agar preferensi terkunci & load
+//     berikutnya stabil; (3) catch = light.
+// Catatan: fallback preferensi OS (matchMedia, sejak P2 26 Sep)
+// DIHAPUS ruling ini; edge private browsing (tulis cookie gagal
+// sunyi) -> default light diulang tiap load, sesuai ruling.
+const themeInit = `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)theme=(dark|light)/);var t=m?m[1]:'light';if(!m){document.cookie='theme=light; path=/; max-age=31536000; samesite=lax';}document.documentElement.classList.toggle('dark',t==='dark');}catch(e){document.documentElement.classList.remove('dark');}})();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
