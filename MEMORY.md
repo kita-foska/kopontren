@@ -4994,5 +4994,23 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   `Number(x) || 0` saat submit), P1 kasir. Page terkonfirmasi:
   pos-client.tsx L1564-1567 (setPrice `|| 0`). Batch 2b-1
   setelah commit 2b-0.
-- **NEXT**: GO 2b-1 (plan display-shim) -> W5.1 PINJ-1 +
-  Phase 2b.
+- **2b-1 EKSEKUSI (12 Okt, `75d6c06` + commit docs ini)**:
+  display-shim **18 baris / 9 file** (deviasi +1 vs plan:
+  `produk-client.tsx` L850 `t.discount_percent`, TierDraft
+  numerik default 0 -- PATTERN SAMA, disetujui):
+  `pos-client` (l.price), `piutang-client` (form.amount +
+  payAmt), `admin/hutang-client` (form.amount + payAmt),
+  `admin/kas-client` (form.amount), `admin/belanja-client`
+  (p.qty + p.unit_cost + e.amount), `admin/konsinyasi-client`
+  (acts[].pay + f.qty + f.agree_price), `admin/produk-client`
+  (t.min_qty + t.discount_percent), `admin/zakat-client`
+  (String(s.gold_price/nishab_gram/zakat_rate) -> '' saat 0),
+  `retur-client` (qty). Aturan: `value={x === 0 ? '' : x}` --
+  input 0 kini tampil KOSONG (bukan "0" nyangkut); onChange +
+  submit TIDAK DIUBAH (parse `Number()` / `|| 0` tetap) ->
+  payload API identik. Verify 2 EXCLUDED: konsinyasi L489
+  (`f.commission_rate` = string-state) + product-label L140
+  (`<select>` jumlah label, bukan input). Gates: tsc 0;
+  test:all ALL_PASS; non-ASCII 0; file proteksi 0; scope
+  9 file (18 ins / 18 del).
+- **NEXT**: W5.1 PINJ-1 + Phase 2b.

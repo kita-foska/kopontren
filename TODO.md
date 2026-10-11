@@ -616,14 +616,18 @@ konsistensi.
   DIHAPUS; palette: baris Aksi hanya q >= 2 (idle = nav-only)
   + a11y `type="button"`. Sub-item (d) visual regression test
   tema ke release gate = masih open, masuk W5.1/2b/5.5.
-- [ ] 2b-1 (P1 kasir): **BUG nominal -- "0" nyangkut di input
-  nominal tak bisa dihapus** (H1+H4/H6: state numerik default
-  0 + `Number()` di onChange; field kosong -> 0 -> "0"
-  nyangkut). Ruling: DISPLAY-SHIM
+- [x] 2b-1 (P1 kasir): **BUG nominal -- "0" nyangkut di input
+  nominal tak bisa dihapus -- RESOLVED 2b-1 (12 Okt, C1
+  `75d6c06` + docs commit ini)** (H1+H4/H6: state numerik
+  default 0 + `Number()` di onChange; field kosong -> 0 ->
+  "0" nyangkut). Fix: DISPLAY-SHIM
   (`value={x === 0 ? '' : x}` + parse `Number(x) || 0` saat
-  submit); scope ~12 input numerik / 11 file (audit 35 input
-  `type="number"` -- mayoritas sudah string-state, aman).
-  Page terkonfirmasi: `pos-client.tsx` L1564-1567 (harga).
+  submit tak diubah) -- **18 baris / 9 file** (deviasi +1 vs
+  plan: produk-client L850 `t.discount_percent`; verify 2
+  excluded: konsinyasi L489 string-state + product-label
+  L140 `<select>`). Gates: tsc 0, test:all ALL_PASS,
+  non-ASCII 0, file proteksi 0. Detail MEMORY.md seksi
+  "2b-1 EKSEKUSI".
 
 ### Global / shell / komponen bersama
 - P1 [bug] **Double-submit tanpa guard** di form pencatatan:
