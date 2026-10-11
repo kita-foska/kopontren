@@ -148,7 +148,7 @@ export function BelanjaClient() {
                 className="input"
                 type="number"
                 min={1}
-                value={p.qty}
+                value={p.qty === 0 ? '' : p.qty}
                 onChange={(ev) => setP({ ...p, qty: Number(ev.target.value) })}
               />
             </div>
@@ -158,7 +158,7 @@ export function BelanjaClient() {
                 className="input"
                 type="number"
                 min={0}
-                value={p.unit_cost}
+                value={p.unit_cost === 0 ? '' : p.unit_cost}
                 onChange={(ev) => setP({ ...p, unit_cost: Number(ev.target.value) })}
               />
             </div>
@@ -241,7 +241,7 @@ export function BelanjaClient() {
                 className="input"
                 type="number"
                 min={0}
-                value={e.amount}
+                value={e.amount === 0 ? '' : e.amount}
                 onChange={(ev) => setE({ ...e, amount: Number(ev.target.value) })}
               />
             </div>

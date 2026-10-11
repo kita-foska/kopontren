@@ -437,7 +437,7 @@ export function ZakatClient() {
                 className="input"
                 type="number"
                 min={1}
-                value={String(s.gold_price)}
+                value={s.gold_price ? String(s.gold_price) : ''}
                 onChange={(e) => setSettings({ ...s, gold_price: Number(e.target.value) })}
                 placeholder="harga per gram (Rp), mis. 1100000"
               />
@@ -454,7 +454,7 @@ export function ZakatClient() {
                 type="number"
                 min={0.0001}
                 step="any"
-                value={String(s.nishab_gram)}
+                value={s.nishab_gram ? String(s.nishab_gram) : ''}
                 onChange={(e) => setSettings({ ...s, nishab_gram: Number(e.target.value) })}
               />
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -476,7 +476,7 @@ export function ZakatClient() {
                 min={0.0001}
                 max={100}
                 step="any"
-                value={String(s.zakat_rate)}
+                value={s.zakat_rate ? String(s.zakat_rate) : ''}
                 onChange={(e) => setSettings({ ...s, zakat_rate: Number(e.target.value) })}
               />
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">

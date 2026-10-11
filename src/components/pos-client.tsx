@@ -1563,7 +1563,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       className="input h-11 w-24 px-2 text-right text-sm sm:h-9"
                       type="number"
                       inputMode="numeric"
-                      value={l.price}
+                      value={l.price === 0 ? '' : l.price}
                       onChange={(e) => setPrice(l.product.id, Number(e.target.value) || 0)}
                     />
                   </div>

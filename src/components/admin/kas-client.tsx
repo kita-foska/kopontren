@@ -144,7 +144,7 @@ export function KasClient() {
             className="input"
             type="number"
             min={0}
-            value={form.amount}
+            value={form.amount === 0 ? '' : form.amount}
             onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })}
           />
         </div>

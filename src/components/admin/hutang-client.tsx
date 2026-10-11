@@ -207,7 +207,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
               className="input"
               type="number"
               min={0}
-              value={form.amount}
+              value={form.amount === 0 ? '' : form.amount}
               onChange={(ev) => setForm({ ...form, amount: Number(ev.target.value) })}
             />
           </div>
@@ -337,7 +337,7 @@ export function HutangClient({ admin }: { admin: boolean }) {
               type="number"
               min={1}
               max={payFor.remaining}
-              value={payAmt}
+              value={payAmt === 0 ? '' : payAmt}
               onChange={(ev) => setPayAmt(Number(ev.target.value))}
             />
             {payAmt > payFor.remaining && (

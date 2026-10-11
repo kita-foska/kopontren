@@ -297,7 +297,7 @@ export function KonsinyasiClient() {
                 type="number"
                 min={0}
                 className="input"
-                value={acts[k.id]?.pay ?? 0}
+                value={(acts[k.id]?.pay ?? 0) === 0 ? '' : (acts[k.id]?.pay ?? 0)}
                 onChange={(e) => act(k.id, { pay: Number(e.target.value) })}
               />
             </div>
@@ -450,7 +450,7 @@ export function KonsinyasiClient() {
               type="number"
               min={1}
               className="input"
-              value={f.qty}
+              value={f.qty === 0 ? '' : f.qty}
               onChange={(e) => setF({ ...f, qty: Number(e.target.value) })}
             />
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -468,7 +468,7 @@ export function KonsinyasiClient() {
               type="number"
               min={0}
               className="input"
-              value={f.agree_price}
+              value={f.agree_price === 0 ? '' : f.agree_price}
               placeholder="0"
               onChange={(e) => setF({ ...f, agree_price: e.target.value })}
             />

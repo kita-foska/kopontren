@@ -836,7 +836,7 @@ export function ProdukClient() {
                         className="input"
                         type="number"
                         min={1}
-                        value={t.min_qty}
+                        value={t.min_qty === 0 ? '' : t.min_qty}
                         onChange={(e) => setTier(i, { min_qty: Number(e.target.value) || 0 })}
                       />
                     </div>
@@ -847,7 +847,7 @@ export function ProdukClient() {
                         type="number"
                         min={0}
                         max={100}
-                        value={t.discount_percent}
+                        value={t.discount_percent === 0 ? '' : t.discount_percent}
                         onChange={(e) =>
                           setTier(i, { discount_percent: Number(e.target.value) || 0 })
                         }

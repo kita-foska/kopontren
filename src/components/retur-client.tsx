@@ -143,7 +143,7 @@ export function ReturClient() {
               className="input"
               type="number"
               min={1}
-              value={qty}
+              value={qty === 0 ? '' : qty}
               onChange={(ev) => setQty(Number(ev.target.value))}
             />
           </div>
