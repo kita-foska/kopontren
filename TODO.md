@@ -1247,6 +1247,13 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 ### Kelompok P -- 15 perkara kelas profesional (P1–P15)
 
 - [ ] P1 Zero Thinking UX -- user hanya berpikir untuk keputusan bisnis, bukan cara pakai aplikasi.
+  - [x] P1(c) Member-side Pinjaman View (read-only) -- SELESAI commit `29d1acf`
+        (11 Okt): kartu "Pinjaman Koperasi" di dashboard member `/member`
+        (server-side, tanpa endpoint baru); identitas name-based
+        `lower(trim(name))` + filter default "Aktif" (toggle "Sedaya") +
+        metric (aktif / total sisa / jatuh tempo terdekat) + badge
+        StatusBadge + disclaimer. Gate lulus: tsc exit 0; 0 non-ASCII
+        2 file; test:all 28/28 green. (lihat MEMORY 2026-10-11)
 - [ ] P2 Role-based experience -- kasir fokus bertransaksi; pengurus fokus insight & risiko; admin setup & keamanan; gudang input kelola stok; pembelian supplier & stok; member info/reward.
 - [ ] P3 Attention System -- indikator penting/risiko/perlu tindakan/berita/success, jangan semua notification merah.
 - [ ] P4 Smart defaults -- default yang benar (rentang 1–30 hari, status open, stok minimum, tanggal hari ini) agar tidak banyak mengetik.

@@ -1,5 +1,45 @@
 # MEMORY
 
+## 2026-10-11
+### P1(c) MEMBER-SIDE PINJAMAN VIEW -- read-only pinjaman koperasi di /member (LEPAS, commit `29d1acf`, dual-push master+main)
+- **Lingkup (P1 Zero Thinking UX, sub-item c)**: seksi
+  "Pinjaman Koperasi" pada dashboard member `/member` (read-only),
+  data diambil server-side langsung dari DB TANPA endpoint baru
+  (menambah `page.tsx` yang sudah server-render).
+- **Identitas (solusi name-based, batasan tanpa ubah skema)**:
+  tak ada FK `users` -> `coop_members`; link yang feasible =
+  `lower(trim(name))` antara nama `members` dan `coop_members.name`.
+  Bisa cocok beberapa baris coop_members (semua id diambil). UI
+  menampilkan disclaimer "Data berdasarkan nama. Jika ada
+  perbedaan, hubungi admin."
+- **Cakupan tampilan**: SEMUA pinjaman anggota tercocok dari
+  `coop_pinjaman` (urutan `created_at DESC`). Filter default
+  "Aktif" + toggle "Sedaya". Metrik turunan: jumlah pinjaman
+  aktif, total sisa, jatuh tempo terdekat; per pinjaman
+  StatusBadge (overdue / aktif amber / lunas hijau).
+- **File (additive, 2 file, +154/-10)**:
+  (a) `src/app/member/page.tsx`: + type `MyLoanRow`; + langkah 4
+      (lookup `coop_members` name-based + query `coop_pinjaman`
+      + flag `overdue` via `wibToday`); + prop `loans` ke client.
+  (b) `src/components/member/personal-dashboard-client.tsx`:
+      + prop `loans`, + state `loanFilter` (default 'aktif'),
+      + kartu "Pinjaman Koperasi" (3 tile metrik + FilterPill
+      + list + empty state "Belum ada pinjaman" / "semua lunas").
+- **Gate lulus**: `tsc --noEmit` exit 0; 0 non-ASCII di 2 file;
+  `test:all` 28/28 suite green (exit 0; suite akhir
+  `test-admin-export` PASS 26/0 + ALL_PASS). Frozen gate
+  `public/sw.js`, `laporan-admin-client.tsx`, `coop.ts` tak
+  tersentuh.
+- **STATE**: LEPAS -- `29d1acf` (2 file, +154/-10) dual-push
+  master+main (verified `git ls-remote`: kedua ref = 29d1acf).
+  File temp helper `n_*.txt` dibersihkan sebelum commit.
+- **Batasan (dicatat)**: identitas name-based = best-effort link;
+  keanggotaan koperasi yang eksak butuh ubah skema (FK
+  `users` -> `coop_members`) atau field login. Tidak dieksekusi
+  sebelum ruling/ACC Gus Fi.
+- NEXT = P3c (menunggu arahan Gus Fi); sub-item P1 sisanya
+  (a/b/d dst) masih terbuka.
+
 ## 2026-10-10
 ### P3d ADMIN EXPORT CENTER -- unduh CSV + cetak formal di /admin/ekspor (LEPAS, commit C1 `5363da9` + C2 docs, dual-push master+main)
 - **Lingkup (Option A, desain 10 Okt)**: pusat ekspor
