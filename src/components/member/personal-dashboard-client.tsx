@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Empty, StatusBadge } from '@/components/ui';
+import { Button, Empty, FilterPill, StatusBadge } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { pointReasonLabel, isPointUnit, type PointEntry } from '@/lib/points';
 import { payMethodLabel } from '@/lib/pay-methods';
@@ -16,6 +16,18 @@ type MySaleRow = {
   created_at: string;
 };
 
+type MyLoanRow = {
+  id: string;
+  pokok: number;
+  sisa: number;
+  tanggal_mulai: string;
+  tanggal_jatuh_tempo: string;
+  status: string;
+  catatan: string | null;
+  created_at: string;
+  overdue: boolean;
+};
+
 /**
  * UX-5 H3: tampilan dashboard member (prop murni dari halaman server
  * /member). Read-only: saldo + tier, riwayat poin & reward (ledger),
@@ -27,17 +39,21 @@ export function MemberDashboardClient({
   member,
   history,
   sales,
+  loans,
   showPosCta,
 }: {
   member: (MemberQrMember & { tier: string; cashback_balance: number; total_spent: number }) | null;
   history: PointEntry[];
   sales: MySaleRow[];
+  loans: MyLoanRow[];
   showPosCta: boolean;
 }) {
   const [qrOpen, setQrOpen] = useState(false);
   // Salinan token QR utk sinkron setelah auto-generate (badge admin) -
   // baris server tidak berubah tanpa reload.
   const [memberQr, setMemberQr] = useState(member?.qr_code ?? '');
+  // P1c: filter pinjaman (default "Aktif"; "Sedaya" = seluruh pinjaman).
+  const [loanFilter, setLoanFilter] = useState<'aktif' | 'semua'>('aktif');
 
   if (!member) {
     return (
@@ -54,9 +70,20 @@ export function MemberDashboardClient({
 
   const tier = (member.tier || '').toLowerCase();
 
+  // P1c: derivasi pinjaman (jumlah aktif + total sisa + jatuh tempo terdekat).
+  const activeLoans = loans.filter((l) => l.status === 'aktif');
+  const totalSisa = activeLoans.reduce((s, l) => s + (l.sisa || 0), 0);
+  const nextDue = activeLoans.length
+    ? activeLoans.reduce(
+        (m, l) => (l.tanggal_jatuh_tempo < m ? l.tanggal_jatuh_tempo : m),
+        activeLoans[0].tanggal_jatuh_tempo,
+      )
+    : null;
+  const visibleLoans = loanFilter === 'aktif' ? activeLoans : loans;
+
   return (
     <div className="space-y-4">
-      {/* ── Ringkasan kartu ── */}
+      {/* -- Ringkasan kartu -- */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="card fade-up p-4">
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -101,7 +128,7 @@ export function MemberDashboardClient({
           </div>
         </div>
       </div>
-      {/* ── Riwayat poin & reward (ledger, 20 terakhir) ── */}
+      {/* -- Riwayat poin & reward (ledger, 20 terakhir) -- */}
       <div className="card fade-up p-4">
         <h2 className="mb-2 font-bold">Riwayat Poin &amp; Reward</h2>
         {history.length === 0 ? (
@@ -124,7 +151,7 @@ export function MemberDashboardClient({
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {fmtDateTime(h.created_at)}
-                      {h.amount > 0 ? ' · ' + rp(h.amount) : ''}
+                      {h.amount > 0 ? ' - ' + rp(h.amount) : ''}
                     </p>
                   </div>
                   <span
@@ -146,12 +173,12 @@ export function MemberDashboardClient({
         )}
       </div>
 
-      {/* ── Transaksi saya (20 terakhir) ── */}
+      {/* -- Transaksi saya (20 terakhir) -- */}
       <div className="card fade-up p-4">
         <h2 className="mb-2 font-bold">Transaksi Saya</h2>
         {sales.length === 0 ? (
           // I-4 UX-6: empty state CTA POS kondisional (pola H3: showPosCta
-          // hanya bila role punya akses /kasir — member murni tanpa CTA,
+          // hanya bila role punya akses /kasir - member murni tanpa CTA,
           // bukan link mati). Mirip CTA "Riwayat Poin & Reward" di atas.
           <Empty
             compact
@@ -166,14 +193,90 @@ export function MemberDashboardClient({
                 <div className="min-w-0">
                   <p className="font-medium tabular-nums">{rp(s.total)}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {fmtDateTime(s.created_at)} · {payMethodLabel(s.pay_method)}
-                    {s.member_points > 0 ? ' · +' + s.member_points + ' poin' : ''}
+                    {fmtDateTime(s.created_at)} - {payMethodLabel(s.pay_method)}
+                    {s.member_points > 0 ? ' - +' + s.member_points + ' poin' : ''}
                   </p>
                 </div>
                 <StatusBadge status={s.status} />
               </li>
             ))}
           </ul>
+        )}
+      </div>
+
+      {/* P1c: pinjaman koperasi (read-only; identitas berbasis NAMA). */}
+      <div className="card fade-up p-4">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-bold">Pinjaman Koperasi</h2>
+          <div className="flex gap-1.5">
+            <FilterPill active={loanFilter === 'aktif'} onClick={() => setLoanFilter('aktif')}>
+              Aktif
+            </FilterPill>
+            <FilterPill active={loanFilter === 'semua'} onClick={() => setLoanFilter('semua')}>
+              Sedaya
+            </FilterPill>
+          </div>
+        </div>
+        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+          Data berdasarkan nama. Jika ada perbedaan, hubungi admin.
+        </p>
+        {loans.length === 0 ? (
+          <Empty compact text="Belum ada pinjaman koperasi tercatat atas nama Anda." />
+        ) : (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-md bg-slate-50 p-2.5 dark:bg-navy-900">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Pinjaman Aktif
+                </p>
+                <p className="tabular-nums mt-0.5 text-lg font-extrabold">{activeLoans.length}</p>
+              </div>
+              <div className="rounded-md bg-slate-50 p-2.5 dark:bg-navy-900">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Total Sisa
+                </p>
+                <p className="tabular-nums mt-0.5 text-lg font-extrabold">{rp(totalSisa)}</p>
+              </div>
+              <div className="rounded-md bg-slate-50 p-2.5 dark:bg-navy-900">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Jatuh Tempo Terdekat
+                </p>
+                <p className="tabular-nums mt-0.5 text-lg font-extrabold">{nextDue ?? '-'}</p>
+              </div>
+            </div>
+            {visibleLoans.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Tidak ada pinjaman aktif - semuanya sudah lunas.
+              </p>
+            ) : (
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                {visibleLoans.map((l) => {
+                  const badge =
+                    l.status === 'aktif' && l.overdue ? (
+                      <StatusBadge status="overdue" />
+                    ) : l.status === 'aktif' ? (
+                      <StatusBadge status="aktif" tone="amber" label="Aktif" />
+                    ) : (
+                      <StatusBadge status="lunas" tone="green" label="Lunas" />
+                    );
+                  return (
+                    <li key={l.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                      <div className="min-w-0">
+                        <p className="font-medium tabular-nums">
+                          Pokok {rp(l.pokok)} - sisa {rp(l.sisa)}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Jatuh tempo {l.tanggal_jatuh_tempo}
+                          {l.catatan ? ' - ' + l.catatan : ''}
+                        </p>
+                      </div>
+                      {badge}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         )}
       </div>
 

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { canAccess, currentUser } from '@/lib/auth';
 import { db } from '@/db';
 import { queryPointHistory, type PointEntry } from '@/lib/points';
+import { wibToday } from '@/lib/zakat-period';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 import { PageSkeleton } from '@/components/ui';
@@ -39,8 +40,20 @@ type MySaleRow = {
   created_at: string;
 };
 
+type MyLoanRow = {
+  id: string;
+  pokok: number;
+  sisa: number;
+  tanggal_mulai: string;
+  tanggal_jatuh_tempo: string;
+  status: string;
+  catatan: string | null;
+  created_at: string;
+  overdue: boolean;
+};
+
 /**
- * UX-5 H3 (fix I-4): dashboard pribadi ROLE MEMBER — read-only, filtered.
+ * UX-5 H3 (fix I-4): dashboard pribadi ROLE MEMBER - read-only, filtered.
  *
  * Data diambil server-side langsung dari DB (tanpa endpoint baru):
  * relasi `users.member_id` -> baris `members` (kartu loyalti milik user),
@@ -85,18 +98,46 @@ export default async function MemberPage() {
         .all(member.id)) as MySaleRow[])
     : [];
 
+  // 4) P1c: pinjaman koperasi (read-only; identitas berbasis NAMA -
+  //    coop_members entitas terpisah, dicocokkan lower(trim(name))).
+  const loans: MyLoanRow[] = [];
+  if (member && member.name) {
+    const coopMatches = (await d
+      .prepare('SELECT id FROM coop_members WHERE lower(trim(name)) = lower(?)')
+      .all(member.name)) as { id: string }[];
+    if (coopMatches.length > 0) {
+      const ids = coopMatches.map((c) => c.id);
+      const ph = ids.map(() => '?').join(', ');
+      const todayWib = wibToday();
+      const rows = (await d
+        .prepare(
+          `SELECT id, pokok, sisa, tanggal_mulai, tanggal_jatuh_tempo, status, catatan, created_at
+           FROM coop_pinjaman WHERE member_id IN (${ph})
+           ORDER BY created_at DESC`
+        )
+        .all(...ids)) as Omit<MyLoanRow, 'overdue'>[];
+      loans.push(
+        ...rows.map((r) => ({
+          ...r,
+          overdue: r.status === 'aktif' && todayWib > r.tanggal_jatuh_tempo,
+        })),
+      );
+    }
+  }
+
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
         Kartu <span className="text-accent-500 dark:text-accent-300">Member Saya</span>
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-        Ringkasan poin, saldo reward, dan transaksi Anda - read-only.
+        Ringkasan poin, saldo reward, transaksi, dan pinjaman koperasi Anda - read-only.
       </p>
       <MemberDashboardClient
         member={member}
         history={history}
         sales={sales}
+        loans={loans}
         showPosCta={canAccess(user, 'pos')}
       />
     </Shell>
