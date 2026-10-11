@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { canAccess, currentUser, isManager, roleHome } from '@/lib/auth';
 import type { Feature } from '@/lib/features';
 import { db } from '@/db';
@@ -7,14 +6,14 @@ import { kpiDelta, rp, startOfDayJakarta, type KpiDelta } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { PengurusDashboardClient } from '@/components/pengurus-dashboard-client';
 import { ActivityFeed, type FeedItem, type KpiMover } from '@/components/activity-feed';
-import { Button, TermTip } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { KpiGrid, type KpiCardDef } from '@/components/kpi-card';
 import {
   TrendingUp,
   Wallet,
   Users,
   AlertTriangle,
   Building2,
-  ArrowUpRight,
   Sparkles,
 } from 'lucide-react';
 
@@ -123,15 +122,6 @@ export default async function PengurusDashboardPage() {
   // tak jatuh ke dead-end (halaman tsb di-guard isManager/'member'/'stock').
   const readOnly = !isManager(user);
   const laporan = '/admin/laporan';
-  type DashCard = {
-    label: string;
-    value: string;
-    sub: string;
-    href: string;
-    icon: React.ReactNode;
-    warn?: boolean;
-    delta?: KpiDelta & { tip: string };
-  };
   const TIP_SALES =
     'Perbandingan: total penjualan 30 hari terakhir vs 30 hari sebelumnya ' +
     '(WIB). "baru" = periode sebelumnya tidak ada penjualan; ' +
@@ -143,13 +133,13 @@ export default async function PengurusDashboardPage() {
   const TIP_MEMBER =
     'Kartu menampilkan total member terdaftar. Baris ini = jumlah ' +
     'member baru yang didaftarkan dalam 30 hari terakhir (WIB).';
-  const cards: DashCard[] = [
+  const cards: KpiCardDef[] = [
     {
       label: 'Penjualan 30 Hari',
       value: rp(s30.t),
       sub: s30.c + ' transaksi',
       href: laporan,
-      icon: <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />,
+      icon: <TrendingUp className="h-5 w-5 text-success-600 dark:text-success-400" />,
       delta: deltaSales ? { ...deltaSales, tip: TIP_SALES } : undefined,
     },
     {
@@ -157,7 +147,7 @@ export default async function PengurusDashboardPage() {
       value: rp(cash30.inn - cash30.out),
       sub: 'masuk ' + rp(cash30.inn) + ' / keluar ' + rp(cash30.out),
       href: readOnly ? laporan : '/admin/kas',
-      icon: <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
+      icon: <Wallet className="h-5 w-5 text-info-600 dark:text-info-400" />,
       delta: deltaCash ? { ...deltaCash, tip: TIP_CASH } : undefined,
     },
     {
@@ -165,7 +155,7 @@ export default async function PengurusDashboardPage() {
       value: String(memberCount),
       sub: 'loyalty & poin',
       href: readOnly ? laporan : '/admin/member',
-      icon: <Users className="h-5 w-5 text-violet-600 dark:text-violet-400" />,
+      icon: <Users className="h-5 w-5 text-accent-600 dark:text-accent-300" />,
       delta: deltaMember ? { ...deltaMember, tip: TIP_MEMBER } : undefined,
     },
     {
@@ -173,7 +163,7 @@ export default async function PengurusDashboardPage() {
       value: String(lowStock),
       sub: 'produk di bawah 10',
       href: '/admin/dashboard',
-      icon: <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />,
+      icon: <AlertTriangle className="h-5 w-5 text-attention-600 dark:text-attention-400" />,
       warn: lowStock > 0,
     },
     {
@@ -205,8 +195,8 @@ export default async function PengurusDashboardPage() {
 
   return (
     <Shell user={user}>
-      <div className="card-hero relative mb-5 overflow-hidden shadow-lg shadow-accent-700/10">
-        <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
+      {/* Hero flat (UI/UX P1): solid token, tanpa shadow/ornamen */}
+      <div className="card-hero mb-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
@@ -230,7 +220,7 @@ export default async function PengurusDashboardPage() {
               size="sm"
               as="a"
               href="/admin/laporan"
-              className="bg-white/90 text-slate-800 hover:bg-white shadow-sm"
+              className="bg-white/90 text-slate-800 hover:bg-white"
             >
               Lihat Laporan Lengkap
             </Button>
@@ -238,52 +228,7 @@ export default async function PengurusDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        {cards.map((c) => (
-          <Link
-            key={c.label}
-            href={c.href}
-            className={
-              'group card fade-up relative flex flex-col justify-between p-4 tile-hover border-slate-200/80 transition-all hover:border-accent-400/50 hover:shadow-lg dark:border-navy-700 ' +
-              (c.warn ? 'border-amber-500/60 ring-1 ring-amber-500/30' : '')
-            }
-          >
-            <div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  {c.label}
-                </span>
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 ring-1 ring-black/5 transition group-hover:scale-110 dark:bg-navy-900/90 dark:ring-white/10">
-                  {c.icon}
-                </span>
-              </div>
-              <p className="mt-2 text-xl font-extrabold tracking-tight text-accent-600 dark:text-accent-300">
-                {c.value}
-              </p>
-            </div>
-            <div className="mt-2.5 border-t border-slate-100 pt-2 dark:border-navy-700/60">
-              <div className="flex items-center justify-between gap-1 text-xs">
-                <p className="text-slate-500 dark:text-slate-400 truncate">{c.sub}</p>
-                <ArrowUpRight className="h-3 w-3 text-slate-400 opacity-0 transition group-hover:opacity-100 group-hover:text-accent-500 shrink-0" />
-              </div>
-              {c.delta && (
-                <p
-                  className={
-                    'mt-1 text-xs font-bold tabular-nums ' +
-                    (c.delta.tone === 'down'
-                      ? 'text-rose-600 dark:text-rose-400'
-                      : c.delta.tone === 'flat'
-                        ? 'text-slate-500 dark:text-slate-400'
-                        : 'text-emerald-600 dark:text-emerald-400')
-                  }
-                >
-                  <TermTip tip={c.delta.tip}>{c.delta.text}</TermTip>
-                </p>
-              )}
-            </div>
-          </Link>
-        ))}
-      </div>
+      <KpiGrid cards={cards} />
 
       <div className="card fade-up p-4">
         <h2 className="mb-2 font-bold">Aksi cepat</h2>
