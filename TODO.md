@@ -2181,6 +2181,13 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       check-theme-gate OK; test:all 29 suite 0 failures; ASCII
       bersih. **Phase 2b SELESAI -- menunggu ruling langkah
       berikutnya.**
+- [x] **AUDIT Phase 2b CLOSED (12 Okt, DeepSeek): LULUS + koreksi
+      1 -- klaim "Phase 2a pending / never committed" = STALE:
+      2a sudah LEPAS `0191a5e` (induk HEAD `59a52dc`; 4 fix
+      terverifikasi di tree; lihat item PHASE 2a di atas,
+      seksi FASE 2). SHA audit yg kosong terisi: 2b-3 =
+      `aef64e8`. Status riil: 2a CLOSED, 2b CLOSED; sisanya
+      2c + P3c -- tunggu ruling.**
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.

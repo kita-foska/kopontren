@@ -86,6 +86,18 @@
   Gate: tsc --noEmit 0; next build 0; check-route-exports +
   check-theme-gate OK; test:all 29 suite 0 failures; ASCII bersih.
   Lanjutan = menunggu ruling langkah berikutnya.
+- **AUDIT PHASE 2b CLOSED (12 Okt, DeepSeek): LULUS -- + koreksi
+  1: klaim "Phase 2a pending / never committed" = STALE. 2a
+  sudah LEPAS `0191a5e` (ui(2a): flat hero + KPI token colors +
+  shared KpiCard + member menu icons; 4 file +139/-140), induk
+  langsung HEAD `59a52dc` (merge-base --is-ancestor = YES).
+  Verifikasi di tree: kpi-card.tsx (KpiGrid/KpiCardDef/
+  lg:grid-cols-3) + sidebar.tsx (IconCard/IconGauge/IconCap/
+  IconGlosarium, inline SVG). 2 keputusan 2a ter-masukan:
+  Hutang->risk-600/400 + Grid->lg:grid-cols-3. SHA audit yg
+  kosong terisi: 2b-3 = `aef64e8`. Status riil Wave 6:
+  P3a/P3b/P2/Banner/Emoji/P3d/P1(c)/2a/2b = CLOSED; 2c + P3c
+  belum mulai -- tunggu ruling.
 - **Catatan**: memori "fresh audit" = salah sesi (obrolan lama W5.1).
 
 ### P1(c) MEMBER-SIDE PINJAMAN VIEW -- read-only pinjaman koperasi di /member (LEPAS, commit `29d1acf`, dual-push master+main)
