@@ -1,6 +1,42 @@
 # MEMORY
 
 ## 2026-10-12
+### P3c LEPAS -- Unduh Data Saya (CSV self-scope member) (commit `9b68d49`, 12 Okt 2026)
+- **Commit `9b68d49`** "P3c: Unduh Data Saya -- CSV self-scope
+  (poin/transaksi/koperasi)" (5 file, +703/-2; dual-push
+  master+main terverifikasi: origin/master = origin/main =
+  9b68d49; ACC Gus Fi 12 Okt):
+  (a) `src/app/api/members/ekspor/route.ts` BARU (96 baris):
+  `GET /api/members/ekspor?jenis=poin|transaksi|koperasi`
+  -- self-scope by member_id (401 belum login, 404 kartu
+  tak terhubung/member tak dikenal, 400 jenis tak valid);
+  koperasi pakai pola cocok-nama P1c lower(trim(name)) +
+  pinjaman via id IN (...); output CSV+BOM, attachment,
+  no-store.
+  (b) `src/lib/member/ekspor-csv.ts` BARU (225 baris,
+  hermetis, zero-import @/): csvEscape (dobel-kutip/koma/
+  baris-baru/null), header Indonesia, tanggal WIB
+  (isoToWib), label reason + metode bayar, nama file
+  member-ekspor-{jenis}-{YYYY-MM-DD}.csv; bukti self-scope
+  di level SQL: semua query SELECT ikut member_id.
+  (c) `personal-dashboard-client.tsx` (+154/-2): seksi
+  "Unduh Data Saya" (3 tombol jenis + "Unduh Semua"
+  sekuensial + progress list + AbortController) reuse
+  helper P3d (downloadExportCsv/downloadAll,
+  ExportProgressList) -- tanpa duplikasi mesin unduh.
+  (d) `scripts/test-member-export.ts` BARU (227 baris) =
+  suite #31 test:all (31 checks: csvEscape 6, jenis,
+  scope SQL A!=B 5, build 3 jenis (BOM/header/WIB/label/
+  NULL), kosong = header saja, nama file, non-ASCII).
+- **Gate (12 Okt)**: tsc --noEmit 0; test:all 31/31
+  ALL_PASS (suite ke-31 = member-export); npm run gate
+  exit 0 (check-route-exports + check-theme-gate +
+  next build; /api/members/ekspor hadir di build);
+  non-ASCII 0 di 5 file; frozen file (sw.js, V1,
+  coop.ts, export-center admin) tak tersentuh.
+- **NEXT = W5.4 close audit / W5.1 PINJ-1 (tashih-gated) /
+  Wave 6 -- tunggu arahan Gus Fi.**
+
 ### PHASE 2c LEPAS -- centralize BRAND_ACCENTS + fix copy pay label (commit `fb5d122`, 12 Okt 2026)
 - **Commit `fb5d122`** "2c P2: Centralize brand accents + fix pay
   label copy" (6 file, +112/-18; dual-push master+main terverifikasi

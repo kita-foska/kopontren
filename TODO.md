@@ -2128,6 +2128,35 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       0 non-ASCII; frozen gate (laporan-admin-client.tsx, sw.js,
       coop.ts) tak tersentuh. Detail: MEMORY.md seksi "P3d
       ADMIN EXPORT CENTER".
+- [x] **P3c LEPAS (12 Okt) -- Unduh Data Saya (CSV self-scope
+      member)** commit `9b68d49` (5 file, +703/-2, dual-push
+      master+main):
+      (a) `GET /api/members/ekspor?jenis=poin|transaksi|koperasi`
+      (route.ts BARU 96 baris) -- self-scope by member_id
+      (401 belum login, 404 kartu tak terhubung/member tak
+      dikenal, 400 jenis tak valid); koperasi = pola cocok-nama
+      P1c lower(trim(name)) + pinjaman via id IN (...); output
+      CSV+BOM, attachment, no-store.
+      (b) `src/lib/member/ekspor-csv.ts` BARU (225 baris,
+      hermetis zero-import): csvEscape (dobel-kutip/koma/
+      baris-baru/null) + header Indonesia + tanggal WIB + label
+      reason/metode bayar + nama file member-ekspor-{jenis}-
+      {YYYY-MM-DD}.csv; semua query SELECT ikut member_id
+      (bukti self-scope di level SQL).
+      (c) `personal-dashboard-client.tsx` (+154/-2): seksi
+      "Unduh Data Saya" (3 tombol jenis + "Unduh Semua"
+      sekuensial + progress list + AbortController) reuse
+      helper P3d (downloadExportCsv/downloadAll,
+      ExportProgressList) -- tanpa duplikasi mesin unduh.
+      (d) `scripts/test-member-export.ts` BARU (227 baris) =
+      suite #31 test:all (31 checks: escape 6, jenis, scope
+      SQL A!=B 5, build 3 jenis (BOM/header/WIB/label/NULL),
+      kosong = header saja, nama file, non-ASCII).
+      Gate: tsc 0 + test:all 31/31 ALL_PASS + npm run gate
+      exit 0 (/api/members/ekspor hadir di build) + 0
+      non-ASCII; frozen file (sw.js, V1, coop.ts,
+      export-center admin) tak tersentuh. Detail: MEMORY.md
+      seksi "P3c LEPAS -- Unduh Data Saya".
 - [x] **W5.1 RESOLVED (12 Okt)** -- ruling lanjutan: PILIHAN 1
       ACCEPT = W5.1 lepas tanpa tindak lanjut kode (GO STEP 3
       12 Okt sudah stale; semua item plan ter-shipped @ commit
