@@ -314,7 +314,7 @@ export function PersetujuanClient() {
         </div>
       )}
 
-      <div className="card overflow-x-auto p-0">
+      <div className="card hidden overflow-x-auto p-0 sm:block">
         <Table minW="min-w-[44rem]">
           {tab === 'menunggu' ? (
             <>
@@ -395,6 +395,49 @@ export function PersetujuanClient() {
             </>
           )}
         </Table>
+      </div>
+
+      {/* 2b-3: kartu mobile (<sm) -- data sama dengan tabel; baris aksi
+          min-h-[44px] (padanan h-11) sbg hit-area; tombol re-use menolakRow(). */}
+      <div className="card sm:hidden">
+        {rows.length === 0 ? (
+          <div className="p-4 text-center text-sm text-slate-500 dark:text-slate-400">
+            {tab === 'menunggu'
+              ? 'Tidak ada permintaan yang menunggu. (Q62)'
+              : 'Belum ada riwayat keputusan. (Q62)'}
+          </div>
+        ) : (
+          rows.map((r) => (
+            <div key={r.id} className="border-b border-slate-200 p-3 last:border-0 dark:border-navy-700">
+              <div className="flex min-h-[44px] items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-slate-100">
+                    #{r.id}
+                    {tab === 'menunggu' ? <Badge tone="blue">{r.label}</Badge> : badge(r.status)}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {r.request_username} - {fmtDateTime(r.created_at)}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{payloadText(r)}</p>
+              {tab === 'menunggu' ? (
+                <div className="mt-2 min-h-[44px]">{menolakRow(r)}</div>
+              ) : (
+                <div className="mt-1 space-y-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  {r.decided_username ? (
+                    <p>
+                      {r.decided_username}
+                      {r.status === 'applied' ? ' (diterapkan)' : ''}
+                      {r.reason ? ' - ' + r.reason : ''}
+                    </p>
+                  ) : null}
+                  {r.decided_at ? <p>Keputusan: {fmtDateTime(r.decided_at)}</p> : null}
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

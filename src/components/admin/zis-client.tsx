@@ -363,6 +363,8 @@ export function ZisClient() {
           <div className="space-y-4">
             <div>
               <h3 className="label mb-2">Total per jenis ({rekapScopeLabel(rekapMode)})</h3>
+              {/* 2b-3: tabel hanya sm ke atas; kartu mobile di bawahnya. */}
+              <div className="hidden sm:block">
               <Table minW="min-w-[560px]">
                 <thead>
                   <tr>
@@ -389,6 +391,29 @@ export function ZisClient() {
                   </Trow>
                 </tbody>
               </Table>
+              </div>
+              {/* 2b-3: kartu mobile (<sm) total per jenis -- data sama dengan tabel. */}
+              <div className="sm:hidden">
+                {rekap.by_kind.map((k) => (
+                  <div key={k.kind} className="border-b border-slate-200 p-2 last:border-0 dark:border-navy-700">
+                    <div className="flex min-h-[44px] items-center justify-between gap-2">
+                      <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                        {KIND_LABELS[k.kind] ?? k.kind}
+                      </p>
+                      <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">{rp(k.net)}</p>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Masuk {rp(k.in_total)} - Keluar {rp(k.out_total)}
+                    </p>
+                  </div>
+                ))}
+                <div className="flex min-h-[44px] items-center justify-between gap-2 border-t border-slate-200 p-2 dark:border-navy-700">
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">TOTAL</p>
+                  <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                    {rp(rekap.grand.net)}
+                  </p>
+                </div>
+              </div>
             </div>
             {rekapMode !== 'month' && rekap.monthly.length > 0 ? (
               <div>
@@ -396,6 +421,8 @@ export function ZisClient() {
                   Per bulan
                   {rekap.monthly.length > 24 ? ' (menampilkan 24 terakhir dari ' + rekap.monthly.length + ' bulan)' : ''}
                 </h3>
+                {/* 2b-3: tabel hanya sm ke atas; kartu mobile di bawahnya. */}
+                <div className="hidden sm:block">
                 <Table minW="min-w-[560px]">
                   <thead>
                     <tr>
@@ -416,6 +443,21 @@ export function ZisClient() {
                     ))}
                   </tbody>
                 </Table>
+                </div>
+                {/* 2b-3: kartu mobile (<sm) per bulan -- data sama dengan tabel. */}
+                <div className="sm:hidden">
+                  {rekap.monthly.slice(-24).map((mo) => (
+                    <div key={mo.month} className="border-b border-slate-200 p-2 last:border-0 dark:border-navy-700">
+                      <div className="flex min-h-[44px] items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{mo.month}</p>
+                        <p className="text-sm font-bold tabular-nums text-slate-900 dark:text-slate-100">{rp(mo.net)}</p>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Masuk {rp(mo.in_total)} - Keluar {rp(mo.out_total)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : null}
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -529,6 +571,9 @@ export function ZisClient() {
         {d.rows.length === 0 ? (
           <Empty compact text="Belum ada catatan ZIS. Gunakan form di atas." />
         ) : (
+          <>
+          {/* 2b-3: tabel hanya sm ke atas; kartu mobile di bawahnya. */}
+          <div className="hidden sm:block">
           <Table minW="min-w-[720px]">
             <thead>
               <tr>
@@ -562,6 +607,44 @@ export function ZisClient() {
               ))}
             </tbody>
           </Table>
+          </div>
+          {/* 2b-3: kartu mobile (<sm) riwayat -- data sama dengan tabel;
+              baris header min-h-[44px] (padanan h-11) sbg hit-area. */}
+          <div className="sm:hidden">
+            {d.rows.map((r) => (
+              <div key={r.id} className="border-b border-slate-200 p-3 last:border-0 dark:border-navy-700">
+                <div className="flex min-h-[44px] items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
+                      {KIND_LABELS[r.kind] ?? r.kind}
+                      <span className="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400">
+                        {r.direction === 'in' ? 'Masuk' : 'Keluar'}
+                      </span>
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {fmtDateTime(r.occurred_at)}
+                      {r.payer ? ' - ' + r.payer : ''}
+                    </p>
+                  </div>
+                  <p
+                    className={
+                      'text-sm font-bold tabular-nums ' +
+                      (r.direction === 'in'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-rose-600 dark:text-rose-400')
+                    }
+                  >
+                    {rp(r.amount)}
+                  </p>
+                </div>
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                  {statusBadge(r, d.gl_enabled)}
+                  <span className="text-xs text-slate-500 dark:text-slate-400">oleh {r.created_by || '-'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </div>
 
