@@ -1,6 +1,39 @@
 # MEMORY
 
 ## 2026-10-12
+### PHASE 2c LEPAS -- centralize BRAND_ACCENTS + fix copy pay label (commit `fb5d122`, 12 Okt 2026)
+- **Commit `fb5d122`** "2c P2: Centralize brand accents + fix pay
+  label copy" (6 file, +112/-18; dual-push master+main terverifikasi
+  `git ls-remote`: origin/master = origin/main = fb5d122; ACC Gus Fi
+  via DeepSeek 12 Okt -- "lanjut terus. aku manut sampeyan"):
+  (a) **Single source `BRAND_ACCENTS` kini di `src/lib/tokens.ts`**
+  (BARU, 5 preset: maroon #7a1835, green #16774b, blue #1d4f91,
+  dark-maroon #5c1224, slate #475569 = nilai ac500 layer CSS T2
+  globals.css). Konsumen: `shell.tsx` (meta theme-color; list hex
+  lama diganti) + `admin/pengguna-client.tsx` (peta swatch META
+  lokal dihapus; kini `const META = BRAND_ACCENTS`).
+  (b) **Copy fix**: `key-cheatsheet.tsx` hotkey 2 "QRIS (pay)" ->
+  "QRIS/WA (pay)" -- selaras label tunggal payMethodLabel di
+  lib/pay-methods.ts (komunikatif).
+  (c) **Guard `scripts/test-brand-sync.ts` (BARU, 12 assert)**:
+  5 kunci preset; maroon = CSS :root --ac500; 4 preset = CSS
+  [data-brand] --ac500; shell + pengguna-client mengimpor dari
+  @/lib/tokens; tak ada lagi peta hex lokal; label cheatsheet.
+  npm test:brandsync; masuk chain test:all = 30 suite.
+- **Gate lulus (12 Okt)**: tsc --noEmit 0; test:all 30/30 green
+  (0 failures, term. suite baru); guard test:brandsync 12/12;
+  0 non-ASCII; frozen gate utuh (public/sw.js, V1
+  laporan-admin-client.tsx, src/lib/coop.ts tak tersentuh).
+- **Koreksi catatan sesi**: skema final = lib/tokens.ts yang
+  MENYIMAN BRAND_ACCENTS (lib single-source pattern), BUKAN
+  "pengguna-client owns + tokens re-export" (skema awal yang
+  dilaporkan); tetap SATU sumber via import -- filosofi DRY
+  terjaga. Catatan hex: nilai lama META uppercase (#7A1835),
+  token baru lowercase (#7a1835) -- nilai sama, tanpa delta
+  visual.
+- **DITUNDA**: counter/grid (belum ada definisi) -- nunggu ruling.
+- **NEXT = Phase P3c (admin panel) -- plan dulu, TUNGGU approval.**
+
 ### W5.1 GO STALE -- ruling STEP 3 (12 Okt) diterima; W5.1 sudah LEPAS 9 Okt
 - **Ruling Gus Fi (via DeepSeek, 12 Okt)**: "W5.1 (PINJ-1) STEP 3
   (CODE) GO" -- GO memuat plan 9 file (db v27 + lib + 2 op + tab

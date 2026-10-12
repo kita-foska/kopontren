@@ -2188,6 +2188,18 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       seksi FASE 2). SHA audit yg kosong terisi: 2b-3 =
       `aef64e8`. Status riil: 2a CLOSED, 2b CLOSED; sisanya
       2c + P3c -- tunggu ruling.**
+- [x] **Phase 2c LEPAS (12 Okt) -- commit `fb5d122`, dual-push
+      master+main (6 file, +112/-18): Phase 2c SELESAI.**
+      (a) Single source `BRAND_ACCENTS` kini di `src/lib/tokens.ts`
+      (5 preset ac500 T2; shell.tsx + pengguna-client.tsx mengimpor;
+      peta hex lokal dihapus). (b) Copy fix key-cheatsheet
+      "QRIS" -> "QRIS/WA" (selaras payMethodLabel). (c) Guard
+      `scripts/test-brand-sync.ts` (BARU, 12 assert; npm
+      test:brandsync; masuk chain test:all = 30 suite). Gate: tsc 0;
+      test:all 30/30; guard 12/12; 0 non-ASCII; frozen gate utuh.
+      Counter/grid DITUNDA (belum ada definisi). NEXT = Phase P3c
+      (admin panel) -- plan dulu, TUNGGU approval. Detail:
+      MEMORY.md seksi "PHASE 2c LEPAS" (12 Okt).
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.
