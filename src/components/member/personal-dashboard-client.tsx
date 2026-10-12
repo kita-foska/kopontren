@@ -1,11 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Empty, FilterPill, StatusBadge } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
 import { pointReasonLabel, isPointUnit, type PointEntry } from '@/lib/points';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { MemberQrBadge, type MemberQrMember } from '@/components/admin/member-qr-badge';
+// P3c: unduhan "Unduh Data Saya" -- reuse helper unduhan admin P3d
+// (downloadExportCsv/downloadAll, tanpa duplikasi mesin download) +
+// indikator progress P3d (ikon inline SVG, a11y role/aria).
+import {
+  downloadAll,
+  downloadExportCsv,
+  type ExportProgress,
+  type ExportTask,
+} from '@/lib/admin/export-download';
+import {
+  ExportProgressList,
+  type ExportProgressItem,
+} from '@/components/admin/ekspor/export-progress';
 
 type MySaleRow = {
   id: number;
@@ -27,6 +40,58 @@ type MyLoanRow = {
   created_at: string;
   overdue: boolean;
 };
+
+/**
+ * P3c -- Tugas unduhan "Unduh Data Saya" (3 jenis, cocok dgn layar P1c:
+ * ledger poin/reward, transaksi saya, pinjaman koperasi). Orkestrasi di
+ * sisi frontend lewat helper P3d (self-scope /api/members/ekspor).
+ * Tanpa batas baris (keputusan D3: data per-member kecil).
+ */
+const MEMBER_EXPORT_TASKS: ExportTask[] = [
+  {
+    id: 'poin',
+    label: 'Poin & Reward',
+    endpoint: '/api/members/ekspor',
+    params: { jenis: 'poin', csv: '1' },
+    fallbackFilename: 'member-ekspor-poin.csv',
+  },
+  {
+    id: 'transaksi',
+    label: 'Transaksi Saya',
+    endpoint: '/api/members/ekspor',
+    params: { jenis: 'transaksi', csv: '1' },
+    fallbackFilename: 'member-ekspor-transaksi.csv',
+  },
+  {
+    id: 'koperasi',
+    label: 'Pinjaman Koperasi',
+    endpoint: '/api/members/ekspor',
+    params: { jenis: 'koperasi', csv: '1' },
+    fallbackFilename: 'member-ekspor-koperasi.csv',
+  },
+];
+
+/** Ikon unduh -- inline SVG 16px stroke-2 (tanpa pustaka ikon). */
+function DownloadIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
 
 /**
  * UX-5 H3: tampilan dashboard member (prop murni dari halaman server
@@ -54,6 +119,18 @@ export function MemberDashboardClient({
   const [memberQr, setMemberQr] = useState(member?.qr_code ?? '');
   // P1c: filter pinjaman (default "Aktif"; "Sedaya" = seluruh pinjaman).
   const [loanFilter, setLoanFilter] = useState<'aktif' | 'semua'>('aktif');
+  // P3c: progress unduhan "Unduh Data Saya" (pola P3d: berurutan + abort
+  // saat unmount; "Unduh Semua" tidak memblokir unduhan per-jenis lain).
+  const [eksporItems, setEksporItems] = useState<ExportProgressItem[]>(() =>
+    MEMBER_EXPORT_TASKS.map((t) => ({ taskId: t.id, status: 'idle', label: t.label })),
+  );
+  const [eksporBusy, setEksporBusy] = useState(false);
+  const eksporAbortRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    return () => {
+      eksporAbortRef.current?.abort();
+    };
+  }, []);
 
   if (!member) {
     return (
@@ -80,6 +157,39 @@ export function MemberDashboardClient({
       )
     : null;
   const visibleLoans = loanFilter === 'aktif' ? activeLoans : loans;
+
+  /** P3c: perbarui status satu jenis unduhan (patch per taskId). */
+  function patchEkspor(taskId: string, p: Omit<ExportProgress, 'taskId'>) {
+    setEksporItems((prev) => prev.map((it) => (it.taskId === taskId ? { ...it, ...p } : it)));
+  }
+
+  /** P3c: unduh SATU jenis (timeout per modul; gagal -> pesan galat tampil). */
+  async function unduhJenis(taskId: string): Promise<void> {
+    const task = MEMBER_EXPORT_TASKS.find((t) => t.id === taskId);
+    if (!task || eksporBusy) return;
+    patchEkspor(taskId, { status: 'running' });
+    try {
+      const r = await downloadExportCsv(task, {});
+      patchEkspor(taskId, { status: 'ok', filename: r.filename, bytes: r.bytes });
+    } catch (e) {
+      patchEkspor(taskId, { status: 'fail', error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
+  /** P3c: unduh SEMUA jenis berurutan (gagal satu tak menghentikan lain;
+   *  batal manual / unmount menghentikan sisa unduhan). */
+  async function unduhSemua(): Promise<void> {
+    if (eksporBusy) return;
+    const ctrl = new AbortController();
+    eksporAbortRef.current = ctrl;
+    setEksporBusy(true);
+    setEksporItems(MEMBER_EXPORT_TASKS.map((t) => ({ taskId: t.id, status: 'idle', label: t.label })));
+    await downloadAll(MEMBER_EXPORT_TASKS, {
+      signal: ctrl.signal,
+      onProgress: (p) => patchEkspor(p.taskId, p),
+    });
+    setEksporBusy(false);
+  }
 
   return (
     <div className="space-y-4">
@@ -278,6 +388,48 @@ export function MemberDashboardClient({
             )}
           </div>
         )}
+      </div>
+
+      {/* P3c: seksi "Unduh Data Saya" -- salinan CSV data kartu ini
+          (self-scope /api/members/ekspor; tanpa batas baris). */}
+      <div className="card fade-up p-4">
+        <h2 className="mb-1 font-bold">Unduh Data Saya</h2>
+        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+          Unduh salinan CSV data kartu Anda - tanggal WIB, siap dibuka Excel.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {MEMBER_EXPORT_TASKS.map((t) => {
+            const st = eksporItems.find((i) => i.taskId === t.id);
+            return (
+              <Button
+                key={t.id}
+                variant="ghost"
+                icon={<DownloadIcon />}
+                aria-label={'Unduh CSV ' + t.label}
+                onClick={() => unduhJenis(t.id)}
+                disabled={eksporBusy || st?.status === 'running'}
+              >
+                {t.label}
+              </Button>
+            );
+          })}
+          <Button
+            variant="primary"
+            onClick={unduhSemua}
+            disabled={eksporBusy}
+            loading={eksporBusy}
+            loadingLabel="Mengunduh..."
+          >
+            Unduh Semua
+          </Button>
+        </div>
+        <div className="mt-3">
+          <ExportProgressList
+            items={eksporItems}
+            busy={eksporBusy}
+            onCancel={() => eksporAbortRef.current?.abort()}
+          />
+        </div>
       </div>
 
       {/* Modal kartu membership (reuse admin; auto-generate QR khusus admin -
