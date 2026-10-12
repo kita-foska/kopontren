@@ -1,5 +1,38 @@
 # MEMORY
 
+## 2026-10-13
+### TURSO V29 VERIFIED + WAVE 6 COMPLETE (verifikasi Gus Fi + audit
+DeepSeek, 13 Okt 2026)
+- **Turso v29 terverifikasi di produksi**: backup Turso oleh
+  Gus Fi (file lokal `kopontren (1).db`, git-ignored via
+  `.gitignore` pattern `* (1).db`) + verifikasi Turso Studio:
+  tabel `approval_requests` WONTEN (paling bawah daftar; semua
+  tabel sibling hadir: audit_log, member_settings, vapid_keys,
+  settings, categories, product_units, debts, returns,
+  sale_cancellations, product_prices, bundles, stores,
+  push_subscriptions, point_history, schema_version,
+  zakat_settings, zakat_history, payables, user_pins,
+  notifications, notification_settings, notification_logs,
+  zakat_gold_standards, coa, journal_entries, journal_lines,
+  zis, akad, akad_events, coop_members, coop_savings, coop_shu,
+  coop_pinjaman). `approval_requests` hanya dibuat migrasi v29
+  -> migrasi = TERAPLIKASI. DB produksi aman; fitur P2
+  (approval flow) saged mlampah.
+- **Audit DeepSeek (13 Okt): LULUS. Sedaya aman.** Wave 6 =
+  12 item LEPAS: P3a, P3b, P2, Banner PWA, Emoji sweep, P3d,
+  P1(c), Phase 2a, 2b, 2c, P3c, + migrasi Turso v29.
+- **Koreksi catatan**: record commit P3c = `5d1d585` (bukan
+  `db4f21a` yang tercantum di pesan audit -- SHA itu tidak
+  ada di repo; hasil terminal flaky sesi sebelumnya). Dua ref
+  ter-sync: origin/master = origin/main = `5d1d585`.
+- **Sisa (opsional, tanpa definisi/keputusan)**: W5.4 close
+  audit (pending), admin panel (evaluasi, tanpa ruling),
+  counter/grid (DITUNDA -- belum ada definisi). W5.1 PINJ-1
+  tetap tashih-gated.
+- **STOP point per arahan audit**: tak ada commit kode
+  lanjutan; tunggu arahan Gus Fi (istirahat / Wave 7 / item
+  opsional).
+
 ## 2026-10-12
 ### P3c LEPAS -- Unduh Data Saya (CSV self-scope member) (commit `9b68d49`, 12 Okt 2026)
 - **Commit `9b68d49`** "P3c: Unduh Data Saya -- CSV self-scope

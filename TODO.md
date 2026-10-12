@@ -2157,6 +2157,19 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       non-ASCII; frozen file (sw.js, V1, coop.ts,
       export-center admin) tak tersentuh. Detail: MEMORY.md
       seksi "P3c LEPAS -- Unduh Data Saya".
+- [x] **TURSO v29 VERIFIED + WAVE 6 COMPLETE (13 Okt)** --
+      verifikasi Gus Fi: backup Turso (`kopontren (1).db`,
+      git-ignored) + Turso Studio: tabel `approval_requests`
+      WONTEN -> migrasi v29 TERAPLIKASI (DB produksi aman, P2
+      approval flow saged mlampah). Audit DeepSeek: LULUS,
+      sedaya aman (Wave 6 = 12 item LEPAS). Koreksi catatan:
+      record commit P3c = `5d1d585` (bukan `db4f21a` yang
+      tercantum di pesan audit -- SHA itu tak ada di repo);
+      refs ter-sync origin/master = origin/main = `5d1d585`.
+      STOP point per arahan: tunggu arahan Gus Fi utk sisa
+      item (W5.4 close audit / admin panel / counter-grid).
+      Detail: MEMORY.md seksi "TURSO V29 VERIFIED +
+      WAVE 6 COMPLETE" (13 Okt).
 - [x] **W5.1 RESOLVED (12 Okt)** -- ruling lanjutan: PILIHAN 1
       ACCEPT = W5.1 lepas tanpa tindak lanjut kode (GO STEP 3
       12 Okt sudah stale; semua item plan ter-shipped @ commit
