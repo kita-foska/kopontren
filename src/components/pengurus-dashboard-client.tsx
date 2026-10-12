@@ -4,37 +4,21 @@ import { useCallback, useEffect, useState } from 'react';
 import { SalesBarChart, type DailyPoint } from '@/components/charts';
 import { Button, PageSkeleton, Table, Td, Th, Trow, Toast, api, apiRetry, useToast } from '@/components/ui';
 import { fmtDate, rp } from '@/lib/format';
+import {
+  buildReportRows,
+  csvCell,
+  flattenCsvRows,
+  xlsxSheets,
+  type ReportPayload,
+} from '@/lib/admin/report-rows';
 import { shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
-
-type ReportPayload = {
-  from: string;
-  days: number;
-  sales_count: number;
-  sales_total: number;
-  profit: number;
-  cogs: number;
-  purchases_total: number;
-  expenses_total: number;
-  cash_in: number;
-  cash_out: number;
-  cash_net: number;
-  by_method: Record<string, number>;
-  top: { name: string; qty: number; revenue: number }[];
-  daily: DailyPoint[];
-  stores: { id: number; name: string; address: string }[];
-};
 
 const PERIODS: { days: number; label: string }[] = [
   { days: 7, label: '7 hari' },
   { days: 30, label: '30 hari' },
   { days: 365, label: '1 tahun' },
 ];
-
-function csvCell(v: string | number): string {
-  const s = String(v);
-  return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-}
 
 function downloadBlob(content: BlobPart, filename: string, mime: string) {
   const blob = new Blob([content], { type: mime });
@@ -72,29 +56,11 @@ export function PengurusDashboardClient() {
 
   const exportCsv = () => {
     if (!data) return;
-    const L: (string | number)[][] = [];
-    L.push(['LAPORAN GLOBAL KOPONTREN']);
-    L.push(['Periode', data.days + ' hari (sejak ' + fmtDate(data.from) + ')']);
-    L.push([]);
-    L.push(['RINGKASAN']);
-    L.push(['Penjualan (Rp)', data.sales_total]);
-    L.push(['Jumlah transaksi', data.sales_count]);
-    L.push(['Laba kotor (Rp)', data.profit]);
-    L.push(['Belanja supplier (Rp)', data.purchases_total]);
-    L.push(['Pengeluaran lain (Rp)', data.expenses_total]);
-    L.push(['Arus kas bersih (Rp)', data.cash_net]);
-    L.push([]);
-    L.push(['METODE BAYAR']);
-    Object.entries(data.by_method).forEach(([m, v]) => L.push([payMethodLabel(m), v]));
-    L.push([]);
-    L.push(['TOP PRODUK']);
-    L.push(['Produk', 'Qty', 'Omzet']);
-    data.top.forEach((t) => L.push([t.name, t.qty, t.revenue]));
-    L.push([]);
-    L.push(['HARIAN']);
-    L.push(['Tanggal', 'Transaksi', 'Penjualan (Rp)']);
-    data.daily.forEach((d) => L.push([d.day, d.c, d.t]));
-    const text = L.map((row) => row.map(csvCell).join(',')).join('\n');
+    // 2b-5: baris laporan dari satu sumber (src/lib/admin/report-rows.ts);
+    // layout byte-identik dgn export lama (regression: test-report-rows).
+    const text = flattenCsvRows(buildReportRows(data, { payMethodLabel, fmtDate }))
+      .map((row) => row.map(csvCell).join(','))
+      .join('\n');
     downloadBlob(
       '\uFEFF' + text,
       `kopontren-laporan-${data.days}h-${stamp()}.csv`,
@@ -109,38 +75,13 @@ export function PengurusDashboardClient() {
     try {
       const XLSX = await import('xlsx');
       const wb = XLSX.utils.book_new();
-      const ws1 = XLSX.utils.aoa_to_sheet([
-        ['LAPORAN GLOBAL KOPONTREN'],
-        ['Periode', data.days + ' hari (sejak ' + fmtDate(data.from) + ')'],
-        [],
-        ['Penjualan (Rp)', data.sales_total],
-        ['Jumlah transaksi', data.sales_count],
-        ['Laba kotor (Rp)', data.profit],
-        ['Belanja supplier (Rp)', data.purchases_total],
-        ['Pengeluaran lain (Rp)', data.expenses_total],
-        ['Arus kas bersih (Rp)', data.cash_net],
-        [],
-        ['METODE BAYAR'],
-        ...Object.entries(data.by_method).map(([m, v]) => [payMethodLabel(m), v] as string[]),
-        [],
-        ['TOP PRODUK'],
-        ['Produk', 'Qty', 'Omzet'],
-        ...data.top.map((t) => [t.name, t.qty, t.revenue]),
-      ]);
-      ws1['!cols'] = [{ wch: 28 }, { wch: 18 }];
-      XLSX.utils.book_append_sheet(wb, ws1, 'Ringkasan');
-      const ws2 = XLSX.utils.aoa_to_sheet([
-        ['Tanggal', 'Transaksi', 'Penjualan (Rp)'],
-        ...data.daily.map((d) => [d.day, d.c, d.t] as (string | number)[]),
-      ]);
-      ws2['!cols'] = [{ wch: 12 }, { wch: 12 }, { wch: 16 }];
-      XLSX.utils.book_append_sheet(wb, ws2, 'Harian');
-      const ws3 = XLSX.utils.aoa_to_sheet([
-        ['Cabang', 'Alamat'],
-        ...data.stores.map((s) => [s.name, s.address || '-'] as string[]),
-      ]);
-      ws3['!cols'] = [{ wch: 26 }, { wch: 44 }];
-      XLSX.utils.book_append_sheet(wb, ws3, 'Cabang');
+      // 2b-5: 3 sheet dari satu sumber (xlsxSheets, report-rows.ts);
+      // layout + lebar kolom !cols tak berubah (regression: test-report-rows).
+      for (const sheet of xlsxSheets(buildReportRows(data, { payMethodLabel, fmtDate }))) {
+        const ws = XLSX.utils.aoa_to_sheet(sheet.aoa);
+        ws['!cols'] = sheet.cols;
+        XLSX.utils.book_append_sheet(wb, ws, sheet.name);
+      }
       XLSX.writeFile(wb, `kopontren-laporan-${data.days}h-${stamp()}.xlsx`);
       setToast('Excel terunduh');
     } catch {
