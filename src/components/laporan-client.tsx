@@ -52,6 +52,12 @@ export function LaporanClient({
   const [undoMsg, setUndoMsg] = useState('');
   const [undoIds, setUndoIds] = useState<number[]>([]);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 2b-2 (P1): indikator data sebagian -- daftar hanya sebagian
+  // saat loop pagination break (!r.ok) atau kena cap 500 baris.
+  const [partial, setPartial] = useState(false);
+  // Toast "Data mungkin tak lengkap" ditampilkan sekali per sesi muat;
+  // ref di-reset saat muatan berikutnya kembali lengkap (boleh bunyi lagi).
+  const partialToastRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -67,6 +73,7 @@ export function LaporanClient({
     setLoading(true);
     const all: Sale[] = [];
     const PAGE = 50;
+    let brokeEarly = false;
     try {
       let totalSeen = 0;
       for (let offset = 0; ; offset += PAGE) {
@@ -75,7 +82,10 @@ export function LaporanClient({
         const r = await apiRetry<ListResp>(
           '/api/sales?days=' + period + '&status=' + (statusF || 'all') + '&limit=' + PAGE + '&offset=' + offset
         );
-        if (!r.ok || !r.data) break;
+        if (!r.ok || !r.data) {
+          brokeEarly = true;
+          break;
+        }
         if (typeof r.data.total === 'number') totalSeen = r.data.total;
         const page = r.data.sales || [];
         all.push(...page);
@@ -83,10 +93,30 @@ export function LaporanClient({
       }
       setSales(all);
       setTotal(totalSeen || all.length);
+      // 2b-2 (P1): data sebagian = break jaringan / cap 500 / server total
+      // lebih besar dari baris termuat (truncation tidak lagi diam).
+      const isPartial =
+        brokeEarly || all.length >= 500 || (totalSeen > 0 && totalSeen > all.length);
+      setPartial(isPartial);
+      if (isPartial) {
+        // Toast sekali per sesi muat (auto-refresh online tidak mengulang).
+        if (!partialToastRef.current) {
+          partialToastRef.current = true;
+          showToast(
+            'Data mungkin tak lengkap: hanya ' +
+              all.length +
+              (totalSeen > 0 ? ' dari ' + totalSeen : '') +
+              ' transaksi yang terbaca',
+            'warning'
+          );
+        }
+      } else {
+        partialToastRef.current = false;
+      }
     } finally {
       setLoading(false);
     }
-  }, [period, statusF]);
+  }, [period, statusF, showToast]);
 
   useEffect(() => {
     load();
@@ -239,6 +269,12 @@ export function LaporanClient({
             {filteredSales.length}
           </p>
           <p className="text-1xs text-slate-500">Periode terpilih</p>
+          {/* 2b-2 (P1): badge data sebagian -- muncul saat muatan terpotong */}
+          {partial && (
+            <p className="mt-1.5">
+              <Badge tone="amber">Data mungkin tak lengkap</Badge>
+            </p>
+          )}
         </div>
         <div className="card p-3">
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Total Penjualan</p>
