@@ -2135,8 +2135,8 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       "GO as written" ditolak, risiko duplikat). Lanjut
       langsung Phase 2b. Detail: MEMORY.md seksi "W5.1 GO STALE"
       (12 Okt).
-- [ ] **Phase 2b STEP 1 (12 Okt) -- plan report SELESAI, nunggu GO**
-      (tak ada kode; STEP 2 kode JANGAN mulai sebelum approval):
+- [x] **Phase 2b STEP 1 (12 Okt) -- plan report SELESAI; GO diterima
+      12 Okt (STEP 2+3 LEPAS, lihat item di bawah):**
       scope 2b resmi per ruling = P1 #5 dedup ekspor + P2 #6
       ACTION_LABEL feed (item audit-baru: truncation laporan,
       kartu mobile ZIS, theme gate -- BUKAN scope 2b).
@@ -2161,8 +2161,26 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       activity-feed.tsx, +2 file baru (lib + test),
       +1 script test di package.json. Regres risk rendah
       (presentational + library aditif, tanpa schema/route
-      change). Menunggu GO Gus Fi -> STEP 2 (kode + diff
-      lengkap 1 report + commit dual-push).
+      change). GO diterima 12 Okt -> STEP 2+3 LEPAS di bawah.
+- [x] **Phase 2b STEP 2+3 (12 Okt) -- LEPAS commit `b5e001b`,
+      dual-push master+main (5 file, +418/-79): Phase 2b SELESAI.**
+      (a) P1 #5 LEPAS: extract baris laporan ke
+      `src/lib/admin/report-rows.ts` (BARU, zero-import;
+      buildReportRows/csvCell/flattenCsvRows/xlsxSheets;
+      payMethodLabel+fmtDate di-injeksi pemanggil) +
+      `scripts/test-report-rows.ts` (BARU, 38 assert PASS; npm
+      test:report-rows masuk chain test:all = 29 suite).
+      pengurus-dashboard-client.tsx (+19/-60): exportCsv +
+      exportXlsx kini memakai modul tsb -- layout CSV/XLSX
+      byte-identik dgn export lama.
+      (b) P2 #6 LEPAS: activity-feed.tsx (+55 baris): 53 entri
+      ACTION_LABEL baru (angka aktual per diff; estimasi plan
+      ~44) -- inventaris audit log kini berlabel; fallback raw
+      utk aksi tak dikenal dipertahankan.
+      Gate: tsc --noEmit 0; next build 0; check-route-exports +
+      check-theme-gate OK; test:all 29 suite 0 failures; ASCII
+      bersih. **Phase 2b SELESAI -- menunggu ruling langkah
+      berikutnya.**
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.

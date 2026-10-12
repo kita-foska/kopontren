@@ -67,8 +67,25 @@
   debt/payable:pay/delete, auth:login/logout, zis:record,
   data:reset, purchase/expense:create, dsb.); fallback raw
   dipertahankan; file = activity-feed.tsx saja (presentational;
-  admin + pengurus dashboard tak disentuh). Menunggu GO utk STEP 2
-  (kode + diff lengkap 1 report + commit dual-push).
+  admin + pengurus dashboard tak disentuh). GO diterima 12 Okt ->
+  STEP 2+3 LEPAS (blok di bawah).
+- **STEP 2+3 2b LEPAS (12 Okt) -- commit `b5e001b`, dual-push
+  master+main (5 file, +418/-79): Phase 2b SELESAI.**
+  (a) P1 #5 LEPAS: `src/lib/admin/report-rows.ts` BARU
+  (zero-import; buildReportRows/csvCell/flattenCsvRows/xlsxSheets;
+  payMethodLabel + fmtDate di-injeksi pemanggil) +
+  `scripts/test-report-rows.ts` BARU (38 assert PASS; npm
+  test:report-rows masuk chain test:all = 29 suite).
+  pengurus-dashboard-client.tsx (+19/-60): exportCsv + exportXlsx
+  kini memakai modul tsb -- layout CSV/XLSX byte-identik dgn
+  export lama (regression guard: test-report-rows).
+  (b) P2 #6 LEPAS: activity-feed.tsx (+55 baris): 53 entri
+  ACTION_LABEL baru (angka aktual per diff; estimasi plan ~44) --
+  inventaris audit log kini berlabel; fallback raw utk aksi tak
+  dikenal dipertahankan.
+  Gate: tsc --noEmit 0; next build 0; check-route-exports +
+  check-theme-gate OK; test:all 29 suite 0 failures; ASCII bersih.
+  Lanjutan = menunggu ruling langkah berikutnya.
 - **Catatan**: memori "fresh audit" = salah sesi (obrolan lama W5.1).
 
 ### P1(c) MEMBER-SIDE PINJAMAN VIEW -- read-only pinjaman koperasi di /member (LEPAS, commit `29d1acf`, dual-push master+main)
