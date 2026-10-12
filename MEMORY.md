@@ -45,6 +45,31 @@
   open (TIDAK bagian W5.1): W5.1 UI P2 Fix D (DITUNDA, P2 kosmetik
   -- revisit bila ada complaint) + Turso prod stamp v27/v28/v29
   verification = manual Gus Fi.
+- **Ruling lanjutan (12 Okt, via audit DeepSeek): PILIHAN 1 ACCEPT** =
+  W5.1 RESOLVED -> langsung Phase 2b; opsi re-audit & "GO as written"
+  DITOLAK (duplikat 1783bbc, risiko konflik).
+- **Scope Phase 2b (per ruling)** = **P1 #5 dedup ekspor** +
+  **P2 #6 ACTION_LABEL feed** (label jelas, gampang dipahami -- filosofi
+  Gus Fi). Item audit-baru Cline (truncation laporan, kartu mobile
+  ZIS/persetujuan, theme gate) = BUKAN scope 2b resmi.
+- **STEP 1 2b SELESAI (12 Okt)** -- plan report: (a) P1 #5: duplikat
+  sesungguhnya = build baris laporan GANDA di
+  src/components/pengurus-dashboard-client.tsx (exportCsv L73-104 vs
+  exportXlsx L106-151, struktur RINGKASAN/METODE/TOP/HARIAN identik;
+  /admin/ekspor = detail per-transaksi /api/reports/csv, bentuk LAIN,
+  tak bisa dipakai dashboard). Rencana: extract `buildReportRows` +
+  `csvCell` ke `src/lib/admin/report-rows.ts` (node-testable, tanpa
+  DOM, hermetis ala export-download.ts) + test baru
+  `scripts/test-report-rows.ts`; CSV byte-identik (BOM `\uFEFF` dipertahankan).
+  (b) P2 #6: ACTION_LABEL = 35 key vs 62 key audit nyata (scan
+  logAudit call-sites + dynamic) -> tambah ~44 label (coop:*,
+  akad:*, kas:*, konsinyasi:*, products:bulk-*, user:*_requested,
+  debt/payable:pay/delete, auth:login/logout, zis:record,
+  data:reset, purchase/expense:create, dsb.); fallback raw
+  dipertahankan; file = activity-feed.tsx saja (presentational;
+  admin + pengurus dashboard tak disentuh). Menunggu GO utk STEP 2
+  (kode + diff lengkap 1 report + commit dual-push).
+- **Catatan**: memori "fresh audit" = salah sesi (obrolan lama W5.1).
 
 ### P1(c) MEMBER-SIDE PINJAMAN VIEW -- read-only pinjaman koperasi di /member (LEPAS, commit `29d1acf`, dual-push master+main)
 - **Lingkup (P1 Zero Thinking UX, sub-item c)**: seksi

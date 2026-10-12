@@ -2128,6 +2128,41 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       0 non-ASCII; frozen gate (laporan-admin-client.tsx, sw.js,
       coop.ts) tak tersentuh. Detail: MEMORY.md seksi "P3d
       ADMIN EXPORT CENTER".
+- [x] **W5.1 RESOLVED (12 Okt)** -- ruling lanjutan: PILIHAN 1
+      ACCEPT = W5.1 lepas tanpa tindak lanjut kode (GO STEP 3
+      12 Okt sudah stale; semua item plan ter-shipped @ commit
+      `1783bbc`, audit segar @ f465cd2 green; opsi re-audit &
+      "GO as written" ditolak, risiko duplikat). Lanjut
+      langsung Phase 2b. Detail: MEMORY.md seksi "W5.1 GO STALE"
+      (12 Okt).
+- [ ] **Phase 2b STEP 1 (12 Okt) -- plan report SELESAI, nunggu GO**
+      (tak ada kode; STEP 2 kode JANGAN mulai sebelum approval):
+      scope 2b resmi per ruling = P1 #5 dedup ekspor + P2 #6
+      ACTION_LABEL feed (item audit-baru: truncation laporan,
+      kartu mobile ZIS, theme gate -- BUKAN scope 2b).
+      (a) P1 #5: duplikat sesungguhnya = build baris laporan
+      GANDA di pengurus-dashboard-client.tsx (exportCsv L73-104
+      vs exportXlsx L106-151; struktur RINGKASAN/METODE/TOP/
+      HARIAN identik, harus disinkron manual). /admin/ekspor
+      = detail per-transaksi (/api/reports/csv, bentuk LAIN),
+      tak bisa dipakai dashboard. Rencana: extract
+      `buildReportRows` + `csvCell` ke `src/lib/admin/
+      report-rows.ts` (node-testable, tanpa DOM, hermetis ala
+      export-download.ts) + test baru `scripts/test-report-rows.ts`;
+      CSV byte-identik (BOM \uFEFF dipertahankan).
+      (b) P2 #6: ACTION_LABEL = 35 key vs 62 key audit nyata
+      (scan logAudit call-sites + dynamic) -> tambah ~44 label
+      baru (coop:*, akad:*, kas:*, konsinyasi:*,
+      products:bulk-*, user:*_requested, debt/payable:pay/delete,
+      auth:login/logout, zis:record, dsb.); fallback raw
+      dipertahankan; file = activity-feed.tsx saja
+      (presentational; admin + pengurus dashboard tak disentuh).
+      File tersentuh: pengurus-dashboard-client.tsx,
+      activity-feed.tsx, +2 file baru (lib + test),
+      +1 script test di package.json. Regres risk rendah
+      (presentational + library aditif, tanpa schema/route
+      change). Menunggu GO Gus Fi -> STEP 2 (kode + diff
+      lengkap 1 report + commit dual-push).
 
 **Notifikasi & komunikasi:**
 - [ ] Q49 Pusat notifikasi -- bukan sembarangan popup.
