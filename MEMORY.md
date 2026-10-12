@@ -1,6 +1,51 @@
 # MEMORY
 
-## 2026-10-11
+## 2026-10-12
+### W5.1 GO STALE -- ruling STEP 3 (12 Okt) diterima; W5.1 sudah LEPAS 9 Okt
+- **Ruling Gus Fi (via DeepSeek, 12 Okt)**: "W5.1 (PINJ-1) STEP 3
+  (CODE) GO" -- GO memuat plan 9 file (db v27 + lib + 2 op + tab
+  Pinjaman + posisi + glosarium + suite R + docs + record,
+  3-commit structure). GO ternyata disusun dari checklist pra-9-Okt;
+  audit status repo (12 Okt) menunjukkan SEMUA item plan sudah
+  ter-shipped dan tercatat "W5.1 LEPAS 9 Okt" (TODO L2054 [x]).
+- **Verifikasi per item plan GO (semua = SUDAH ADA):**
+  (1) db.ts: tabel coop_pinjaman + idx(member_id,status) + COA seed
+  1130 open/0 -- ter-shipped v27, kini SCHEMA_VERSION=29 (v28 P3a
+  close 2080; v29 P2 approval_requests).
+  (2) src/lib/coop-pinjaman.ts: op pinjam (D1130>K1010) + bayar
+  (D1010>K1130), gl-on/off, ref_id idempoten coop#<m>:pnj#/byr#<loan>.
+  (3) /api/koperasi: case pinjam (L976) + case bayar (L1048) + loans
+  di GET + REKAP_ACCOUNTS +1130.
+  (4) koperasi-client.tsx: Tab 5 "Pinjaman" (COOP_TABS 5 tab).
+  (5) lib/laporan/posisi.ts: ASET_LANCAR +1130 (L95).
+  (6) glosarium: 3 entri Qardh / Pinjaman Anggota / Denda Sadaqah di
+  src/lib/glossary.ts (sumber data glosarium-client; bukan hardcode
+  di client).
+  (7) scripts/test-coop-pinjaman.ts (29 assert P1-P13) + package.json
+  test:pinjaman + test:all (28 suite).
+  (8) docs SOP-ADMIN / SOP-MANAJER / DOKUMENTASI-APLIKASI: seksi
+  Pinjaman (Qardh) hadir.
+  (9) record: commit 08199ea (MEMORY + TODO) LEPAS 9 Okt.
+- **Commit W5.1 (di git history, dual-push master+main):**
+  feat `1783bbc` "feat(pinj-1): W5.1 qardh -- coop_pinjaman + 1130 +
+  pinjam/bayar ops + tab Pinjaman + R-suite" + docs `5e9df1a`
+  (w5.1) + record `08199ea`.
+- **Verifikasi segar (12 Okt, @ f465cd2, tree bersih, origin
+  master+main sinkron):** tsc --noEmit exit 0; test:all exit 0
+  (semua suite green; 28 suite); file proteksi utuh (public/sw.js,
+  V1 laporan-admin-client.tsx, src/lib/coop.ts,
+  lib/laporan/calk.ts).
+- **Deviasi terekam (tak dikode-kan ulang):** teks GO "GL bayar:
+  D1130 sisa / K1010 sisa" = kebalik typo; desain ter-shipped +
+  ter-tashih = bayar D 1010 -> K 1130 (kas masuk, piutang turun)
+  -- TETAP (sesuai tashih OQ7-OQ9 + rekaman LEPAS 9 Okt).
+- **Ruling (12 Okt, via DeepSeek): W5.1 = RESOLVED** -- tak ada
+  tindak lanjut kode; lanjut = **Phase 2b (fresh audit + STEP 2
+  plan; TUNGGU approval sebelum kode).** Item terkait yang masih
+  open (TIDAK bagian W5.1): W5.1 UI P2 Fix D (DITUNDA, P2 kosmetik
+  -- revisit bila ada complaint) + Turso prod stamp v27/v28/v29
+  verification = manual Gus Fi.
+
 ### P1(c) MEMBER-SIDE PINJAMAN VIEW -- read-only pinjaman koperasi di /member (LEPAS, commit `29d1acf`, dual-push master+main)
 - **Lingkup (P1 Zero Thinking UX, sub-item c)**: seksi
   "Pinjaman Koperasi" pada dashboard member `/member` (read-only),

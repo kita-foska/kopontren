@@ -1488,13 +1488,15 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
              Q5 BOBOT JASA ANGGOTA: RATAAN (konservatif) --
              PKGF Sek.2.3 tak men-set bobot; rata = tanpa
              asumsi; manual override kemudian.
-       - [ ] **W5 + PINJ-1 (pinjaman anggota) -- dicatat 5 Okt
-      - [ ] **W5 + PINJ-1 (pinjaman anggota) -- dicatat 5 Okt
-            (ruling batch W4.1, Gus Fi; masuk W5 penguatan)**:
-            tashih qardh/murabahah dulu (pilihan akad syariah),
-            akun COA baru + sumber dana ditetapkan pasca-tashih.
-            Menunggu ruling/ACC Gus Fi; **TIDAK mulai eksekusi
-            sebelum approval.**
+       - [x] **W5 + PINJ-1 (pinjaman anggota) -- dicatat 5 Okt
+            (ruling batch W4.1, Gus Fi; masuk W5 penguatan):
+            LEPAS 9 Okt sbg W5.1 (qardh; skema v27 + COA 1130) --
+            entri "W5.1 LEPAS 9 Okt" di bawah + MEMORY.md seksi
+            "W5.1 (PINJ-1) LEPAS". GO STEP 3 (12 Okt, via
+            DeepSeek) = STALE: 9 file plan sudah ter-shipped
+            (feat 1783bbc + docs 5e9df1a + record 08199ea; audit
+            12 Okt: tsc 0 + test:all exit 0 @ f465cd2). Terekam
+            MEMORY.md seksi "W5.1 GO STALE" (12 Okt).
     - [ ] **AUDIT WAVE 2 (2 Okt 2026; ruling Gus Fi: SAFE,
           0 must-fix) -- findings pasca-koreksi DeepSeek:**
           **P1 (W3 housekeeping)**: a11y tablist shell laporan
