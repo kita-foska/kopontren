@@ -12,6 +12,7 @@ import { Avatar, ROLE_LABEL, api } from './ui';
 import { Breadcrumb } from './breadcrumb';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { useHotkeys } from '@/lib/useHotkeys';
+import { BRAND_ACCENTS } from '@/lib/tokens';
 import { CommandPalette } from '@/components/command-palette';
 import { KeyCheatsheet } from '@/components/key-cheatsheet';
 import { Radio } from 'lucide-react';
@@ -133,13 +134,11 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
     const root = document.documentElement;
     if (brand === 'maroon') delete root.dataset.brand;
     else root.dataset.brand = brand;
-    const META: Record<string, string> = {
-      maroon: '#7A1835',
-      green: '#16774B',
-      blue: '#1D4F91',
-      'dark-maroon': '#5C1224',
-      slate: '#475569',
-    };
+    // Phase 2c: SATU sumber BRAND_ACCENTS (lib/tokens.ts) — SYNC POINT
+    // dgn layer CSS T2 (globals.css ac500 per preset). Meta theme-color
+    // tetap hex literal (browser tak menerima CSS var) tapi tak lagi
+    // dikesankan ulang. Guard: scripts/test-brand-sync.ts.
+    const META = BRAND_ACCENTS;
     let m = document.querySelector('meta[name="theme-color"]');
     if (!m) {
       m = document.createElement('meta');

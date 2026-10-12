@@ -21,7 +21,7 @@ const GLOBAL_ROWS: Row[] = [
 // di sana). Baris dipadatkan -- detail ada di pos-client (CHEAT_ROWS).
 const POS_ROWS: Row[] = [
   ['F1-F5', 'Alur transaksi: produk | pembeli | uang diterima | simpan | struk'],
-  ['F6 | F7', 'Metode bayar (1 tunai | 2 QRIS | 3 transfer | 4 campur) | shift'],
+  ['F6 | F7', 'Metode bayar (1 tunai | 2 QRIS/WA | 3 transfer | 4 campur) | shift'],
   ['F8 | F9', 'Pilih member | diskon (admin)'],
   ['Up / Down | + / - | Del', 'Seleksi item keranjang | qty | hapus'],
   ['Ctrl+P | Ctrl+M | Ctrl+R', 'Cetak struk | fokus pilih member | reset pesanan'],

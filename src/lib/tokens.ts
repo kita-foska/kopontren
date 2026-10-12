@@ -35,3 +35,15 @@ export const T = {
   black: '#000',
   white: '#fff',
 };
+
+// ===== T2 brand presets (single-source, Phase 2c) =====
+// Aksen 5 tema = nilai ac500 layer CSS (globals.css `html[data-brand]`).
+// Dipakai: shell.tsx (meta theme-color) + kartu swatch pengguna client.
+// SYNC POINT: ubah globals.css + sini BARENG. Guard: scripts/test-brand-sync.ts.
+export const BRAND_ACCENTS: Record<string, string> = {
+  maroon: '#7a1835',
+  green: '#16774b',
+  blue: '#1d4f91',
+  'dark-maroon': '#5c1224',
+  slate: '#475569',
+};

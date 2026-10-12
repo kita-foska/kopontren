@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { PageSkeleton, api, Badge, Button, Modal, ROLE_LABEL, Table, Td, Th, TEmpty, Trow, Toast, useToast } from '@/components/ui';
 import { ROLES } from '@/lib/features';
 import { fmtDate } from '@/lib/format';
+import { BRAND_ACCENTS } from '@/lib/tokens';
 
 type User = {
   id: number;
@@ -18,15 +19,10 @@ type User = {
 type Resp = { users: User[]; self: User };
 
 // Theme T3 (2026-09-29): swatch = ac500 per preset utk kartu "Tema warna".
-// SYNC POINT hex: nilai di sini = layer CSS T2 (globals.css) =
-// meta theme-color di shell.tsx. Ubah ketiganya bareng.
-const SWATCH: Record<string, string> = {
-  maroon: '#7A1835',
-  green: '#16774B',
-  blue: '#1D4F91',
-  'dark-maroon': '#5C1224',
-  slate: '#475569',
-};
+// SYNC POINT hex (Phase 2c): SATU sumber = BRAND_ACCENTS (lib/tokens.ts)
+// = layer CSS T2 (globals.css) = meta theme-color di shell.tsx.
+// Ubah ketiganya bareng. Guard: scripts/test-brand-sync.ts.
+const SWATCH = BRAND_ACCENTS;
 
 export function PenggunaClient() {
   const [users, setUsers] = useState<User[]>([]);
