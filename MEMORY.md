@@ -1,6 +1,69 @@
 # MEMORY
 
 ## 2026-10-13
+### COUNTER LEPAS -- badge "stok menipis" (header global) + count API
+(commit `aa8f875`, 13 Okt 2026; ACC Gus Fi via DeepSeek: "GO COMMIT")
+- **Persetujuan 13 Okt (via DeepSeek)**: definisi D1-D6 Counter
+  disetujui; DeepSeek mengoreksi D4 tertulis ("admin/manajer
+  only") -- RULING: gudang MASUK, sesuai `FEATURE_MATRIX.stock =
+  ['admin','manajer','gudang']` (sumber kebenaran gating tier;
+  sama dengan widget W5.4 + CTA). Audit DeepSeek diff lengkap:
+  LULUS.
+- **Commit C1 `aa8f875`** "counter: low-stock badge (header) +
+  count API" (6 file, +359/-1; dual-push master+main, verified
+  `git ls-remote`: origin/master = origin/main = `aa8f875`):
+  (a) `src/lib/low-stock.ts` (BARU, 62 baris, hermetic pure,
+  pola coop.ts -> jurnal.ts): `LOW_STOCK_THRESHOLD = 10`
+  (batas < 10, identik widget dashboard OQ-22; TIDAK pakai
+  alert_threshold), `LOW_STOCK_COUNT_SQL` (COUNT alias n),
+  `lowStockGate` (anon -> 401 / denied -> 403 / ok -> 200, map
+  `LOW_STOCK_STATUS`), header `no-store`, `lowStockCount`
+  (normalisasi: angka bulat >= 0, selain itu null),
+  `lowStockLabel` (lebar "N produk stok menipis" / sempit "N").
+  (b) `src/app/api/low-stock-count/route.ts` (BARU, 45 baris):
+  GET read-only; gerbang tier D4 (kasir/pengurus/pembelian/
+  member = 403 + hint 'stock'); query COUNT(*) products active
+  stock < 10 (payload ringan, bukan katalog); gagal query =
+  { count: null } 200 (badge tak muncul, bukan 5xx); Cache-
+  Control: no-store.
+  (c) `src/components/low-stock-badge.tsx` (BARU, 103 baris):
+  pill amber + dark (tone satu, konsisten strip offline),
+  ikon triangle-alert SVG inline 14px (tanpa emoji/unicode),
+  target sentuh >= 44px; teks "N produk stok menipis" md+ /
+  "N" mobile, aria-label/title = teks lebar; fetch saat mount +
+  re-fetch fokus jendela bila >60 dtk sejak sukses terakhir,
+  offline lewati; loading/gagal/count 0/tak berwenang =
+  render null (tanpa spinner).
+  (d) `src/components/shell.tsx` (EDIT +4): badge = item
+  pertama grup kanan header, SEBELUM pemicu palette (D2);
+  gating tier 'stock' di shell via `canAccess` -- DIIMPOR DARI
+  `@/lib/features` (modul pure), TIDAK dari `@/lib/auth`
+  (nilai-impor modul server ke client = build error --
+  tertangkap di gate pertama, diperbaiki sebelum green).
+  (e) `scripts/test-low-stock-count.ts` (BARU) = suite #32
+  (20 cek): threshold D1 (10), bentuk SQL, gerbang 401/403/200
+  utk semua role, map status + header, normalisasi, label,
+  BUKTI batas di SQLite in-memory nyata (stock 9 masuk, 10
+  tidak, inactive tidak -> 3; insert -> 4; kosong -> 0), modul
+  bebas non-ASCII.
+  (f) `package.json`: + `test:low-stock-count`; `test:all`
+  31 -> 32.
+- **Gate lulus**: `tsc --noEmit` EXIT 0; `test:all` 32/32
+  ALL_PASS EXIT 0; `npm run gate` EXIT 0 (route-exports:
+  `/api/low-stock-count` hadir di build 62 halaman; theme-gate
+  LULUS; next build OK); 0 non-ASCII (scanning byte keempat
+  file baru); `public/sw.js`, `laporan-admin-client.tsx`
+  (V1), `coop.ts` TAK TERSentuh; TIDAK ada perubahan skema.
+- **Proses**: `next build` + `test:all` melebihi umur sesi
+  foreground (battery; perintah panjang kepotong) -> dieksekusi
+  via scheduled-task sekali-pakai dengan policy battery
+  override, output ke file; semua task helper dihapus
+  setelah selesai.
+- **STATE**: LEPAS. C2 docs = commit ini.
+- **NEXT**: Grid / panel admin / Wave 7 -- menunggu arahan
+  Gus Fi (Grid berikutnya per prioritas; Wave 7 menunggu
+  pemilihan item).
+
 ### TURSO V29 VERIFIED + WAVE 6 COMPLETE (verifikasi Gus Fi + audit
 DeepSeek, 13 Okt 2026)
 - **Turso v29 terverifikasi di produksi**: backup Turso oleh
@@ -26,12 +89,14 @@ DeepSeek, 13 Okt 2026)
   ada di repo; hasil terminal flaky sesi sebelumnya). Dua ref
   ter-sync: origin/master = origin/main = `5d1d585`.
 - **Sisa (opsional, tanpa definisi/keputusan)**: W5.4 close
-  audit (pending), admin panel (evaluasi, tanpa ruling),
-  counter/grid (DITUNDA -- belum ada definisi). W5.1 PINJ-1
-  tetap tashih-gated.
+  audit (pending -- sudah ter-resolusi oleh audit close W5 atas),
+  admin panel (evaluasi, tanpa ruling). Counter: LEPAS 13 Okt
+  (`aa8f875`, seksi "COUNTER LEPAS" atas); grid tetap tanpa
+  definisi. W5.1 PINJ-1 tetap tashih-gated.
 - **STOP point per arahan audit**: tak ada commit kode
   lanjutan; tunggu arahan Gus Fi (istirahat / Wave 7 / item
-  opsional).
+  opsional -- counter sudah LEPAS, pilihan tersisa: grid /
+  admin panel / Wave 7).
 
 ### WAVE 5 CLOSED -- close audit LULUS (13 Okt 2026; record commit
 tanpa kode, GO Gus Fi via DeepSeek)
@@ -61,8 +126,11 @@ tanpa kode, GO Gus Fi via DeepSeek)
   terpuaskan oleh audit ini. Sisa opsional: admin panel +
   counter/grid (tanpa definisi). Definisi default Counter
   disetujui Gus Fi 13 Okt: badge "N produk stok menipis" pada
-  header. W5.1 PINJ-1 tetap tashih-gated.
-- **STOP**: tunggu arahan Gus Fi (STEP 2 = Counter plan).
+  header -- RESOLUSI: Counter LEPAS 13 Okt (`aa8f875`, seksi
+  "COUNTER LEPAS" teratas); grid tetap tanpa definisi. W5.1
+  PINJ-1 tetap tashih-gated.
+- **STOP**: (RESOLUSI) Counter plan saged LEPAS 13 Okt;
+  arahan berikutnya = Grid / panel admin / Wave 7.
 
 ## 2026-10-12
 ### P3c LEPAS -- Unduh Data Saya (CSV self-scope member) (commit `9b68d49`, 12 Okt 2026)

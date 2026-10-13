@@ -2177,6 +2177,32 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       13 Okt; lihat MEMORY.md seksi "WAVE 5 CLOSED" + TODO atas).
       Detail: MEMORY.md seksi "TURSO V29 VERIFIED +
       WAVE 6 COMPLETE" (13 Okt).
+- [x] **COUNTER LEPAS (13 Okt)** -- badge "N produk stok
+      menipis" (header global) + `GET /api/low-stock-count`.
+      Plan D1-D6 disetujui Gus Fi 13 Okt (via DeepSeek; audit
+      LULUS; D4 dikoreksi: gudang MASUK sesuai
+      `FEATURE_MATRIX.stock = admin/manajer/gudang` -- sumber
+      kebenaran gating tier). Commit C1 `aa8f875` (6 file,
+      +359/-1) dual-push master+main terverifikasi (`git
+      ls-remote`: origin/master = origin/main = `aa8f875`).
+      (a) `src/lib/low-stock.ts` BARU (hermetic pure, pola
+      coop.ts): threshold <10 (identik widget dashboard),
+      SQL COUNT, gerbang tier 401/403/200, normalisasi, label.
+      (b) route GET read-only + `Cache-Control: no-store`.
+      (c) `low-stock-badge.tsx`: pill amber (+dark), ikon
+      triangle-alert SVG inline, target >= 44px, teks responsif
+      ("N produk stok menipis" md+ / "N" mobile), fetch mount +
+      re-fetch fokus >60 dtk, offline lewati, null saat
+      loading/gagal. (d) `shell.tsx`: gating `canAccess(user,
+      'stock')` dari `@/lib/features` (BUKAN `@/lib/auth` --
+      landmine server/client), badge sebelum pemicu palette.
+      (e) `test-low-stock-count.ts` suite #32 (20 cek,
+      termasuk BUKTI batas di SQLite in-memory: 9 masuk, 10
+      tidak, inactive tidak). Gate: tsc 0; test:all 32/32
+      ALL_PASS; gate 0 (62 rute, /api/low-stock-count hadir);
+      0 non-ASCII; sw.js/V1/coop.ts tak tersentuh; tanpa
+      perubahan skema. Detail: MEMORY.md seksi "COUNTER LEPAS"
+      (13 Okt).
 - [x] **W5.1 RESOLVED (12 Okt)** -- ruling lanjutan: PILIHAN 1
       ACCEPT = W5.1 lepas tanpa tindak lanjut kode (GO STEP 3
       12 Okt sudah stale; semua item plan ter-shipped @ commit
