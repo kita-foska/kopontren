@@ -1,6 +1,7 @@
 'use client';
 
 import type { AppUser, Role } from '@/lib/auth';
+import { canAccess } from '@/lib/features';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -15,6 +16,7 @@ import { useHotkeys } from '@/lib/useHotkeys';
 import { BRAND_ACCENTS } from '@/lib/tokens';
 import { CommandPalette } from '@/components/command-palette';
 import { KeyCheatsheet } from '@/components/key-cheatsheet';
+import { LowStockBadge } from '@/components/low-stock-badge';
 import { Radio } from 'lucide-react';
 
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
@@ -236,6 +238,10 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
             </a>
           </div>
           <div className="flex shrink-0 items-center justify-end gap-2">
+            {/* COUNTER (POST-W5): badge stok menipis (header global; D2).
+                Gating tier 'stock' (D4: admin/manajer/gudang) -- sebelum
+                pemicu palette, item pertama grup kanan. */}
+            {canAccess(user, 'stock') && <LowStockBadge />}
             {/* UX-7B: pemicu Command Palette (discovery; Ctrl+K tetap jalan). */}
             <button
               type="button"
