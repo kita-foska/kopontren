@@ -614,6 +614,23 @@ const IconDatabase = (
     <path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3" />
   </svg>
 );
+// P13 (Health Center): ikon kesehatan sistem (denyut nadi -- inline SVG,
+// 16px, stroke currentColor; tanpa emoji/unicode/ikon-font).
+const IconPulse = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M2.5 12h4l3-7 4 14 3-7h5" />
+  </svg>
+);
 // P2/Q62: ikon alur persetujuan (clip + centang -- inline SVG, 16px,
 // stroke currentColor; tanpa emoji/unicode/ikon-font).
 const IconApprovals = (
@@ -717,6 +734,7 @@ export const MENU_ITEMS: MenuDef[] = [
   // P2/Q62: alur persetujuan (antrean 5 aksi besar; tier admin, matriks).
   { href: '/admin/persetujuan', label: 'Persetujuan', icon: IconApprovals, level: 'approvals' },
   { href: '/admin/data', label: 'Data & Backup', icon: IconDatabase, level: 'admin' },
+  { href: '/admin/health', label: 'Kesehatan', icon: IconPulse, level: 'admin' },
   { href: '/admin/migrate', label: 'Import CSV', icon: IconUpload, level: 'admin' },
   // P3d: pusat ekspor admin (unduh CSV + cetak formal; level 'admin').
   { href: '/admin/ekspor', label: 'Ekspor', icon: IconExport, level: 'admin' },
@@ -767,6 +785,8 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
       '/admin/migrate',
       // P3d: pusat ekspor (unduh CSV + cetak formal).
       '/admin/ekspor',
+      // P13 (Health Center): status sistem (admin-only).
+      '/admin/health',
     ],
   },
 ];

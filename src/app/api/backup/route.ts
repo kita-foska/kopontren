@@ -86,6 +86,15 @@ export async function GET() {
     products: (payload.products as unknown[] | undefined)?.length ?? 0,
     sales: (payload.sales as unknown[] | undefined)?.length ?? 0,
   });
+  // P13 (Health Center): catat backup terakhir utk kartu "Backup" di
+  // /admin/health. Tabel settings = key-value umum (tanpa perubahan
+  // skema); settings kv DIKECUALIKAN saat import (lihat POST di bawah)
+  // jadi catatan ini bertahan lintas restore.
+  const upsertSetting = d.prepare(
+    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+  );
+  await upsertSetting.run('backup_last', payload.exported_at);
+  await upsertSetting.run('backup_last_by', user.username);
   return new Response(JSON.stringify(payload, null, 2), {
     headers: {
       'Content-Type': 'application/json',

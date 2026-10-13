@@ -19,6 +19,8 @@ export type KpiCardDef = {
   label: string;
   value: string;
   sub?: string;
+  /** P13: penjelasan komunikatif; bila ada, `sub` dirender via TermTip. */
+  tip?: string;
   href: string;
   icon: ReactNode;
   warn?: boolean;
@@ -29,6 +31,7 @@ export function KpiCard({
   label,
   value,
   sub,
+  tip,
   href,
   icon,
   warn,
@@ -55,7 +58,9 @@ export function KpiCard({
       </div>
       <div className="mt-3 border-t border-slate-100 pt-2.5 dark:border-navy-700/60">
         <div className="flex items-center justify-between gap-1 text-xs">
-          <p className="truncate text-slate-500 dark:text-slate-400">{sub}</p>
+          <p className="truncate text-slate-500 dark:text-slate-400">
+            {tip ? <TermTip tip={tip}>{sub}</TermTip> : sub}
+          </p>
           <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-400 opacity-0 transition group-hover:opacity-100 group-hover:text-accent-500" />
         </div>
         {delta && (

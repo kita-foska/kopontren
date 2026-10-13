@@ -1257,7 +1257,7 @@ export async function saveZakatSettings(
 // idx_approval_pending. migrate30(): CREATE TABLE IF NOT EXISTS + index,
 // purely additive; DB stempel v28 menjalankan fullInit sekali lagi saat
 // cold start berikutnya. BACKUP DB WAJIB sebelum deploy (lesson v16).
-const SCHEMA_VERSION = 29;
+export const SCHEMA_VERSION = 29;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

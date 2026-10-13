@@ -53,3 +53,11 @@ export function invalidate(prefix: string): void {
     if (k.startsWith(prefix)) store.delete(k);
   }
 }
+
+/**
+ * Statistik read-only utk halaman health (P13): jumlah key ter-cache
+ * per-instance. Tanpa efek samping; TTL & eviksi berjalan seperti biasa.
+ */
+export function cacheStats(): { keys: number } {
+  return { keys: store.size };
+}
