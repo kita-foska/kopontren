@@ -2052,7 +2052,13 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       refresh reconnect POS settings / admin-member / laporan +
       silent-failure fix daftar member; commit C1 `5740004` +
       C2 `888eb3f`).
-    - NEXT: **Wave 5 close audit** + Wave 6 (migrasi + SOP).
+    - [x] **WAVE 5 CLOSED (close audit LULUS 13 Okt, record commit
+      tanpa kode @ HEAD `2ef21f0`)** -- 5 item + 14 commit
+      terverifikasi (ancestor HEAD, dual-push ter-sync), gates
+      segara green (tsc 0; test:all 31/31; gate 0, 59 rute);
+      G1/G2 = catatan minor record-only (detail: MEMORY.md seksi
+      "WAVE 5 CLOSED"). NEXT = Wave 6 (LEPAS 13 Okt; record di
+      bawah).
    - [x] **W5.1 LEPAS 9 Okt (PINJ-1: pinjaman anggota QARDH)** --
       tashih OQ7-OQ9: akun COA **1130** 'Piutang Anggota (Koperasi)'
       (BUKAN 1030 -- 1030 tetap live, tak terpakai modul ini);
@@ -2167,7 +2173,8 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       tercantum di pesan audit -- SHA itu tak ada di repo);
       refs ter-sync origin/master = origin/main = `5d1d585`.
       STOP point per arahan: tunggu arahan Gus Fi utk sisa
-      item (W5.4 close audit / admin panel / counter-grid).
+      item (admin panel / counter-grid -- W5.4 close audit LULUS
+      13 Okt; lihat MEMORY.md seksi "WAVE 5 CLOSED" + TODO atas).
       Detail: MEMORY.md seksi "TURSO V29 VERIFIED +
       WAVE 6 COMPLETE" (13 Okt).
 - [x] **W5.1 RESOLVED (12 Okt)** -- ruling lanjutan: PILIHAN 1

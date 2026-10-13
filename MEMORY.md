@@ -33,6 +33,37 @@ DeepSeek, 13 Okt 2026)
   lanjutan; tunggu arahan Gus Fi (istirahat / Wave 7 / item
   opsional).
 
+### WAVE 5 CLOSED -- close audit LULUS (13 Okt 2026; record commit
+tanpa kode, GO Gus Fi via DeepSeek)
+- **Close audit read-only @ HEAD `2ef21f0` (13 Okt) = LULUS.**
+  5 item Wave 5 semua ter-shipping; 14 commit valid, semua
+  ancestor HEAD (origin/master = origin/main = `2ef21f0`):
+  - W5.1 PINJ-1: `1783bbc`+`5e9df1a`+`08199ea` (LEPAS 9 Okt;
+    tashih OQ7-OQ9: COA 1130, denda sadaqah memo-only, lunas
+    sekaligus)
+  - W5.2 NEG-1: `0d2615e`+`2f23803`+`377a126` (LEPAS 8 Okt;
+    produk titipan flag-gated, stok negatif sah)
+  - W5.3a B1+B2: `1961a4f`+`e2db9a1` (LEPAS 8 Okt; period-picker
+    URL + inflight guard zis)
+  - W5.3b OQ13+OQ14: `e2c8f0c`+`8669cbc`+`27994bf` (LEPAS 10 Okt;
+    flip 6030 open + rekon #16 GL_CASH)
+  - W5.4 OFF-1 P2: `5740004`+`888eb3f`+`c1a1a16` (LEPAS 8 Okt;
+    banner offline global shell + refresh reconnect)
+- **Gates segara @ HEAD**: tsc --noEmit 0; test:all 31/31
+  ALL_PASS; gate (check-route-exports + next build, 59 rute) 0;
+  non-ASCII 0; sw.js/V1/coop.ts tak tersentuh.
+- **Catatan minor (record-only, bukan gap fungsional)**:
+  - G1: W5.3b rekaman "LEPAS 10 Okt" padahal ad=cd commit = 8 Okt
+    (eksekusi 8 Okt; konfirmasi/lepas 10 Okt).
+  - G2: OFF-1 "P3" pernah disebut di baris NEXT tetapi tak
+    terdefinisi -- resmi: OFF-1 ditutup pada P2.
+- **Resolusi baris "NEXT: W5.4 close audit"** (seksi W6 atas) =
+  terpuaskan oleh audit ini. Sisa opsional: admin panel +
+  counter/grid (tanpa definisi). Definisi default Counter
+  disetujui Gus Fi 13 Okt: badge "N produk stok menipis" pada
+  header. W5.1 PINJ-1 tetap tashih-gated.
+- **STOP**: tunggu arahan Gus Fi (STEP 2 = Counter plan).
+
 ## 2026-10-12
 ### P3c LEPAS -- Unduh Data Saya (CSV self-scope member) (commit `9b68d49`, 12 Okt 2026)
 - **Commit `9b68d49`** "P3c: Unduh Data Saya -- CSV self-scope
