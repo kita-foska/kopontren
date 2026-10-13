@@ -78,13 +78,15 @@ export function KpiCard({
 }
 
 /**
- * KpiGrid: tata letak kartu KPI. Default = 2 kolom (mobile) / 3 kolom
- * (lg) -- menstandarkan grid dashboard admin & pengurus (keputusan P1).
- * `cols` utk override jumlah kolom lg (mis. 'lg:grid-cols-5').
+ * KpiGrid: tata letak kartu KPI. Default = 1 kolom (<360px) /
+ * 2 kolom (360px s.d. 1023px) / 3 kolom (lg) -- menstandarkan grid
+ * dashboard admin & pengurus (keputusan P1; polish mobile: kartu KPI
+ * tidak cekik di layar kecil). `cols` utk override jumlah kolom lg
+ * (mis. 'lg:grid-cols-5').
  */
 export function KpiGrid({ cards, cols }: { cards: KpiCardDef[]; cols?: string }) {
   return (
-    <div className={'grid grid-cols-2 gap-3 ' + (cols ?? 'lg:grid-cols-3')}>
+    <div className={'grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 ' + (cols ?? 'lg:grid-cols-3')}>
       {cards.map((c) => (
         <KpiCard key={c.label} {...c} />
       ))}
