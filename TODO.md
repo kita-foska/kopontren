@@ -2177,6 +2177,24 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       13 Okt; lihat MEMORY.md seksi "WAVE 5 CLOSED" + TODO atas).
       Detail: MEMORY.md seksi "TURSO V29 VERIFIED +
       WAVE 6 COMPLETE" (13 Okt).
+- [x] **GRID LEPAS (13 Okt)** -- KpiGrid mobile polish (sisa
+      Phase 2c / P2 #11). Option A disetujui Gus Fi 13 Okt (via
+      DeepSeek; audit LULUS; Option B "tetep 2 kolom" ditolak --
+      tanpa perubahan riil). Commit C1 `01b65e2` (1 file,
+      +6/-4) dual-push master+main terverifikasi (`git
+      ls-remote`: origin/master = origin/main = `01b65e2`).
+      `src/components/kpi-card.tsx` KpiGrid: `grid grid-cols-2
+      gap-3` -> `grid grid-cols-1 min-[360px]:grid-cols-2 gap-3`
+      = 1 kolom <360px / 2 kolom 360-1023px / 3 kolom lg
+      (Tailwind 3.4 native arbitrary variant, tanpa perubahan
+      config; visual only, tanpa logika/API/DB). Konsumen
+      KpiGrid hanya 2 dashboard (admin 6 kartu + pengurus 5
+      kartu). Tunda (out-of-scope): `text-xl
+      min-[390px]:text-2xl` nilai KpiCard -- nominal panjang
+      @360-390px (batch terpisah bila perlu). Gate: tsc 0;
+      test:all 32/32 ALL_PASS; gate 0 (62 rute); 0 non-ASCII;
+      sw.js/V1/coop.ts tak tersentuh; tanpa perubahan skema.
+      Detail: MEMORY.md seksi "GRID LEPAS" (13 Okt).
 - [x] **COUNTER LEPAS (13 Okt)** -- badge "N produk stok
       menipis" (header global) + `GET /api/low-stock-count`.
       Plan D1-D6 disetujui Gus Fi 13 Okt (via DeepSeek; audit

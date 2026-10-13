@@ -1,6 +1,40 @@
 # MEMORY
 
 ## 2026-10-13
+### GRID LEPAS -- KpiGrid mobile polish (1 kolom <360px) (commit
+`01b65e2`, 13 Okt 2026; ACC Gus Fi via DeepSeek: "GO COMMIT")
+- **Persetujuan 13 Okt (via DeepSeek)**: Option A disetujui = 1
+  kolom (<360px) / 2 kolom (360-1023px) / 3 kolom (lg); Option B
+  (tetep 2 kolom, tanpa perubahan riil) ditolak. Alesan: kartu
+  KPI cekik di layar alit (lebar kartu @360px = 158px; nilai
+  text-2xl mepet; @390px = 173px masih mepet utk nominal rupiah
+  panjang). Filosofi: gampang dipahami (mobile lega) + apik.
+- **Commit C1 `01b65e2`** "ui(2c-followup): KpiGrid mobile polish
+  -- 1 kolom <360px, 2 kolom 360+" (1 file, +6/-4; dual-push
+  master+main terverifikasi `git ls-remote`: origin/master =
+  origin/main = `01b65e2`):
+  `src/components/kpi-card.tsx` (KpiGrid): `grid grid-cols-2
+  gap-3` -> `grid grid-cols-1 min-[360px]:grid-cols-2 gap-3`
+  (Tailwind 3.4 native arbitrary variant -- TIDAK ada perubahan
+  config; JSDoc diperbarui). Scope: visual only (tanpa logika,
+  tanpa API/DB, tanpa komponen baru, tanpa ikon baru).
+- **Konsumen**: KpiGrid hanya 2 dashboard (admin/dashboard 6
+  kartu + pengurus/dashboard 5 kartu) -- tak ada konsumen lain.
+- **Tunda (out-of-scope, ruling 13 Okt)**: `text-xl
+  min-[390px]:text-2xl` utk nilai KpiCard -- nominal rupiah
+  panjang @360-390px masih mbakak 2 menithi (rapi via row
+  stretch); batch terpisah bila Gus Fi menghendaki.
+- **Gate lulus (13 Okt)**: `tsc --noEmit` EXIT 0; `test:all`
+  32/32 ALL_PASS EXIT 0; `npm run gate` EXIT 0 (route-exports OK;
+  theme-gate LULUS; next build OK, 62/62 halaman); 0 non-ASCII
+  (scan byte keempat kpi-card.tsx); `git status` = hanya
+  kpi-card.tsx berubah; frozen files (`public/sw.js`, V1
+  `laporan-admin-client.tsx`, `src/lib/coop.ts`) TIDAK tersentuh;
+  tanpa perubahan skema.
+- **STATE**: LEPAS. C2 docs = commit ini.
+- **NEXT**: panel admin (P13 Health Center) / Wave 7 -- menunggu
+  arahan Gus Fi (Grid LEPAS; Wave 7 menunggu pemilihan item).
+
 ### COUNTER LEPAS -- badge "stok menipis" (header global) + count API
 (commit `aa8f875`, 13 Okt 2026; ACC Gus Fi via DeepSeek: "GO COMMIT")
 - **Persetujuan 13 Okt (via DeepSeek)**: definisi D1-D6 Counter
@@ -60,9 +94,9 @@
   override, output ke file; semua task helper dihapus
   setelah selesai.
 - **STATE**: LEPAS. C2 docs = commit ini.
-- **NEXT**: Grid / panel admin / Wave 7 -- menunggu arahan
-  Gus Fi (Grid berikutnya per prioritas; Wave 7 menunggu
-  pemilihan item).
+- **NEXT**: panel admin (P13) / Wave 7 -- menunggu arahan Gus
+  Fi (Grid LEPAS `01b65e2`, seksi "GRID LEPAS" di atas; Wave 7
+  menunggu pemilihan item).
 
 ### TURSO V29 VERIFIED + WAVE 6 COMPLETE (verifikasi Gus Fi + audit
 DeepSeek, 13 Okt 2026)
