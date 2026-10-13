@@ -1,6 +1,61 @@
 # MEMORY
 
 ## 2026-10-13
+### P13 LEPAS -- Health Center `/admin/health` (admin-only, 7 kartu)
+(13 Okt 2026; ACC Gus Fi via DeepSeek: "GO COMMIT" -- audit diff
+14 Okt: LULUS; commit C1 `ce4a509`)
+- **Scope (definisi P13, TODO L1298; UX-8 Operational Safety)**:
+  dashboard status sistem -- DB, Koneksi, Versi, Cache, Log, Backup
+  terakhir, Notifikasi. Bahasa komunikatif (P15): tiap kartu punya
+  penjelasan + drill-down ke sumber (P9).
+- **Commit C1 `ce4a509`** "feat(admin): P13 Health Center dashboard"
+  (9 file; dual-push master+main, akan diverifikasi `git
+  ls-remote`):
+  (a) `src/lib/health.ts` (BARU, ~255 baris, hermetis pure -- pola
+  coop.ts -> low-stock.ts, TANPA dependensi server): 7 kartu +
+  summary; ambang D-P13 (dbWarnMs 500 / dbBadMs 2000 /
+  backupWarnDays 30); helper ageDays/ageLabel/shortDate; seluruh
+  string ASCII tanpa emoji/unicode.
+  (b) `src/app/admin/health/page.tsx` (BARU, ~171 baris): server
+  component, guard `role === 'admin'` (pola /admin/data),
+  force-dynamic; query `schema_version` + `audit_log` 24 jam +
+  `settings` (backup_last/backup_last_by) + `vapid_keys` +
+  COUNT `notifications`; DB tak terjangkau = kartu GAGAL/OFFLINE
+  (bukan 500); stempel build = baca marker SW-BUILD di
+  public/sw.js (frozen; TIDAK dimutasi); "Muat Ulang" = link
+  halaman sendiri (tanpa polling).
+  (c) `src/app/api/backup/route.ts`: setelah sukses, catat settings
+  `backup_last` (ISO) + `backup_last_by` (pelaku) -- TIDAK ada
+  perubahan skema, tanpa migrasi.
+  (d) `src/lib/ref-cache.ts`: +`cacheStats()` (read-only, jumlah
+  key per-instance, TTL 60 dtk).
+  (e) `src/db.ts`: `SCHEMA_VERSION` (29) diekspor (dulu const
+  lokal).
+  (f) `src/components/kpi-card.tsx`: KpiCard +prop `tip`
+  (TermTip); backward-compatible, tak ada break konsumen; KpiGrid
+  tak berubah.
+  (g) `src/components/sidebar.tsx`: +IconPulse (SVG inline,
+  mengikuti icon system LOCK) + item "Kesehatan" (level 'admin',
+  href /admin/health) di MENU_ITEMS + `/admin/health` di
+  ADMIN_GROUP_DEFS.
+  (h) `scripts/test-health.ts` (BARU, suite #33, 37 assert) +
+  `package.json` chain test:all 32 -> 33.
+- **Gate lulus (13 Okt)**: `tsc --noEmit` EXIT 0; `test:all`
+  33/33 ALL_PASS (suite 33: 37 passed, 0 failed); `npm run gate`
+  EXIT 0 (route-exports OK; theme-gate LULUS; next build, 62
+  halaman static; /admin/health = force-dynamic tak terhitung
+  static); 0 non-ASCII file baru/ubah di bagian berubah
+  (health.ts, page.tsx, test-health.ts, kpi-card.tsx, sidebar.tsx,
+  package.json bersih; backup/route.ts, db.ts, ref-cache.ts punya
+  non-ASCII PRE-EXISTING di baris tak diubah -- hunk kluwih
+  ASCII); frozen files TIDAK tersentuh (`public/sw.js`, V1
+  `laporan-admin-client.tsx`, `src/lib/coop.ts`); TANPA
+  perubahan skema (Turso tetep v29).
+- **STATE**: LEPAS (dual-push master+main terverifikasi `git
+  ls-remote`: origin/master = origin/main = `ce4a509` pada C1;
+  record ini = commit C2).
+- **NEXT**: Wave 7 -- menenti arahan Gus Fi.
+
 ### GRID LEPAS -- KpiGrid mobile polish (1 kolom <360px) (commit
 `01b65e2`, 13 Okt 2026; ACC Gus Fi via DeepSeek: "GO COMMIT")
 - **Persetujuan 13 Okt (via DeepSeek)**: Option A disetujui = 1

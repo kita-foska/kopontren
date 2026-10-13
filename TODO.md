@@ -1295,7 +1295,7 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [ ] P10 Period context -- semua angka harus context periode ("Rp10 jt per 30 hari").
 - [ ] P11 Freeze / Close Period -- tutup periode keuangan; data tetap bisa dilihat, tidak bisa diubah diam-diam.
 - [ ] P12 Backup rasa aman -- terakhir, cadangan, restore, otomatis/semi-otomatis, bukan "backup sekali lalu lupa".
-- [ ] P13 Health Center -- status sistem: DB, koneksi, versi, cache, log, backup terakhir, notifikasi.
+- [x] P13 Health Center -- status sistem: DB, koneksi, versi, cache, log, backup terakhir, notifikasi. -- SELESAI 13 Okt 2026 (C1 `ce4a509` dual-push master+main; record "P13 LEPAS" di bawah + MEMORY.md).
 - [ ] P14 Offline confidence -- kasir online/offline/nyinkron; status per modul.
 - [ ] P15 Confidence language -- label jelas: "Terakhir diperbarui 2 menit lalu", "Data lengkap", "Menunggu sinkronisasi".
 
@@ -2221,6 +2221,32 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
       0 non-ASCII; sw.js/V1/coop.ts tak tersentuh; tanpa
       perubahan skema. Detail: MEMORY.md seksi "COUNTER LEPAS"
       (13 Okt).
+- [x] **P13 LEPAS (13 Okt)** -- Health Center `/admin/health`
+      (admin-only; UX-8 Operational Safety; definisi P13 TODO
+      L1298). 7 kartu status sistem: DB, Koneksi, Versi, Cache,
+      Log, Backup terakhir, Notifikasi -- bahasa komunikatif
+      (P15: tiap kartu punya penjelasan) + drill-down ke sumber
+      (P9). Commit C1 `ce4a509` (9 file, +680/-3) dual-push master+main
+      terverifikasi (`git ls-remote`: origin/master = origin/main =
+      `ce4a509`). (a) `src/lib/health.ts`
+      BARU (modul hermetis pure, pola coop.ts -> low-stock.ts,
+      tanpa dependensi server; ambang 500/2000 ms + 30 hari;
+      seluruh string ASCII). (b) `/admin/health` page server
+      component, guard `role === 'admin'`; DB down = kartu
+      GAGAL/OFFLINE (bukan 500); stempel build dibaca dari marker
+      SW-BUILD di sw.js (frozen, TAK dimutasi). (c)
+      `api/backup/route.ts` catat settings `backup_last` +
+      `backup_last_by` setelah ekspor sukses (tanpa perubahan
+      skema). (d) `ref-cache.ts` +`cacheStats()`. (e) `db.ts`
+      ekspor SCHEMA_VERSION. (f) `kpi-card.tsx` +prop `tip`
+      (backward-compatible). (g) `sidebar.tsx` +item "Kesehatan"
+      (IconPulse, SVG inline, icon system LOCK). (h)
+      `test-health.ts` suite #33 (37 assert) + chain test:all 33.
+      Gate: tsc 0; test:all 33/33 ALL_PASS; gate 0 (next build,
+      62 halaman static; /admin/health force-dynamic); 0
+      non-ASCII (file baru + bagian berubah); sw.js/V1/coop.ts
+      tak tersentuh; tanpa perubahan skema (Turso tetep v29).
+      Detail: MEMORY.md seksi "P13 LEPAS" (13 Okt).
 - [x] **W5.1 RESOLVED (12 Okt)** -- ruling lanjutan: PILIHAN 1
       ACCEPT = W5.1 lepas tanpa tindak lanjut kode (GO STEP 3
       12 Okt sudah stale; semua item plan ter-shipped @ commit
