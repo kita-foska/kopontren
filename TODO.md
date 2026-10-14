@@ -1296,7 +1296,7 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [ ] P11 Freeze / Close Period -- tutup periode keuangan; data tetap bisa dilihat, tidak bisa diubah diam-diam.
 - [ ] P12 Backup rasa aman -- terakhir, cadangan, restore, otomatis/semi-otomatis, bukan "backup sekali lalu lupa".
 - [x] P13 Health Center -- status sistem: DB, koneksi, versi, cache, log, backup terakhir, notifikasi. -- SELESAI 13 Okt 2026 (C1 `ce4a509` dual-push master+main; record "P13 LEPAS" di bawah + MEMORY.md).
-- [ ] P14 Offline confidence -- kasir online/offline/nyinkron; status per modul.
+- [x] P14 Offline confidence -- kasir online/offline/nyinkron; status per modul. -- SELESAI 14 Okt 2026 (C1 `8096d2f` dual-push master+main; record "P14 LEPAS" di MEMORY.md).
 - [x] P15-A Confidence language -- label jelas: "Terakhir diperbarui {umur}", "Data lengkap", "Menunggu sinkronisasi". -- SELESAI 14 Okt 2026 (C1 `2e3f587` dual-push master+main; record "P15-A LEPAS" di atas + MEMORY.md).
 - [ ] P15-B Confidence language audit (exhaustive) -- menunggu definisi scope (pasca P15-A).
 

@@ -1,6 +1,53 @@
 # MEMORY
 
 ## 2026-10-14
+### P14 LEPAS -- Offline confidence (C1 `8096d2f`, 14 Okt 2026; ACC Gus Fi
+via DeepSeek: audit 14 Okt LULUS)
+- **Scope (P14, TODO L1299)**: status data per modul + stempel
+  "Terakhir online" -- komunikatif, bukan biner. Murni UX/status:
+  TIDAK mengubah transaksi, skema (v29), atau file fiqih. Data per
+  modul DIBACA dari localStorage sisi klien (kop:lastfetch:<module> +
+  kop:lastonline); stempel hanya DITULIS oleh fitur (bukan
+  instrumentasi page-load) -> jujur "Belum ada catatan akses".
+- **Commit C1 `8096d2f`** "feat(ui): P14 offline confidence
+  (last-online stamp + module status)" (6 file; dual-push master+main
+  terverifikasi `git ls-remote` = `8096d2f`):
+  (a) `src/lib/offline-status.ts` (BARU, 100 baris, HERMETIS -- 0
+  non-ASCII, 0 import @/db / next/): API read/record (KvStore
+  minim, SSR-safe: store null -> null/no-op) + label DISUSUN dari
+  confidence.ts (sumber tunggal P15-A): freshnessOf /
+  lastFetchLabel (freshness + syncLabel) / lastOnlineLabel / syncOf.
+  (b) `src/components/shell.tsx` (+29/-5): stempel "Terakhir online"
+  ditulis ke localStorage saat (baru) online; strip offline kini
+  informatif ("... Data mungkin tidak dapat dimuat. Terakhir online
+  Hari ini").
+  (c) `src/app/admin/health/page.tsx` (+8/-2): render
+  ModuleStatusPanel (cacheKeys hoist + nowIso).
+  (d) `src/app/admin/health/module-status-client.tsx` (BARU, 136
+  baris, 'use client', co-located di route health): tabel "Status
+  Data per Modul" -- 10 modul (kas, belanja, hutang, konsinyasi,
+  member, produk, koperasi, zakat, qris, laporan) + drill-down;
+  kolom Sinkron = placeholder jujur utk P15-B (antrean per modul),
+  selalu "Tersinkron" (komunikatif, bukan asersi database); footer
+  "Terakhir online" + "Referensi ter-cache (per-instance, TTL 60
+  dtk)".
+  (e) `scripts/test-offline-status.ts` (BARU, suite #35, 37 assert:
+  key, read/write mock Map, SSR-safe null-store, isValidStamp,
+  freshnessOf, lastFetchLabel + paritas dgn confidence,
+  lastOnlineLabel + paritas ageLabel/ageDays, syncOf paritas,
+  hermetis-assert) + `package.json` (chain test:all 34 -> 35 +
+  script test:offline-status).
+- **Gate lulus (14 Okt)**: tsc --noEmit EXIT 0; test:all 35/35
+  ALL_PASS (suite #35 = 37/37); 0 non-ASCII di lib; frozen tak
+  tersentuh (public/sw.js, laporan-admin-client.tsx V1,
+  src/lib/coop.ts); TANPA perubahan skema (v29 intact);
+  zero fiqih impact.
+- **STATE**: LEPAS (dual-push terverifikasi: origin/master =
+  origin/main = `8096d2f`; record ini = commit C2).
+- **NEXT**: P15-B audit confidence (exhaustive) -- antrean sinkron
+  per modul (P14 hanya placeholder jujur) menunggu definisi scope;
+  Wave 7 fitur menyusul (Gus Fi pilih).
+
 ### P15-A LEPAS -- Confidence language standar (C1 `2e3f587`, 14 Okt
 2026; ACC Gus Fi via DeepSeek: audit 14 Okt LULUS)
 - **Scope (P15, TODO L1300)**: standardisasi label confidence --
