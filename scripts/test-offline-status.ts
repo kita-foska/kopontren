@@ -12,7 +12,6 @@
  *  - recordLastFetch / recordLastOnline: tulis, null store no-op;
  *  - isValidStamp: valid / null / kosong / tak valid;
  *  - freshnessOf: hari ini / N hari / null / tak valid -> "Belum ada catatan akses";
- *  - lastFetchLabel: komposisi P15-A (freshness + syncLabel), paritas confidence;
  *  - lastOnlineLabel: "Terakhir online {umur}" / null / tak valid;
  *  - syncOf: paritas dgn confidence.syncLabel;
  *  - hermetis: offline-status.ts 0 non-ASCII & tanpa import @/db / next/;
@@ -24,7 +23,6 @@ import {
   freshnessOf,
   isValidStamp,
   lastFetchKey,
-  lastFetchLabel,
   lastOnlineLabel,
   recordLastFetch,
   recordLastOnline,
@@ -121,27 +119,6 @@ function main() {
   ok(
     'freshnessOf: tak valid -> Belum ada catatan akses',
     freshnessOf('bukan-waktu', NOW) === 'Belum ada catatan akses'
-  );
-
-  // -- lastFetchLabel (komposisi P15-A: freshness + sinkron) --
-  ok(
-    'lastFetchLabel: segar + tersinkron',
-    lastFetchLabel('2026-10-12T00:00:00.000Z', 0, NOW) ===
-      'Terakhir diperbarui 2 hari lalu / Tersinkron'
-  );
-  ok(
-    'lastFetchLabel: 3 menunggu',
-    lastFetchLabel('2026-10-12T00:00:00.000Z', 3, NOW) ===
-      'Terakhir diperbarui 2 hari lalu / 3 menunggu sinkronisasi'
-  );
-  ok(
-    'lastFetchLabel: null + tersinkron',
-    lastFetchLabel(null, 0, NOW) === 'Belum ada catatan akses / Tersinkron'
-  );
-  ok(
-    'lastFetchLabel: paritas dgn confidence (freshness + syncLabel)',
-    lastFetchLabel('2026-10-12T00:00:00.000Z', 5, NOW) ===
-      freshnessOf('2026-10-12T00:00:00.000Z', NOW) + ' / ' + syncLabel(5)
   );
 
   // -- lastOnlineLabel --

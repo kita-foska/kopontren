@@ -19,6 +19,7 @@ import { rp, rpShort, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { syncLabel, wibTimeSec } from '@/lib/confidence';
+import { POS_QUEUE_KEY, recordLastFetch } from '@/lib/offline-status';
 import { useHotkeys } from '@/lib/useHotkeys';
 import { effectiveWholesalePrice, parseWholesaleJson } from '@/lib/wholesale';
 import { T } from '@/lib/tokens';
@@ -87,11 +88,11 @@ type QueuedSale = {
   };
 };
 
-const OFFLINE_QUEUE_KEY = 'kopontren_pos_queue_v1';
-
+// P15-B: key antrean offline kini satu sumber di lib/offline-status.ts
+// (POS_QUEUE_KEY, kontrak beku P13.1) -- panel health membacanya.
 function loadQueue(): QueuedSale[] {
   try {
-    const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+    const raw = localStorage.getItem(POS_QUEUE_KEY);
     const arr = raw ? (JSON.parse(raw) as QueuedSale[]) : [];
     return Array.isArray(arr) ? arr : [];
   } catch {
@@ -368,6 +369,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       // Field yg belum ke-load lokal (members/settings saat mount) diwarisi
       // dari cache lama -- jangan merusak snapshot yg lebih lengkap.
       setCacheInfo(null);
+      // P15-B CONFIDENCE: live fetch sukses = stempel "Terakhir Diperbarui"
+      // modul kas (panel /admin/health). HANYA cabang sukses -- cadangan
+      // cache di else sengaja tidak di-stempel (bukan data live).
+      recordLastFetch('kas', new Date().toISOString(), globalThis.localStorage ?? null);
       const prev = loadPosCache();
       savePosCache({
         products: r.data.products,
@@ -770,7 +775,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         setOfflineQueue((q) => {
           const next = [...q, entry];
           try {
-            localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(next));
+            localStorage.setItem(POS_QUEUE_KEY, JSON.stringify(next));
           } catch {
             /* penyimpanan penuh: transaksi tetap di memori */
           }
@@ -797,7 +802,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     // bisa melayani walau lupa buka shift; tapi beri peringatan non-blocking
     // bahwa transaksi ini tidak masuk rekap shift (bisa dicatat manual nanti).
     if (currentShift === null)
-      showToast('Transaksi tercatat, tetapi shift belum dibuka - transaksi ini tidak masuk rekap shift.');
+      showToast('Transaksi tercatat, tetapi shift belum dibuka -- transaksi ini tidak masuk rekap shift.');
     const saved = r.data.sale;
     if (saved) {
       setReceipt({
@@ -848,12 +853,19 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         body: JSON.stringify(item.payload),
       });
       if (r.ok) remaining = remaining.filter((x) => x.ref !== item.ref);
-      else break; // masih offline / error: sisanya ditangani retry berikutnya
+      else if (r.error === 'Kesalahan jaringan.')
+        break; // masih offline: retry otomatis saat online (banner + tombol)
+      else {
+        // P15-B: error server (non-jaringan) menghentikan flush -- beri tahu
+        // kasir (sebelumnya diam); antrean tetap tersimpan, bisa dicoba lagi.
+        showToast('Sinkronisasi berhenti: ' + (r.error || 'gagal'), 'error');
+        break;
+      }
     }
     setOfflineQueue((cur) => {
       const next = cur.filter((x) => remaining.some((r2) => r2.ref === x.ref));
       try {
-        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(next));
+        localStorage.setItem(POS_QUEUE_KEY, JSON.stringify(next));
       } catch {
         /* abaikan */
       }

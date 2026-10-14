@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Table, Td, Th, TEmpty, Trow, api, Badge, Button, Empty, Modal, TermTip, Toast, useConfirm, useToast } from '@/components/ui';
 import { rp, fmtDateTime } from '@/lib/format';
+import { recordLastFetch } from '@/lib/offline-status';
 import { isPointUnit, pointReasonLabel, type PointEntry } from '@/lib/points';
 import { MemberQrBadge } from './member-qr-badge';
 import { Users } from 'lucide-react';
@@ -112,6 +113,8 @@ export function MemberClient() {
       hasMoreRef.current =
         limit === 50 && (r.data.members?.length || 0) >= limit && (r.data.total || 0) > 0;
       setLoadErr('');
+      // P15-B: stempel freshness saat fetch live sukses (bukan cache/page-load).
+      recordLastFetch('member', new Date().toISOString(), globalThis.localStorage ?? null);
     } else if (!append) {
       // W5.4: load awal gagal -> tampilkan state error (bukan daftar kosong
       // tanpa informasi). "Muat lebih banyak" (append) tetap silent,

@@ -6,6 +6,7 @@ import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
 import { parseWholesaleJson } from '@/lib/wholesale';
 import { readSavedView, writeSavedView, SAVEDVIEW_KEYS } from '@/lib/saved-view';
+import { recordLastFetch } from '@/lib/offline-status';
 import { Download } from 'lucide-react';
 
 type Product = {
@@ -83,7 +84,11 @@ export function ProdukClient() {
   const load = useCallback(async () => {
     setLoading(true);
     const r = await api<Resp>('/api/products');
-    if (r.ok && r.data) setProducts(r.data.products || []);
+    if (r.ok && r.data) {
+      setProducts(r.data.products || []);
+      // P15-B: stempel freshness saat fetch live sukses (bukan cache/page-load).
+      recordLastFetch('produk', new Date().toISOString(), globalThis.localStorage ?? null);
+    }
     setLoading(false);
   }, []);
   useEffect(() => {

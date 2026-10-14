@@ -5,6 +5,7 @@ import { api, Badge, Button, Empty, Table, Td, Th, Trow, TermTip, Toast, useToas
 import { fetchTimeout } from '@/lib/fetch-util';
 import { fmtDate, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
+import { recordLastFetch } from '@/lib/offline-status';
 
 type GoldStandardRow = {
   id: number;
@@ -142,7 +143,11 @@ export function ZakatClient() {
       api<{ rows: GoldStandardRow[] }>('/api/zakat/gold-standards').catch(() => null),
     ]);
     if (s.ok && s.data) setSettings(s.data);
-    if (c.ok && c.data) setCalc(c.data);
+    if (c.ok && c.data) {
+      setCalc(c.data);
+      // P15-B: stempel freshness saat fetch live sukses (bukan cache/page-load).
+      recordLastFetch('zakat', new Date().toISOString(), globalThis.localStorage ?? null);
+    }
     if (h.ok && h.data) setHistory(h.data.rows);
     if (g && g.ok && g.data) setGoldLog(g.data.rows);
     if (!s.ok || !c.ok || !h.ok) showToast('Gagal memuat data zakat', 'error');

@@ -39,6 +39,7 @@ import {
 } from '@/components/ui';
 import { fmtDateTime, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
+import { recordLastFetch } from '@/lib/offline-status';
 
 type MemberRow = {
   id: string;
@@ -251,8 +252,11 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
 
   const load = useCallback(async () => {
     const r = await api<KoperasiData>('/api/koperasi');
-    if (r.ok && r.data) setData(r.data);
-    else showToast(r.error || 'Gagal memuat rekap koperasi', 'error');
+    if (r.ok && r.data) {
+      setData(r.data);
+      // P15-B: stempel freshness saat fetch live sukses (bukan cache/page-load).
+      recordLastFetch('koperasi', new Date().toISOString(), globalThis.localStorage ?? null);
+    } else showToast(r.error || 'Gagal memuat rekap koperasi', 'error');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

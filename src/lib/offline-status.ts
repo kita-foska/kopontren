@@ -3,7 +3,8 @@
  * "Terakhir online" utk strip shell (informatif, bukan biner). Hermetis
  * & pure -- TIDAK ada dependensi server (@/db, next/); label DISUSUN dari
  * confidence.ts (sumber tunggal P15-A) agar seluruh aplikasi satu bahasa.
- * String ASCII. Teruji: scripts/test-offline-status.ts (suite 35).
+ * String ASCII. Teruji: scripts/test-offline-status.ts (suite 35) +
+ * scripts/test-p15b-queue.ts (suite 36).
  *
  * Prinsip P14 (keputusan Gus Fi): murni UX/status -- TIDAK mengubah
  * transaksi, skema (v29), atau file fiqih. Data per modul DIBACA dari
@@ -29,6 +30,13 @@ export interface KvStore {
 export const LASTFETCH_PREFIX = 'kop:lastfetch:';
 /** Key stempel "terakhir online" utk strip shell. */
 export const LASTONLINE_KEY = 'kop:lastonline';
+/**
+ * P15-B: key antrean offline POS (transaksi, P13.1). Key BEKU -- dipakai
+ * runtime pos-client.tsx (loadQueue / persist antrean) + dibaca panel
+ * health (readPendingCount); satu sumber di sini (kontrak, jangan ubah
+ * nilai).
+ */
+export const POS_QUEUE_KEY = 'kopontren_pos_queue_v1';
 
 /** Key localStorage modul tertentu (mis. 'kas' -> 'kop:lastfetch:kas'). */
 export function lastFetchKey(module: string): string {
@@ -45,6 +53,23 @@ export function readLastFetch(module: string, store: KvStore | null): string | n
 export function readLastOnline(store: KvStore | null): string | null {
   if (!store) return null;
   return store.getItem(LASTONLINE_KEY);
+}
+
+/**
+ * P15-B: hitung transaksi POS yang masih antre di localStorage (JSON array
+ * QueuedSale, key POS_QUEUE_KEY). Pure & hermetis; SSR-safe (store null ->
+ * 0); JSON korup / bukan array -> 0 (panel health tak boleh crash).
+ */
+export function readPendingCount(store: KvStore | null): number {
+  if (!store) return 0;
+  try {
+    const raw = store.getItem(POS_QUEUE_KEY);
+    if (!raw) return 0;
+    const arr: unknown = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.length : 0;
+  } catch {
+    return 0;
+  }
 }
 
 /** Tulis stempel fetch terakhir modul (no-op bila store null / SSR). */
@@ -72,16 +97,6 @@ export function isValidStamp(iso: string | null): boolean {
  */
 export function freshnessOf(iso: string | null, nowIso: string): string {
   return isValidStamp(iso) ? freshnessStamp(iso, nowIso) : emptyLabel('catatan akses');
-}
-
-/**
- * SUSUNAN penuh P15-A utk panel (freshnessStamp + syncLabel, fallback
- * emptyLabel): "Terakhir diperbarui {umur} / {sinkron}". Contoh:
- * "Terakhir diperbarui 2 hari lalu / Tersinkron" /
- * "Belum ada catatan akses / 3 menunggu sinkronisasi".
- */
-export function lastFetchLabel(iso: string | null, pending: number, nowIso: string): string {
-  return freshnessOf(iso, nowIso) + ' / ' + syncLabel(pending);
 }
 
 /**

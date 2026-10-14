@@ -7,6 +7,7 @@ import {
   lastOnlineLabel,
   readLastFetch,
   readLastOnline,
+  readPendingCount,
   syncOf,
 } from '@/lib/offline-status';
 
@@ -17,11 +18,14 @@ import {
  * label DISUSUN dari confidence.ts (sumber tunggal P15-A). Komponen client
  * (useEffect baca localStorage), co-located di route health sesuai plan.
  *
- * Sinkron = antrean perangkat: P14 tidak memelihara antrean per modul, jadi
- * nilai default 0 ("Tersinkron" -- komunikatif, bukan asersi database).
- * Kolom ini placeholder jujur utk P15-B. Stempel modul hanya DITULIS oleh
- * fitur (bukan instrumentasi page-load); saat belum ada yang menulis, baris
- * menampilkan "Belum ada catatan akses" (jujur, tak pura-pura segar).
+ * P15-B: kolom Sinkron = antrean offline DI PERANGKAT, nyata utk modul
+ * kas (readPendingCount, key POS_QUEUE_KEY -- transaksi POS belum
+ * tersinkron; tone amber bila > 0); modul lain online-only (tanpa
+ * antrean lokal), jadi 0 antre = "Tersinkron" (komunikatif, bukan
+ * asersi database). Stempel freshness ditulisi fiturnya (P15-B:
+ * kas/member/produk/koperasi/zakat, bukan instrumentasi page-load);
+ * modul tak tertempel menampilkan "Belum ada catatan akses" (jujur,
+ * tak pura-pura segar).
  */
 
 /** Modul data inti + drill-down ke halaman admin-nya. */
@@ -38,7 +42,7 @@ const MODULES: { key: string; label: string; href: string }[] = [
   { key: 'laporan', label: 'Laporan & Rekap', href: '/admin/laporan' },
 ];
 
-type Row = { key: string; label: string; href: string; iso: string | null };
+type Row = { key: string; label: string; href: string; iso: string | null; pending: number };
 
 export function ModuleStatusPanel({
   cacheKeys,
@@ -48,18 +52,22 @@ export function ModuleStatusPanel({
   nowIso: string;
 }) {
   const [rows, setRows] = useState<Row[]>(() =>
-    MODULES.map((m) => ({ key: m.key, label: m.label, href: m.href, iso: null }))
+    MODULES.map((m) => ({ key: m.key, label: m.label, href: m.href, iso: null, pending: 0 }))
   );
   const [lastOnlineIso, setLastOnlineIso] = useState<string | null>(null);
 
   useEffect(() => {
     const store = globalThis.localStorage ?? null;
+    // P15-B: modul kas = satu-satunya modul dengan antrean offline di
+    // perangkat (transaksi POS, P13.1); baris lain jujur 0 (online-only).
+    const kasPending = readPendingCount(store);
     setRows(
       MODULES.map((m) => ({
         key: m.key,
         label: m.label,
         href: m.href,
         iso: readLastFetch(m.key, store),
+        pending: m.key === 'kas' ? kasPending : 0,
       }))
     );
     setLastOnlineIso(readLastOnline(store));
@@ -70,8 +78,9 @@ export function ModuleStatusPanel({
       <h2 className="mb-1 text-sm font-extrabold tracking-tight">Status Data per Modul</h2>
       <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
         Waktu terakhir data modul ini disentuh perangkat (localStorage sisi klien). Kolom
-        Sinkron = antrean perangkat (P14 tak memeliharanya, jadi selalu "Tersinkron" --
-        komunikatif, bukan asersi database). Klik "Lihat" untuk membuka modulnya.
+        Sinkron = antrean offline di perangkat: modul Kas menghitung transaksi POS yang
+        belum tersinkron; modul lain online-only (tanpa antrean lokal), jadi 0 antre =
+        "Tersinkron" (komunikatif, bukan asersi database). Klik "Lihat" untuk membuka modulnya.
       </p>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
@@ -103,7 +112,15 @@ export function ModuleStatusPanel({
                 <td className="py-2 pr-3 text-slate-500 dark:text-slate-400">
                   {freshnessOf(r.iso, nowIso)}
                 </td>
-                <td className="py-2 pr-3 text-slate-500 dark:text-slate-400">{syncOf(0)}</td>
+                <td
+                  className={
+                    r.pending > 0
+                      ? 'py-2 pr-3 font-semibold text-amber-600 dark:text-amber-400'
+                      : 'py-2 pr-3 text-slate-500 dark:text-slate-400'
+                  }
+                >
+                  {syncOf(r.pending)}
+                </td>
                 <td className="py-2 text-right">
                   <Link
                     href={r.href}
