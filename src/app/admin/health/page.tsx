@@ -15,6 +15,7 @@ import { fmtDateTime } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { Badge, Button } from '@/components/ui';
 import { KpiGrid, type KpiCardDef } from '@/components/kpi-card';
+import { ModuleStatusPanel } from './module-status-client';
 import {
   Archive,
   Bell,
@@ -117,13 +118,14 @@ export default async function AdminHealthPage() {
     // dev tanpa build: kartu menampilkan "stempel tidak tersedia".
   }
 
+  const cacheKeys = cacheStats().keys;
   const cards = buildHealthCards({
     dbOk,
     dbMs,
     schemaVersion,
     expectedSchema: SCHEMA_VERSION,
     buildStamp,
-    cacheKeys: cacheStats().keys,
+    cacheKeys,
     audit24h,
     lastAuditAt,
     backupLast,
@@ -166,6 +168,10 @@ export default async function AdminHealthPage() {
       </div>
 
       <KpiGrid cards={kpiCards} />
+
+      {/* P14 (Offline Confidence): panel status data per modul (client;
+          baca localStorage sisi klien + ref-cache per-instance). */}
+      <ModuleStatusPanel cacheKeys={cacheKeys} nowIso={nowIso} />
     </Shell>
   );
 }

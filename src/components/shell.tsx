@@ -14,6 +14,7 @@ import { Breadcrumb } from './breadcrumb';
 import { fetchTimeout } from '@/lib/fetch-util';
 import { useHotkeys } from '@/lib/useHotkeys';
 import { BRAND_ACCENTS } from '@/lib/tokens';
+import { lastOnlineLabel, readLastOnline, recordLastOnline } from '@/lib/offline-status';
 import { CommandPalette } from '@/components/command-palette';
 import { KeyCheatsheet } from '@/components/key-cheatsheet';
 import { LowStockBadge } from '@/components/low-stock-badge';
@@ -173,12 +174,31 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
   // (stale-data + antrean + tombol Sinkronisasi). Pola deteksi online/
   // offline identik dengan pos-client.tsx.
   const [offline, setOffline] = useState(false);
+  // P14 (Offline Confidence): stempel "Terakhir online" (informatif, bukan
+  // biner) -- tulis ke localStorage saat (baru) online, baca saat mulai
+  // offline, tampilkan di strip via lastOnlineLabel (label P15-A).
+  const [lastOnlineIso, setLastOnlineIso] = useState<string | null>(null);
   useEffect(() => {
-    const onOn = () => setOffline(false);
+    const store = globalThis.localStorage ?? null;
+    const stampOnline = () => {
+      const now = new Date().toISOString();
+      recordLastOnline(now, store);
+      setLastOnlineIso(now);
+    };
+    const onOn = () => {
+      stampOnline();
+      setOffline(false);
+    };
     const onOff = () => setOffline(true);
     window.addEventListener('online', onOn);
     window.addEventListener('offline', onOff);
-    setOffline(!(typeof navigator === 'undefined' || navigator.onLine));
+    const isOn = typeof navigator === 'undefined' || navigator.onLine;
+    if (isOn) {
+      stampOnline(); // baru buka & online: cap stempel fresh
+    } else {
+      setLastOnlineIso(readLastOnline(store)); // mulai offline: cap terakhir
+    }
+    setOffline(!isOn);
     return () => {
       window.removeEventListener('online', onOn);
       window.removeEventListener('offline', onOff);
@@ -204,7 +224,10 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
             className="flex items-center justify-center gap-1.5 border-b border-amber-200 bg-amber-50 px-3 py-1 text-2xs font-semibold text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
           >
             <Radio size={12} aria-hidden="true" />
-            OFFLINE -- koneksi terputus. Data mungkin tidak dapat dimuat.
+            <span>
+              OFFLINE -- koneksi terputus. Data mungkin tidak dapat dimuat.{' '}
+              {lastOnlineLabel(lastOnlineIso, new Date().toISOString())}
+            </span>
           </div>
         )}
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
