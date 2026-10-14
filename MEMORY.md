@@ -1,5 +1,46 @@
 # MEMORY
 
+## 2026-10-14
+### P15-A LEPAS -- Confidence language standar (C1 `2e3f587`, 14 Okt
+2026; ACC Gus Fi via DeepSeek: audit 14 Okt LULUS)
+- **Scope (P15, TODO L1300)**: standardisasi label confidence --
+  freshness ("Terakhir diperbarui {umur}"), kelengkapan ("Data
+  lengkap"), sinkron ("Tersinkron"/"Menunggu sinkronisasi"), klaim
+  data ("Data per HH:MM WIB"/"Belum ada data"), loading ("Memuat...",
+  "Muat lebih banyak"); TIDAK memakai "berhasil" di toast sukses
+  (pola "Transaksi dipertahankan").
+- **Commit C1 `2e3f587`** "feat(ui): P15 confidence language
+  (freshness/sync/empty standar)" (13 file, +275/-36; dual-push
+  master+main terverifikasi `git ls-remote` = `2e3f587`):
+  (a) `src/lib/confidence.ts` (BARU, 93 baris, HERMETIS -- 0 import
+  db/next, 0 non-ASCII): ageDays/ageLabel/freshnessStamp/
+  COMPLETE_LABEL/emptyLabel/syncLabel/wibTime/wibTimeSec/
+  dataPerLabel = satu sumber label seluruh aplikasi.
+  (b) `src/lib/health.ts`: delegasi ageDays+ageLabel ke
+  confidence.ts (import `./confidence.ts` -- Node ESM type-stripping
+  butuh ekstensi; `allowImportingTsExtensions: true`) + re-export
+  (konsumen `@/lib/health` aman).
+  (c) dashboard admin: klaim data -> dataPerLabel(wibTime(now))
+  ("Data per 06.30 WIB").
+  (d) pos-client.tsx: chip sinkron "Tersinkron {HH:MM:SS} WIB"
+  (lastSync lokal) + "n menunggu sinkronisasi" (syncLabel 0/1/n) +
+  toast "Transaksi dipertahankan".
+  (e) audit/data/konsinyasi/shift: "Muat lebih banyak"; member:
+  "Member baru didaftarkan"; ui.tsx: "Memuat data..." -> "Memuat...".
+  (f) api/products/[id]: "Produk berhasil dihapus" -> "Produk
+  dihapus" (violation laten ditemukan + diperbaiki).
+  (g) `scripts/test-confidence.ts` (BARU, suite #34, 34 assert --
+  proof delegasi `health.ageDays === confidence.ageDays`, zona WIB
+  fixed, hermetic) + chain test:all 33 -> 34.
+- **Gate lulus (14 Okt)**: tsc --noEmit EXIT 0; test:all 34/34
+  ALL_PASS; 0 hit "berhasil"/"Memuat data"/"Muat lebih banyak log"
+  di src/; frozen tak tersentuh (public/sw.js,
+  laporan-admin-client.tsx V1, coop.ts); TANPA perubahan skema.
+- **STATE**: LEPAS (dual-push terverifikasi: origin/master =
+  origin/main = `2e3f587`; record ini = commit C2).
+- **NEXT**: P14 Offline confidence (status per modul) -- PLAN
+  menyusul; P15-B audit confidence (exhaustive) menunggu definisi.
+
 ## 2026-10-13
 ### P13 LEPAS -- Health Center `/admin/health` (admin-only, 7 kartu)
 (13 Okt 2026; ACC Gus Fi via DeepSeek: "GO COMMIT" -- audit diff
