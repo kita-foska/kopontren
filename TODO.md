@@ -1298,7 +1298,11 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [x] P13 Health Center -- status sistem: DB, koneksi, versi, cache, log, backup terakhir, notifikasi. -- SELESAI 13 Okt 2026 (C1 `ce4a509` dual-push master+main; record "P13 LEPAS" di bawah + MEMORY.md).
 - [x] P14 Offline confidence -- kasir online/offline/nyinkron; status per modul. -- SELESAI 14 Okt 2026 (C1 `8096d2f` dual-push master+main; record "P14 LEPAS" di MEMORY.md).
 - [x] P15-A Confidence language -- label jelas: "Terakhir diperbarui {umur}", "Data lengkap", "Menunggu sinkronisasi". -- SELESAI 14 Okt 2026 (C1 `2e3f587` dual-push master+main; record "P15-A LEPAS" di atas + MEMORY.md).
-- [ ] P15-B Confidence language audit (exhaustive) -- menunggu definisi scope (pasca P15-A).
+- [x] P15-B Health panel real-time sync + POS antrean -- stempel
+  5 modul (kas/member/produk/koperasi/zakat) + antrean POS + flush
+  toast. -- SELESAI 14 Okt 2026 (C1 `f907694` dual-push master+
+  main; record "P15-B LEPAS" di MEMORY.md; audit confidence
+  exhaustive = lanjutan menunggu definisi scope).
 
 ### Kelompok Q -- kelas profesional lanjutan (Q41–Q95, nomor mengikuti usulan user)
 

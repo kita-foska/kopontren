@@ -88,6 +88,62 @@ via DeepSeek: audit 14 Okt LULUS)
 - **NEXT**: P14 Offline confidence (status per modul) -- PLAN
   menyusul; P15-B audit confidence (exhaustive) menunggu definisi.
 
+### P15-B LEPAS -- Health panel real-time sync + POS antrean (C1
+`f907694`, 14 Okt 2026; ACC Gus Fi via DeepSeek: audit 14 Okt LULUS)
+- **Scope (P15-B, TODO L1301, ruling Gus Fi 14 Okt -- scope B1)**:
+  kolom Sinkron panel /admin/health NYATA utk modul kas = antrean
+  offline POS (key beku P13.1 `kopontren_pos_queue_v1`, satu sumber
+  di lib); modul lain online-only -> 0 antre = "Tersinkron"
+  (komunikatif, bukan asersi database). Stempel freshness 5 modul
+  (kas/member/produk/koperasi/zakat) DITULIS fiturnya HANYA saat
+  live-fetch sukses (bukan cache/page-load); flush antrean POS:
+  error jaringan = break + retry otomatis (perilaku lama, diam),
+  error server = toast "Sinkronisasi berhenti: {err}" + antrean
+  tetap tersimpan (sebelumnya diam -- kasir tak tahu flush
+  berhenti).
+- **Commit C1 `f907694`** "feat(ui): P15-B health panel sync stamps
+  + POS queue tracking" (10 file, +230/-56; dual-push master+main
+  terverifikasi `git ls-remote` = `f907694`):
+  (a) `src/lib/offline-status.ts` (+25/-10): `POS_QUEUE_KEY`
+  (kontrak beku P13.1, satu sumber runtime + panel) +
+  `readPendingCount` (pure, SSR-safe null->0, JSON korup/bukan
+  array->0, read-only 0 setItem) + HAPUS dead export
+  `lastFetchLabel` (panel menyusun sendiri: `freshnessOf` +
+  `syncOf`); hermetis intact (0 non-ASCII, 0 import @/db|next/).
+  (b) `src/components/pos-client.tsx` (+15/-7): konstanta lokal
+  OFFLINE_QUEUE_KEY hapus -> `POS_QUEUE_KEY` (nilai identik,
+  migrasi nol); stempel 'kas' cabang sukses live (cadangan cache
+  SENGJAJA tak di-stempel); flush: error jaringan = break,
+  error server = `showToast('Sinkronisasi berhenti: ...', 'error')`
+  + break; 1 baris kosmetik em-dash ("shift belum dibuka -- ...").
+  (c) `module-status-client.tsx` (+25/-10): Row + field pending;
+  useEffect `readPendingCount` utk kas; kolom Sinkron =
+  `syncOf(r.pending)` (amber bila > 0); doc header + teks footer
+  sesuai semantik P15-B.
+  (d) 4 admin client (stempel `recordLastFetch('<mod>', ...)`
+  cabang live-fetch sukses, pola sama pos-client):
+  member-client (+2), produk-client (+2), koperasi-client (+2),
+  zakat-client (+3).
+  (e) `scripts/test-p15b-queue.ts` BARU (135 baris, suite #36, 17
+  assert, HERMETIS: mock Map localStorage + SSR null store: key
+  beku P13.1, readPendingCount 7 skenario + read-only spy,
+  round-trip stempel, null store no-op, paritas syncOf <->
+  confidence.syncLabel) + `package.json` (script test:p15b-queue
+  + chain test:all 35 -> 36).
+  (f) `scripts/test-offline-status.ts` (-21): terkoordinasi dgn
+  (a): hapus import + 4 asersi `lastFetchLabel` (37 -> 33).
+- **Gate lulus (14 Okt)**: tsc --noEmit EXIT 0; test:all 36/36
+  ALL_PASS (suite #35 = 33/33, suite #36 = 17/17); npm run gate
+  EXIT 0 (next build); 0 non-ASCII di lib; frozen tak tersentuh
+  (public/sw.js, V1 laporan-admin-client.tsx, src/lib/coop.ts);
+  TANPA perubahan skema (v29 intact); zero fiqih impact.
+- **Deviation diterima**: KOSMETIK SAJA -- 1 baris em-dash di
+  pos-client ("- " -> "-- "), bagian file yang sama.
+- **STATE**: LEPAS (dual-push terverifikasi: origin/master =
+  origin/main = `f907694`; record ini = commit C2).
+- **NEXT**: P15-B audit confidence exhaustive (B2+) menunggu
+  definisi scope Gus Fi; Wave 7 fitur menyusul.
+
 ## 2026-10-13
 ### P13 LEPAS -- Health Center `/admin/health` (admin-only, 7 kartu)
 (13 Okt 2026; ACC Gus Fi via DeepSeek: "GO COMMIT" -- audit diff
