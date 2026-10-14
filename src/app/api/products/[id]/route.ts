@@ -191,5 +191,5 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     fieldChanges: { name: { before: prod.name, after: null } },
     req: _req,
   });
-  return NextResponse.json({ ok: true, message: 'Produk berhasil dihapus' });
+  return NextResponse.json({ ok: true, message: 'Produk dihapus' });
 }

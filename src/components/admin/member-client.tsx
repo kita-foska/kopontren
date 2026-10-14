@@ -229,7 +229,7 @@ export function MemberClient() {
             body: JSON.stringify(form),
           });
       if (r.ok) {
-        showToast(form.id ? 'Data member diperbarui' : 'Member baru berhasil didaftarkan');
+        showToast(form.id ? 'Data member diperbarui' : 'Member baru didaftarkan');
         setShow(false);
         await load(qDeb);
       } else {

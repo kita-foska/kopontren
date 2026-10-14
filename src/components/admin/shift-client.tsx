@@ -241,7 +241,7 @@ export function ShiftClient({ isAdmin }: { isAdmin: boolean }) {
       {canMore && (
         <div className="p-1 text-center">
           <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? 'Memuat…' : 'Muat shift lama lainnya'}
+            {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
           </Button>
         </div>
       )}

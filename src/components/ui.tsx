@@ -879,7 +879,7 @@ export function PageSkeleton() {
           />
         ))}
       </div>
-      <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Memuat data…</p>
+      <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Memuat…</p>
     </div>
   );
 }

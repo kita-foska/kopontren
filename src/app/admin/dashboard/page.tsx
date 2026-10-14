@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { canAccess, currentUser, roleHome } from '@/lib/auth';
 import { db } from '@/db';
 import { kpiDelta, rp, startOfDayJakarta } from '@/lib/format';
+import { dataPerLabel, wibTime } from '@/lib/confidence';
 import { Shell } from '@/components/shell';
 import { LowStockClient } from '@/components/admin/low-stock-client';
 import { ActivityFeed, type FeedItem, type KpiMover } from '@/components/activity-feed';
@@ -232,7 +233,8 @@ export default async function AdminDashboardPage() {
               {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
                 new Date()
               )}{' '}
-              · Ringkasan operasional real-time Kopontren Al Ittihad
+              · {dataPerLabel(wibTime(new Date().toISOString()))}
+              · Ringkasan operasional Kopontren Al Ittihad
             </p>
           </div>
           <div className="flex items-center gap-2">

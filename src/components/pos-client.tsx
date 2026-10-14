@@ -18,6 +18,7 @@ import {
 import { rp, rpShort, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
+import { syncLabel, wibTimeSec } from '@/lib/confidence';
 import { useHotkeys } from '@/lib/useHotkeys';
 import { effectiveWholesalePrice, parseWholesaleJson } from '@/lib/wholesale';
 import { T } from '@/lib/tokens';
@@ -312,6 +313,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [offlineQueue, setOfflineQueue] = useState<QueuedSale[]>(() => loadQueue());
   const [flushing, setFlushing] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  // P15-A CONFIDENCE: stempel sinkron terakhir (ISO) utk label "Tersinkron
+  // HH:MM:SS WIB" -- terisi tiap transaksi tersimpan & antrean flush habis.
+  const [lastSync, setLastSync] = useState<string | null>(null);
   const customerRef = useRef<HTMLInputElement>(null);
   const receivedRef = useRef<HTMLInputElement>(null);
   const queueRef = useRef<QueuedSale[]>(offlineQueue);
@@ -785,12 +789,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       }
       return;
     }
+    // P15-A CONFIDENCE: transaksi tersimpan = sudah tersinkron ke server
+    // (baru atau duplikat) -- stempel waktu utk label "Tersinkron ... WIB".
+    setLastSync(new Date().toISOString());
     if (r.data.deduped) showToast('Transaksi sudah tersinkron sebelumnya (tanpa duplikat).');
     // UX-8D (keputusan 8): penjualan sengaja TIDAK di-gate shift -- kasir tetap
     // bisa melayani walau lupa buka shift; tapi beri peringatan non-blocking
     // bahwa transaksi ini tidak masuk rekap shift (bisa dicatat manual nanti).
     if (currentShift === null)
-      showToast('Transaksi berhasil, tetapi shift belum dibuka - transaksi ini tidak masuk rekap shift.');
+      showToast('Transaksi tercatat, tetapi shift belum dibuka - transaksi ini tidak masuk rekap shift.');
     const saved = r.data.sale;
     if (saved) {
       setReceipt({
@@ -855,8 +862,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setFlushing(false);
     load();
     loadShift();
-    if (remaining.length === 0 && q.length > 0)
-      showToast('Semua transaksi offline berhasil tersinkron');
+    if (remaining.length === 0 && q.length > 0) {
+      // P15-A CONFIDENCE: antrean kosong = sinkron -- stempel waktu + kata
+      // kerja hasil ("tersinkron", tanpa "berhasil").
+      setLastSync(new Date().toISOString());
+      showToast('Semua transaksi offline tersinkron');
+    }
   }
 
   // Deteksi offline/online: sinkron otomatis saat internet pulih.
@@ -1108,7 +1119,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       body: JSON.stringify({ label: shiftLabel || 'Shift Pagi/Siang' }),
     });
     if (r.ok) {
-      showToast('Shift kasir berhasil dibuka');
+      showToast('Shift kasir dibuka');
       setShiftModalOpen(false);
       setShiftLabel('');
       loadShift();
@@ -1126,7 +1137,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     if (r.ok && r.data?.summary) {
       setClosingSummary(r.data.summary);
       setCurrentShift(null);
-      showToast('Shift berhasil ditutup & direkap');
+      showToast('Shift ditutup & direkap');
     } else {
       showToast(r.error || 'Gagal menutup shift', 'error');
     }
@@ -1192,7 +1203,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       change: receipt.change,
     });
     navigator.clipboard.writeText(text);
-    showToast('Teks struk berhasil disalin ke clipboard');
+    showToast('Teks struk disalin ke clipboard');
   }
 
   // Fix 1: sticky bottom bar (mobile) -- ketuk bar -> scroll halus ke
@@ -1281,7 +1292,15 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           className="flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300"
         >
           <Radio className="h-4 w-4 shrink-0" />
-          OFFLINE -- data mungkin tidak terbaru (data per {fmtDateTime(cacheInfo.at)}).
+          OFFLINE -- data per {wibTimeSec(cacheInfo.at) ?? '-'} WIB (cache, mungkin tidak terbaru).
+        </div>
+      )}
+      {/* P15-A CONFIDENCE: label sinkron -- antrean kosong + stempel sinkron
+          terakhir = chip "Tersinkron HH:MM:SS WIB". */}
+      {offlineQueue.length === 0 && lastSync && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+          <Check className="h-4 w-4 shrink-0" />
+          Tersinkron {wibTimeSec(lastSync) ?? '-'} WIB
         </div>
       )}
       {/* Antrean transaksi offline: sinkron otomatis saat internet pulih */}
@@ -1295,7 +1314,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
           <span className="inline-flex items-center gap-1.5">
             <Zap className="h-3.5 w-3.5 shrink-0" />
-            {offlineQueue.length} transaksi offline menunggu sinkronisasi...
+            {syncLabel(offlineQueue.length)}
           </span>
           <Button variant="amber" size="sm"
             onClick={() => void flushQueue()}
@@ -1931,7 +1950,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       {/* Modern Thermal Receipt Modal */}
       <Modal
         open={!!receipt}
-        title="Transaksi Berhasil Disimpan"
+        title="Transaksi Disimpan"
         onClose={() => setReceipt(null)}
         footer={
           <div className="w-full space-y-2">
@@ -2344,7 +2363,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       {/* Closing Shift Summary Modal */}
       <Modal
         open={!!closingSummary}
-        title="Rekap Shift Berhasil Ditutup"
+        title="Rekap Shift Ditutup"
         onClose={() => setClosingSummary(null)}
         footer={
           <Button variant="primary" onClick={() => setClosingSummary(null)}>

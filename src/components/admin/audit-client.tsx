@@ -292,7 +292,7 @@ export function AuditClient() {
       {canMore && (
         <div className="p-1 text-center">
           <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? 'Memuat…' : 'Muat lebih banyak log'}
+            {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
           </Button>
         </div>
       )}

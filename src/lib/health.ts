@@ -62,23 +62,11 @@ export type HealthInput = {
   nowIso: string;
 };
 
-const MS_PER_DAY = 86_400_000;
+// P15-A: umur/label umur kini satu sumber di confidence.ts (famili label
+// FRESHNESS) -- health.ts mendelegasikan agar seluruh aplikasi seragam.
+import { ageDays, ageLabel } from './confidence.ts';
 
-/** Umur (hari) utk waktu ISO; null bila kosong/tak valid; masa depan = 0. */
-export function ageDays(iso: string | null, nowIso: string): number | null {
-  if (!iso) return null;
-  const t = Date.parse(iso);
-  if (Number.isNaN(t)) return null;
-  return Math.max(0, Math.floor((Date.parse(nowIso) - t) / MS_PER_DAY));
-}
-
-/** Label umur komunikatif (P15): "Hari ini" / "N hari lalu". */
-export function ageLabel(days: number | null): string {
-  if (days === null) return 'Belum ada catatan';
-  if (days === 0) return 'Hari ini';
-  if (days === 1) return '1 hari lalu';
-  return days + ' hari lalu';
-}
+export { ageDays, ageLabel };
 
 /** Tanggal pendek ISO -> "YYYY-MM-DD" (tanpa format locale, hermetis). */
 export function shortDate(iso: string | null): string {

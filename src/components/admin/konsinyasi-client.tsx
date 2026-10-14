@@ -647,7 +647,7 @@ export function KonsinyasiClient() {
       {canMore && (
         <div className="p-1 text-center">
           <Button variant="ghost" size="sm" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? 'Memuat...' : 'Muat riwayat lebih lama'}
+            {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
           </Button>
         </div>
       )}

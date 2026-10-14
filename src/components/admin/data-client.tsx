@@ -145,7 +145,7 @@ export function DataClient() {
         const text = await file.text();
         const r = await api('/api/backup', { method: 'POST', body: text });
         setBusy('');
-        if (r.ok) showToast('Backup berhasil diimport');
+        if (r.ok) showToast('Backup diimport');
         else showToast(r.error || 'Import gagal', 'error');
       },
     });
@@ -349,7 +349,7 @@ export function DataClient() {
           {canMore && (
             <div className="p-1 text-center">
               <Button variant="ghost" size="sm" onClick={loadMoreLogs} disabled={loadingMore}>
-                {loadingMore ? 'Memuat…' : 'Muat lebih banyak log'}
+                {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
               </Button>
             </div>
           )}
