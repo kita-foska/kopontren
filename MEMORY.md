@@ -193,6 +193,37 @@ via DeepSeek: audit 14 Okt LULUS)
 - **STATE**: LEPAS (dual-push terverifikasi: origin/master =
   origin/main = `ab013c4`; record ini = commit C2).
 - **NEXT**: Foto produk (Wave 7 #9) -- audit menyusul.
+### FOTO LEPAS -- Foto produk (URL manual) (C1 `d381353`, 16 Okt 2026;
+ACC Gus Fi via DeepSeek: audit 16 Okt LULUS)
+- **Scope (Wave 7 #9)**: field `image_url` di form produk + thumbnail
+  kartu POS + kolom tabel admin. Opsi A: URL manual (bukan
+  upload). Additive only -- TIDAK mengubah logika transaksi, skema
+  (v29), atau file fiqih. Kolom `image_url` sudah ada (v29), tanpa
+  migration.
+- **Commit C1 `d381353`** "feat(ui): foto produk -- URL manual (form +
+  POS card)" (4 file, +75/-25; dual-push master+main terverifikasi
+  `git ls-remote` = `d381353`):
+  (a) `src/app/api/products/route.ts`: POST +`image_url` (clamp
+  500 char, prevent DB bloat).
+  (b) `src/app/api/products/[id]/route.ts`: PUT +`image_url` +
+  audit trail.
+  (c) `src/components/admin/produk-client.tsx`: form field
+  "Foto produk (URL)" + emptyForm + type + thumbnail tabel.
+  (d) `src/components/pos-client.tsx`: card thumbnail 48x48
+  (lazy + async + referrerPolicy no-referrer) + fallback icon
+  Package bila kosong.
+- **Gate lulus (16 Okt)**: tsc --noEmit EXIT 0; test:inflight
+  11/11; test:split 22/22; test:report-rows 31/31; 0 non-ASCII;
+  frozen tak tersentuh (public/sw.js, V1 laporan-admin-client.tsx,
+  src/lib/coop.ts); TANPA perubahan skema (v29 intact); zero
+  fiqih.
+- **STATE**: LEPAS (dual-push terverifikasi: origin/master =
+  origin/main = `d381353`; record ini = commit C2).
+- **NEXT**: Multi-satuan (Wave 7 #10) -- AUDIT read-only
+  menyusul (tashih T1-T5 sudah tercatat; tunggu approval plan
+  Gus Fi).
+
+
 
 
 ## 2026-10-13

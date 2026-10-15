@@ -2441,5 +2441,23 @@ bikin keputusan fiqih baru demi kebutuhan coding.
   (is_consignment=1, stock 1) -> POST /api/sales qty 3 -> 200,
   read-back stock=-2; kontrol: oversell produk biasa tetap ditolak.
 - Scheduling: W5 penguatan ATAU wave baru -- menunggu ruling Gus Fi.
+
+## WAVE 7 (15-16 Okt 2026, fitur Gus Fi)
+- [x] **Wave 7 #1-#8** -- Counter, Grid, P13, P15-A, P14, P15-B,
+      Top-10, Numpad -- LEPAS (lihat MEMORY.md entri 14-15 Okt).
+- [x] **Wave 7 #9 -- Foto Produk** -- LEPAS 16 Okt (C1 `d381353`,
+      C2 = record ini; ACC Gus Fi via DeepSeek audit 16 Okt LULUS):
+      URL manual (form + POS card + tabel admin + API POST/PUT);
+      4 file +75/-25; additive only; no schema change (v29
+      intact); 500-char clamp; PWA-safe (lazy/async/no-referrer);
+      fallback icon Package. Detail: MEMORY.md seksi "FOTO LEPAS".
+- [ ] **Wave 7 #10 -- Multi-satuan (AUDIT read-only)** -- PENDING:
+      Tashih T1-T5 sudah tercatat (HPP referensi base unit kg;
+      margin = penjualan - HPP; zakat satuan dasar; parsial sisa
+      tetap; konversi otomatis). Cline audit read-only (db.ts
+      schema, produk/POS client, HPP/margin/zakat computation,
+      reports) + proposal scope + skema v30. TUNGGU approval
+      Gus Fi sebelum implementasi.
+
   **TIDAK mulai eksekusi sebelum approval.**
 
