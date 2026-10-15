@@ -144,6 +144,36 @@ via DeepSeek: audit 14 Okt LULUS)
 - **NEXT**: P15-B audit confidence exhaustive (B2+) menunggu
   definisi scope Gus Fi; Wave 7 fitur menyusul.
 
+### Q46 LEPAS -- Top-10 (top kasir + top transaksi) (C1 `ef351ae`,
+15 Okt 2026; ACC Gus Fi via DeepSeek: ruling 14 Okt GO CODE)
+- **Scope (Q46, TODO L1315)**: top kasir + top transaksi di pengurus
+  dashboard (Opsi 1: minimal, UI only, frozen-safe; top produk =
+  sync only). Murni read-only insight -- TIDAK mengubah transaksi,
+  skema (v29), atau file fiqih.
+- **Commit C1 `ef351ae`** "feat(ui): Q46 top-10 -- top kasir + top
+  transaksi (pengurus dashboard)" (2 file, +159/-2; dual-push
+  master+main terverifikasi `git ls-remote` = `ef351ae`):
+  (a) `src/app/api/reports/route.ts` (+58): topKasirRaw (LEFT JOIN
+  users; GROUP BY COALESCE(u.id,0); null -> "Tanpa kasir") +
+  topTxRaw (ORDER BY total DESC LIMIT 10) + kasir batch IN(...)
+  (pola /api/sales, N+1 prevention) + payload +2 field
+  (top_kasir, top_transaksi; additive -- konsumen lama takpecah).
+  (b) `src/components/pengurus-dashboard-client.tsx` (+82): type
+  TopKasir/TopTransaksi/ReportData; 2 card baru (grid md:2) --
+  "Top Kasir" (rank, N transaksi, omzet) + "Transaksi Terbesar"
+  (tanggal+status, kasir, pelanggan, metode, total); sync period
+  preset 7/30/365; reuse Table/Td/Th/Trow, rp(), payMethodLabel,
+  fmtDate; empty state "Belum ada penjualan."
+- **Gate lulus (15 Okt)**: tsc --noEmit EXIT 0; test-report-rows
+  31/31; test-laporan 197/197; test-golden 70/70; gate
+  (check-route-exports) OK; 0 non-ASCII di added lines; frozen tak
+  tersentuh (public/sw.js, V1 laporan-admin-client.tsx,
+  src/lib/coop.ts); TANPA perubahan skema (v29 intact); zero fiqih.
+- **STATE**: LEPAS (dual-push terverifikasi: origin/master =
+  origin/main = `ef351ae`; record ini = commit C2).
+- **NEXT**: Numpad POS (Wave 7 item #8) -- audit + plan menyusul.
+
+
 ## 2026-10-13
 ### P13 LEPAS -- Health Center `/admin/health` (admin-only, 7 kartu)
 (13 Okt 2026; ACC Gus Fi via DeepSeek: "GO COMMIT" -- audit diff

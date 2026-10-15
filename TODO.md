@@ -1312,7 +1312,7 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [ ] Q43 Peringatan risiko -- stok menipis, piutang tak tertagih, kas menipis, diskon besar.
 - [ ] Q44 Perbandingan periode -- hari vs kemarin, minggu vs minggu sebelumnya, bulan vs bulan sebelumnya.
 - [ ] Q45 Target vs aktual -- omzet, laba, target kas harian.
-- [ ] Q46 Top produk / top kasir / top transaksi -- ranking berguna.
+- [x] Q46 Top produk / top kasir / top transaksi -- ranking berguna. -- SELESAI 15 Okt 2026 (C1 `ef351ae` dual-push master+main; top kasir + top transaksi di pengurus dashboard, Opsi 1 minimal; record di MEMORY.md).
 - [ ] Q47 Trend sederhana -- grafik tidak berlebihan, tetap komunikatif.
 - [ ] Q48 "Klik angka → detail" -- semua dashboard bisa di-drill-down.
 
