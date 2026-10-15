@@ -170,6 +170,8 @@ type Product = {
   /** Grosir v1: tier per produk, JSON string [{min_qty, discount_percent}]
    *  (subquery kolom `wholesale` di /api/products; '[]' bila tak ada). */
   wholesale?: string;
+  /** Foto produk (Opsi A: URL manual, max 500 char). */
+  image_url?: string;
 };
 type CartLine = { product: Product; qty: number; price: number; manual?: boolean };
 
@@ -1436,12 +1438,30 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       {inCart.qty}
                     </span>
                   )}
-                  <p className="line-clamp-2 text-sm font-bold leading-tight text-slate-900 dark:text-slate-100">
-                    {p.name}
-                  </p>
-                  <div className="mt-1 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>{p.category || 'Umum'}</span>
-                    {p.barcode && <span className="font-mono text-2xs">#{p.barcode}</span>}
+                  <div className="mb-1.5 flex items-start gap-2">
+                    {p.image_url ? (
+                      <img
+                        src={p.image_url}
+                        alt=""
+                        className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-navy-800">
+                        <Package className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-bold leading-tight text-slate-900 dark:text-slate-100">
+                        {p.name}
+                      </p>
+                      <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                        <span>{p.category || 'Umum'}</span>
+                        {p.barcode && <span className="font-mono text-2xs">#{p.barcode}</span>}
+                      </div>
+                    </div>
                   </div>
                   <div className="mt-2.5 flex items-end justify-between">
                     <div className="flex items-baseline gap-1.5">

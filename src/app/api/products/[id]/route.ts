@@ -28,6 +28,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         unit: string;
         category: string;
         is_consignment: number;
+        image_url?: string;
       }
     | undefined;
   if (!prod) return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 });
@@ -108,11 +109,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   // W5.2 NEG-1: flag titipan ikut form update; bila klien lama tidak
   // mengirim field, nilai lama dipertahankan (tanpa clobber).
   const newConsignment = b.is_consignment !== undefined ? (b.is_consignment ? 1 : 0) : prod.is_consignment;
+  const newImageUrl = b.image_url !== undefined ? String(b.image_url).trim().slice(0, 500) : (prod.image_url ?? '');
   await d
     .prepare(
-      `UPDATE products SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, barcode = ?, is_consignment = ? WHERE id = ?`
+      `UPDATE products SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, barcode = ?, is_consignment = ?, image_url = ? WHERE id = ?`
     )
-    .run(newName, newCategory, newUnit, newBasePrice, newCostPrice, newBarcode, newConsignment, prod.id);
+    .run(newName, newCategory, newUnit, newBasePrice, newCostPrice, newBarcode, newConsignment, newImageUrl, prod.id);
   invalidate('products:');
   // Audit trail diff per-field: hanya field yang benar-benar berubah
   // yang tercatat (mis. "harga 10000 -> 12000").
@@ -129,6 +131,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     changes.barcode = { before: prod.barcode, after: newBarcode };
   if (newConsignment !== prod.is_consignment)
     changes.is_consignment = { before: prod.is_consignment, after: newConsignment };
+  if (newImageUrl !== (prod.image_url ?? ''))
+    changes.image_url = { before: prod.image_url ?? '', after: newImageUrl };
   await logAudit({
     userId: user.id,
     userName: user.display_name,

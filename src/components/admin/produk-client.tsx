@@ -7,7 +7,7 @@ import { rp } from '@/lib/format';
 import { parseWholesaleJson } from '@/lib/wholesale';
 import { readSavedView, writeSavedView, SAVEDVIEW_KEYS } from '@/lib/saved-view';
 import { recordLastFetch } from '@/lib/offline-status';
-import { Download } from 'lucide-react';
+import { Download, Package } from 'lucide-react';
 
 type Product = {
   id: number;
@@ -24,6 +24,8 @@ type Product = {
   /** Grosir v1: tier per produk, JSON string [{min_qty, discount_percent}]
    *  (subquery kolom `wholesale` di /api/products; '[]' bila tak ada). */
   wholesale?: string;
+  /** Foto produk (Opsi A: URL manual, max 500 char). */
+  image_url?: string;
 };
 type Resp = { products: Product[]; categories?: string[] };
 /** Baris tier grosir yang sedang disusun di form (belum disimpan). */
@@ -45,6 +47,7 @@ const emptyForm = {
   active: 1,
   barcode: '',
   is_consignment: 0,
+  image_url: '',
 };
 
 export function ProdukClient() {
@@ -132,7 +135,7 @@ export function ProdukClient() {
 
   function openEdit(p?: Product) {
     if (p) {
-      setForm({ ...p, barcode: p.barcode ?? '', is_consignment: p.is_consignment === 1 ? 1 : 0 });
+      setForm({ ...p, barcode: p.barcode ?? '', is_consignment: p.is_consignment === 1 ? 1 : 0, image_url: p.image_url ?? '' });
       // Muat tier grosir dari kolom `wholesale` produk (diisi subquery
       // /api/products) -- bila field tidak ada (klien/cache lama), fetch
       // langsung dari endpoint prices supaya form tetap utuh.
@@ -560,19 +563,37 @@ export function ProdukClient() {
                     />
                   </Td>
                   <Td>
-                    <p className="font-bold text-slate-900 dark:text-slate-100">{p.name}</p>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                      <span>{p.category || 'Tanpa kategori'}</span>
-                      <span>|</span>
-                      <span>{p.unit}</span>
-                      {p.barcode && (
-                        <>
-                          <span>|</span>
-                          <span className="font-mono rounded bg-slate-100 px-1.5 py-0.5 text-2xs text-slate-700 dark:bg-navy-700 dark:text-slate-300">
-                            {p.barcode}
-                          </span>
-                        </>
+                    <div className="flex items-start gap-2">
+                      {p.image_url ? (
+                        <img
+                          src={p.image_url}
+                          alt=""
+                          className="h-8 w-8 shrink-0 rounded object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-slate-100 dark:bg-navy-800">
+                          <Package className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                        </div>
                       )}
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 dark:text-slate-100">{p.name}</p>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                          <span>{p.category || 'Tanpa kategori'}</span>
+                          <span>|</span>
+                          <span>{p.unit}</span>
+                          {p.barcode && (
+                            <>
+                              <span>|</span>
+                              <span className="font-mono rounded bg-slate-100 px-1.5 py-0.5 text-2xs text-slate-700 dark:bg-navy-700 dark:text-slate-300">
+                                {p.barcode}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </Td>
                   <Td className="font-bold text-slate-900 dark:text-slate-100">{rp(p.base_price)}</Td>
@@ -787,6 +808,9 @@ export function ProdukClient() {
           })}
           <div className="col-span-2">
             {F('barcode', { label: 'Barcode / Kode SKU (opsional)', ph: 'Scan barcode atau ketik kode unik' })}
+          </div>
+          <div className="col-span-2">
+            {F('image_url', { label: 'Foto produk (URL, opsional)', ph: 'https://...' })}
           </div>
           {form.id === 0 && (
             <div className="col-span-2">
