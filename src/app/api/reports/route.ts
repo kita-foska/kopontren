@@ -92,6 +92,64 @@ export async function GET(req: Request) {
         .all(from)) as { name: string; qty: number; revenue: number }[]
     );
 
+    // Q46 (top-10): top kasir -- COUNT + SUM(total) per kasir. LEFT JOIN
+    // users; kasir null (walk-in) -> "Tanpa kasir". Read-only, ikut cache
+    // 60 detik di atas (dibuang oleh invalidate('reports:') route tulis).
+    const topKasirRaw = (
+      (await d
+        .prepare(
+          `SELECT COALESCE(NULLIF(u.display_name, ''), u.username, 'Tanpa kasir') name,
+                  COUNT(*) c, COALESCE(SUM(s.total), 0) t
+           FROM sales s
+           LEFT JOIN users u ON u.id = s.kasir_id
+           WHERE s.created_at >= ?
+           GROUP BY COALESCE(u.id, 0)
+           ORDER BY t DESC
+           LIMIT 10`
+        )
+        .all(from)) as { name: string; c: number; t: number }[]
+    );
+    // Q46 (top-10): transaksi terbesarpun per periode (insight drill-down).
+    // Label kasir di-batch dengan IN (...) -- pencegahan N+1, pola yang
+    // sama dengan route /api/sales.
+    const topTxRaw = (
+      (await d
+        .prepare(
+          `SELECT id, kasir_id, customer, pay_method, status, total, created_at
+           FROM sales
+           WHERE created_at >= ?
+           ORDER BY total DESC
+           LIMIT 10`
+        )
+        .all(from)) as {
+        id: number;
+        kasir_id: number | null;
+        customer: string;
+        pay_method: string;
+        status: string;
+        total: number;
+        created_at: string;
+      }[]
+    );
+    const txKasirIds = [...new Set(topTxRaw.map((r) => r.kasir_id).filter((v): v is number => !!v))];
+    const txKasirRows = (
+      txKasirIds.length
+        ? (await d
+            .prepare(
+              `SELECT id, username, display_name FROM users WHERE id IN (${Array(
+                txKasirIds.length
+              )
+                .fill('?')
+                .join(', ')})`
+            )
+            .all(...txKasirIds)) as {
+            id: number;
+            username: string;
+            display_name: string | null;
+          }[]
+        : []
+    );
+
     const cash_net = sales.t + cashIn - purchases - expenses - cashOut;
 
     // Series penjualan per-hari (bucket hari WIB via shift '+7 hours') untuk
@@ -135,6 +193,21 @@ export async function GET(req: Request) {
       cash_net,
       by_method: byMethod,
       top,
+      // Q46 (top-10): top kasir + transaksi terbesarpun (additive;
+      // konsumen payload lama takpecah -- field enggal namung nambah).
+      top_kasir: topKasirRaw.map((k) => ({ name: k.name, count: k.c, total: k.t })),
+      top_transaksi: topTxRaw.map((r) => {
+        const u = txKasirRows.find((x) => x.id === r.kasir_id);
+        return {
+          id: r.id,
+          kasir: r.kasir_id && u ? u.display_name || u.username : 'Tanpa kasir',
+          customer: r.customer,
+          pay_method: r.pay_method,
+          status: r.status,
+          total: r.total,
+          created_at: r.created_at,
+        };
+      }),
       daily,
       stores,
     };

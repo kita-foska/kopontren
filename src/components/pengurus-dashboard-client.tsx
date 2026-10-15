@@ -20,6 +20,19 @@ const PERIODS: { days: number; label: string }[] = [
   { days: 365, label: '1 tahun' },
 ];
 
+// Q46 (top-10): field enggal /api/reports (additive saking ReportPayload).
+type TopKasir = { name: string; count: number; total: number };
+type TopTransaksi = {
+  id: number;
+  kasir: string;
+  customer: string;
+  pay_method: string;
+  status: string;
+  total: number;
+  created_at: string;
+};
+type ReportData = ReportPayload & { top_kasir: TopKasir[]; top_transaksi: TopTransaksi[] };
+
 function downloadBlob(content: BlobPart, filename: string, mime: string) {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -36,7 +49,7 @@ function stamp(): string {
 
 export function PengurusDashboardClient() {
   const [days, setDays] = useState(30);
-  const [data, setData] = useState<ReportPayload | null>(null);
+  const [data, setData] = useState<ReportData | null>(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState('');
   const [toast, setToast, clearToast, toastTone] = useToast();
@@ -45,7 +58,7 @@ export function PengurusDashboardClient() {
     setErr('');
     // apiRetry: GET read-only load awal/refresh dashboard — tahan cold
     // start Vercel (1 retry, backoff 800ms). Aksi tombol tetap api().
-    const r = await apiRetry<ReportPayload>('/api/reports?days=' + n);
+    const r = await apiRetry<ReportData>('/api/reports?days=' + n);
     if (!r.ok) setErr(r.error || 'Gagal memuat laporan.');
     else setData(r.data);
   }, []);
@@ -268,6 +281,77 @@ export function PengurusDashboardClient() {
               <p className="text-lg font-extrabold">{rp(data.cash_net)}</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Q46 (top-10): top kasir + transaksi terbesarpun, sinkron preset periode */}
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="card p-4">
+          <h2 className="mb-2 font-bold">Top Kasir</h2>
+          {data.top_kasir.length === 0 ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada penjualan.</p>
+          ) : (
+            <Table>
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-navy-700">
+                  <Th>Kasir</Th>
+                  <Th className="text-right">Transaksi</Th>
+                  <Th className="text-right">Omzet</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.top_kasir.map((k, i) => (
+                  <Trow key={k.name}>
+                    <Td>
+                      <span className="mr-1.5 text-slate-500">{i + 1}.</span>
+                      {k.name}
+                    </Td>
+                    <Td className="text-right font-semibold">{k.count}</Td>
+                    <Td className="text-right font-bold text-accent-500 dark:text-accent-300">
+                      {rp(k.total)}
+                    </Td>
+                  </Trow>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </div>
+
+        <div className="card p-4">
+          <h2 className="mb-2 font-bold">Transaksi Terbesar</h2>
+          {data.top_transaksi.length === 0 ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada penjualan.</p>
+          ) : (
+            <Table>
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-navy-700">
+                  <Th>Tanggal</Th>
+                  <Th>Kasir</Th>
+                  <Th>Pelanggan</Th>
+                  <Th>Metode</Th>
+                  <Th className="text-right">Total</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.top_transaksi.map((t) => (
+                  <Trow key={t.id}>
+                    <Td className="whitespace-nowrap">
+                      <div className="text-xs">{fmtDate(t.created_at)}</div>
+                      <div className="text-2xs text-slate-500 dark:text-slate-400">
+                        {t.status === 'unreported' ? 'Belum dicatat' : 'Tercatat'}
+                      </div>
+                    </Td>
+                    <Td>{t.kasir}</Td>
+                    <Td>{t.customer || '-'}</Td>
+                    <Td>{payMethodLabel(t.pay_method)}</Td>
+                    <Td className="text-right font-bold text-accent-500 dark:text-accent-300">
+                      {rp(t.total)}
+                    </Td>
+                  </Trow>
+                ))}
+              </tbody>
+            </Table>
+          )}
         </div>
       </div>
 
