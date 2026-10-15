@@ -1313,6 +1313,7 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [ ] Q44 Perbandingan periode -- hari vs kemarin, minggu vs minggu sebelumnya, bulan vs bulan sebelumnya.
 - [ ] Q45 Target vs aktual -- omzet, laba, target kas harian.
 - [x] Q46 Top produk / top kasir / top transaksi -- ranking berguna. -- SELESAI 15 Okt 2026 (C1 `ef351ae` dual-push master+main; top kasir + top transaksi di pengurus dashboard, Opsi 1 minimal; record di MEMORY.md).
+- [x] Numpad POS mobile (Uang Diterima) -- Wave 7 #8. -- SELESAI 15 Okt 2026 (C1 `ab013c4` dual-push master+main; PosNumpad 3x4 grid mobile-only additive; record di MEMORY.md).
 - [ ] Q47 Trend sederhana -- grafik tidak berlebihan, tetap komunikatif.
 - [ ] Q48 "Klik angka → detail" -- semua dashboard bisa di-drill-down.
 

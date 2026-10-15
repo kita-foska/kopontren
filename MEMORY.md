@@ -171,7 +171,28 @@ via DeepSeek: audit 14 Okt LULUS)
   src/lib/coop.ts); TANPA perubahan skema (v29 intact); zero fiqih.
 - **STATE**: LEPAS (dual-push terverifikasi: origin/master =
   origin/main = `ef351ae`; record ini = commit C2).
-- **NEXT**: Numpad POS (Wave 7 item #8) -- audit + plan menyusul.
+- **NEXT**: Numpad POS (Wave 7 item #8) -- LEPAS (lihat di bawah).
+
+### NUMPAD LEPAS -- POS numpad mobile (Uang Diterima) (C1 `ab013c4`,
+15 Okt 2026; ACC Gus Fi via DeepSeek: ruling 15 Okt GO CODE)
+- **Scope (Wave 7 #8)**: on-screen numpad utk input nominal di POS
+  (mobile only). Opsi 1 minimal: Uang Diterima wae. Murni UX --
+  TIDAK mengubah logika transaksi, skema (v29), atau file fiqih.
+- **Commit C1 `ab013c4`** "feat(ui): POS numpad (mobile) -- Uang
+  Diterima" (1 file, +37; dual-push master+main terverifikasi `git
+  ls-remote` = `ab013c4`):
+  (a) `src/components/pos-client.tsx` (+37): `PosNumpad`
+  component (3x4 grid: 1-9, C clear, 0, < backspace; h-12
+  buttons, grid-cols-3, gap-1.5, dark mode) + render di
+  section Cash (`lg:hidden`). Additive only: quick buttons
+  (SET) tak berubah, numpad (APPEND) baru.
+- **Gate lulus (15 Okt)**: tsc --noEmit EXIT 0; test:inflight
+  11/11; test:split 22/22; test:report-rows 31/31; 0 non-ASCII;
+  frozen tak tersentuh (public/sw.js, V1 laporan-admin-client.tsx,
+  src/lib/coop.ts); TANPA perubahan skema (v29 intact); zero fiqih.
+- **STATE**: LEPAS (dual-push terverifikasi: origin/master =
+  origin/main = `ab013c4`; record ini = commit C2).
+- **NEXT**: Foto produk (Wave 7 #9) -- audit menyusul.
 
 
 ## 2026-10-13
