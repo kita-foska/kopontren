@@ -143,7 +143,7 @@ export async function POST(req: Request) {
     discount?: number;
     redeem?: number;
     client_ref?: string;
-    items?: { product_id: number; qty: number; unit_price?: number; discount?: number }[];
+    items?: { product_id: number; qty: number; unit_price?: number; discount?: number; unit_name?: string; qty_per_base?: number }[];
   };
   const items = Array.isArray(b.items) ? b.items : [];
   if (items.length === 0)
@@ -234,8 +234,8 @@ export async function POST(req: Request) {
       // W5.2 NEG-1: barang titipan (is_consignment = 1) boleh negatif --
       // decrement TANPA guard (stok = indikator titipan, bukan stok kita).
       const decFreeStmt = d.prepare('UPDATE products SET stock = stock - ? WHERE id = ?');
-      // [qty, name, pid, unit, price, sub, lineDisc, cost]
-      const insertItems: [number, string, number, string, number, number, number, number][] = [];
+      // [qty, name, pid, unit, price, sub, lineDisc, cost, unitName, qtyPerBase]
+      const insertItems: [number, string, number, string, number, number, number, number, string, number][] = [];
       for (const it of items) {
         const qty = Math.max(1, Math.floor(Number(it.qty) || 0));
         const prod = (await prodStmt.get(Number(it.product_id))) as
@@ -248,26 +248,62 @@ export async function POST(req: Request) {
               stock: number;
               active: number;
               is_consignment: number;
+              pack_units?: string;
             }
           | undefined;
         if (!prod || prod.active !== 1)
           throw new Error('Produk tidak tersedia: ' + (prod?.name || it.product_id));
+        // v30 multi-satuan: qty_per_base dari klien (default 1 = satuan dasar).
+        // Validasi: integer >= 1. Bila > 1, verifikasi pack ada di pack_units.
+        let qtyPerBase = Math.max(1, Math.floor(Number(it.qty_per_base) || 1));
+        let unitName = String(it.unit_name || '').trim().slice(0, 32);
+        if (qtyPerBase > 1) {
+          // Verifikasi pack unit tersedia di produk (pack_units JSON).
+          let packList: { unit: string; qty_per_base: number; price: number }[] = [];
+          try {
+            const raw = (prod as Record<string, unknown>).pack_units as string || '';
+            if (raw) packList = JSON.parse(raw) as typeof packList;
+          } catch { /* invalid JSON = treat as no packs */ }
+          const match = packList.find((p) => p.unit === unitName && p.qty_per_base === qtyPerBase);
+          if (!match) {
+            // Pack tidak ditemukan: fallback ke satuan dasar (qtyPerBase=1).
+            qtyPerBase = 1;
+            unitName = '';
+          }
+        } else {
+          unitName = '';
+        }
+        // T1+T5: stok dibutuhkan = qty * qty_per_base (konversi otomatis).
+        const stockNeeded = qty * qtyPerBase;
         // W5.2 NEG-1: barang titipan (is_consignment=1) BOLEH dijual saat
         // stok <= 0 (stok negatif = indikator titipan); produk biasa tetap
         // diblokir (oversell = bug inventori).
-        if (prod.stock < qty && prod.is_consignment !== 1)
+        if (prod.stock < stockNeeded && prod.is_consignment !== 1)
           throw new Error('Stok ' + prod.name + ' tidak cukup (sisa ' + prod.stock + ')');
         // Manager may override the price per line; only accept a finite
         // positive value, anything else falls back to the catalog price
         // (kasir: always base price). Prevents negative/NaN manipulation.
+        // v30: bila pack dipilih (unitName non-empty), price default = pack price.
+        let packPrice: number | null = null;
+        if (unitName) {
+          try {
+            const raw = (prod as Record<string, unknown>).pack_units as string || '';
+            if (raw) {
+              const list: { unit: string; qty_per_base: number; price: number }[] = JSON.parse(raw);
+              const found = list.find((p) => p.unit === unitName);
+              if (found) packPrice = found.price;
+            }
+          } catch { /* fallback to base_price */ }
+        }
         const override = Number(it.unit_price);
         const price =
           manager && Number.isFinite(override) && override > 0
             ? Math.floor(override)
-            : prod.base_price;
+            : packPrice !== null ? packPrice : prod.base_price;
         const sub = price * qty;
         subtotal += sub;
-        totalCost += (prod.cost_price || 0) * qty;
+        // T1: HPP pack = cost_price * qty_per_base * qty.
+        totalCost += (prod.cost_price || 0) * qtyPerBase * qty;
         // Per-line discount: manager only, capped at the line total.
         let lineDisc = 0;
         if (manager) {
@@ -275,24 +311,29 @@ export async function POST(req: Request) {
           if (Number.isFinite(dv) && dv > 0) lineDisc = Math.min(Math.floor(dv), sub);
         }
         lineDiscSum += lineDisc;
-        // NEG-1: titipan memakai decrement tanpa guard (boleh negatif).
+        // T4: stok decrement = qty * qty_per_base (konversi ke satuan dasar).
         const decRes =
           prod.is_consignment === 1
-            ? await decFreeStmt.run(qty, prod.id)
-            : await decStmt.run(qty, prod.id, qty);
+            ? await decFreeStmt.run(stockNeeded, prod.id)
+            : await decStmt.run(stockNeeded, prod.id, stockNeeded);
         if (Number(decRes.changes) !== 1)
           throw new Error(
             'Stok ' + prod.name + ' tidak cukup (stok berubah — sisa ' + prod.stock + ')'
           );
-        const insertItemsRow: [number, string, number, string, number, number, number, number] = [
+        // T1: cost_price di sale_items = HPP per unit terjual (pack-aware).
+        const costPerUnit = (prod.cost_price || 0) * qtyPerBase;
+        const displayUnit = unitName || prod.unit;
+        const insertItemsRow: [number, string, number, string, number, number, number, number, string, number] = [
           qty,
           prod.name,
           prod.id,
-          prod.unit,
+          displayUnit,
           price,
           sub,
           lineDisc,
-          prod.cost_price || 0,
+          costPerUnit,
+          unitName,
+          qtyPerBase,
         ];
         insertItems.push(insertItemsRow);
       }
@@ -436,11 +477,11 @@ export async function POST(req: Request) {
         );
       const sid = Number(sale.lastInsertRowid);
       const insItem = d.prepare(
-        `INSERT INTO sale_items (sale_id, product_id, product_name, qty, unit, unit_price, subtotal, discount, cost_price)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO sale_items (sale_id, product_id, product_name, qty, unit, unit_price, subtotal, discount, cost_price, unit_name, qty_per_base)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       );
-      for (const [qty, name, pid, unit, price, sub, lineDisc, cost] of insertItems) {
-        await insItem.run(sid, pid, name, qty, unit, price, sub, lineDisc, cost);
+      for (const [qty, name, pid, unit, price, sub, lineDisc, cost, unitName, qtyPerBase] of insertItems) {
+        await insItem.run(sid, pid, name, qty, unit, price, sub, lineDisc, cost, unitName, qtyPerBase);
       }
       // W1.3 auto-posting GL (gated: settings gl_enabled, default off ->
       // no-op). Entry 'JE-sale-<id>' ditulis DI DALAM tx yang sama dgn

@@ -96,10 +96,28 @@ export async function POST(req: Request) {
       ? Math.floor(Number(b.stock) || 0)
       : Math.max(0, Math.floor(Number(b.stock) || 0));
   const imageUrl = String(b.image_url ?? '').trim().slice(0, 500);
+  // v30 multi-satuan: pack_units JSON array [{unit, qty_per_base, price}].
+  // Validasi: array of objects with string unit + integer qty_per_base >= 1
+  // + integer price >= 0. Kosong/undefined = '' (produk satuan tunggal).
+  let packUnits = '';
+  if (Array.isArray(b.pack_units) && b.pack_units.length > 0) {
+    const validated = b.pack_units
+      .filter((p): p is { unit: string; qty_per_base: number; price: number } =>
+        typeof p === 'object' && p !== null &&
+        typeof (p as Record<string, unknown>).unit === 'string'
+      )
+      .map((p) => ({
+        unit: String(p.unit).trim().slice(0, 32),
+        qty_per_base: Math.max(1, Math.floor(Number(p.qty_per_base) || 1)),
+        price: Math.max(0, Math.floor(Number(p.price) || 0)),
+      }))
+      .filter((p) => p.unit.length > 0);
+    packUnits = validated.length > 0 ? JSON.stringify(validated) : '';
+  }
   const info = await d
     .prepare(
-      `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode, is_consignment, image_url)
-       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`
+      `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode, is_consignment, image_url, pack_units)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`
     )
     .run(
       name,
@@ -110,7 +128,8 @@ export async function POST(req: Request) {
       stockValue,
       barcode,
       isConsignment,
-      imageUrl
+      imageUrl,
+      packUnits
     );
   const id = Number(info.lastInsertRowid);
   await logAudit(user, 'product:create', 'products', id, undefined, {

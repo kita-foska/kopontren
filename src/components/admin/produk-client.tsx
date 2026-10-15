@@ -26,6 +26,8 @@ type Product = {
   wholesale?: string;
   /** Foto produk (Opsi A: URL manual, max 500 char). */
   image_url?: string;
+  /** v30 multi-satuan: JSON string [{unit, qty_per_base, price}]. '' = satuan tunggal. */
+  pack_units?: string;
 };
 type Resp = { products: Product[]; categories?: string[] };
 /** Baris tier grosir yang sedang disusun di form (belum disimpan). */
@@ -34,6 +36,26 @@ type TierDraft = { min_qty: number; discount_percent: number };
 /** Parse kolom `wholesale` produk jadi daftar tier (modul bersama). */
 function parseTiers(raw?: string | null): TierDraft[] {
   return parseWholesaleJson(raw) as TierDraft[];
+}
+/** v30 multi-satuan: baris pack unit di form (belum disimpan). */
+type PackUnitDraft = { unit: string; qty_per_base: number; price: number };
+/** Parse kolom `pack_units` produk jadi daftar pack unit. */
+function parsePackUnits(raw?: string | null): PackUnitDraft[] {
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter((p: unknown) => typeof p === 'object' && p !== null && typeof (p as Record<string, unknown>).unit === 'string')
+      .map((p: Record<string, unknown>) => ({
+        unit: String(p.unit || '').trim().slice(0, 32),
+        qty_per_base: Math.max(1, Math.floor(Number(p.qty_per_base) || 1)),
+        price: Math.max(0, Math.floor(Number(p.price) || 0)),
+      }))
+      .filter((p: PackUnitDraft) => p.unit.length > 0);
+  } catch {
+    return [];
+  }
 }
 
 const emptyForm = {
@@ -83,6 +105,8 @@ export function ProdukClient() {
   // save() HANYA setalah produk tersimpan (produk baru perlu id dulu).
   const [tiers, setTiers] = useState<TierDraft[]>([]);
   const [tiersBusy, setTiersBusy] = useState(false);
+  // v30 multi-satuan: daftar pack unit yang sedang disusun di form modal.
+  const [packUnits, setPackUnits] = useState<PackUnitDraft[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -147,9 +171,12 @@ export function ProdukClient() {
           if (r.ok && r.data?.tiers) setTiers(r.data.tiers);
         })();
       } else setTiers([]);
+      // v30: muat pack units dari kolom `pack_units` produk.
+      setPackUnits(parsePackUnits(p.pack_units));
     } else {
       setForm({ ...emptyForm });
       setTiers([]);
+      setPackUnits([]);
     }
     setShow(true);
   }
@@ -162,14 +189,16 @@ export function ProdukClient() {
     }
     setSaveBusy(true);
     try {
+      // v30: sertakan pack_units di payload (array kosong = hapus semua pack).
+      const payload = { ...form, pack_units: packUnits.length > 0 ? packUnits : [] };
       const r = form.id
         ? await api<{ ok?: boolean; id?: number }>('/api/products/' + form.id, {
             method: 'PUT',
-            body: JSON.stringify(form),
+            body: JSON.stringify(payload),
           })
         : await api<{ ok?: boolean; id?: number }>('/api/products', {
             method: 'POST',
-            body: JSON.stringify(form),
+            body: JSON.stringify(payload),
           });
       if (r.ok) {
         const productId = form.id || Number(r.data?.id);
@@ -215,6 +244,17 @@ export function ProdukClient() {
     const base = Number(form.base_price) || 0;
     const pct = Math.max(0, Math.min(100, Number(t.discount_percent) || 0));
     return Math.round((base * (100 - pct)) / 100);
+  }
+
+  // -- v30 multi-satuan: kelola pack unit di form modal -------------------
+  function addPackUnit() {
+    setPackUnits((pu) => [...pu, { unit: '', qty_per_base: 1, price: 0 }]);
+  }
+  function setPackUnit(i: number, patch: Partial<PackUnitDraft>) {
+    setPackUnits((pu) => pu.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  }
+  function removePackUnit(i: number) {
+    setPackUnits((pu) => pu.filter((_, j) => j !== i));
   }
 
   async function setStock(p: Product) {
@@ -891,6 +931,82 @@ export function ProdukClient() {
                       className="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
                       onClick={() => removeTier(i)}
                       aria-label={`Hapus tier ${i + 1}`}
+                    >
+                      Hapus
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* -- v30 multi-satuan: satuan jual (pack units) -- */}
+          <div className="col-span-2">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                Satuan jual / pack (opsional)
+              </span>
+              <Button variant="ghost" size="sm" onClick={addPackUnit}>
+                + Tambah pack
+              </Button>
+            </div>
+            <p className="mb-2 text-1xs leading-snug text-slate-600 dark:text-slate-400">
+              Tambahkan satuan jual lain (box, lusin, rim). 1 pack = N satuan dasar.
+              Harga pack = harga jual per pack. HPP pack dihitung otomatis
+              (HPP dasar x N). Stok berkurang N per pack terjual.
+            </p>
+            {packUnits.length === 0 ? (
+              <Empty
+                compact
+                text="Belum ada pack unit."
+                ctaLabel="+ Tambah pack"
+                ctaOnClick={addPackUnit}
+              />
+            ) : (
+              <div className="space-y-2">
+                {packUnits.map((pu, i) => (
+                  <div key={i} className="flex items-end gap-2">
+                    <div className="w-24">
+                      <label className="label">Nama pack</label>
+                      <input
+                        className="input"
+                        placeholder="box / lusin / rim"
+                        value={pu.unit}
+                        onChange={(e) => setPackUnit(i, { unit: e.target.value })}
+                      />
+                    </div>
+                    <div className="w-24">
+                      <label className="label">= jumlah dasar</label>
+                      <input
+                        className="input"
+                        type="number"
+                        min={1}
+                        value={pu.qty_per_base === 1 ? '' : pu.qty_per_base}
+                        placeholder="12"
+                        onChange={(e) => setPackUnit(i, { qty_per_base: Math.max(1, Math.floor(Number(e.target.value) || 1)) })}
+                      />
+                    </div>
+                    <div className="w-28">
+                      <label className="label">Harga pack (Rp)</label>
+                      <input
+                        className="input"
+                        type="number"
+                        min={0}
+                        value={pu.price === 0 ? '' : pu.price}
+                        placeholder="45000"
+                        onChange={(e) => setPackUnit(i, { price: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
+                      />
+                    </div>
+                    <div className="w-28 shrink-0 pb-1 text-right text-1xs text-slate-600 dark:text-slate-400">
+                      {pu.qty_per_base > 1 && pu.price > 0
+                        ? 'HPP: ' + rp((Number(form.cost_price) || 0) * pu.qty_per_base)
+                        : '--'}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                      onClick={() => removePackUnit(i)}
+                      aria-label={'Hapus pack ' + (i + 1)}
                     >
                       Hapus
                     </Button>

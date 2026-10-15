@@ -84,7 +84,7 @@ type QueuedSale = {
     change: number;
     pay_split?: { m: string; a: number }[];
     client_ref: string;
-    items: { product_id: number; qty: number; unit_price: number }[];
+    items: { product_id: number; qty: number; unit_price: number; unit_name?: string; qty_per_base?: number }[];
   };
 };
 
@@ -172,8 +172,37 @@ type Product = {
   wholesale?: string;
   /** Foto produk (Opsi A: URL manual, max 500 char). */
   image_url?: string;
+  /** v30 multi-satuan: JSON string [{unit, qty_per_base, price}]. '' = satuan tunggal. */
+  pack_units?: string;
 };
-type CartLine = { product: Product; qty: number; price: number; manual?: boolean };
+/** v30: parse pack_units JSON jadi array (modul bersama utk form + POS). */
+function parsePackUnits(raw?: string | null): { unit: string; qty_per_base: number; price: number }[] {
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter((p: unknown) => typeof p === 'object' && p !== null && typeof (p as Record<string, unknown>).unit === 'string')
+      .map((p: Record<string, unknown>) => ({
+        unit: String(p.unit || '').trim().slice(0, 32),
+        qty_per_base: Math.max(1, Math.floor(Number(p.qty_per_base) || 1)),
+        price: Math.max(0, Math.floor(Number(p.price) || 0)),
+      }))
+      .filter((p: { unit: string }) => p.unit.length > 0);
+  } catch {
+    return [];
+  }
+}
+type CartLine = {
+  product: Product;
+  qty: number;
+  price: number;
+  manual?: boolean;
+  /** v30: nama pack yang dipilih ('' = satuan dasar). */
+  unitName?: string;
+  /** v30: jumlah satuan dasar per 1 unit terjual (1 = base). */
+  qtyPerBase?: number;
+};
 
 type ShiftInfo = {
   id: number;
@@ -624,11 +653,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       c
         .map((l) => {
           if (l.product.id !== id) return l;
+          // v30: cap qty = sisa stok / qty_per_base (konversi pack -> dasar).
+          const qpb = l.qtyPerBase || 1;
           // NEG-1: cap qty = sisa stok utk produk biasa; titipan tak ber-cap.
           const q =
             l.product.is_consignment === 1
               ? Math.max(0, qty)
-              : Math.max(0, Math.min(qty, l.product.stock));
+              : Math.max(0, Math.min(qty, Math.floor(l.product.stock / qpb)));
           // Ubah qty: harga otomatis recompute (naik ambang grosir -> turun,
           // turun ambang -> naik lagi); harga manual tetap tidak disentuh.
           return { ...l, qty: q, price: l.manual ? l.price : autoPrice(l.product, q) };
@@ -765,7 +796,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       change: cashReceived ? change : 0,
       pay_split: mixParts.length > 0 ? mixParts : undefined,
       client_ref: clientRef,
-      items: cart.map((l) => ({ product_id: l.product.id, qty: l.qty, unit_price: l.price })),
+      items: cart.map((l) => ({
+        product_id: l.product.id,
+        qty: l.qty,
+        unit_price: l.price,
+        unit_name: l.unitName || '',
+        qty_per_base: l.qtyPerBase || 1,
+      })),
     };
     const r = await api<SaleResp>('/api/sales', { method: 'POST', body: JSON.stringify(payload) });
     setBusy(false);
@@ -1550,15 +1587,56 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     <p className="break-words text-sm font-bold leading-tight text-slate-800 dark:text-slate-200">
                       {l.product.name}
                     </p>
-                    {gPct > 0 ? (
-                      <span className="mt-0.5 inline-block rounded bg-emerald-500/15 px-1.5 py-0.5 text-2xs font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
-                        Grosir -{gPct}%
-                      </span>
-                    ) : l.manual ? (
-                      <span className="mt-0.5 inline-block rounded bg-amber-500/15 px-1.5 py-0.5 text-2xs font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
-                        Harga manual
-                      </span>
-                    ) : null}
+                    {/* v30: selector pack unit (tampil bila produk punya pack_units). */}
+                    {parsePackUnits(l.product.pack_units).length > 0 && (
+                      <select
+                        className="mt-1 w-28 rounded border border-slate-300 bg-white px-1.5 py-0.5 text-2xs text-slate-700 dark:border-navy-600 dark:bg-navy-800 dark:text-slate-300"
+                        value={l.unitName || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const packs = parsePackUnits(l.product.pack_units);
+                          const sel = packs.find((pk) => pk.unit === val);
+                          setCart((c) =>
+                            c.map((cl) =>
+                              cl.product.id !== l.product.id
+                                ? cl
+                                : {
+                                    ...cl,
+                                    unitName: val || undefined,
+                                    qtyPerBase: sel ? sel.qty_per_base : 1,
+                                    price: sel ? sel.price : cl.price,
+                                    manual: false,
+                                  }
+                            )
+                          );
+                        }}
+                        aria-label={'Pilih satuan ' + l.product.name}
+                      >
+                        <option value="">{l.product.unit} (dasar)</option>
+                        {parsePackUnits(l.product.pack_units).map((pk) => (
+                          <option key={pk.unit} value={pk.unit}>
+                            {pk.unit} ({pk.qty_per_base} {l.product.unit})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <div className="mt-0.5 flex gap-1">
+                      {gPct > 0 ? (
+                        <span className="inline-block rounded bg-emerald-500/15 px-1.5 py-0.5 text-2xs font-bold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+                          Grosir -{gPct}%
+                        </span>
+                      ) : null}
+                      {l.manual ? (
+                        <span className="inline-block rounded bg-amber-500/15 px-1.5 py-0.5 text-2xs font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">
+                          Harga manual
+                        </span>
+                      ) : null}
+                      {l.unitName ? (
+                        <span className="inline-block rounded bg-blue-500/15 px-1.5 py-0.5 text-2xs font-bold text-blue-600 dark:bg-blue-500/15 dark:text-blue-400">
+                          {l.unitName}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -1589,10 +1667,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     </span>
                     <button
                       type="button"
-                      disabled={l.qty >= l.product.stock && l.product.is_consignment !== 1}
+                      disabled={l.qty * (l.qtyPerBase || 1) >= l.product.stock && l.product.is_consignment !== 1}
                       className="grid h-11 w-11 place-items-center text-slate-600 transition active:scale-90 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-300 dark:hover:bg-navy-700 sm:h-9 sm:w-9"
                       onClick={() => setQty(l.product.id, l.qty + 1)}
-                      title={l.qty >= l.product.stock && l.product.is_consignment !== 1 ? 'Sudah maksimum stok' : 'Tambah jumlah'}
+                      title={l.qty * (l.qtyPerBase || 1) >= l.product.stock && l.product.is_consignment !== 1 ? 'Sudah maksimum stok' : 'Tambah jumlah'}
                       aria-label="Tambah jumlah"
                     >
                       <Plus className="h-5 w-5" />
@@ -1603,7 +1681,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       {rp(l.qty * l.price)}
                     </p>
                     <p className="text-1xs text-slate-600 dark:text-slate-400">
-                      @{rp(l.price)}/{l.product.unit}
+                      @{rp(l.price)}/{l.unitName || l.product.unit}
                     </p>
                   </div>
                 </div>

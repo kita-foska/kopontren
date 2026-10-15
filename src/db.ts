@@ -112,6 +112,11 @@ CREATE TABLE IF NOT EXISTS products (
   active INTEGER NOT NULL DEFAULT 1,
   barcode TEXT NOT NULL DEFAULT '',
   is_consignment INTEGER NOT NULL DEFAULT 0,
+  -- v30 multi-satuan (Opsi A): JSON array pack units per produk.
+  -- Format: [{"unit":"box","qty_per_base":12,"price":45000}]
+  -- qty_per_base = jumlah satuan dasar per 1 pack (integer, V1).
+  -- '' = produk satuan tunggal (backward compat 100%).
+  pack_units TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 CREATE TABLE IF NOT EXISTS sales (
@@ -140,7 +145,12 @@ CREATE TABLE IF NOT EXISTS sale_items (
   unit_price INTEGER NOT NULL,
   subtotal INTEGER NOT NULL,
   discount REAL NOT NULL DEFAULT 0,
-  cost_price INTEGER NOT NULL DEFAULT 0
+  cost_price INTEGER NOT NULL DEFAULT 0,
+  -- v30 multi-satuan: pack unit identifier + conversion factor.
+  -- unit_name: nama pack ('' = satuan dasar, 'box'/'lusin' = pack).
+  -- qty_per_base: jumlah satuan dasar per 1 unit terjual (1 = base).
+  unit_name TEXT NOT NULL DEFAULT '',
+  qty_per_base INTEGER NOT NULL DEFAULT 1
 );
 CREATE TABLE IF NOT EXISTS members (
   id INTEGER PRIMARY KEY,
@@ -885,6 +895,12 @@ async function migrate(d: Db) {
       `UPDATE coa SET status = 'closed', needs_decision = 0 WHERE code = '2080'`
     );
   }
+  // v30 multi-satuan (Opsi A, 2026-10-16, ruling Gus Fi via DeepSeek audit):
+  // products.pack_units (JSON array pack units) + sale_items.unit_name +
+  // sale_items.qty_per_base. Purely additive; DB v29 re-run fullInit sekali.
+  await execColumn(d, "ALTER TABLE products ADD COLUMN pack_units TEXT NOT NULL DEFAULT ''");
+  await execColumn(d, "ALTER TABLE sale_items ADD COLUMN unit_name TEXT NOT NULL DEFAULT ''");
+  await execColumn(d, "ALTER TABLE sale_items ADD COLUMN qty_per_base INTEGER NOT NULL DEFAULT 1");
 }
 
 
@@ -1257,7 +1273,10 @@ export async function saveZakatSettings(
 // idx_approval_pending. migrate30(): CREATE TABLE IF NOT EXISTS + index,
 // purely additive; DB stempel v28 menjalankan fullInit sekali lagi saat
 // cold start berikutnya. BACKUP DB WAJIB sebelum deploy (lesson v16).
-export const SCHEMA_VERSION = 29;
+// Bump v30 (2026-10-16, multi-satuan Opsi A): products.pack_units (JSON) +
+// sale_items.unit_name + qty_per_base. Purely additive; DB v29 re-run
+// fullInit sekali lagi. BACKUP DB WAJIB sebelum deploy (lesson v16).
+export const SCHEMA_VERSION = 30;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {

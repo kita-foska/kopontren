@@ -88,7 +88,8 @@ export async function POST(req: Request) {
       .prepare(
         `SELECT si.product_name, si.unit_price, si.qty, si.subtotal, si.discount,
                  COALESCE(si.cost_price, 0) AS cost_price,
-                 COALESCE(p.cost_price, 0) AS product_cost
+                 COALESCE(p.cost_price, 0) AS product_cost,
+                 COALESCE(si.qty_per_base, 1) AS qty_per_base
           FROM sale_items si
           LEFT JOIN products p ON p.id = si.product_id
           WHERE si.sale_id = ? AND si.product_id = ?
@@ -103,6 +104,7 @@ export async function POST(req: Request) {
           discount: number;
           cost_price: number;
           product_cost: number;
+          qty_per_base: number;
         }
       | undefined
   );
@@ -203,9 +205,11 @@ export async function POST(req: Request) {
       // Restock: kembalikan produk ke stok. Guard changes === 1: baris
       // produk harus memang ada (baris hilang -> changes 0 -> abort:
       // refund tanpa restock tidak boleh terjadi).
+      // v30: restock = qty * qty_per_base (konversi ke satuan dasar).
+      const qpb = Math.max(1, Number(item.qty_per_base) || 1);
       const restock = await d
         .prepare('UPDATE products SET stock = stock + ? WHERE id = ?')
-        .run(qty, productId);
+        .run(qty * qpb, productId);
       if (Number(restock.changes) !== 1)
         throw new Error('Produk tidak ditemukan — retur dibatalkan (guard restock)');
       // Refund tunai: catat sebagai jurnal kas keluar agar pembukuan tetap akur.

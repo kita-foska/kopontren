@@ -110,11 +110,34 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   // mengirim field, nilai lama dipertahankan (tanpa clobber).
   const newConsignment = b.is_consignment !== undefined ? (b.is_consignment ? 1 : 0) : prod.is_consignment;
   const newImageUrl = b.image_url !== undefined ? String(b.image_url).trim().slice(0, 500) : (prod.image_url ?? '');
+  // v30 multi-satuan: pack_units update. Validasi: array [{unit, qty_per_base, price}].
+  // undefined = pertahankan nilai lama (tanpa clobber utk klien lama).
+  let newPackUnits: string;
+  if (b.pack_units !== undefined) {
+    let packUnits = '';
+    if (Array.isArray(b.pack_units) && b.pack_units.length > 0) {
+      const validated = b.pack_units
+        .filter((p): p is { unit: string; qty_per_base: number; price: number } =>
+          typeof p === 'object' && p !== null &&
+          typeof (p as Record<string, unknown>).unit === 'string'
+        )
+        .map((p) => ({
+          unit: String(p.unit).trim().slice(0, 32),
+          qty_per_base: Math.max(1, Math.floor(Number(p.qty_per_base) || 1)),
+          price: Math.max(0, Math.floor(Number(p.price) || 0)),
+        }))
+        .filter((p) => p.unit.length > 0);
+      packUnits = validated.length > 0 ? JSON.stringify(validated) : '';
+    }
+    newPackUnits = packUnits;
+  } else {
+    newPackUnits = ((prod as Record<string, unknown>).pack_units as string) ?? '';
+  }
   await d
     .prepare(
-      `UPDATE products SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, barcode = ?, is_consignment = ?, image_url = ? WHERE id = ?`
+      `UPDATE products SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, barcode = ?, is_consignment = ?, image_url = ?, pack_units = ? WHERE id = ?`
     )
-    .run(newName, newCategory, newUnit, newBasePrice, newCostPrice, newBarcode, newConsignment, newImageUrl, prod.id);
+    .run(newName, newCategory, newUnit, newBasePrice, newCostPrice, newBarcode, newConsignment, newImageUrl, newPackUnits, prod.id);
   invalidate('products:');
   // Audit trail diff per-field: hanya field yang benar-benar berubah
   // yang tercatat (mis. "harga 10000 -> 12000").
@@ -133,6 +156,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     changes.is_consignment = { before: prod.is_consignment, after: newConsignment };
   if (newImageUrl !== (prod.image_url ?? ''))
     changes.image_url = { before: prod.image_url ?? '', after: newImageUrl };
+  if (newPackUnits !== (((prod as Record<string, unknown>).pack_units as string) ?? ''))
+    changes.pack_units = { before: (prod as Record<string, unknown>).pack_units ?? '', after: newPackUnits };
   await logAudit({
     userId: user.id,
     userName: user.display_name,

@@ -73,19 +73,22 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     const delRes = await d.prepare('DELETE FROM sales WHERE id = ?').run(sale.id);
     if (Number(delRes.changes) !== 1)
       throw new Error('Transaksi sudah dihapus — batalkan penghapusan ganda');
+    // v30: baca qty_per_base utk konversi restock ke satuan dasar.
     const items = (
-      await d.prepare('SELECT product_id, qty FROM sale_items WHERE sale_id = ?').all(sale.id)
-    ) as { product_id: number | null; qty: number }[];
+      await d.prepare('SELECT product_id, qty, qty_per_base FROM sale_items WHERE sale_id = ?').all(sale.id)
+    ) as { product_id: number | null; qty: number; qty_per_base: number }[];
     const inc = d.prepare('UPDATE products SET stock = stock + ? WHERE id = ?');
     const retSum = d.prepare(
       'SELECT COALESCE(SUM(qty), 0) s FROM returns WHERE sale_id = ? AND product_id = ?'
     );
     for (const it of items) {
       if (!it.product_id) continue;
+      const qpb = Math.max(1, Number(it.qty_per_base) || 1);
       const retRow = (await retSum.get(sale.id, it.product_id)) as { s: number };
       const alreadyRet = Number(retRow.s);
       returnedQty += alreadyRet;
-      const restock = Math.max(0, it.qty - alreadyRet);
+      // T4+T5: restock = (qty terjual - qty diretur) * qty_per_base
+      const restock = Math.max(0, (it.qty - alreadyRet) * qpb);
       if (restock > 0) await inc.run(restock, it.product_id);
     }
     // Hapus jurnal refund untuk sale ini (kas dihitung dari total sales;
