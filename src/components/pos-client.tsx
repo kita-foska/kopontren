@@ -1871,6 +1871,9 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     ))}
                   </div>
                 )}
+                <div className="lg:hidden">
+                  <PosNumpad value={received} onChange={setReceived} />
+                </div>
               </div>
             )}
 
@@ -2674,6 +2677,40 @@ function CameraScan({ onCode, onClose }: { onCode: (code: string) => void; onClo
           Batal (ESC)
         </Button>
       </div>
+    </div>
+  );
+}
+
+
+/**
+ * On-screen numpad (mobile only, hidden di lg+) -- input nominal cepat.
+ * Grid 3x4: 1-9, C (clear), 0, < (backspace).
+ * Dipakai di section Cash POS untuk kolom Uang Diterima.
+ */
+function PosNumpad({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  function press(k: string) {
+    if (k === 'C') onChange('');
+    else if (k === '<') onChange(value.slice(0, -1));
+    else onChange(value + k);
+  }
+  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '<'];
+  return (
+    <div className="grid grid-cols-3 gap-1.5">
+      {keys.map((k) => (
+        <button
+          key={k}
+          type="button"
+          onClick={() => press(k)}
+          className={
+            'h-12 rounded-lg text-lg font-bold transition active:scale-95 ' +
+            (k === 'C' || k === '<'
+              ? 'bg-slate-200 text-slate-500 active:bg-slate-300 dark:bg-navy-700 dark:text-slate-400'
+              : 'bg-slate-100 text-slate-800 active:bg-slate-200 dark:bg-navy-800 dark:text-slate-100')
+          }
+        >
+          {k}
+        </button>
+      ))}
     </div>
   );
 }
