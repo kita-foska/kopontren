@@ -2451,13 +2451,17 @@ bikin keputusan fiqih baru demi kebutuhan coding.
       4 file +75/-25; additive only; no schema change (v29
       intact); 500-char clamp; PWA-safe (lazy/async/no-referrer);
       fallback icon Package. Detail: MEMORY.md seksi "FOTO LEPAS".
-- [ ] **Wave 7 #10 -- Multi-satuan (AUDIT read-only)** -- PENDING:
-      Tashih T1-T5 sudah tercatat (HPP referensi base unit kg;
-      margin = penjualan - HPP; zakat satuan dasar; parsial sisa
-      tetap; konversi otomatis). Cline audit read-only (db.ts
-      schema, produk/POS client, HPP/margin/zakat computation,
-      reports) + proposal scope + skema v30. TUNGGU approval
-      Gus Fi sebelum implementasi.
+- [x] **Wave 7 #10 -- Multi-satuan V1** -- LEPAS 16 Okt
+      (C1 `9406cdb`, C2 = record ini; ACC Gus Fi via DeepSeek
+      audit 16 Okt LULUS): Schema v30 additive (products.
+      pack_units JSON + sale_items.unit_name + qty_per_base);
+      10 file +470/-47; Tashih T1-T5 applied (HPP pack-aware,
+      margin pack-aware, zakat T3 tak disentuh, decrement
+      qty*qpb, restock qty*qpb); form produk + POS pack selector
+      (dropdown + HPP live + stock cap + inline SVG); test
+      multisatuan 17/17; backward compat 100% (qpb=1 = base);
+      integer-only V1. V2 (fractional, multi-pack) = deferred.
+      Detail: MEMORY.md seksi "MULTI-SATUAN V1 LEPAS".
 
-  **TIDAK mulai eksekusi sebelum approval.**
+  **WAVE 7 = COMPLETE (10/10 LEPAS).**
 

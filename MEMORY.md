@@ -5628,4 +5628,15 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   (`<select>` jumlah label, bukan input). Gates: tsc 0;
   test:all ALL_PASS; non-ASCII 0; file proteksi 0; scope
   9 file (18 ins / 18 del).
-- **NEXT**: W5.1 PINJ-1 + Phase 2b.
+- **MULTI-SATUAN V1 LEPAS** (16 Okt, C1 `9406cdb`):
+  Opsi A (JSON pack_units) disetujui Gus Fi. Schema v30 additive:
+  products.pack_units TEXT (JSON array [{unit,qty_per_base,price}]),
+  sale_items.unit_name + qty_per_base. 10 file +470/-47.
+  Tashih T1-T5 applied: T1 HPP=cost*qpb*qty; T2 margin pack-aware;
+  T3 zakat/neraca ZERO change; T4 decrement=qty*qpb; T5 restock
+  =qty*qpb. Form produk (add/remove pack + HPP live) + POS
+  (dropdown satuan + HPP display + stock cap). Test multisatuan
+  17/17. Backward compat 100% (qpb=1). V1 integer-only; V2
+  (fractional, multi-pack) deferred. Gates: tsc 0, non-ASCII 0,
+  frozen files untouched.
+- **NEXT**: Wave 8 / V2 multi-satuan / istirahat (Gus Fi decides).
