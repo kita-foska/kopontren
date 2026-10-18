@@ -2460,8 +2460,23 @@ bikin keputusan fiqih baru demi kebutuhan coding.
       qty*qpb, restock qty*qpb); form produk + POS pack selector
       (dropdown + HPP live + stock cap + inline SVG); test
       multisatuan 17/17; backward compat 100% (qpb=1 = base);
-      integer-only V1. V2 (fractional, multi-pack) = deferred.
+      integer-only V1. V2 (fractional, multi-pack) = LEPAS 19 Okt (lihat entri V2 di bawah).
       Detail: MEMORY.md seksi "MULTI-SATUAN V1 LEPAS".
 
-  **WAVE 7 = COMPLETE (10/10 LEPAS).**
+- [x] **V2 Multi-satuan fraksional** -- LEPAS 19 Okt (C1
+      `60008d2`, C2 = record ini; ACC Gus Fi via DeepSeek audit 19 Okt
+      LULUS): Skema v31 (products.stock REAL + sale_items.qty_per_base
+      REAL + purchases.qty REAL; preseden v29, aditif; BACKUP DB
+      WAJIB). Helper kanonik `src/lib/multisatuan.ts` (r3,
+      STOCK_EPS 1e-6, validateQpb R6, stockNeeded R2/R1, hppPerUnit
+      R3, parseStockInput R7); ruling D1-D5 dipatuhi (fraksional
+      TERMAUK, CSV titik, 3 desimal, HPP Math.round, harga integer
+      rupiah); POS cap fraksional `Math.floor((stock+EPS)/qpb)`
+      (smoke 8/8). Test: multisatuan 31/31, zakat 40/40 (fraksional
+      3.5 kg -> 875), neraca 38/38 (Gula 3.5 kg, units 16.5, aset
+      1.120.000). Gate: tsc 0 + test:all 36/36 + 0 non-ASCII diff
+      + frozen utuh + fiqih precision-only. Detail: MEMORY.md seksi
+      `V2 MULTI-SATUAN LEPAS`.
+
+  **WAVE 7 = COMPLETE (10/10 LEPAS) + V2 MULTI-SATUAN LEPAS.**
 

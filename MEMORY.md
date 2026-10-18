@@ -1,6 +1,54 @@
 # MEMORY
 
 ## 2026-10-14
+### V2 MULTI-SATUAN LEPAS -- stok fraksional (C1 `60008d2`, 19 Okt 2026;
+ACC Gus Fi via DeepSeek: audit 19 Okt LULUS)
+- **Scope (V2, TODO L2463 "V2 = deferred")**: presisi fraksional
+  multi-satuan -- stok REAL (3 desimal, ruling D3), qpb REAL
+  (D5, 0.001-999), pembelian/restock fraksional (D1 TERMAUK),
+  CSV titik desimal saja (D2, koma OOS -> 0), HPP pack =
+  Math.round ke rupiah utuh (D4). Fiqih = precision only, rumus
+  zakat/neraca TAK berubah (tashih 1 baris, tercatat di TODO L2454
+  + design doc). Skema **v31** (products.stock REAL +
+  sale_items.qty_per_base REAL + purchases.qty REAL; preseden v29,
+  aditif, integer eksak sebagai REAL). **BACKUP DB WAJIB sebelum
+  deploy** (upgrade v30 -> v31).
+- **Commit C1 `60008d2`** "feat(v2): multi-satuan fractional (stock
+  REAL, qpb REAL, purchases REAL)" (17 file, +404/-122;
+  16 modifikasi + 1 baru; dual-push master+main terverifikasi
+  `git ls-remote` = `60008d2`):
+  (a) `src/lib/multisatuan.ts` (BARU, HERMETIS -- r3, STOCK_EPS
+  1e-6, validateQpb R6 strict, stockNeeded R2/R1, hppPerUnit R3,
+  parseStockInput R7) = sumber tunggal aritmetika pack.
+  (b) `src/db.ts` skema v30 -> v31 rebuild REAL (additif; data
+  lama integer = presisi penuh).
+  (c) API: products (POST/PUT/bulk) + [id] + migrate/products +
+  purchases + sales + [id] + returns + product-import -- stok/qpb
+  fraksional end-to-end (decrement/restock = stockNeeded, HPP
+  snapshot hppPerUnit di sale_items).
+  (d) `pos-client.tsx`: input stok desimal + HPP pack live + cap
+  fraksional `Math.floor((stock + STOCK_EPS) / qpb)` (smoke 8/8,
+  qpb 0.5 & 0.333).
+  (e) Test: test-multisatuan 31/31 (T1-T5 base + V2 fraksional +
+  R6/R7 + compat), test-zakat 40/40 (fraksional 3.5 kg -> zakat
+  875, trunc 35000 x 2.5%), test-neraca 38/38 (Gula 3.5 kg: stok
+  total 145.000, units 16.5, aset 1.120.000, modal 1.090.000).
+  0 non-ASCII di baris tambah (higien audit 19 Okt: 7 header
+  box-drawing di test-multisatuan.ts -> ASCII `--`).
+- **Gate lulus (19 Okt)**: tsc --noEmit EXIT 0; check-route-exports
+  OK; check-theme-gate OK; next build "Compiled successfully";
+  test:all 36/36 ALL_PASS (test-zakat 40/40, test-neraca 38/38,
+  test-multisatuan 31/31, test-wholesale 39/39, test-gl 102/102,
+  margin/split/dropship/konsinyasi/akad/coop/zis/coa/snapshot/gates
+  sedaya lulus); 0 non-ASCII di diff tambah; frozen tak tersentuh
+  (public/sw.js, V1 laporan-admin-client.tsx, src/lib/coop.ts);
+  fiqih = precision only (0 mekanisme baru); data = integer ->
+  REAL eksak.
+- **STATE**: LEPAS (dual-push terverifikasi: origin/master =
+  origin/main = `60008d2`; record ini = commit C2).
+- **NEXT**: Wave 8 / V3 / istirahat -- Gus Fi pilih. Design doc
+  `P-V2-MULTISATUAN.md` (repo root, 210 baris, C2) = arsip.
+
 ### P14 LEPAS -- Offline confidence (C1 `8096d2f`, 14 Okt 2026; ACC Gus Fi
 via DeepSeek: audit 14 Okt LULUS)
 - **Scope (P14, TODO L1299)**: status data per modul + stempel
