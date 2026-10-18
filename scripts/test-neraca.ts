@@ -136,13 +136,14 @@ async function main(): Promise<void> {
        ('income', 'Setor kasir', 50000),
        ('expense', 'Potong belanja kasir', 25000);`
   );
-  // Stok = Teh 10×5.000=50.000 + Kopi 3×20.000=60.000 = 110.000 (2 SKU, 13 unit).
-  // Gula (stok 0), Madu (stok −2 oversell), Minyak (cost 0) diabaikan.
+  // Stok = Teh 10x5.000=50.000 + Kopi 3x20.000=60.000 + Gula 3.5x10.000
+  // =35.000 (V2 fraksional, 3 desimal) = 145.000 (3 SKU, 16.5 unit).
+  // Madu (stok -2 oversell), Minyak (cost 0) diabaikan.
   db.exec(
     `INSERT INTO products (name, stock, cost_price, price) VALUES
        ('Teh', 10, 5000, 8000),
        ('Kopi', 3, 20000, 32000),
-       ('Gula', 0, 10000, 15000),
+       ('Gula', 3.5, 10000, 15000),
        ('Madu', -2, 30000, 50000),
        ('Minyak', 4, 0, 14000);`
   );
@@ -177,12 +178,12 @@ async function main(): Promise<void> {
 
   // ── Aset ──
   eq('kas = 875.000 (rumus /api/kas)', p.kas, 875_000);
-  eq('stok total = 110.000 (basis harga beli)', p.stok.total, 110_000);
-  eq('stok count = 2 SKU (oversell/cost 0 diabaikan)', p.stok.count, 2);
-  eq('stok units = 13', p.stok.units, 13);
+  eq('stok total = 145.000 (basis harga beli; Gula 3.5 fraksional)', p.stok.total, 145_000);
+  eq('stok count = 3 SKU (oversell/cost 0 diabaikan)', p.stok.count, 3);
+  eq('stok units = 16.5 (fraksional V2)', p.stok.units, 16.5);
   eq('piutang open = 100.000', p.piutang.total, 100_000);
   eq('piutang count = 2 (settled tak dihitung)', p.piutang.count, 2);
-  eq('aset total = 875.000 + 110.000 + 100.000 = 1.085.000', p.aset_total, 1_085_000);
+  eq('aset total = 875.000 + 145.000 + 100.000 = 1.120.000', p.aset_total, 1_120_000);
 
   // ── Kewajiban ──
   eq('hutang open = 25.000', p.hutang.total, 25_000);
@@ -201,12 +202,13 @@ async function main(): Promise<void> {
   );
 
   // ── Modal Setara ──
-  eq('modal setara = 1.085.000 − 30.000 = 1.055.000', p.modal_setara, 1_055_000);
+  eq('modal setara = 1.120.000 - 30.000 = 1.090.000', p.modal_setara, 1_090_000);
 
   // ── Detail 5 terbesar ──
-  eq('stok_top panjang = 2 (hanya yang sah)', p.rincian.stok_top.length, 2);
+  eq('stok_top panjang = 3 (hanya yang sah)', p.rincian.stok_top.length, 3);
   eq('stok_top #1 = Kopi 60.000', p.rincian.stok_top[0].name + '/' + p.rincian.stok_top[0].total, 'Kopi/60000');
   eq('stok_top #2 = Teh 50.000', p.rincian.stok_top[1].name + '/' + p.rincian.stok_top[1].total, 'Teh/50000');
+  eq('stok_top #3 = Gula 35.000 (fraksional 3.5)', p.rincian.stok_top[2].name + '/' + p.rincian.stok_top[2].total, 'Gula/35000');
   eq('piutang_top #1 = Ibu Sari 60.000', p.rincian.piutang_top[0].name + '/' + p.rincian.piutang_top[0].remaining, 'Ibu Sari/60000');
   eq('hutang_top #1 = CV Sembako 25.000', p.rincian.hutang_top[0].name + '/' + p.rincian.hutang_top[0].remaining, 'CV Sembako/25000');
   ok(
@@ -219,8 +221,8 @@ async function main(): Promise<void> {
   const p2 = await queryNeraca(shim);
   // kas = 875.000 − 2.000.000 = −1.125.000
   eq('kas boleh negatif = −1.125.000', p2.kas, -1_125_000);
-  eq('aset total negatif = −1.125.000 + 110.000 + 100.000 = −915.000', p2.aset_total, -915_000);
-  eq('modal setara = −915.000 − 30.000 = −945.000', p2.modal_setara, -945_000);
+  eq('aset total negatif = -1.125.000 + 145.000 + 100.000 = -880.000', p2.aset_total, -880_000);
+  eq('modal setara = -880.000 - 30.000 = -910.000', p2.modal_setara, -910_000);
 
   // ── DB kosong: semua nol, rincian kosong (bukan null/NaN) ───────────
   const emptyDb = new (await import('node:sqlite')).DatabaseSync(':memory:') as unknown as import('node:sqlite').DatabaseSync;

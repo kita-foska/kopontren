@@ -3,6 +3,7 @@ import { db, tx } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
+import { r3 } from '@/lib/multisatuan';
 
 /**
  * Operasi massal produk (import/export & kelola massal untuk admin).
@@ -58,10 +59,13 @@ export async function POST(req: Request) {
     const out = await tx(d, async () => {
       let changed = 0;
       if (action === 'stock') {
-        const delta = Math.trunc(Number(b.delta) || 0);
+        // V2 (R1): delta opname fraksional 3 desimal (kolom stock REAL).
+        const delta = r3(Number(b.delta) || 0);
         if (delta === 0) return { changed: 0 };
+        // V2 (R1): pembulatan 3 desimal di SQL (ROUND) -- satu pintu
+        // presisi utk kolom REAL (mencegah drift biner float).
         const res = await d
-          .prepare(`UPDATE products SET stock = MAX(0, stock + ?) WHERE id IN (${inList})`)
+          .prepare(`UPDATE products SET stock = ROUND(MAX(0, stock + ?), 3) WHERE id IN (${inList})`)
           .run(delta, ...ids);
         changed = res.changes;
       } else if (action === 'category') {

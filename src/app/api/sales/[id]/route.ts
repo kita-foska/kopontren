@@ -4,6 +4,7 @@ import { currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { parsePerkConfig } from '@/lib/perks';
+import { r3 } from '@/lib/multisatuan';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
@@ -77,18 +78,19 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     const items = (
       await d.prepare('SELECT product_id, qty, qty_per_base FROM sale_items WHERE sale_id = ?').all(sale.id)
     ) as { product_id: number | null; qty: number; qty_per_base: number }[];
-    const inc = d.prepare('UPDATE products SET stock = stock + ? WHERE id = ?');
+    const inc = d.prepare('UPDATE products SET stock = ROUND(stock + ?, 3) WHERE id = ?');
     const retSum = d.prepare(
       'SELECT COALESCE(SUM(qty), 0) s FROM returns WHERE sale_id = ? AND product_id = ?'
     );
     for (const it of items) {
       if (!it.product_id) continue;
-      const qpb = Math.max(1, Number(it.qty_per_base) || 1);
+      // V2 (R1): qpb fraksional (r3) + pembulatan restock 3 desimal.
+      const qpb = Math.max(1, r3(Number(it.qty_per_base) || 1));
       const retRow = (await retSum.get(sale.id, it.product_id)) as { s: number };
       const alreadyRet = Number(retRow.s);
       returnedQty += alreadyRet;
-      // T4+T5: restock = (qty terjual - qty diretur) * qty_per_base
-      const restock = Math.max(0, (it.qty - alreadyRet) * qpb);
+      // T4+T5: restock = r3((qty terjual - qty diretur) * qty_per_base)
+      const restock = r3(Math.max(0, (it.qty - alreadyRet) * qpb));
       if (restock > 0) await inc.run(restock, it.product_id);
     }
     // Hapus jurnal refund untuk sale ini (kas dihitung dari total sales;

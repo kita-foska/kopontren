@@ -4,6 +4,8 @@
  * imports here, so it is safe to bundle client-side.
  */
 
+import { parseStockInput } from './multisatuan';
+
 export type ImportRow = {
   line: number; // 1-based position in the file (header excluded)
   name: string;
@@ -172,7 +174,7 @@ export function parseImport(text: string): {
       unit: String(cUnit ?? '').trim() || 'pcs',
       base_price: Math.round(Number(base)),
       cost_price: Math.round(Number(cost)),
-      stock: Math.round(Number(stock)),
+      stock: parseStockInput(stock),
       barcode,
       is_consignment: isConsignment,
     });
@@ -237,7 +239,10 @@ export function excelToRow(line: number, e: ExcelMapping): ImportRow | RowError 
     base_price: Math.max(0, Math.round(base)),
     cost_price: Math.max(0, Math.round(cost)),
     // NEG-1: clamp floor-0 HANYA utk baris non-titipan.
-    stock: isConsignment === 1 ? Math.round(stock) : Math.max(0, Math.round(stock)),
+    // V2 (R7): stok fraksional 3 desimal (parseStockInput/r3).
+    stock: isConsignment === 1
+      ? parseStockInput(stock)
+      : Math.max(0, parseStockInput(stock)),
     barcode: String(e.code ?? '').trim(),
     is_consignment: isConsignment,
   };

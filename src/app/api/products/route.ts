@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
+import { r3, validateQpb } from '@/lib/multisatuan';
 
 /**
  * Cache in-memory (60 dtk, ref-cache) utk data statis produk + kategori.
@@ -90,28 +91,38 @@ export async function POST(req: Request) {
   const barcode = String(b.barcode || '').trim();
   // W5.2 NEG-1: flag "barang titipan" (konsinyasi). Stok negatif HANYA
   // valid utk titipan; produk biasa tetap floor 0 (stok negatif = bug).
+  // V2 (R1): nilai stok fraksional 3 desimal (kolom REAL).
   const isConsignment = b.is_consignment ? 1 : 0;
   const stockValue =
     isConsignment === 1
-      ? Math.floor(Number(b.stock) || 0)
-      : Math.max(0, Math.floor(Number(b.stock) || 0));
+      ? r3(Number(b.stock) || 0)
+      : Math.max(0, r3(Number(b.stock) || 0));
   const imageUrl = String(b.image_url ?? '').trim().slice(0, 500);
   // v30 multi-satuan: pack_units JSON array [{unit, qty_per_base, price}].
-  // Validasi: array of objects with string unit + integer qty_per_base >= 1
-  // + integer price >= 0. Kosong/undefined = '' (produk satuan tunggal).
+  // V2 (R6): qty_per_base fraksional 0.01-10000 (3 desimal) via
+  // validateQpb -- entri tak valid THROW -> 400 (ganti V1 fallback 1).
+  // price = rupiah bulat utuh (R4). '' = produk satuan tunggal.
   let packUnits = '';
   if (Array.isArray(b.pack_units) && b.pack_units.length > 0) {
-    const validated = b.pack_units
-      .filter((p): p is { unit: string; qty_per_base: number; price: number } =>
-        typeof p === 'object' && p !== null &&
-        typeof (p as Record<string, unknown>).unit === 'string'
-      )
-      .map((p) => ({
-        unit: String(p.unit).trim().slice(0, 32),
-        qty_per_base: Math.max(1, Math.floor(Number(p.qty_per_base) || 1)),
-        price: Math.max(0, Math.floor(Number(p.price) || 0)),
-      }))
-      .filter((p) => p.unit.length > 0);
+    let validated: { unit: string; qty_per_base: number; price: number }[] = [];
+    try {
+      validated = b.pack_units
+        .filter((p): p is { unit: string; qty_per_base: number; price: number } =>
+          typeof p === 'object' && p !== null &&
+          typeof (p as Record<string, unknown>).unit === 'string'
+        )
+        .map((p) => ({
+          unit: String(p.unit).trim().slice(0, 32),
+          qty_per_base: validateQpb(p.qty_per_base),
+          price: Math.max(0, Math.floor(Number(p.price) || 0)),
+        }))
+        .filter((p) => p.unit.length > 0);
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : 'Pack unit tidak valid' },
+        { status: 400 }
+      );
+    }
     packUnits = validated.length > 0 ? JSON.stringify(validated) : '';
   }
   const info = await d

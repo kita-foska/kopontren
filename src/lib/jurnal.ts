@@ -529,7 +529,10 @@ export function journalForPurchase(inp: {
   created_at?: string;
   supplier?: string;
 }): JSpec {
-  const value = round(inp.qty) * round(inp.unit_cost);
+  // V2 (D1): qty pembelian boleh fraksional 3 desimal (kolom REAL) --
+  // nilai = Math.round(qty x unit_cost), hasil SELALU integer rupiah
+  // (GL hanya menyimpan bilangan bulat).
+  const value = Math.round((Number(inp.qty) || 0) * (Number(inp.unit_cost) || 0));
   const counter = inp.on_account ? ACCT.HUTANG_PEMBELIAN : ACCT.KAS_TOKO;
   return {
     id: 'JE-purchase-' + inp.id,

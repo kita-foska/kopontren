@@ -4,6 +4,7 @@ import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { notifyStockChange } from '@/lib/notify';
+import { r3, validateQpb } from '@/lib/multisatuan';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await currentUser();
@@ -35,10 +36,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   // quick stock adjust: { stock: n }
   if (b.stock !== undefined && b.name === undefined) {
-    const v = Math.floor(Number(b.stock));
+    // V2 (R1): opname fraksional 3 desimal (kolom stock REAL).
+    const vn = Number(b.stock);
+    if (Number.isNaN(vn))
+      return NextResponse.json({ error: 'Stok tidak valid' }, { status: 400 });
+    const v = r3(vn);
     // W5.2 NEG-1: opname negatif HANYA utk barang titipan (flag=1).
     // Gudang/produk biasa tetap floor 0 (JC-1).
-    if (Number.isNaN(v) || (v < 0 && prod.is_consignment !== 1))
+    if (v < 0 && prod.is_consignment !== 1)
       return NextResponse.json(
         { error: 'Stok tidak valid (negatif hanya utk barang titipan)' },
         { status: 400 }
@@ -111,22 +116,32 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   const newConsignment = b.is_consignment !== undefined ? (b.is_consignment ? 1 : 0) : prod.is_consignment;
   const newImageUrl = b.image_url !== undefined ? String(b.image_url).trim().slice(0, 500) : (prod.image_url ?? '');
   // v30 multi-satuan: pack_units update. Validasi: array [{unit, qty_per_base, price}].
+  // V2 (R6): qty_per_base fraksional 0.01-10000 (3 desimal) via
+  // validateQpb -- entri tak valid THROW -> 400; price rupiah bulat (R4).
   // undefined = pertahankan nilai lama (tanpa clobber utk klien lama).
   let newPackUnits: string;
   if (b.pack_units !== undefined) {
     let packUnits = '';
     if (Array.isArray(b.pack_units) && b.pack_units.length > 0) {
-      const validated = b.pack_units
-        .filter((p): p is { unit: string; qty_per_base: number; price: number } =>
-          typeof p === 'object' && p !== null &&
-          typeof (p as Record<string, unknown>).unit === 'string'
-        )
-        .map((p) => ({
-          unit: String(p.unit).trim().slice(0, 32),
-          qty_per_base: Math.max(1, Math.floor(Number(p.qty_per_base) || 1)),
-          price: Math.max(0, Math.floor(Number(p.price) || 0)),
-        }))
-        .filter((p) => p.unit.length > 0);
+      let validated: { unit: string; qty_per_base: number; price: number }[] = [];
+      try {
+        validated = b.pack_units
+          .filter((p): p is { unit: string; qty_per_base: number; price: number } =>
+            typeof p === 'object' && p !== null &&
+            typeof (p as Record<string, unknown>).unit === 'string'
+          )
+          .map((p) => ({
+            unit: String(p.unit).trim().slice(0, 32),
+            qty_per_base: validateQpb(p.qty_per_base),
+            price: Math.max(0, Math.floor(Number(p.price) || 0)),
+          }))
+          .filter((p) => p.unit.length > 0);
+      } catch (e) {
+        return NextResponse.json(
+          { error: e instanceof Error ? e.message : 'Pack unit tidak valid' },
+          { status: 400 }
+        );
+      }
       packUnits = validated.length > 0 ? JSON.stringify(validated) : '';
     }
     newPackUnits = packUnits;

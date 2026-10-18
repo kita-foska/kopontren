@@ -4,6 +4,7 @@ import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { journalForPurchase, postJournalInTx } from '@/lib/jurnal';
+import { r3 } from '@/lib/multisatuan';
 import { notifyCashBalance, notifyNewBelanja } from '@/lib/notify';
 
 export async function POST(req: Request) {
@@ -18,7 +19,9 @@ export async function POST(req: Request) {
     supplier?: string;
     note?: string;
   };
-  const qty = Math.floor(Number(b.qty) || 0);
+  // V2 (D1): qty pembelian boleh fraksional 3 desimal (mis. 3.5 kg);
+  // validasi qty > 0; pembulatan r3 (R1) -- kolom purchases.qty REAL.
+  const qty = r3(Number(b.qty) || 0);
   if (!b.product_id || qty <= 0)
     return NextResponse.json({ error: 'Pilih produk & jumlah valid' }, { status: 400 });
   const d = await db();
@@ -48,7 +51,10 @@ export async function POST(req: Request) {
         String(b.supplier || '').trim(),
         String(b.note || '').trim()
       );
-    await d.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(qty, prod.id);
+    // V2 (R1): restock fraksional -- pembulatan 3 desimal di SQL (kolom REAL).
+    await d
+      .prepare('UPDATE products SET stock = ROUND(stock + ?, 3) WHERE id = ?')
+      .run(qty, prod.id);
     if (cost > 0)
       await d.prepare('UPDATE products SET cost_price = ? WHERE id = ?').run(cost, prod.id);
     if (glOn) {
@@ -71,11 +77,15 @@ export async function POST(req: Request) {
   const stockRow = (await d.prepare('SELECT stock FROM products WHERE id = ?').get(prod.id)) as {
     stock: number;
   };
+  // V2 (R5): total kas/GL = Math.round(qty * unit_cost) -- nominal
+  // pecahan (qty fraksional) dibulatkan ke rupiah utuh.
+  const total = Math.round(qty * cost);
   await logAudit(user, 'purchase:create', 'purchases', Number(info.lastInsertRowid), undefined, {
     product: prod.name,
     qty,
     unit_cost: cost,
     supplier: String(b.supplier || '').trim() || undefined,
+    total,
   });
   // Restok & harga modal produk berubah; agregat belanja/kas/laporan ikut.
   invalidate('products:');
@@ -84,7 +94,7 @@ export async function POST(req: Request) {
   invalidate('reports:');
   // Notifikasi admin (best-effort): belanja baru + cek kas menipis.
   try {
-    await notifyNewBelanja(prod.name, qty, String(b.supplier || '').trim(), qty * cost);
+    await notifyNewBelanja(prod.name, qty, String(b.supplier || '').trim(), total);
     await notifyCashBalance();
   } catch (e) {
     console.warn('[notify] pemicu belanja gagal:', e);

@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS products (
   unit TEXT NOT NULL DEFAULT 'pcs',
   base_price INTEGER NOT NULL DEFAULT 0,
   cost_price INTEGER NOT NULL DEFAULT 0,
-  stock INTEGER NOT NULL DEFAULT 0,
+  stock REAL NOT NULL DEFAULT 0,
   active INTEGER NOT NULL DEFAULT 1,
   barcode TEXT NOT NULL DEFAULT '',
   is_consignment INTEGER NOT NULL DEFAULT 0,
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS sale_items (
   -- unit_name: nama pack ('' = satuan dasar, 'box'/'lusin' = pack).
   -- qty_per_base: jumlah satuan dasar per 1 unit terjual (1 = base).
   unit_name TEXT NOT NULL DEFAULT '',
-  qty_per_base INTEGER NOT NULL DEFAULT 1
+  qty_per_base REAL NOT NULL DEFAULT 1
 );
 CREATE TABLE IF NOT EXISTS members (
   id INTEGER PRIMARY KEY,
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS purchases (
   id INTEGER PRIMARY KEY,
   product_id INTEGER,
   product_name TEXT NOT NULL,
-  qty INTEGER NOT NULL,
+  qty REAL NOT NULL,
   unit_cost INTEGER NOT NULL DEFAULT 0,
   supplier TEXT NOT NULL DEFAULT '',
   note TEXT NOT NULL DEFAULT '',
@@ -1163,6 +1163,71 @@ export async function saveZakatSettings(
     await d.exec('CREATE INDEX IF NOT EXISTS idx_approval_pending ON approval_requests(action, target, status)');
   }
 
+  // Bump v31 (V2 multi-satuan fraksional, P-V2-MULTISATUAN.md): tabel lama
+  // V1 menyimpan stock/qty/qty_per_base sebagai INTEGER. SQLite INTEGER
+  // affinity sebenarnya masih menyimpan nilai REAL (quirk affinity), tapi
+  // deklarasi skema harus jujur: rebuild 3 tabel -- products.stock REAL,
+  // sale_items.qty_per_base REAL, purchases.qty REAL -- dengan copy data
+  // eksak (INSERT SELECT; nilai integer lama -> REAL tanpa loss) +
+  // rebuild 4 index (idx_products_barcode, idx_products_active, idx_si_sale,
+  // idx_sale_items_sale). Rebuild dijaga stempel: hanya DB < v31 yang
+  // menjalankan (fresh/REBUILDed DB = no-op) -- pola data-preserving,
+  // di luar tx() agar Turso serialisasi write aman. Idempoten: ulang =
+  // copy kolom-tipe yang sama. BACKUP DB WAJIB sebelum deploy (lesson v16).
+  async function rebuildTableV31(d: Db, table: 'products' | 'sale_items' | 'purchases') {
+    const tmp = table + '_v31';
+    const cols =
+      table === 'products'
+        ? 'id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL DEFAULT \'\', unit TEXT NOT NULL DEFAULT \'pcs\', base_price INTEGER NOT NULL DEFAULT 0, cost_price INTEGER NOT NULL DEFAULT 0, stock REAL NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1, barcode TEXT NOT NULL DEFAULT \'\', is_consignment INTEGER NOT NULL DEFAULT 0, image_url TEXT NOT NULL DEFAULT \'\', pack_units TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\'))'
+        : table === 'sale_items'
+          ? 'id INTEGER PRIMARY KEY, sale_id INTEGER NOT NULL, product_id INTEGER, product_name TEXT NOT NULL, qty INTEGER NOT NULL, unit TEXT NOT NULL DEFAULT \'pcs\', unit_price INTEGER NOT NULL, subtotal INTEGER NOT NULL, discount REAL NOT NULL DEFAULT 0, cost_price INTEGER NOT NULL DEFAULT 0, unit_name TEXT NOT NULL DEFAULT \'\', qty_per_base REAL NOT NULL DEFAULT 1'
+          : 'id INTEGER PRIMARY KEY, product_id INTEGER, product_name TEXT NOT NULL, qty REAL NOT NULL, unit_cost INTEGER NOT NULL DEFAULT 0, supplier TEXT NOT NULL DEFAULT \'\', note TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\'))';
+    // Tabel rebuild = REGULER (bukan TEMPORARY) agar satu tx Turso
+    // menjamin kesatuan: crash mid-rebuild -> tx rollback, tabel lama
+    // tetap ada. Nama _v31 = guard: crash SETELAH commit rebuild membuat
+    // tabel _v31 yatim (tak dipakai) -- backup pre-deploy menjaga (v16).
+    await d.exec(`CREATE TABLE IF NOT EXISTS ${tmp} (${cols})`);
+    await d.exec(`INSERT INTO ${tmp} SELECT * FROM ${table}`);
+    // Guard anti-data-loss: jumlah baris harus sama persis sebelum drop.
+    const [a, b] = await Promise.all([
+      d.prepare(`SELECT COUNT(*) c FROM ${table}`).get(),
+      d.prepare(`SELECT COUNT(*) c FROM ${tmp}`).get(),
+    ]);
+    if (Number((a as { c: number }).c) !== Number((b as { c: number }).c))
+      throw new Error(`Rebuild v31 ${table}: guard baris gagal -- abort (data utuh)`);
+    await d.exec(`DROP TABLE ${table}`);
+    await d.exec(`ALTER TABLE ${tmp} RENAME TO ${table}`);
+  }
+
+  async function migrate31(d: Db) {
+    // Hanya DB stempel < v31 (fresh DB tanpa stempel = no-op aman: tabel
+    // dibuat langsung REAL oleh SCHEMA di atas; rebuild di sini cuma copy
+    // kolom-tipe yang sama + guard baris).
+    let stamped = -1;
+    try {
+      const r = (await d
+        .prepare('SELECT version FROM schema_version LIMIT 1')
+        .get()) as { version: number } | undefined;
+      stamped = r ? Number(r.version) : -1;
+    } catch {
+      stamped = -1; // tabel stempel belum ada (fresh DB)
+    }
+    if (stamped >= 31) return;
+    if (stamped > 0) {
+      // DB existing V1: rebuild data-preserving 3 tabel (tx write).
+      await tx(d, async () => {
+        await rebuildTableV31(d, 'products');
+        await rebuildTableV31(d, 'sale_items');
+        await rebuildTableV31(d, 'purchases');
+      });
+    }
+    // Rebuild 4 index (index lama ikut drop table; buat ulang di atas).
+    await d.exec('CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode)');
+    await d.exec('CREATE INDEX IF NOT EXISTS idx_products_active ON products(active, category)');
+    await d.exec('CREATE INDEX IF NOT EXISTS idx_si_sale ON sale_items(sale_id)');
+    await d.exec('CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id, product_id)');
+  }
+
 // Bump v10 (2026): notifikasi admin — tabel notifications,
 // notification_settings, notification_logs (+ index). Idempotent, aman
 // utk DB existing.
@@ -1276,7 +1341,16 @@ export async function saveZakatSettings(
 // Bump v30 (2026-10-16, multi-satuan Opsi A): products.pack_units (JSON) +
 // sale_items.unit_name + qty_per_base. Purely additive; DB v29 re-run
 // fullInit sekali lagi. BACKUP DB WAJIB sebelum deploy (lesson v16).
-export const SCHEMA_VERSION = 30;
+// Bump v31 (2026-10-19, V2 multi-satuan fraksional, P-V2-MULTISATUAN.md):
+// rebuild data-preserving 3 tabel -- products.stock REAL,
+// sale_items.qty_per_base REAL, purchases.qty REAL (V1 integer -> REAL,
+// nilai lama intak; INSERT SELECT + guard baris + drop/rename, dalam 1 tx)
+// + rebuild 4 index (idx_products_barcode, idx_products_active, idx_si_sale,
+// idx_sale_items_sale). Tashih: PRESISI SAJA -- rumus zakat/neraca/GL
+// tidak berubah. TIDAK purely additive (rebuild tabel): DB stempel v30
+// menjalankan fullInit sekali lagi saat cold start. BACKUP DB WAJIB
+// sebelum deploy (lesson v16).
+export const SCHEMA_VERSION = 31;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
@@ -1302,6 +1376,7 @@ async function fullInit(d: Db) {
   await migrate28(d);
   await migrate29(d);
   await migrate30(d); // Q62 (P2): tabel approval_requests + index
+  await migrate31(d); // V2 multi-satuan: rebuild stock/qty/qty_per_base -> REAL
   await d.exec(
     `UPDATE sales SET reported_at = strftime('%Y-%m-%dT%H:%M:%fZ', reported_at) WHERE reported_at IS NOT NULL AND instr(reported_at, ' ') > 0;`
   );

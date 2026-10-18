@@ -23,6 +23,7 @@ import { POS_QUEUE_KEY, recordLastFetch } from '@/lib/offline-status';
 import { useHotkeys } from '@/lib/useHotkeys';
 import { effectiveWholesalePrice, parseWholesaleJson } from '@/lib/wholesale';
 import { T } from '@/lib/tokens';
+import { r3, stockNeeded, STOCK_EPS } from '@/lib/multisatuan';
 import {
   Banknote,
   BookOpen,
@@ -185,10 +186,15 @@ function parsePackUnits(raw?: string | null): { unit: string; qty_per_base: numb
       .filter((p: unknown) => typeof p === 'object' && p !== null && typeof (p as Record<string, unknown>).unit === 'string')
       .map((p: Record<string, unknown>) => ({
         unit: String(p.unit || '').trim().slice(0, 32),
-        qty_per_base: Math.max(1, Math.floor(Number(p.qty_per_base) || 1)),
+        qty_per_base: r3(Number(p.qty_per_base) || 1),
         price: Math.max(0, Math.floor(Number(p.price) || 0)),
       }))
-      .filter((p: { unit: string }) => p.unit.length > 0);
+      // V2 (R6): batasi pack sah qpb 0.01-10000; baris di luar rentang
+      // di-skip (fallback satuan dasar) -- data pack divalidasi server.
+      .filter(
+        (p: { unit: string; qty_per_base: number }) =>
+          p.unit.length > 0 && p.qty_per_base >= 0.01 && p.qty_per_base <= 10000
+      );
   } catch {
     return [];
   }
@@ -656,10 +662,11 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           // v30: cap qty = sisa stok / qty_per_base (konversi pack -> dasar).
           const qpb = l.qtyPerBase || 1;
           // NEG-1: cap qty = sisa stok utk produk biasa; titipan tak ber-cap.
+          // V2: qpb fraksional -> cap = floor((stock + EPS) / qpb) (drift-safe).
           const q =
             l.product.is_consignment === 1
               ? Math.max(0, qty)
-              : Math.max(0, Math.min(qty, Math.floor(l.product.stock / qpb)));
+              : Math.max(0, Math.min(qty, Math.floor((l.product.stock + STOCK_EPS) / qpb)));
           // Ubah qty: harga otomatis recompute (naik ambang grosir -> turun,
           // turun ambang -> naik lagi); harga manual tetap tidak disentuh.
           return { ...l, qty: q, price: l.manual ? l.price : autoPrice(l.product, q) };
@@ -1667,10 +1674,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                     </span>
                     <button
                       type="button"
-                      disabled={l.qty * (l.qtyPerBase || 1) >= l.product.stock && l.product.is_consignment !== 1}
+                      disabled={stockNeeded(l.qty + 1, l.qtyPerBase || 1) > l.product.stock + STOCK_EPS && l.product.is_consignment !== 1}
                       className="grid h-11 w-11 place-items-center text-slate-600 transition active:scale-90 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-300 dark:hover:bg-navy-700 sm:h-9 sm:w-9"
                       onClick={() => setQty(l.product.id, l.qty + 1)}
-                      title={l.qty * (l.qtyPerBase || 1) >= l.product.stock && l.product.is_consignment !== 1 ? 'Sudah maksimum stok' : 'Tambah jumlah'}
+                      title={stockNeeded(l.qty, l.qtyPerBase || 1) > l.product.stock + STOCK_EPS && l.product.is_consignment !== 1 ? 'Sudah maksimum stok' : 'Tambah jumlah'}
                       aria-label="Tambah jumlah"
                     >
                       <Plus className="h-5 w-5" />

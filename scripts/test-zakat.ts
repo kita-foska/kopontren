@@ -111,6 +111,15 @@ function main(): void {
       resolveValuationMode(undefined) === 'market'
   );
 
+  // V2 (P-V2-MULTISATUAN): stok fraksional 3 desimal -- rumus & keluaran
+  // rupiah-utuh TIDAK berubah (tashih 19 Okt; Math.round ke rupiah).
+  const prodsFrak: ProductRow[] = [{ stock: 3.5, base_price: 10000, cost_price: 6000 }];
+  const mf = computeValuation('market', prodsFrak, 0, 0, 0);
+  const hf = computeValuation('hpp', prodsFrak, 0, 0, 0);
+  ok('V2 fraksional: market = round(3.5 x 10000) = 35000', mf.modal === 35000, String(mf.modal));
+  ok('V2 fraksional: hpp = round(3.5 x 6000) = 21000', hf.modal === 21000, String(hf.modal));
+  ok('V2 fraksional: zakat = round(total x rate/100) rupiah utuh', computeZakatAmount(35000, 35000, 2.5).zakat === 875, String(computeZakatAmount(35000, 35000, 2.5).zakat));
+
   // 2) accrual: 0 hari = 0
   ok('accrual: 0 hari = 0', computeAccrual(4000000, 2.5, 0) === 0);
   // 3) accrual: 365 hari = penuh (4jt × 2,5% = 100rb)

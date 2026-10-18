@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PageSkeleton, Table, Td, TEmpty, Trow, Th, Empty, api, Button, StatusBadge, Modal, TermTip, Toast, TogglePill, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
 import { rp } from '@/lib/format';
+import { r3 } from '@/lib/multisatuan';
 import { parseWholesaleJson } from '@/lib/wholesale';
 import { readSavedView, writeSavedView, SAVEDVIEW_KEYS } from '@/lib/saved-view';
 import { recordLastFetch } from '@/lib/offline-status';
@@ -49,7 +50,7 @@ function parsePackUnits(raw?: string | null): PackUnitDraft[] {
       .filter((p: unknown) => typeof p === 'object' && p !== null && typeof (p as Record<string, unknown>).unit === 'string')
       .map((p: Record<string, unknown>) => ({
         unit: String(p.unit || '').trim().slice(0, 32),
-        qty_per_base: Math.max(1, Math.floor(Number(p.qty_per_base) || 1)),
+        qty_per_base: r3(Number(p.qty_per_base) || 1),
         price: Math.max(0, Math.floor(Number(p.price) || 0)),
       }))
       .filter((p: PackUnitDraft) => p.unit.length > 0);
@@ -979,10 +980,11 @@ export function ProdukClient() {
                       <input
                         className="input"
                         type="number"
-                        min={1}
+                        min={0.01}
+                        step={0.01}
                         value={pu.qty_per_base === 1 ? '' : pu.qty_per_base}
-                        placeholder="12"
-                        onChange={(e) => setPackUnit(i, { qty_per_base: Math.max(1, Math.floor(Number(e.target.value) || 1)) })}
+                        placeholder="0.5/12"
+                        onChange={(e) => setPackUnit(i, { qty_per_base: r3(Number(e.target.value) || 1) })}
                       />
                     </div>
                     <div className="w-28">
@@ -997,8 +999,8 @@ export function ProdukClient() {
                       />
                     </div>
                     <div className="w-28 shrink-0 pb-1 text-right text-1xs text-slate-600 dark:text-slate-400">
-                      {pu.qty_per_base > 1 && pu.price > 0
-                        ? 'HPP: ' + rp((Number(form.cost_price) || 0) * pu.qty_per_base)
+                      {pu.qty_per_base >= 0.01 && pu.price > 0
+                        ? 'HPP: ' + rp(Math.max(0, Math.round((Number(form.cost_price) || 0) * pu.qty_per_base)))
                         : '--'}
                     </div>
                     <Button

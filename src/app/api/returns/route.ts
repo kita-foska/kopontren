@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/audit';
 import { invalidate } from '@/lib/ref-cache';
 import { notifyNewRetur } from '@/lib/notify';
 import { journalForSalesReturn, postJournalInTx } from '@/lib/jurnal';
+import { r3, stockNeeded } from '@/lib/multisatuan';
 
 type ReturnRow = {
   id: number;
@@ -202,14 +203,15 @@ export async function POST(req: Request) {
       if (Number(info.changes) !== 1)
         throw new Error('Gagal mencatat retur (guard anti double-return)');
       newId = Number(info.lastInsertRowid);
-      // Restock: kembalikan produk ke stok. Guard changes === 1: baris
+   // Restock: kembalikan produk ke stok. Guard changes === 1: baris
       // produk harus memang ada (baris hilang -> changes 0 -> abort:
       // refund tanpa restock tidak boleh terjadi).
       // v30: restock = qty * qty_per_base (konversi ke satuan dasar).
-      const qpb = Math.max(1, Number(item.qty_per_base) || 1);
+      // V2 (R1): pembulatan r3 di JS + ROUND(x,3) di SQL -- kolom REAL.
+      const qpb = Math.max(1, r3(Number(item.qty_per_base) || 1));
       const restock = await d
-        .prepare('UPDATE products SET stock = stock + ? WHERE id = ?')
-        .run(qty * qpb, productId);
+        .prepare('UPDATE products SET stock = ROUND(stock + ?, 3) WHERE id = ?')
+        .run(stockNeeded(qty, qpb), productId);
       if (Number(restock.changes) !== 1)
         throw new Error('Produk tidak ditemukan — retur dibatalkan (guard restock)');
       // Refund tunai: catat sebagai jurnal kas keluar agar pembukuan tetap akur.

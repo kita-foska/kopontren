@@ -8,6 +8,7 @@ import { journalForSale, postJournalInTx } from '@/lib/jurnal';
 import { notifyLargeTransaction, notifyMarginClamp, notifyStockAfterSale } from '@/lib/notify';
 import { computePerks, marginGuard, parsePerkConfig, type PerkResult } from '@/lib/perks';
 import { parsePaySplit } from '@/lib/pay-methods';
+import { STOCK_EPS, hppPerUnit, r3, stockNeeded } from '@/lib/multisatuan';
 
 type SaleRow = {
   id: number;
@@ -228,12 +229,17 @@ export async function POST(req: Request) {
       // Guarded decrement: update HANYA jalan bila stok masih cukup saat
       // statement dieksekusi (menutup race window oversell antar transaksi
       // paralel). Cek di loop bawah tetap sebagai guard UX cepat.
+      // V2 (R1/R2): guard epsilon (stock + STOCK_EPS >= needed) -- kolom
+      // stock REAL; pembulatan hasil utk drift fraksional (ROUND(x,3)).
       const decStmt = d.prepare(
-        'UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?'
+        `UPDATE products SET stock = ROUND(stock - ?, 3)
+         WHERE id = ? AND stock + ${STOCK_EPS} >= ?`
       );
       // W5.2 NEG-1: barang titipan (is_consignment = 1) boleh negatif --
       // decrement TANPA guard (stok = indikator titipan, bukan stok kita).
-      const decFreeStmt = d.prepare('UPDATE products SET stock = stock - ? WHERE id = ?');
+      const decFreeStmt = d.prepare(
+        'UPDATE products SET stock = ROUND(stock - ?, 3) WHERE id = ?'
+      );
       // [qty, name, pid, unit, price, sub, lineDisc, cost, unitName, qtyPerBase]
       const insertItems: [number, string, number, string, number, number, number, number, string, number][] = [];
       for (const it of items) {
@@ -254,31 +260,47 @@ export async function POST(req: Request) {
         if (!prod || prod.active !== 1)
           throw new Error('Produk tidak tersedia: ' + (prod?.name || it.product_id));
         // v30 multi-satuan: qty_per_base dari klien (default 1 = satuan dasar).
-        // Validasi: integer >= 1. Bila > 1, verifikasi pack ada di pack_units.
-        let qtyPerBase = Math.max(1, Math.floor(Number(it.qty_per_base) || 1));
+        // V2 (R6): fraksional 0.01-10000 valid (r3). Bila > 1, verifikasi
+        // pack ada di pack_units; tak cocok -> fallback satuan dasar (1).
+        let qtyPerBase = 1;
         let unitName = String(it.unit_name || '').trim().slice(0, 32);
-        if (qtyPerBase > 1) {
-          // Verifikasi pack unit tersedia di produk (pack_units JSON).
-          let packList: { unit: string; qty_per_base: number; price: number }[] = [];
+        if (it.qty_per_base !== undefined) {
           try {
-            const raw = (prod as Record<string, unknown>).pack_units as string || '';
-            if (raw) packList = JSON.parse(raw) as typeof packList;
-          } catch { /* invalid JSON = treat as no packs */ }
-          const match = packList.find((p) => p.unit === unitName && p.qty_per_base === qtyPerBase);
-          if (!match) {
-            // Pack tidak ditemukan: fallback ke satuan dasar (qtyPerBase=1).
+            qtyPerBase = r3(Number(it.qty_per_base) || 1);
+            if (qtyPerBase >= 0.01 && qtyPerBase <= 10000) {
+              if (qtyPerBase > 1) {
+                // Verifikasi pack unit tersedia di produk (pack_units JSON).
+                let packList: { unit: string; qty_per_base: number; price: number }[] = [];
+                try {
+                  const raw = (prod as Record<string, unknown>).pack_units as string || '';
+                  if (raw) packList = JSON.parse(raw) as typeof packList;
+                } catch { /* invalid JSON = treat as no packs */ }
+                const match = packList.find((p) => p.unit === unitName && p.qty_per_base === qtyPerBase);
+                if (!match) {
+                  // Pack tidak ditemukan: fallback ke satuan dasar (qpb=1).
+                  qtyPerBase = 1;
+                  unitName = '';
+                }
+              }
+              // qpb fraksional (0.01-1) = konversi satuan, bukan pack.
+            } else {
+              qtyPerBase = 1;
+              unitName = '';
+            }
+          } catch {
             qtyPerBase = 1;
             unitName = '';
           }
         } else {
           unitName = '';
         }
-        // T1+T5: stok dibutuhkan = qty * qty_per_base (konversi otomatis).
-        const stockNeeded = qty * qtyPerBase;
+        // T1+T5: stok dibutuhkan = r3(qty * qty_per_base) -- konversi ke
+        // satuan dasar dgn pembulatan 3 desimal (drift-safe, R1).
+        const needStock = stockNeeded(qty, qtyPerBase);
         // W5.2 NEG-1: barang titipan (is_consignment=1) BOLEH dijual saat
         // stok <= 0 (stok negatif = indikator titipan); produk biasa tetap
-        // diblokir (oversell = bug inventori).
-        if (prod.stock < stockNeeded && prod.is_consignment !== 1)
+        // diblokir (oversell = bug inventori). V2 (R2): guard epsilon.
+        if (prod.stock + STOCK_EPS < needStock && prod.is_consignment !== 1)
           throw new Error('Stok ' + prod.name + ' tidak cukup (sisa ' + prod.stock + ')');
         // Manager may override the price per line; only accept a finite
         // positive value, anything else falls back to the catalog price
@@ -302,8 +324,8 @@ export async function POST(req: Request) {
             : packPrice !== null ? packPrice : prod.base_price;
         const sub = price * qty;
         subtotal += sub;
-        // T1: HPP pack = cost_price * qty_per_base * qty.
-        totalCost += (prod.cost_price || 0) * qtyPerBase * qty;
+        // T1: HPP pack = Math.round(cost * qpb) per unit (R3/D4) x qty.
+        totalCost += hppPerUnit(prod.cost_price || 0, qtyPerBase) * qty;
         // Per-line discount: manager only, capped at the line total.
         let lineDisc = 0;
         if (manager) {
@@ -311,17 +333,18 @@ export async function POST(req: Request) {
           if (Number.isFinite(dv) && dv > 0) lineDisc = Math.min(Math.floor(dv), sub);
         }
         lineDiscSum += lineDisc;
-        // T4: stok decrement = qty * qty_per_base (konversi ke satuan dasar).
+        // T4: stok decrement = r3(qty * qty_per_base) (konversi ke satuan dasar).
         const decRes =
           prod.is_consignment === 1
-            ? await decFreeStmt.run(stockNeeded, prod.id)
-            : await decStmt.run(stockNeeded, prod.id, stockNeeded);
+            ? await decFreeStmt.run(needStock, prod.id)
+            : await decStmt.run(needStock, prod.id, needStock);
         if (Number(decRes.changes) !== 1)
           throw new Error(
             'Stok ' + prod.name + ' tidak cukup (stok berubah — sisa ' + prod.stock + ')'
           );
         // T1: cost_price di sale_items = HPP per unit terjual (pack-aware).
-        const costPerUnit = (prod.cost_price || 0) * qtyPerBase;
+        // V2 (R3/D4): Math.round(bulat rupiah); V1 = floor.
+        const costPerUnit = hppPerUnit(prod.cost_price || 0, qtyPerBase);
         const displayUnit = unitName || prod.unit;
         const insertItemsRow: [number, string, number, string, number, number, number, number, string, number] = [
           qty,

@@ -3,6 +3,7 @@ import { db, tx } from '@/db';
 import { currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { parseImport, type ImportRow, type RowError } from '@/lib/product-import';
+import { r3 } from '@/lib/multisatuan';
 import { invalidate } from '@/lib/ref-cache';
 
 /**
@@ -97,7 +98,8 @@ export async function POST(req: Request) {
         const unit = String(r.unit ?? '').trim() || 'pcs';
         const base = Math.round(Number(r.base_price));
         const cost = Math.round(Number(r.cost_price));
-        const stock = Math.round(Number(r.stock));
+        // V2 (R1): stok fraksional 3 desimal (r3) -- harga tetap bulat utuh.
+  const stock = r3(Number(r.stock));
         // NEG-1: persist flag titipan (kolom opsional; default 0).
         const consignment = r.is_consignment === 1 ? 1 : 0;
         if (r.barcode) {
