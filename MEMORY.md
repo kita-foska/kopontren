@@ -3,6 +3,48 @@
 # MEMORY
 
 ## 2026-10-19
+### DARURAT LOGIN v31 -- FIX DEPLOY LEPAS, MENUNGGU VERIFIKASI PRODUKSI (C1 `31060e7` + C2 `7668415`, 19 Okt 2026)
+- **Problema (URGENT)**: login produksi gagal ("Waktu koneksi
+  habis"). Akar: cold start Vercel dengan DB Turso masih stempel
+  v30 -> fullInit + migrasi v31 (~150 round-trip Turso) melewati
+  durasi default fungsi; kegagalan jadi PERMANEN per instance
+  karena `db()` menyimpan promise rejected tanpa reset -> 500
+  body kosong -> `res.json()` klien throw -> pesan menyesatkan
+  "kesalahan jaringan".
+- **Commit `31060e7`** "fix(db,v31): self-heal init failure +
+  honest login 500 + maxDuration 60" (4 file): db.ts self-heal
+  (reset _db/_dbPromise saat gagal + console.error penyebab
+  asli), COUNT-guard rebuildTableV31 sekuensial, login route
+  balas JSON 500 eksplisit, login/page.tsx res.json().catch +
+  pesan 5xx jujur, vercel.json +functions glob maxDuration 60.
+- **Deploy `31060e7` ERROR 2s** (master + main): config
+  validation Vercel gagal SEBELUM build -- glob
+  `"**/app/api/**/route.ts"` di `functions` BUKAN pola valid
+  untuk Next.js App Router (docs Vercel: route App Router
+  memakai `export const maxDuration` per file; limit Hobby =
+  300s, jadi angka 60 bukan masalah -- masalahnya pola glob).
+- **Commit `7668415`** "fix(db,v31): maxDuration per-route
+  (App Router) + revert vercel.json functions glob" (2 file,
+  +7/-4; dual-push terverifikasi `git ls-remote` = `7668415`):
+  (a) vercel.json REVERT byte-identik dengan `0f6f3e2`
+  (deployment Ready); (b) login/route.ts +`export const
+  maxDuration = 60` (mekanisme resmi App Router; Hobby/Pro
+  sampai 300s).
+- **Gate lulus**: tsc 0, next build OK, vercel.json
+  byte-identik vs `0f6f3e2`, 0 non-ASCII, frozen tak
+  tersentuh, skema tak berubah.
+- **CATATAN DESAIN**: route login = pintu masuk migrasi v31 di
+  cold start produksi. Satu request login yang menyelesaikan
+  migrasi (<=60s) -> DB ter-stempel v31 -> semua 70 route API
+  kembali cepat tanpa ubahan lain.
+- **STATE**: PUSHED, MENUNGGU VERIFIKASI Vercel (Gus Fi):
+  (1) dashboard -- deploy `7668415` Ready? (2) function logs --
+  baris `[db] init/migrasi gagal: ...`? (3) test login
+  (tunggu 15-60s cold start migrasi). (4) Turso Studio --
+  `schema_version` = 31?
+- **NEXT**: Wave 8 item 2 = Barcode ID (setelah login
+  terverifikasi).
+
 ### WAVE 8 ITEM 1: AUDIT ANOMALI LEPAS -- deteksi keanehan audit_log (C1 `f7613ff`, 19 Okt 2026; ACC Gus Fi via DeepSeek: audit final LULUS)
 - **Scope (Q72, Wave 8 item 1, TODO "Q72 Konsolidasi data -- deteksi
   anomali")**: READ-ONLY deteksi anomali di atas audit_log -- 3 aturan

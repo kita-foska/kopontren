@@ -3,6 +3,21 @@
 Prioritas: [!] tinggi · [m] sedang · [r] rendah.
 
 ## Bug / konsistensi (hasil audit 18 Sep 2026)
+- [!] **DARURAT: login produksi gagal (v31 migration timeout)** --
+      FIX PUSHED 19 Okt, MENUNGGU VERIFIKASI Vercel:
+      - Akar: cold start DB Turso stempel v30 -> migrasi v31
+        kelamaan + `db()` menyimpan promise rejected tanpa
+        reset -> 500 kosong permanen -> "kesalahan jaringan".
+      - C1 `31060e7` (self-heal + JSON 500) -> DEPLOY ERROR 2s
+        (glob `functions` vercel.json tidak valid untuk App
+        Router).
+      - C2 `7668415` -- vercel.json revert byte-identik
+        `0f6f3e2` + `export const maxDuration = 60` per-route
+        (cara resmi). Dual-push terverifikasi.
+      - Verifikasi Gus Fi: (1) deploy `7668415` Ready?
+        (2) function log `[db]`? (3) test login (15-60s)?
+        (4) Turso `schema_version` = 31? Detail: MEMORY.md
+        seksi 2026-10-19 "DARURAT LOGIN".
 - [x] Anti brute-force `/api/auth/login` (throttle per username+IP) -- SELESAI
 - [x] `pin/change`: PIN lama salah kini menghitung lockout (konsisten
       dgn `pin/verify`) -- SELESAI
