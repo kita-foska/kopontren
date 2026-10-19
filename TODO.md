@@ -35,6 +35,15 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
         `[db] ... SQLITE_BUSY` / `init/migrasi gagal`?
         (4) setelah C3 Ready: login 2-3x (percobaan pertama
         = cold start migrasi, tunggu <=90 dtk).
+      - Hasil probe 19 Okt malam (Cline): deploy C3 READY
+        LIVE (marker chunk login OK) TAPI
+        `POST /api/auth/login` MASIH 500 db-error 15-16s
+        -> grep Vercel logs: `[api/auth/login] db() gagal`
+        (object error asli), `[db] init/migrasi gagal`,
+        `[db] ... SQLITE_BUSY`. Hipotesis: server Turso
+        reject batch DDL / busy persisten / akses write
+        terbatas -- detail + C3b bila perlu: MEMORY.md
+        seksi 2026-10-19 "C3 FIX KE-2".
       - Langkah cadangan: bila (2) gagal (DB read-only utk
         Vercel) -> tambah env Vercel `DATABASE_REPLICA_URL`
         (= Database URL Turso) lalu Redeploy. Detail + bug

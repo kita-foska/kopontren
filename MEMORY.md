@@ -56,6 +56,26 @@
   diagnostik Turso (version + test write), (3) retry login 2-3x
   (percobaan pertama setelah deploy = cold start migrasi,
   tunggu <=90 dtk).
+  PERBARUI 19 Okt (setelah push): deploy `bb71e89`/`ce4c094`
+  **READY & LIVE** -- marker C3 ">90 dtk" terkonfirmasi di
+  chunk `/_next/static/chunks/app/login/page-417dddf4b4c7ac52.js`.
+  TAPI probe `POST /api/auth/login` (kredensial dummy) MASIH
+  500 JSON db-error dalam 15-16s -> `db()` init TETAP gagal
+  setelah batch+retry. Error PERSIS ada di Vercel function
+  logs (Gus Fi): grep `[api/auth/login] db() gagal`
+  (login/route.ts L89 -- log object error asli),
+  `[db] init/migrasi gagal` (db.ts L1521), dan
+  `[db] ... SQLITE_BUSY` (db.ts L112).
+  Hipotesis tersisa: (1) **server Turso reject batch DDL**
+  -- probe lokal (native libsql win32) MENERIMA DDL di
+  `client.batch()` (`_probeddl`: CREATE TABLE/INDEX di batch
+  OK), sehingga batasan (bila ada) hanya di sisi SERVER
+  remote; log Vercel akan memutuskan. Bila terkonfirmasi ->
+  C3b: pisahkan DDL (exec sekuensial, semua `IF NOT EXISTS`
+  idempoten) dari DML (batch; stempel `INSERT ON CONFLICT`).
+  (2) SQLITE_BUSY persisten. (3) akses write Turso utk Vercel
+  terbatas/read-only -> langkah cadangan
+  `DATABASE_REPLICA_URL`.
 - **BUG LATEN TEMUAN (DI LUAR SCOPE -- catat utk audit nanti)**:
   kolom `products.image_url` ada di cols rebuildTableV31 & DB
   produksi v30, TAPI TIDAK ada di literal SCHEMA products ->
