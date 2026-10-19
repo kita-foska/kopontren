@@ -34,10 +34,13 @@ const ALLOWED_FUNCS = new Set([
   'generateViewportMeta', 'generateImageMetadata',
 ]);
 // Allowed route-config constant keys (export const dynamic = ... etc).
+// maxDuration = kunci konfigurasi fungsi Vercel (timeout per-fungsi,
+// detik; sah utk App Router -- terverifikasi deploy Vercel Ready).
 const ALLOWED_CONFIG = new Set([
   'dynamic', 'revalidate', 'fetchCache', 'dynamicParams',
   'generateStaticParams', 'generateMetadata',
   'generateViewportMeta', 'generateImageMetadata', 'config',
+  'maxDuration',
 ]);
 
 function* walkRoutes(dir) {

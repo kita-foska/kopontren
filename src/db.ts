@@ -25,6 +25,10 @@ export type Db = {
     run(...args: unknown[]): Promise<{ changes: number; lastInsertRowid: number }>;
   };
   exec(sql: string): Promise<void>;
+  /** 2026-10-19 (v31): kumpulan statement DDL idempoten (CREATE ... IF
+   *  NOT EXISTS) sebagai SATU transaksi atomik. Remote: satu batch
+   *  request (1 round-trip, bukan N). Local file: tx atomik. */
+  execBatch(sql: string): Promise<void>;
 };
 
 class DbShim implements Db {
@@ -59,6 +63,61 @@ class DbShim implements Db {
       if (s) await this.c.execute(s);
     }
   }
+  async execBatch(sql: string) {
+    // 2026-10-19 (v31): DDL idempoten dalam SATU transaksi atomik.
+    // Remote Turso: batch() = satu POST /v1 (1 round-trip) vs exec()
+    // yang melakukan N round-trip berurutan -> cold-start migrasi
+    // jauh lebih cepat + kegagalan di tengah tidak meninggalkan
+    // skema separuh (atomic). Local file: batch() tx atomik juga.
+    const stmts = sql
+      .split(';')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (stmts.length === 0) return;
+    if (typeof this.c.batch === 'function') {
+      await this.c.batch(stmts, 'write');
+      return;
+    }
+    for (const s of stmts) await this.c.execute(s);
+  }
+}
+
+/**
+ * 2026-10-19 (v31 produksi): SQLITE_BUSY. Saat cold start, beberapa
+ * instance Vercel bisa berebut migration serentak (instance B jalan
+ * saat instance A masih pegang write-lock Turso) -> SQLITE_BUSY.
+ * Tanpa retry, kegagalan mengunci instance B (db() reset promise ->
+ * request berikutnya mengulang dari nol, kemungkinan besar kena
+ * lock lagi). Backoff eksponensial kecil + ulangi hingga lock
+ * instance lain selesai (commit/rollback tx-nya).
+ */
+function isBusyErr(err: unknown): boolean {
+  const m = String((err as { message?: string })?.message ?? err ?? '');
+  return /SQLITE_BUSY|SQLITE_LOCKED|database is locked|database is busy/i.test(m);
+}
+
+async function withBusyRetry(
+  label: string,
+  attempts: number,
+  fn: () => Promise<unknown>
+): Promise<unknown> {
+  let last: unknown;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      last = err;
+      if (i === attempts || !isBusyErr(err)) throw err;
+      const wait = Math.min(8000, 400 * 2 ** (i - 1));
+      console.error(
+        `[db] ${label}: SQLITE_BUSY (instance lain memigrasi?); ulangi ${i}/${
+          attempts - 1
+        } dalam ${wait}ms`
+      );
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  throw last;
 }
 
 let _db: Db | null = null;
@@ -1216,17 +1275,26 @@ export async function saveZakatSettings(
     if (stamped >= 31) return;
     if (stamped > 0) {
       // DB existing V1: rebuild data-preserving 3 tabel (tx write).
-      await tx(d, async () => {
-        await rebuildTableV31(d, 'products');
-        await rebuildTableV31(d, 'sale_items');
-        await rebuildTableV31(d, 'purchases');
-      });
+      // 2026-10-19: retry SQLITE_BUSY -- tx() gagal = rollback total
+      // (tabel lama utuh), jadi ulangan tx aman (idempoten + guard baris).
+      await withBusyRetry('migrate31(rebuild)', 4, () =>
+        tx(d, async () => {
+          await rebuildTableV31(d, 'products');
+          await rebuildTableV31(d, 'sale_items');
+          await rebuildTableV31(d, 'purchases');
+        })
+      );
     }
     // Rebuild 4 index (index lama ikut drop table; buat ulang di atas).
-    await d.exec('CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode)');
-    await d.exec('CREATE INDEX IF NOT EXISTS idx_products_active ON products(active, category)');
-    await d.exec('CREATE INDEX IF NOT EXISTS idx_si_sale ON sale_items(sale_id)');
-    await d.exec('CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id, product_id)');
+    // 2026-10-19: 4 round-trip -> 1 batch atomik + retry SQLITE_BUSY.
+    await withBusyRetry('migrate31(index)', 4, () =>
+      d.execBatch(
+        'CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode); ' +
+          'CREATE INDEX IF NOT EXISTS idx_products_active ON products(active, category); ' +
+          'CREATE INDEX IF NOT EXISTS idx_si_sale ON sale_items(sale_id); ' +
+          'CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id, product_id)'
+      )
+    );
   }
 
 // Bump v10 (2026): notifikasi admin — tabel notifications,
@@ -1355,7 +1423,10 @@ export const SCHEMA_VERSION = 31;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
-  await d.exec(SCHEMA); // idempotent: creates tables when missing
+  // 2026-10-19: batch (1 round-trip atomik, bukan 23 round-trip) +
+  // retry SQLITE_BUSY. Kegagalan di tengah tak lagi meninggalkan skema
+  // separuh (tx batch = all-or-nothing).
+  await withBusyRetry('fullInit(SCHEMA)', 4, () => d.execBatch(SCHEMA));
   await migrate(d); // feature batch: new columns & tables on existing DBs
   // One-time migration: legacy 'YYYY-MM-DD HH:MM:SS' (UTC, space-separated)
   // timestamps -> ISO 'YYYY-MM-DDTHH:MM:SS.sssZ', so string comparisons with
@@ -1405,9 +1476,13 @@ async function fullInit(d: Db) {
   // Stamp the schema version: every later cold start skips all migrations
   // (one cheap SELECT instead of ~150 sequential Turso round-trips, which
   // made the first page load take 15-20 s over the remote HTTP API).
-  await d.exec('CREATE TABLE IF NOT EXISTS schema_version(id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER NOT NULL)');
-  await d.exec(
-    `INSERT INTO schema_version(id, version) VALUES (1, ${SCHEMA_VERSION}) ON CONFLICT(id) DO UPDATE SET version = excluded.version`
+  // 2026-10-19: batch + retry SQLITE_BUSY (stempel = pernyataan terakhir;
+  // bila lock masih held instance lain, ulangi setelah backoff).
+  await withBusyRetry('fullInit(stempel)', 4, () =>
+    d.execBatch(
+      `CREATE TABLE IF NOT EXISTS schema_version(id INTEGER PRIMARY KEY CHECK (id = 1), version INTEGER NOT NULL); ` +
+        `INSERT INTO schema_version(id, version) VALUES (1, ${SCHEMA_VERSION}) ON CONFLICT(id) DO UPDATE SET version = excluded.version`
+    )
   );
 }
 
@@ -1424,10 +1499,11 @@ export function db(): Promise<Db> {
     // whole migration chain. Table missing (fresh DB) => select throws => fullInit.
     let row: { version: number } | undefined;
     try {
-      row = (((await d.prepare('SELECT version FROM schema_version LIMIT 1').get()) ??
-        undefined) as unknown) as { version: number } | undefined;
+      row = (await withBusyRetry('db(pilih stempel)', 3, () =>
+        d.prepare('SELECT version FROM schema_version LIMIT 1').get()
+      )) as { version: number } | undefined;
     } catch {
-      row = undefined;
+      row = undefined; // fresh DB / skema belum terstempel -> fullInit
     }
     if (!row || Number(row.version) < SCHEMA_VERSION) {
       await fullInit(d);

@@ -18,11 +18,20 @@ export default function LoginPage() {
     setErr('');
     setBusy(true);
     try {
-      const res = await fetchTimeout('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), password }),
-      });
+      // 2026-10-19 (v31): timeout 90 detik (bukan default 10 detik
+      // fetchTimeout) -- cold start pertama setelah pembaruan bisa
+      // menjalankan migrasi skema Turso (fullInit + rebuild 3 tabel)
+      // yang melebihi 10 detik; abort dini menampilkan "Waktu
+      // koneksi habis" padahal server sedang bekerja.
+      const res = await fetchTimeout(
+        '/api/auth/login',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username.trim(), password }),
+        },
+        90_000
+      );
       // 5xx dari Vercel kadang BODI KOSONG (error route tak tertangkap ->
       // empty 500). res.json() yang reject dulu tampil "kesalahan jaringan"
       // (menyesatkan: galat server, bukan jaringan).
@@ -61,7 +70,11 @@ export default function LoginPage() {
         window.location.replace(roleHome(data.user?.role));
       }
     } catch (e) {
-      setErr(isAbort(e) ? 'Waktu koneksi habis. Silakan coba lagi.' : 'Terjadi kesalahan jaringan.');
+      setErr(
+        isAbort(e)
+          ? 'Waktu koneksi habis (>90 dtk). Sesaat setelah pembaruan sistem bisa lambat -- silakan coba lagi.'
+          : 'Terjadi kesalahan jaringan.'
+      );
     } finally {
       setBusy(false);
     }

@@ -15,10 +15,12 @@ import { logAudit } from '@/lib/audit';
 import { clientIp } from '@/lib/client-ip';
 
 // Fungsi ini bisa memicu migrasi skema Turso (v31) pada cold start:
-// fullInit + rebuild 3 tabel bisa makan >10 detik (limit default).
-// maxDuration per-route (cara resmi Next.js App Router; glob vercel.json
-// untuk fungsi App Router tak valid -> gagal deploy). Hobby/Pro: <= 300s.
-export const maxDuration = 60;
+// fullInit + rebuild 3 tabel + retry SQLITE_BUSY bisa >60 detik
+// (limit default). maxDuration per-route (cara resmi Next.js App
+// Router; glob vercel.json untuk fungsi App Router tak valid ->
+// gagal deploy). Hobby/Pro: <= 300s. 2026-10-19: dinaikkan 60 -> 90
+// (headroom utk migration + retry; klien login menunggu <=90s).
+export const maxDuration = 90;
 
 // ── Anti brute-force (per-instansi) ─────────────────────────────────────────
 // Pembatasan percobaan login per username+IP: 10 kegagalan dalam 15 menit
