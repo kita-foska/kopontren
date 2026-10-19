@@ -44,6 +44,16 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
         reject batch DDL / busy persisten / akses write
         terbatas -- detail + C3b bila perlu: MEMORY.md
         seksi 2026-10-19 "C3 FIX KE-2".
+      - PIVOT 19 Okt (Gus Fi via DeepSeek): Turso Free tanpa
+        restore/PITR -> jalur recovery = backup lokal. File
+        `kopontren (1).db` tak ditemukan; kandidat
+        `Downloads\kopontren.db` valid (v21, 236 produk,
+        0 sales, data s.d. 3 Okt -- 17 hari hilang; coba
+        dulu export Turso Studio utk state lebih baru).
+        Script import prepared: `scripts/restore-turso.mjs`
+        (draft, dry-run lulus; menunggu gate). Urutan:
+        log Vercel -> C3b bila perlu -> restore -> env
+        Vercel -> redeploy -> migrasi 21->31 -> login.
       - Langkah cadangan: bila (2) gagal (DB read-only utk
         Vercel) -> tambah env Vercel `DATABASE_REPLICA_URL`
         (= Database URL Turso) lalu Redeploy. Detail + bug

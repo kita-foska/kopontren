@@ -3,6 +3,32 @@
 # MEMORY
 
 ## 2026-10-19
+### PIVOT RECOVERY: LOCAL BACKUP (Gus Fi via DeepSeek, 19 Okt 2026)
+- **Konteks**: Turso Free tanpa PITR/restore (fitur berbayar) -> bila
+  DB produksi rusak, jalur recovery = backup lokal.
+- **Temuan Cline 19 Okt**: file `kopontren (1).db` TIDAK ada di PC
+  ini; kandidat = `C:/Users/baiti/Downloads/kopontren.db` (424 KB,
+  3 Okt): SQLite valid (integrity ok), schema_version **21**,
+  users 4, products 236, sales **0**, audit_log 74 (terakhir
+  2026-10-02T16:42Z). Data 3 Okt -> 19 Okt TIDAK tercakup; saran
+  Gus Fi: coba dulu export Turso Studio (state 19 Okt, lebih baru),
+  pakai file Downloads sbg fallback.
+- **Scan SCHEMA db.ts**: 58 CREATE TABLE + 56 CREATE INDEX di
+  literal SCHEMA SEMUA ber-guard IF NOT EXISTS -> hipotesis
+  "DDL tanpa guard" gugur; hipotesis tersisa tetap (server Turso
+  reject batch DDL / busy persisten / akses write terbatas --
+  bukti di Vercel log `[api/auth/login] db() gagal`, db.ts L89).
+- **Script prepared (LOCAL DRAFT, BELUM COMMIT)**:
+  `scripts/restore-turso.mjs` -- default DRY-RUN (validasi backup
+  + cetak runbook: `turso db create --region aap-1`, `db push`,
+  `token create`, set env Vercel, redeploy, verifikasi v31).
+  Dry-run lulus. Menunggu gate DeepSeek utk commit + push.
+- **Urutan rekomendasi**: (1) log Vercel `[api/auth/login]
+  db() gagal` -> meneguhkan hipotesis; (2) C3b bila perlu
+  (DDL sekuensial + DML batch); (3) restore backup via script;
+  (4) set env Vercel -> redeploy -> login pertama migrasi
+  v21->v31 (<=90 dtk) -> Turso v31; (5) Wave 8 Item 2.
+
 ### DARURAT LOGIN v31 -- C3 FIX KE-2: MIGRASI BATCH + RETRY BUSY + TIMEOUT KLIEN 90s (menunggu Vercel + diagnostik Turso)
 - **Temuan 19 Okt 23:00 (audit Cline + DeepSeek)**: `7668415` +
   `07234c3` sudah Ready di Vercel, tapi Gus Fi TETAP dapat
