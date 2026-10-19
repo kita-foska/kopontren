@@ -3,6 +3,40 @@
 # MEMORY
 
 ## 2026-10-19
+### PIVOT RECOVERY F2: IMPORT VIA NODE.JS -- TANPA TURSO CLI (Gus Fi, 19 Okt 2026)
+- Gus Fi TIDAK punya Turso CLI + Turso Studio tanpa tombol Import
+  + Free Plan tanpa restore/PITR -> `scripts/restore-turso.mjs`
+  (C7) import memakai HANYA @libsql/client (dep repo):
+  - DDL dari sqlite_master (IF NOT EXISTS; tabel dulu urut
+    topological FK, lalu index/trigger/view).
+  - Data per tabel via client.batch() INSERT chunk 100 baris --
+    batch Turso remote HANYA boleh berisi statement DML (bukan
+    DDL di dalam batch; TIDAK ADA ATTACH -- tidak didukung
+    Turso remote).
+  - Validasi: hitungan baris per tabel (sumber vs target),
+    PRAGMA integrity_check target, baca schema_version.
+  - Flag: default DRY-RUN; --execute; --fresh (reset target);
+    --source <file>; --chunk N. Token utk target libsql:// lewat
+    env TURSO_TOKEN (Token dibuat di Turso Studio: halaman
+    database -> bagian Settings -> Tokens -> Create Token;
+    URL: libsql://<db>.<region>.turso.io di halaman yang sama).
+- **UJI 19 Okt end-to-end**: import `Downloads\kopontren.db`
+  (37 tabel, 75 objek DDL) -> DB file lokal: VALIDASI LULUS
+  (semua count cocok), integrity ok, schema_version=21,
+  --fresh dapat reproduksi ulang, guard "target terisi" aman.
+  Bug awal: perbandingan rank() (d.type vs type-string) ->
+  order DDL jadi acak; sudah diperbaiki.
+- Catatan: DDL backup **TIDAK ADA deklarasi FK**
+  (pragma_foreign_key_list kosong utk sales/sale_items dkk)
+  -> urut data aman apa pun; urutan penting utk DDL.
+- Eksekusi produksi:
+  `set TURSO_TOKEN=...` lalu
+  `node scripts/restore-turso.mjs libsql://<db>.<region>.turso.io --execute`
+  -> Vercel: DATABASE_URL + DATABASE_AUTH_TOKEN -> Redeploy ->
+  login pertama migrasi v21->v31 -> Turso Studio v31.
+- **Saran tetap berlaku**: coba dulu export Turso Studio
+  (state 19 Okt, update=true); file Downloads (3 Okt) = fallback.
+
 ### PIVOT RECOVERY: LOCAL BACKUP (Gus Fi via DeepSeek, 19 Okt 2026)
 - **Konteks**: Turso Free tanpa PITR/restore (fitur berbayar) -> bila
   DB produksi rusak, jalur recovery = backup lokal.
@@ -18,11 +52,9 @@
   "DDL tanpa guard" gugur; hipotesis tersisa tetap (server Turso
   reject batch DDL / busy persisten / akses write terbatas --
   bukti di Vercel log `[api/auth/login] db() gagal`, db.ts L89).
-- **Script prepared (LOCAL DRAFT, BELUM COMMIT)**:
-  `scripts/restore-turso.mjs` -- default DRY-RUN (validasi backup
-  + cetak runbook: `turso db create --region aap-1`, `db push`,
-  `token create`, set env Vercel, redeploy, verifikasi v31).
-  Dry-run lulus. Menunggu gate DeepSeek utk commit + push.
+- **Script prepared**: `scripts/restore-turso.mjs` -- draft awal
+  (runbook turso CLI) GANTI oleh F2: import via @libsql/client
+  tanpa CLI; lihat seksi F2 di atas (commit C7).
 - **Urutan rekomendasi**: (1) log Vercel `[api/auth/login]
   db() gagal` -> meneguhkan hipotesis; (2) C3b bila perlu
   (DDL sekuensial + DML batch); (3) restore backup via script;

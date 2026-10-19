@@ -50,10 +50,18 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
         `Downloads\kopontren.db` valid (v21, 236 produk,
         0 sales, data s.d. 3 Okt -- 17 hari hilang; coba
         dulu export Turso Studio utk state lebih baru).
-        Script import prepared: `scripts/restore-turso.mjs`
-        (draft, dry-run lulus; menunggu gate). Urutan:
-        log Vercel -> C3b bila perlu -> restore -> env
-        Vercel -> redeploy -> migrasi 21->31 -> login.
+        **F2 (Gus Fi)**: TIDAK ada Turso CLI + Studio tanpa
+        tombol Import -> import via `scripts/restore-turso.mjs`
+        (C7, HANYA @libsql/client, tanpa ATTACH): DDL
+        sqlite_master (IF NOT EXISTS, tabel-dulu) + data via
+        client.batch() INSERT chunk 100 + validasi count/
+        integrity/schema_version. DRY-RUN default; --execute;
+        --fresh. UJI end-to-end 19 Okt: import backup -> DB
+        file lokal VALIDASI LULUS (v21, 37 tabel, integrity ok).
+        Jalankan: `set TURSO_TOKEN=...` (Token dari Studio)
+        lalu `node scripts/restore-turso.mjs libsql://<db>.<region>.turso.io --execute`
+        -> env Vercel (DATABASE_URL/DATABASE_AUTH_TOKEN) ->
+        Redeploy -> login pertama migrasi 21->31.
       - Langkah cadangan: bila (2) gagal (DB read-only utk
         Vercel) -> tambah env Vercel `DATABASE_REPLICA_URL`
         (= Database URL Turso) lalu Redeploy. Detail + bug
