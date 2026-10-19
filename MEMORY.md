@@ -3,6 +3,65 @@
 # MEMORY
 
 ## 2026-10-19
+### DARURAT LOGIN v31 -- C3 FIX KE-2: MIGRASI BATCH + RETRY BUSY + TIMEOUT KLIEN 90s (menunggu Vercel + diagnostik Turso)
+- **Temuan 19 Okt 23:00 (audit Cline + DeepSeek)**: `7668415` +
+  `07234c3` sudah Ready di Vercel, tapi Gus Fi TETAP dapat
+  "Waktu koneksi habis" di login. Probe produksi: POST
+  /api/auth/login -> JSON 500 ("Server sedang bermasalah
+  (database)") = kode baru AKTIF (self-heal + JSON 500 bekerja);
+  layer DB-nya masih gagal.
+- **Akar 1 (klien)**: login page memakai `fetchTimeout()` default
+  10 detik; migrasi v31 (fullInit ~150 round-trip Turso) makan
+  15-60 dtk -> browser abort dini -> "Waktu koneksi habis"
+  menyesatkan padahal server sedang bekerja / akan sukses.
+- **Akar 2 (server)**: tidak ada handling SQLITE_BUSY di db.ts:
+  beberapa instance Vercel berebut migration di cold start
+  (instance B jalan saat instance A pegang write-lock Turso) ->
+  SQLITE_BUSY -> kegagalan berulang; self-heal (C1) hanya
+  membuat percobaan ULANG, bukan membuatnya BERHASIL.
+- **Fix (C3, 4 file)**:
+  1. `Db.execBatch()` + `client.batch(stmts,'write')` (diverifikasi
+     probe node backend file: OK + idempoten; tsc + build hijau):
+     - fullInit: 23 statement SCHEMA -> 1 batch atomik
+     - migrate31: 4 CREATE index -> 1 batch atomik
+     - stempel schema_version: 2 statement -> 1 batch atomik
+     (atomik = gagal di tengah TIDAK meninggalkan skema separuh)
+  2. `withBusyRetry()` (backoff 400/800/1600/3200ms, max 4x, hanya
+     utk SQLITE_BUSY/LOCKED; error lain propagasi langsung) di:
+     SELECT stempel, fullInit SCHEMA, rebuild tx, index v31,
+     stempel. rebuild tx aman di-retry (gagal = rollback total;
+     tabel lama utuh; guard baris tetap jalan).
+  3. login route `maxDuration` 60 -> 90 detik (headroom
+     migrasi + retry; limit Hobby 300s).
+  4. login page `fetchTimeout(..., 90_000)` + pesan abort jujur
+     (">90 dtk ... coba lagi; setelah pembaruan sistem bisa
+     lambat").
+- **Gate `check-route-exports.mjs` diperlebar +`maxDuration`**:
+  ternyata over-strict (kunci itu VALID utk Vercel App Router --
+  bukti: `7668415` deploy Ready; tanpa perubahan gate, `npm run
+  gate` lokal menolak file yang sudah sah di Vercel).
+- **Hipotesa BELUM TERBUKTI (perlu akses Turso Studio)**: bila
+  akses WRITE produksi Turso terbatas/missing, semua write
+  gagal instan (500 cepat, konsisten dgn probe). Diagnostik
+  Gus Fi: `SELECT version FROM schema_version` + test write
+  `INSERT INTO settings(key,value) VALUES('__writetest','1')
+  ON CONFLICT(key) DO NOTHING; DELETE FROM settings WHERE
+  key='__writetest';`. Bila DB read-only utk Vercel -> tambah
+  env Vercel `DATABASE_REPLICA_URL` (= Database URL Turso;
+  @libsql/client merutekan write ke primary) lalu Redeploy.
+- **Gate lulus**: tsc 0, check-route-exports OK, check-theme-gate
+  OK, next build OK, probe batch file-backend OK, 0 non-ASCII
+  baris baru, skema TIDAK berubah (percepatan + retry saja).
+- **STATE**: C3 PUSHED; MENUNGGU: (1) Vercel Ready, (2)
+  diagnostik Turso (version + test write), (3) retry login 2-3x
+  (percobaan pertama setelah deploy = cold start migrasi,
+  tunggu <=90 dtk).
+- **BUG LATEN TEMUAN (DI LUAR SCOPE -- catat utk audit nanti)**:
+  kolom `products.image_url` ada di cols rebuildTableV31 & DB
+  produksi v30, TAPI TIDAK ada di literal SCHEMA products ->
+  fresh DB akan punya 1 kolom kurang dari produksi (baca di DB
+  produksi aman; hanya fresh DB terdampak).
+
 ### DARURAT LOGIN v31 -- FIX DEPLOY LEPAS, MENUNGGU VERIFIKASI PRODUKSI (C1 `31060e7` + C2 `7668415`, 19 Okt 2026)
 - **Problema (URGENT)**: login produksi gagal ("Waktu koneksi
   habis"). Akar: cold start Vercel dengan DB Turso masih stempel
@@ -44,6 +103,10 @@
   `schema_version` = 31?
 - **NEXT**: Wave 8 item 2 = Barcode ID (setelah login
   terverifikasi).
+  19 Okt 23:15: hasil verifikasi: (1) deploy Ready tercapai
+  (`7668415` + `07234c3` Production); (3) login TETAP gagal
+  ("Waktu koneksi habis") -> lanjut entry C3 di atas; (4)
+  belum terkonfirmasi (perlu Turso Studio + test write).
 
 ### WAVE 8 ITEM 1: AUDIT ANOMALI LEPAS -- deteksi keanehan audit_log (C1 `f7613ff`, 19 Okt 2026; ACC Gus Fi via DeepSeek: audit final LULUS)
 - **Scope (Q72, Wave 8 item 1, TODO "Q72 Konsolidasi data -- deteksi

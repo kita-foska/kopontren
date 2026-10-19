@@ -14,10 +14,32 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       - C2 `7668415` -- vercel.json revert byte-identik
         `0f6f3e2` + `export const maxDuration = 60` per-route
         (cara resmi). Dual-push terverifikasi.
-      - Verifikasi Gus Fi: (1) deploy `7668415` Ready?
-        (2) function log `[db]`? (3) test login (15-60s)?
-        (4) Turso `schema_version` = 31? Detail: MEMORY.md
-        seksi 2026-10-19 "DARURAT LOGIN".
+      - Hasil verifikasi 19 Okt 23:15: deploy `7668415` +
+        `07234c3` = READY, tapi login TETAP gagal ("Waktu
+        koneksi habis") + probe produksi = JSON 500 database.
+      - C3 (fix ke-2, PUSHED): migrasi v31 dipercepat +
+        diamanahkan -- (a) `execBatch()` batch atomik Turso
+        (SCHEMA 23 st -> 1, index v31 4 st -> 1, stempel 2 st
+        -> 1), (b) `withBusyRetry()` utk SQLITE_BUSY (berebut
+        migration antar instance cold start), (c) login route
+        `maxDuration` 60->90, (d) login page timeout 10->90
+        detik (dulu abort dini menyesatkan), (e) gate
+        `check-route-exports.mjs` +`maxDuration` (over-strict).
+        Gate: tsc + build + probe batch OK.
+      - Tindakan Gus Fi: buka Turso Studio ->
+        (1) `SELECT version FROM schema_version` (29/30/31?)
+        (2) test write: `INSERT INTO settings(key,value)
+        VALUES('__writetest','1') ON CONFLICT(key) DO NOTHING;`
+        lalu `DELETE FROM settings WHERE key='__writetest';`
+        (3) Vercel Logs deploy terbaru -- ada baris
+        `[db] ... SQLITE_BUSY` / `init/migrasi gagal`?
+        (4) setelah C3 Ready: login 2-3x (percobaan pertama
+        = cold start migrasi, tunggu <=90 dtk).
+      - Langkah cadangan: bila (2) gagal (DB read-only utk
+        Vercel) -> tambah env Vercel `DATABASE_REPLICA_URL`
+        (= Database URL Turso) lalu Redeploy. Detail + bug
+        laten image_url: MEMORY.md seksi 2026-10-19
+        "DARURAT LOGIN".
 - [x] Anti brute-force `/api/auth/login` (throttle per username+IP) -- SELESAI
 - [x] `pin/change`: PIN lama salah kini menghitung lockout (konsisten
       dgn `pin/verify`) -- SELESAI
