@@ -26,11 +26,16 @@
  *   --execute = drop+create+insert+stempel+verifikasi (destructive!).
  *   Stempel hanya naik (<31 -> 31); target >= 31 tak diubah.
  * PENGGUNAAN:
- *   node scripts/restore-db.js
  *   set DATABASE_URL=libsql://<host>/<db>
- *   set DATABASE_AUTH_TOKEN=<token>
- *   node scripts/restore-db.js --execute
- *   Opsi: arg posisi = path backup alternatif (mis. "kopontren (1).db").
+ *   set DATABASE_AUTH_TOKEN=<write token Turso>
+ *   node scripts/restore-db.js                                  (dry-run default)
+ *   node scripts/restore-db.js --source "kopontren (1).db"      (backup lain;
+ *     path relatif = relatif CWD; spasi/parentesis di nama file aman)
+ *   node scripts/restore-db.js --source "kopontren (1).db" --execute
+ *   Arg posisi juga didukung (= --source). Default backup: 3 Okt
+ *   (C:/Users/baiti/Downloads/kopontren.db, v21, products 236).
+ *   Backup 13 Okt (D:...\kopontren-app\kopontren (1).db, v29,
+ *   products 246, sale_items 22) LEBIH BARU — utamakan bila ada.
  * CATATAN: package.json tak punya "type":"module" -> .js ini CJS;
  *   @libsql/client (ESM) dimuat via dynamic import().
  * SETELAH BERHASIL: Redeploy Vercel. Cold start SKIP fullInit (stempel 31);
@@ -38,6 +43,9 @@
  * ============================================================================
  */
 'use strict';
+
+const { existsSync } = require('fs');
+const { isAbsolute, resolve } = require('path');
 
 const DEFAULT_BACKUP = 'C:/Users/baiti/Downloads/kopontren.db';
 const TABLES = ['products', 'sale_items', 'purchases'];
@@ -83,7 +91,8 @@ const PAGE_SIZE = 500; // baris baca per halaman dari backup
 function log(msg) { process.stdout.write(msg + '\n'); }
 function fail(msg) { log('\n✖ ' + msg); process.exit(1); }
 function normFileUrl(p) {
-  // C:\Users\... -> file:C:/Users/... (libsql file backend: forward slash)
+  // C:\Users\... -> file:C:/Users/... (libsql file backend: forward slash;
+  // single-slash form terverifikasi aman utk path/berkas BERISI SPASI)
   let path = String(p).replace(/\\/g, '/');
   if (!/^file:/.test(path)) path = 'file:' + path;
   return path;
@@ -264,8 +273,17 @@ async function verify(libsql, targetUrl, auth, srcMeta) {
 (async () => {
   const args = process.argv.slice(2);
   const EXECUTE = args.includes('--execute');
-  const pos = args.filter((a) => !a.startsWith('--'));
-  const sourceUrl = normFileUrl(pos[0] || DEFAULT_BACKUP);
+  const iSource = args.indexOf('--source');
+  if (iSource >= 0 && !args[iSource + 1])
+    fail('--source membutuhkan path file backup, mis: --source "kopontren (1).db"');
+  const flagValues = new Set(args.filter((_, i) => i > 0 && args[i - 1] === '--source'));
+  const pos = args.filter((a) => !a.startsWith('--') && !flagValues.has(a));
+  // Sumber: --source <path> > arg posisi > default. Resolusi ke absolut + cek ada
+  let srcPath = iSource >= 0 ? args[iSource + 1] : (pos[0] || DEFAULT_BACKUP);
+  if (!isAbsolute(srcPath)) srcPath = resolve(srcPath);
+  if (!existsSync(srcPath))
+    fail('File backup tidak ditemukan: ' + srcPath + '\n  Periksa nama/path file (opsi --source).');
+  const sourceUrl = normFileUrl(srcPath);
 
   if (!process.env.DATABASE_URL)
     fail('DATABASE_URL tidak diset.\n  set DATABASE_URL=libsql://<host>/<db>  (env Vercel / Turso)');
@@ -315,7 +333,9 @@ async function verify(libsql, targetUrl, auth, srcMeta) {
     log('\n[DRY-RUN selesai] Tak ada perubahan apa pun di backup maupun target.\n' +
       'Untuk memulihkan:\n' +
       '  1. Set env DATABASE_AUTH_TOKEN (write token Turso)\n' +
-      '  2. node scripts/restore-db.js ' + (pos[0] ? JSON.stringify(pos[0]) + ' ' : '') + '--execute\n' +
+      '  2. node scripts/restore-db.js ' +
+      (srcPath !== DEFAULT_BACKUP ? '--source ' + JSON.stringify(srcPath) + ' ' : '') +
+      '--execute\n' +
       '  3. Setelah berhasil: Redeploy Vercel -> login admin -> cek halaman Produk/Sales/Pembelian.');
     return;
   }
