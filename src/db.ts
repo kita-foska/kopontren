@@ -1258,7 +1258,35 @@ export async function saveZakatSettings(
     // Tabel rebuild = REGULER (bukan TEMPORARY) agar satu tx Turso
     // menjamin kesatuan: crash mid-rebuild -> tx rollback, tabel lama
     // tetap ada. Nama _v31 = guard: crash SETELAH commit rebuild membuat
-    // tabel _v31 yatim (tak dipakai) -- backup pre-deploy menjaga (v16).
+    // tabel _v31 yatim (tak dipakai) -- guard yatim di bawah menetralkan.
+    const want = colNames.split(',');
+    // 2026-10-20 DARURAT (log Vercel: "table products_v31 has 13 columns
+    // but 15 values were supplied"): build LAMA (pre-c7ccec5, DDL 13
+    // kolom + INSERT SELECT *) bisa meledak SETELAH
+    // `CREATE TABLE IF NOT EXISTS products_v31` sukses -> meninggalkan
+    // tabel YATIM skema salah. CREATE IF NOT EXISTS di bawah jadi NO-OP
+    // atas yatim itu, lalu INSERT 15 nilai meledak dgn error yg sama.
+    // Guard: skema tmp meleset dari DDL = DROP (yatim tak pernah dibaca
+    // kode app; data live aman di tabel utama); skema cocok = kosongkan
+    // barisnya agar rebuild idempoten.
+    const tmpExists = (await d
+      .prepare(
+        `SELECT 1 FROM sqlite_master WHERE type='table' AND name='${tmp}' LIMIT 1`
+      )
+      .get()) as unknown;
+    if (tmpExists) {
+      const tmpRows = (await d
+        .prepare(`SELECT name FROM pragma_table_info('${tmp}')`)
+        .all()) as unknown[];
+      const tmpCols = tmpRows.map((r) =>
+        r && typeof r === 'object' && 'name' in (r as object)
+          ? String((r as { name: string }).name)
+          : String((r as unknown[])[0])
+      );
+      if (want.some((x) => !tmpCols.includes(x)) || tmpCols.some((x) => !want.includes(x)))
+        await d.exec(`DROP TABLE ${tmp}`); // yatim skema salah -> buat baru
+      else await d.exec(`DELETE FROM ${tmp}`); // yatim berbaris -> kosongkan
+    }
     await d.exec(`CREATE TABLE IF NOT EXISTS ${tmp} (${cols})`);
     // Guard kolom: set kolom live harus PERSIS DDL v31 (hotfix 20 Okt).
     // Shape baris libsql bervariasi (array/object) -> ambil aman keduanya.
@@ -1270,7 +1298,6 @@ export async function saveZakatSettings(
         ? String((r as { name: string }).name)
         : String((r as unknown[])[0])
     );
-    const want = colNames.split(',');
     const missing = want.filter((x) => !liveCols.includes(x));
     const extra = liveCols.filter((x) => !want.includes(x));
     if (missing.length > 0 || extra.length > 0)
