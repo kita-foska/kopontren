@@ -2358,7 +2358,11 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [ ] Q69 Diskon terlalu besar -- perlu perhatian.
 - [ ] Q70 Harga terkeluar.
 - [ ] Q71 Transaksi abnormal -- nilai sangat besar.
-- [ ] Q72 Konsolidasi data -- deteksi anomali.
+- [x] Q72 Konsolidasi data -- deteksi anomali. (LEPAS C1 `f7613ff`,
+      19 Okt 2026: audit anomaly detection atas audit_log -- 3 aturan
+      bulk delete / price jump / after-hours, READ-ONLY, tanpa
+      perubahan skema; UI "Keanehan" + notifikasi cron `anomaly`.
+      Detail di MEMORY.md.)
 
 **Operasional & manajemen:**
 - [ ] Q73 Saved views -- simpan filter favorit.

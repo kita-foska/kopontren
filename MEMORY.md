@@ -1,5 +1,58 @@
 # MEMORY
 
+# MEMORY
+
+## 2026-10-19
+### WAVE 8 ITEM 1: AUDIT ANOMALI LEPAS -- deteksi keanehan audit_log (C1 `f7613ff`, 19 Okt 2026; ACC Gus Fi via DeepSeek: audit final LULUS)
+- **Scope (Q72, Wave 8 item 1, TODO "Q72 Konsolidasi data -- deteksi
+  anomali")**: READ-ONLY deteksi anomali di atas audit_log -- 3 aturan
+  tanpa perubahan skema: A1 bulk delete (hapus massal pada 1 tabel
+  dalam 1 menit), A2 price jump (loncat harga > 50% pada diff JSON
+  flat `fieldToDiff`, banding old vs new field price/price_wholesale/
+  hpp/cashback_max), A3 after-hours (aktivitas lokal 19:30-05:00,
+  hanya aksi tulis). Sampel <=500 baris audit_log terbaru (jendela
+  24 jam).
+- **Commit C1 `f7613ff`** "feat(ui): Q72 audit anomaly detection
+  (bulk delete, price jump, after-hours)" (7 file, +599/-5;
+  3 baru + 4 modifikasi; dual-push master+main terverifikasi
+  `git ls-remote` = `f7613ff`):
+  (a) `src/lib/audit-anomaly.ts` (BARU, 206 baris, murni/zero-import,
+  bebas non-ASCII, export `detectAnomalies` + types `AnomalyFlag` /
+  `AuditLogRow` + `ANOMALY_RULES`).
+  (b) `src/app/api/audit/anomalies/route.ts` (BARU, 44 baris,
+  GET, role admin/manager/pengurus, respons { flags, as_of,
+  analyzed_count }).
+  (c) `scripts/test-audit-anomaly.ts` (BARU, 161 baris, hermetic,
+  31 asersi, bebas non-ASCII).
+  (d) `src/lib/notify.ts` (+45): import types, 2 notify-type baru
+  (`anomaly_price_jump` pri 2 ke /admin/produk, `anomaly_audit`
+  pri 3 ke /admin/audit), `runAnomalySweep()` (dedupe 60 mnt,
+  best-effort), `runCron` + case `anomaly` + `all` kini menjalankan
+  sweep (kembali `{ job: 'all', purged, flagged }`).
+  (e) `src/components/admin/audit-client.tsx` (+91/-0): section
+  "Keanehan" -- fetch saat mount + tombol Perbarui, daftar
+  severity-colored (warn = rose / info = slate), sample IDs
+  `#id`, state kosong/error, `Dipindai dari N aktivitas terakhir`.
+  (f) `src/app/api/notifications/cron/route.ts` (docstring:
+  `?job=` kini menyertakan `anomaly`).
+  (g) `package.json` (+`test:audit-anomaly`, rantai `test:all`
+  +`node scripts/test-audit-anomaly.ts` -> kini 36 suite).
+- **Gate lulus (19 Okt)**: tsc --noEmit EXIT 0;
+  test-audit-anomaly 31/31; test:all rantai penuh -- sedaya suite
+  PASS (catatan: chain abort di `test-brand-sync` karena flake
+  teardown Node di Windows `Assertion failed: UV_HANDLE_CLOSING`,
+  BUKAN bug kode; 2 file setelahnya -- multisatuan 31/31 dan
+  audit-anomaly 31/31 -- dijalankan manual, lulus); 0 non-ASCII
+  di file baru & di baris tambah (audit-client +1 ellipsis legacy
+  `Memuat keanehan...` sudah dinetralkan); frozen tak tersentuh
+  (public/sw.js, V1 laporan-admin-client.tsx, src/lib/coop.ts);
+  fiqih: tidak ada; skema: tidak berubah.
+- **STATE**: LEPAS (dual-push terverifikasi: origin/master =
+  origin/main = `f7613ff`; record ini = commit C2).
+- **NEXT**: Wave 8 item 2 = Barcode ID (menunggu arahan Gus Fi),
+  lalu Pending Cart / Customer Display / RAT.
+
+## 2026-10-14
 ## 2026-10-14
 ### V2 MULTI-SATUAN LEPAS -- stok fraksional (C1 `60008d2`, 19 Okt 2026;
 ACC Gus Fi via DeepSeek: audit 19 Okt LULUS)
