@@ -107,6 +107,25 @@ Database + akun awal dibuat otomatis saat pertama kali jalan
 - Situs Vercel lama (`kopontren-app.vercel.app`) adalah proyek Next.js terpisah
   (login email); proyek ini berdiri sendiri.
 
+## RECOVERY (post-incident 19-20 Okt 2026)
+- **Insiden**: `DROP TABLE products/sale_items/purchases` (bukan sengaja, saat
+  uji migrasi skema) menghancurkan 3 tabel produksi; penjualan 14-18 Okt
+  hanya bisa dipulihkan via **Turso PITR** (file backup lokal tertua s/d
+  13 Okt).
+- **Database produksi aktif: `kopontren-pitr-00036`** (PITR checkpoint
+  19 Okt 17:46 UTC). `DATABASE_URL` Vercel menunjuk ke:
+  `libsql://kopontren-pitr-00036-kita-foska.aws-ap-northeast-1.turso.io`
+  dan `DATABASE_AUTH_TOKEN` = **group write token** grup `default`
+  (satu token untuk semua DB grup, termasuk DB lama).
+- DB lama `kopontren` (rusak) **jangan dihapus** sebelum 24 jam setelah
+  pemulihan terverifikasi di aplikasi.
+- Prosedur PITR (bila diperlukan lagi, free tier = jendela 24 jam):
+  `POST /v1/organizations/kita-foska/databases` body
+  `{"name":"kopontren-pitr-NNNNN","group":"default","seed":{"type":"database","name":"kopontren-pitr-00036","timestamp":"ISO-8601-UTC"}}`.
+- Fallback lokal: `node scripts/restore-db.js --source <file.db> --execute`
+  (pulihkan products/sale_items/purchases dari file backup; sales header
+  tidak dipulihkan skrip — itu hanya ada di PITR).
+
 ## Skema Data
 - `users` (username, role, salt, pass_hash, active, pw_default), `user_pins`
   (pin_hash, failed_attempts, locked_until)
