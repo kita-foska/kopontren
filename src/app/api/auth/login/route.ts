@@ -71,7 +71,19 @@ export async function POST(req: Request) {
       { status: 429 }
     );
   }
-  const d = await db();
+  let d: Awaited<ReturnType<typeof db>>;
+  try {
+    d = await db();
+  } catch (e) {
+    // Kegagalan init/migrasi/Turso (global, bukan salah user): dulu bocor
+    // sebagai 500 body KOSONG -> klien res.json() throw -> "kesalahan
+    // jaringan". Sekarang balas JSON eksplisit + log server (Vercel).
+    console.error('[api/auth/login] db() gagal:', e);
+    return NextResponse.json(
+      { error: 'Server sedang bermasalah (database). Silakan coba beberapa saat lagi.' },
+      { status: 500 }
+    );
+  }
   const user = (await d.prepare('SELECT * FROM users WHERE username = ?').get(username)) as
     | {
         id: number;

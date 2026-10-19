@@ -1189,10 +1189,11 @@ export async function saveZakatSettings(
     await d.exec(`CREATE TABLE IF NOT EXISTS ${tmp} (${cols})`);
     await d.exec(`INSERT INTO ${tmp} SELECT * FROM ${table}`);
     // Guard anti-data-loss: jumlah baris harus sama persis sebelum drop.
-    const [a, b] = await Promise.all([
-      d.prepare(`SELECT COUNT(*) c FROM ${table}`).get(),
-      d.prepare(`SELECT COUNT(*) c FROM ${tmp}`).get(),
-    ]);
+    // SEKUENSIAL (bukan Promise.all): satu transaksi write Turso = satu
+    // stream logis; 2 execute() paralel di transaksi sama rawan gagal
+    // (dan kegagalan = rollback tx, tabel lama tetap utuh).
+    const a = await d.prepare(`SELECT COUNT(*) c FROM ${table}`).get();
+    const b = await d.prepare(`SELECT COUNT(*) c FROM ${tmp}`).get();
     if (Number((a as { c: number }).c) !== Number((b as { c: number }).c))
       throw new Error(`Rebuild v31 ${table}: guard baris gagal -- abort (data utuh)`);
     await d.exec(`DROP TABLE ${table}`);
@@ -1416,7 +1417,7 @@ export function db(): Promise<Db> {
   const url = process.env.DATABASE_URL ?? '';
   if (!url) throw new Error('DATABASE_URL is not set (see DEPLOY-VERCEL.txt)');
   const token = process.env.DATABASE_AUTH_TOKEN;
-  _dbPromise = (async () => {
+  const p: Promise<Db> = (async () => {
     const c = createClient({ url, authToken: token || undefined });
     const d = new DbShim(c);
     // Fast path: database already at the current schema version -> skip the
@@ -1433,8 +1434,19 @@ export function db(): Promise<Db> {
     }
     _db = d;
     return d;
-  })();
-  return _dbPromise;
+  })().catch((err) => {
+    // BUG 2026-10-19 (v31): kegagalan init/migrasi pernah membiarkan
+    // _dbPromise TETAP rejected -> SEMUA request DB berikutnya di
+    // instance ini langsung 500 (login "kesalahan jaringan"), selamanya
+    // sampai instance di-restart. Reset agar request BERIKUTNYA mencoba
+    // ulang init/migrasi. Error dicatat -> muncul di log function Vercel.
+    _db = null;
+    _dbPromise = null;
+    console.error('[db] init/migrasi gagal; akan dicoba ulang request berikutnya:', err);
+    throw err;
+  });
+  _dbPromise = p;
+  return p;
 }
 
 /**

@@ -23,9 +23,29 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username.trim(), password }),
       });
-      const data = await res.json();
+      // 5xx dari Vercel kadang BODI KOSONG (error route tak tertangkap ->
+      // empty 500). res.json() yang reject dulu tampil "kesalahan jaringan"
+      // (menyesatkan: galat server, bukan jaringan).
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+        pin_configured?: boolean;
+        user?: { role?: string };
+      } | null;
       if (!res.ok) {
-        setErr(data.error || 'Gagal masuk. Periksa username & password.');
+        if (data?.error) {
+          setErr(data.error);
+          return;
+        }
+        setErr(
+          res.status >= 500
+            ? 'Server sedang bermasalah (' + res.status + '). Silakan coba lagi beberapa saat.'
+            : 'Gagal masuk. Periksa username & password.'
+        );
+        return;
+      }
+      if (!data) {
+        setErr('Respon server tidak valid (' + res.status + '). Silakan coba lagi.');
         return;
       }
       // Arahkan ke setup PIN bila belum punya PIN, atau diminta reset (?reset=1).
