@@ -67,6 +67,25 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
         (= Database URL Turso) lalu Redeploy. Detail + bug
         laten image_url: MEMORY.md seksi 2026-10-19
         "DARURAT LOGIN".
+      - **R1 (19 Okt, Cline): 3 tabel Turso TERHAPUS (products,
+        sale_items, purchases) -> `scripts/restore-db.js`
+        (PUSHED, MENUNGGU EKSEKUSI PRODUKSI)**: skrip CJS
+        (package.json tanpa "type"; libsql ESM via dynamic
+        import). Default DRY-RUN; `--execute` = DROP 3 tabel
+        -> CREATE DDL v31 PERSIS rebuildTableV31 (db.ts
+        L1238-1243) -> INSERT batch chunk 100 (keyset 500,
+        DML-only; mapping irisan kolom backup∩v31) -> 6 index
+        produksi -> stempel schema_version MAX(,31) ->
+        verifikasi COUNT/integrity/stamp. Sumber:
+        `Downloads\kopontren.db` (v21; products 236,
+        sale_items 0, purchases 0). Stempel 31 sengaja:
+        menghentikan cold-start fullInit/migrate31 (bug laten
+        DDL rebuild v31 tak memuat min_stock/expiry_date).
+        Uji lokal LULUS + idempoten. Aksi Gus Fi: set
+        DATABASE_URL + DATABASE_AUTH_TOKEN -> dry-run ->
+        --execute -> Redeploy Vercel -> login (cold start skip
+        fullInit) -> cek Produk/Sales/Pembelian. Detail:
+        MEMORY.md seksi R1.
 - [x] Anti brute-force `/api/auth/login` (throttle per username+IP) -- SELESAI
 - [x] `pin/change`: PIN lama salah kini menghitung lockout (konsisten
       dgn `pin/verify`) -- SELESAI

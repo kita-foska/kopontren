@@ -3,6 +3,51 @@
 # MEMORY
 
 ## 2026-10-19
+### R1 DARURAT: 3 TABEL TURSO TERHAPUS -- RESTORE VIA `scripts/restore-db.js` (Gus Fi via DeepSeek, 19 Okt 2026)
+- **INSIDEN**: kesalahan fatal (DeepSeek) menghapus tabel
+  `products`, `sale_items`, `purchases` di Turso PRODUKSI.
+  Turso Free tanpa restore/Import + tak ada Turso CLI.
+- **Sumber**: `C:/Users/baiti/Downloads/kopontren.db` (434 KB;
+  -wal 0 byte = utuh; integrity ok; stamp **v21**; 37 tabel;
+  products **236**, sale_items **0**, purchases **0**, sales 0).
+  File "kopontren (1).db" di memo = file ini (nama di-editor WA).
+  Data s.d. 3 Okt; 16-17 Okt tak tergantikan dari backup ini.
+- **Skema target = DDL v31 PERSIS `rebuildTableV31` (db.ts
+  L1238-1243)**: products 13 kolom (stock REAL, ada image_url;
+  TIDAK ada min_stock/expiry_date -- dead columns, tak pernah
+  di-query app, terverifikasi grep), sale_items 12 (qty_per_base
+  REAL, unit_name), purchases 8 (qty REAL).
+- **Bug laten teridentifikasi (akar kronis)**: `migrate()`
+  (db.ts L428-429) menambah min_stock+expiry_date tiap fullInit,
+  padahal DDL rebuild v31 TIDAK memuatnya -> di DB existing
+  `INSERT INTO tmp(13) SELECT * (15)` mismatch -> migrate31
+  PASTI gagal -> fullInit crash loop tiap cold start. Stempel
+  31 oleh skrip restore menghentikan loop tersebut.
+- **`scripts/restore-db.js` (CJS -- package.json tanpa "type",
+  libsql ESM via dynamic import)**: default DRY-RUN (inspeksi
+  backup+target, tampilkan mapping kolom & rencana). `--execute`:
+  (1) DROP 3 tabel, (2) CREATE DDL v31, (3) INSERT dari backup
+  dgn `client.batch()` chunk 100 DML-only (keyset 500,
+  mapping = irisan kolom backup∩v31), (4) 6 index produksi
+  (idx_products_barcode, idx_products_active, idx_si_sale,
+  idx_sale_items_sale, idx_purchases_created,
+  idx_products_active_name), (5) stempel schema_version
+  `MAX(version,31)`, (6) verifikasi COUNT backup-vs-target +
+  integrity_check + stamp + info sales intact. Idempoten.
+  Env: `DATABASE_URL` + `DATABASE_AUTH_TOKEN` (target = DB
+  produksi yang sama; F2/restore-turso.mjs utk impor DB BARU
+  tetap tersedia).
+- **Uji 19 Okt LULUS**: target file-lokal simulasi (stamp 30,
+  sales intact, 3 tabel hilang) -> --execute: 236 products,
+  shape/index/stamp identik DDL v31; run kedua = idempoten.
+  Bug uji: args di-map `res.columns` (13) vs mapping (11) ->
+  perbaiki pakai `map.use`; batch pattern = `batch(chunk,'write')`.
+- **Aksi Gus Fi**: set DATABASE_URL + DATABASE_AUTH_TOKEN ->
+  dry-run -> --execute -> Redeploy Vercel -> login (cold start
+  SKIP fullInit karena stempel 31) -> cek Produk/Sales/Pembelian.
+  **Data hilang permanen**: detail item transaksi lama
+  (sale_items kosong di backup) -- row sales tetap ada.
+
 ### PIVOT RECOVERY F2: IMPORT VIA NODE.JS -- TANPA TURSO CLI (Gus Fi, 19 Okt 2026)
 - Gus Fi TIDAK punya Turso CLI + Turso Studio tanpa tombol Import
   + Free Plan tanpa restore/PITR -> `scripts/restore-turso.mjs`
