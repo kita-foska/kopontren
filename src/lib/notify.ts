@@ -3,6 +3,7 @@ import { invalidate } from '@/lib/ref-cache';
 import { rp, startOfDayJakarta } from '@/lib/format';
 import * as webpush from 'web-push';
 import { salesByMethod } from '@/lib/pay-methods';
+import { detectAnomalies, type AuditLogRow, type AnomalyFlag } from '@/lib/audit-anomaly';
 
 /**
  * Sistem notifikasi KOPONTREN — HANYA untuk ADMIN.
@@ -39,7 +40,11 @@ export type NotifyType =
   | 'rekap_payable'
   // P2 / Q62: approval flow -- request baru + hasil keputusan (semua
   // notifikasi approval memakai jenis ini; link default /admin/persetujuan).
-  | 'approval_pending';
+  | 'approval_pending'
+  // W8-1 / Q72: audit anomaly sweep -- loncat harga (pri 2) + anomali
+  // audit lain: bulk delete / after-hours (pri 3).
+  | 'anomaly_price_jump'
+  | 'anomaly_audit';
 
 export const NOTIFY_TYPES: {
   key: NotifyType;
@@ -70,6 +75,10 @@ export const NOTIFY_TYPES: {
   { key: 'rekap_payable', label: 'Rekap Hutang', priority: 3, link: '/admin/hutang' },
   // P2 / Q62: approval flow (tier admin; 5 aksi allow-list lib/approvals.ts).
   { key: 'approval_pending', label: 'Permintaan Persetujuan', priority: 1, link: '/admin/persetujuan' },
+  // W8-1 / Q72: audit anomaly sweep -- loncat harga (pri 2, ke produk)
+  // + anomali audit lain (bulk delete / after-hours, pri 3, ke audit).
+  { key: 'anomaly_price_jump', label: 'Anomali: Loncat Harga', priority: 2, link: '/admin/produk' },
+  { key: 'anomaly_audit', label: 'Anomali: Aktivitas Audit', priority: 3, link: '/admin/audit' },
 ];
 
 const NOTIFY_TYPE_MAP = new Map(NOTIFY_TYPES.map((t) => [t.key, t]));
@@ -739,7 +748,8 @@ export async function runMonthlyReports(force = false): Promise<number> {
 /**
  * Jalankan pekerjaan terjadwal. Dipanggil scheduler eksternal (Vercel Cron /
  * crontab / GitHub Actions) via POST /api/notifications/cron.
- * job: 'due' | 'daily' | 'weekly' | 'monthly' | 'audit' | 'all' (default: due + prune).
+ * job: 'due' | 'daily' | 'weekly' | 'monthly' | 'anomaly' | 'audit' |
+ * 'all' (default: due + prune).
  */
 /**
  * Auto-purge audit_log: hapus entri lebih lama dari days (default 90,
@@ -754,6 +764,54 @@ export async function purgeAuditLog(days = 90): Promise<number> {
   invalidate('audit:');
   return Number(res.changes);
 }
+/**
+ * W8-1 / Q72 -- Sweep anomali audit_log (jadwal: ?job=anomaly atau ?job=all).
+ * Baca <=500 baris audit_log terbaru, deteksi 3 aturan (bulk delete,
+ * loncat harga, di luar jam), kirim 1 notifikasi per aturan (dedupe
+ * 60 mnt: tak ada spam saat sweep berulang). Best-effort (tidak pernah
+ * throw); hasil hanya untuk log.
+ */
+export async function runAnomalySweep(): Promise<{ flagged: number; notified: string[] }> {
+  const d = await db();
+  const cutoff = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const rows = (await d
+    .prepare(
+      `SELECT id, action, table_name, record_id, old_value, new_value, user_name, created_at
+       FROM audit_log WHERE created_at > ? ORDER BY id DESC LIMIT 500`
+    )
+    .all(cutoff)) as unknown as AuditLogRow[];
+  const flags = detectAnomalies(rows);
+  const byRule = new Map<AnomalyFlag['rule'], AnomalyFlag[]>();
+  for (const fl of flags) {
+    const list = byRule.get(fl.rule) || [];
+    list.push(fl);
+    byRule.set(fl.rule, list);
+  }
+  const notified: string[] = [];
+  // A2 dulu (pri 2), lalu A1+A3 (pri 3) -- urut sesuai prioritas.
+  const order: { rule: AnomalyFlag['rule']; type: 'anomaly_price_jump' | 'anomaly_audit'; label: string; link: string }[] = [
+    { rule: 'price_jump', type: 'anomaly_price_jump', label: 'Loncat Harga Produk', link: '/admin/produk' },
+    { rule: 'bulk_delete', type: 'anomaly_audit', label: 'Hapus Massal', link: '/admin/audit' },
+    { rule: 'after_hours', type: 'anomaly_audit', label: 'Aktivitas Di Luar Jam', link: '/admin/audit' },
+  ];
+  for (const o of order) {
+    const group = byRule.get(o.rule);
+    if (!group || group.length === 0) continue;
+    const res = await notify({
+      type: o.type,
+      title: o.label,
+      message:
+        group.length === 1
+          ? group[0].detail
+          : group.length + ' anomali (' + group.map((g) => g.detail).join('; ') + ')',
+      link: o.link,
+      dedupeMinutes: 60,
+    });
+    if (res.inApp > 0 || res.push > 0) notified.push(o.rule);
+  }
+  return { flagged: flags.length, notified };
+}
+
 export async function runCron(job?: string) {
   switch (job) {
     case 'daily':
@@ -762,6 +820,8 @@ export async function runCron(job?: string) {
       return { job: 'weekly', ran: await runWeeklyReport() };
     case 'monthly':
       return { job: 'monthly', ran: await runMonthlyReports() };
+    case 'anomaly':
+      return { job: 'anomaly', flagged: await runAnomalySweep() };
     case 'audit':
       return { job: 'audit', purged: await purgeAuditLog() };
     case 'all':
@@ -770,8 +830,9 @@ export async function runCron(job?: string) {
       await runWeeklyReport(true);
       await runMonthlyReports(true);
       await pruneOldNotifications(true);
+      const anomaly = await runAnomalySweep();
       const purged = await purgeAuditLog();
-      return { job: 'all', purged };
+      return { job: 'all', purged, flagged: anomaly.flagged };
     case 'due':
     default:
       const due = await runDueDateSweep();

@@ -19,6 +19,22 @@ type Log = {
   user_agent: string;
   created_at: string;
 };
+/** W8-1/Q72: hasil /api/audit/anomalies (lib/audit-anomaly.ts). */
+type Anomaly = {
+  rule: 'bulk_delete' | 'price_jump' | 'after_hours';
+  label: string;
+  detail: string;
+  table?: string;
+  count: number;
+  sample_ids?: number[];
+  created_at: string;
+  severity: 'warn' | 'info';
+};
+type AnomalyResp = {
+  flags: Anomaly[];
+  as_of: string;
+  analyzed_count: number;
+};
 type Resp = {
   logs: Log[];
   tables: string[];
@@ -57,6 +73,28 @@ export function AuditClient() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [canMore, setCanMore] = useState(false);
   const [viewLog, setViewLog] = useState<Log | null>(null);
+  // W8-1/Q72: keanehan audit (deteksi dari /api/audit/anomalies).
+  const [anomalies, setAnomalies] = useState<Anomaly[] | null>(null);
+  const [anomAsOf, setAnomAsOf] = useState('');
+  const [anomCount, setAnomCount] = useState(0);
+  const [anomErr, setAnomErr] = useState('');
+  const [anomLoading, setAnomLoading] = useState(false);
+  const loadAnomalies = useCallback(async () => {
+    setAnomLoading(true);
+    setAnomErr('');
+    const r = await api<AnomalyResp>('/api/audit/anomalies');
+    if (r.ok && r.data) {
+      setAnomalies(r.data.flags);
+      setAnomAsOf(r.data.as_of);
+      setAnomCount(r.data.analyzed_count);
+    } else {
+      setAnomErr(r.error || 'Gagal memuat keanehan');
+    }
+    setAnomLoading(false);
+  }, []);
+  useEffect(() => {
+    loadAnomalies();
+  }, [loadAnomalies]);
   const [toast, showToast, , toastTone] = useToast();
   const { ask, host: confirmHost } = useConfirm();
 
@@ -287,6 +325,59 @@ export function AuditClient() {
         ))}
         {logs.length === 0 && (
           <div className="p-4 text-center text-sm text-slate-500">Tidak ada log yang cocok dengan filter.</div>
+        )}
+      </div>
+      {/* W8-1/Q72: Keanehan -- deteksi dari 350 baris audit_log terakhir
+          (lib/audit-anomaly.ts, READ-ONLY). */}
+      <div className="card p-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200">
+            Keanehan
+          </h3>
+          <Button variant="ghost" size="sm" onClick={loadAnomalies} disabled={anomLoading}>
+            {anomLoading ? 'Memuat...' : 'Perbarui'}
+          </Button>
+        </div>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Dipindai dari {anomCount} aktivitas terakhir
+          {anomAsOf ? ' - ' + fmtDateTime(anomAsOf) : ''}
+        </p>
+        {anomErr ? (
+          <p className="mt-2 text-xs text-rose-600 dark:text-rose-400">{anomErr}</p>
+        ) : null}
+        {anomalies === null ? (
+          <p className="mt-2 text-xs text-slate-500">Memuat keanehan...</p>
+        ) : anomalies.length === 0 ? (
+          <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-400">
+            Tidak ada keanehan terdeteksi.
+          </p>
+        ) : (
+          <ul className="mt-2 space-y-2">
+            {anomalies.map((a) => (
+              <li
+                key={a.rule + a.created_at}
+                className={
+                  'rounded-lg border p-2 ' +
+                  (a.severity === 'warn'
+                    ? 'border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10'
+                    : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/40')
+                }
+              >
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  {a.label}{' '}
+                  <span className="font-normal text-slate-500 dark:text-slate-400">
+                    ({a.severity === 'warn' ? 'perlu perhatian' : 'info'})
+                  </span>
+                </p>
+                <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">{a.detail}</p>
+                {a.sample_ids && a.sample_ids.length > 0 ? (
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    Contoh: {a.sample_ids.map((x) => '#' + x).join(', ')}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
       {canMore && (
