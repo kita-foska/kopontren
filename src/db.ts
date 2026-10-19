@@ -1237,16 +1237,49 @@ export async function saveZakatSettings(
     const tmp = table + '_v31';
     const cols =
       table === 'products'
-        ? 'id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL DEFAULT \'\', unit TEXT NOT NULL DEFAULT \'pcs\', base_price INTEGER NOT NULL DEFAULT 0, cost_price INTEGER NOT NULL DEFAULT 0, stock REAL NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1, barcode TEXT NOT NULL DEFAULT \'\', is_consignment INTEGER NOT NULL DEFAULT 0, image_url TEXT NOT NULL DEFAULT \'\', pack_units TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\'))'
+        ? 'id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL DEFAULT \'\', unit TEXT NOT NULL DEFAULT \'pcs\', base_price INTEGER NOT NULL DEFAULT 0, cost_price INTEGER NOT NULL DEFAULT 0, stock REAL NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\')), barcode TEXT NOT NULL DEFAULT \'\', image_url TEXT NOT NULL DEFAULT \'\', min_stock INTEGER NOT NULL DEFAULT 0, expiry_date TEXT NOT NULL DEFAULT \'\', is_consignment INTEGER NOT NULL DEFAULT 0, pack_units TEXT NOT NULL DEFAULT \'\''
         : table === 'sale_items'
           ? 'id INTEGER PRIMARY KEY, sale_id INTEGER NOT NULL, product_id INTEGER, product_name TEXT NOT NULL, qty INTEGER NOT NULL, unit TEXT NOT NULL DEFAULT \'pcs\', unit_price INTEGER NOT NULL, subtotal INTEGER NOT NULL, discount REAL NOT NULL DEFAULT 0, cost_price INTEGER NOT NULL DEFAULT 0, unit_name TEXT NOT NULL DEFAULT \'\', qty_per_base REAL NOT NULL DEFAULT 1'
           : 'id INTEGER PRIMARY KEY, product_id INTEGER, product_name TEXT NOT NULL, qty REAL NOT NULL, unit_cost INTEGER NOT NULL DEFAULT 0, supplier TEXT NOT NULL DEFAULT \'\', note TEXT NOT NULL DEFAULT \'\', created_at TEXT NOT NULL DEFAULT (strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\'))';
+    // 2026-10-20 (HOTFIX v31): nama kolom eksplisit, BUKAN `SELECT *`
+    // posisional. Skema live v30 produksi (DB PITR 20 Okt) punya 15 kolom
+    // products (termasuk min_stock/expiry_date) + urutan beda dari DDL lama
+    // -> `INSERT INTO tmp SELECT *` meledak "15 values, but 13 columns"
+    // -> fullInit gagal -> 500 "Server sedang bermasalah (database)" di
+    // SEMUA route yang db(). Guard ketat di bawah: set kolom live harus
+    // PERSIS sama dgn DDL v31 -- meleset = abort (data-preserved), tidak
+    // boleh silent drop.
+    const colNames =
+      table === 'products'
+        ? 'id,name,category,unit,base_price,cost_price,stock,active,created_at,barcode,image_url,min_stock,expiry_date,is_consignment,pack_units'
+        : table === 'sale_items'
+          ? 'id,sale_id,product_id,product_name,qty,unit,unit_price,subtotal,discount,cost_price,unit_name,qty_per_base'
+          : 'id,product_id,product_name,qty,unit_cost,supplier,note,created_at';
     // Tabel rebuild = REGULER (bukan TEMPORARY) agar satu tx Turso
     // menjamin kesatuan: crash mid-rebuild -> tx rollback, tabel lama
     // tetap ada. Nama _v31 = guard: crash SETELAH commit rebuild membuat
     // tabel _v31 yatim (tak dipakai) -- backup pre-deploy menjaga (v16).
     await d.exec(`CREATE TABLE IF NOT EXISTS ${tmp} (${cols})`);
-    await d.exec(`INSERT INTO ${tmp} SELECT * FROM ${table}`);
+    // Guard kolom: set kolom live harus PERSIS DDL v31 (hotfix 20 Okt).
+    // Shape baris libsql bervariasi (array/object) -> ambil aman keduanya.
+    const tiRows = (await d
+      .prepare(`SELECT name FROM pragma_table_info('${table}')`)
+      .all()) as unknown[];
+    const liveCols = tiRows.map((r) =>
+      r && typeof r === 'object' && 'name' in (r as object)
+        ? String((r as { name: string }).name)
+        : String((r as unknown[])[0])
+    );
+    const want = colNames.split(',');
+    const missing = want.filter((x) => !liveCols.includes(x));
+    const extra = liveCols.filter((x) => !want.includes(x));
+    if (missing.length > 0 || extra.length > 0)
+      throw new Error(
+        `Rebuild v31 ${table}: skema live meleset dari DDL v31 -- missing=[${missing.join(',')}] extra=[${extra.join(
+          ','
+        )}]; periksa DDL rebuild, abort demi data (tabel lama utuh)`
+      );
+    await d.exec(`INSERT INTO ${tmp} (${colNames}) SELECT ${colNames} FROM ${table}`);
     // Guard anti-data-loss: jumlah baris harus sama persis sebelum drop.
     // SEKUENSIAL (bukan Promise.all): satu transaksi write Turso = satu
     // stream logis; 2 execute() paralel di transaksi sama rawan gagal
@@ -1291,8 +1324,10 @@ export async function saveZakatSettings(
       d.execBatch(
         'CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode); ' +
           'CREATE INDEX IF NOT EXISTS idx_products_active ON products(active, category); ' +
+          'CREATE INDEX IF NOT EXISTS idx_products_active_name ON products(active, name); ' +
           'CREATE INDEX IF NOT EXISTS idx_si_sale ON sale_items(sale_id); ' +
-          'CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id, product_id)'
+          'CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id, product_id); ' +
+          'CREATE INDEX IF NOT EXISTS idx_purchases_created ON purchases(created_at)'
       )
     );
   }
