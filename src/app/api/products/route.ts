@@ -4,6 +4,7 @@ import { canAccess, currentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { cached, invalidate } from '@/lib/ref-cache';
 import { r3, validateQpb } from '@/lib/multisatuan';
+import { kpBarcode } from '@/lib/barcode';
 
 /**
  * Cache in-memory (60 dtk, ref-cache) utk data statis produk + kategori.
@@ -143,13 +144,23 @@ export async function POST(req: Request) {
       packUnits
     );
   const id = Number(info.lastInsertRowid);
+  // W8 Item 2 (R1b): produk baru TANPA barcode dapat Barcode ID otomatis
+  // `KP-{id:05d}` (R2) -- deterministik dari id, tanpa UNIQUE constraint
+  // (R4). Respons menyertakan barcode agar form klien langsung menampilkan.
+  let finalBarcode = barcode;
+  if (!finalBarcode && id > 0) {
+    finalBarcode = kpBarcode(id);
+    await d
+      .prepare('UPDATE products SET barcode = ? WHERE id = ?')
+      .run(finalBarcode, id);
+  }
   await logAudit(user, 'product:create', 'products', id, undefined, {
     name,
     base_price: Math.max(0, Math.floor(Number(b.base_price) || 0)),
     stock: stockValue,
-    barcode: barcode || undefined,
+    barcode: finalBarcode || undefined,
     is_consignment: isConsignment === 1 ? 1 : undefined,
   }, req);
   invalidate('products:');
-  return NextResponse.json({ ok: true, id });
+  return NextResponse.json({ ok: true, id, barcode: finalBarcode || undefined });
 }

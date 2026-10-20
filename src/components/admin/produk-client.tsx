@@ -100,6 +100,8 @@ export function ProdukClient() {
   const [saveBusy, setSaveBusy] = useState(false);
   const [stockBusy, setStockBusy] = useState(false);
   const [toggleBusy, setToggleBusy] = useState(false);
+  // W8 Item 2: guard double-klik utk generate barcode (per-baris & massal).
+  const [barcodeBusy, setBarcodeBusy] = useState(false);
   const [label, setLabel] = useState<Product | null>(null);
   // Grosir v1: daftar tier yang sedang disusun di form modal. Isinya draft
   // (bisa duplikat/invalid); sinkronisasi ke DB (replace-all) dilakukan di
@@ -155,6 +157,13 @@ export function ProdukClient() {
       return true;
     });
   }, [products, q, cat, statusFilter]);
+
+  // W8 Item 2: hitung produk ber-barcode kosong (NULL/''/spasi) --
+  // label tombol massal + kondisi disabled.
+  const emptyBarcodeCount = useMemo(
+    () => products.filter((p) => !(p.barcode && p.barcode.trim() !== '')).length,
+    [products]
+  );
 
   if (loading && products.length === 0) return <PageSkeleton />;
 
@@ -324,7 +333,7 @@ export function ProdukClient() {
   /** Buka overlay cetak label barcode produk (QR berisi nilai barcode). */
   function openLabel(p: Product) {
     if (!p.barcode) {
-      showToast('Isi dulu field Barcode / Kode SKU produk ini (tombol Ubah), lalu cetak label.');
+      showToast('Generate dulu barcode produk ini (tombol Generate / "Isi N Barcode"), lalu cetak label.');
       return;
     }
     setLabel(p);
@@ -380,6 +389,57 @@ export function ProdukClient() {
       showToast(r.error || 'Gagal operasi massal', 'error');
     }
   }
+  // -- W8 Item 2: Barcode ID (KP-{id:05d}) -------------------------------
+  /** Generate Barcode ID utk 1 produk (tombol per-baris). R4: server cek
+   *  bentrok dgn kode manual produk lain; tanpa UNIQUE constraint. */
+  async function generateBarcode(p: Product) {
+    if (barcodeBusy) return;
+    setBarcodeBusy(true);
+    try {
+      const r = await api<{ ok: boolean; barcode?: string }>('/api/products/barcode', {
+        method: 'POST',
+        body: JSON.stringify({ id: p.id }),
+      });
+      if (r.ok) {
+        showToast('Barcode ' + (r.data?.barcode || '') + ' dibuat untuk ' + p.name);
+        load();
+      } else {
+        showToast(r.error || 'Gagal membuat barcode', 'error');
+      }
+    } finally {
+      setBarcodeBusy(false);
+    }
+  }
+  /** Backfill semua produk ber-barcode kosong (tombol massal). */
+  function generateAllBarcodes() {
+    if (barcodeBusy || emptyBarcodeCount === 0) return;
+    ask({
+      title: 'Isi barcode kosong',
+      message:
+        emptyBarcodeCount +
+        ' produk tanpa barcode akan diisi otomatis (format KP-xxxxx). Baris yang kode-nya bentrok dengan produk lain dilewati.',
+      confirmLabel: 'Isi',
+      proceed: async () => {
+        setBarcodeBusy(true);
+        const r = await api<{ ok: boolean; affected?: number; skipped?: number }>(
+          '/api/products/barcode',
+          { method: 'POST', body: JSON.stringify({ allEmpty: true }) }
+        );
+        setBarcodeBusy(false);
+        if (r.ok) {
+          const skipped = Number(r.data?.skipped) || 0;
+          showToast(
+            (r.data?.affected || 0) + ' barcode diisi' + (skipped > 0 ? ', ' + skipped + ' dilewati (bentrok)' : ''),
+            skipped > 0 ? 'warning' : undefined
+          );
+          load();
+        } else {
+          showToast(r.error || 'Gagal mengisi barcode', 'error');
+        }
+      },
+    });
+  }
+
   function exportCsv() {
     const head = ['id', 'name', 'category', 'unit', 'base_price', 'cost_price', 'stock', 'active', 'barcode'];
     const rows = products.map((p) => [
@@ -466,6 +526,16 @@ export function ProdukClient() {
             onClick={exportCsv}
           >
             Export CSV
+          </Button>
+          {/* W8 Item 2: backfill massal barcode kosong (KP-xxxxx). */}
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={barcodeBusy || emptyBarcodeCount === 0}
+            title="Isi otomatis barcode produk kosong (KP-xxxxx)"
+            onClick={generateAllBarcodes}
+          >
+            {emptyBarcodeCount > 0 ? 'Isi ' + emptyBarcodeCount + ' Barcode' : 'Barcode Lengkap'}
           </Button>
           <Button variant="primary" onClick={() => openEdit()}>
             + Tambah Produk
@@ -687,11 +757,26 @@ export function ProdukClient() {
                   </Td>
                   <Td className="text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {/* W8 Item 2: generate Barcode ID per-baris (hanya saat kosong). */}
+                      {!p.barcode && (
+                        <>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            disabled={barcodeBusy}
+                            onClick={() => generateBarcode(p)}
+                            title="Generate barcode otomatis (KP-xxxxx)"
+                          >
+                            Generate
+                          </Button>
+                          <span className="text-slate-300 dark:text-navy-600">|</span>
+                        </>
+                      )}
                       <Button
                         variant="link"
                         size="sm"
                         onClick={() => openLabel(p)}
-                        title={p.barcode ? 'Cetak label barcode produk' : 'Isi dulu barcode produk'}
+                        title={p.barcode ? 'Cetak label barcode produk' : 'Generate dulu barcode produk ini'}
                       >
                         Label
                       </Button>
@@ -792,6 +877,18 @@ export function ProdukClient() {
                 )}
               </div>
               <div className="mt-2 flex gap-2">
+                {/* W8 Item 2: generate Barcode ID (kartu mobile). */}
+                {!p.barcode && (
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    className="flex-1"
+                    disabled={barcodeBusy}
+                    onClick={() => generateBarcode(p)}
+                  >
+                    Generate
+                  </Button>
+                )}
                 <Button variant="secondary" size="md" className="flex-1" onClick={() => openLabel(p)}>
                   Label
                 </Button>
