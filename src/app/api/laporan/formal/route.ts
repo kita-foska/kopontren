@@ -7,7 +7,9 @@
  * (Laporan Laba-Rugi formal, Sek.5.2); W2.4 menambah report `lpe`
  * (Laporan Perubahan Ekuitas formal, Sek.5.3); W2.5 menambah report
  * `lak` (Laporan Arus Kas formal, Sek.5.4); W2.6 menambah report
- * `calk` (CALK -- Catatan atas Laporan Keuangan, template Sek.5.5).
+ * `calk` (CALK -- Catatan atas Laporan Keuangan, template Sek.5.5);
+ * W8 Item 5 menambah report `rat` (Laporan Tahunan utk RAT: jendela
+ * ?tahun=YYYY, paparan only -- LKA/LPE/posisi/LAK per-tahun + SHU + ZIS).
  *
  * `?as_of=YYYY-MM-DD` = tanggal laporan WIB (default = hari ini WIB).
  * Batas kumulatif `at` = akhir hari `as_of` (entry_date < at).
@@ -28,6 +30,7 @@ import { buildLka } from '@/lib/laporan/lka';
 import { buildLpe } from '@/lib/laporan/lpe';
 import { buildLak } from '@/lib/laporan/lak';
 import { buildCalk } from '@/lib/laporan/calk';
+import { buildRat } from '@/lib/laporan/rat';
 import { wibToday } from '@/lib/zakat-period';
 
 // Module-local (TIDAK export): modul route Next.js hanya boleh mengeksport
@@ -83,6 +86,16 @@ const CALK_NOTES: string[] = [
   'Cache 60 detik (TTL backstop); mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
 ];
 
+const RAT_NOTES: string[] = [
+  'Laporan Tahunan (RAT) tahun buku YYYY: GL periode [YYYY-01-01, (YYYY+1)-01-01); neraca KUMULATIF s.d. akhir tahun (reuse buildPosisi).',
+  'D=K (rekon #15 JOURNAL_BAL) kumulatif s.d. akhir tahun: bila flag_rekon15=true, angka formal TIDAK dianggap otoritatif -- periksa cek JOURNAL_BAL di /admin/rekonsiliasi.',
+  'Laba/rugi berjalan ditutup ke 3020 manual periodik (jurnal closing, Sek.3.2.6); pembuka LPE = saldo 30xx akhir tahun sebelumnya.',
+  'Panel SHU = paparan input admin coop_shu (OQ1=W4.4: "hitung = input, distribusi = jurnal"); TIDAK ada distribusi otomatis di modul ini (paparan only).',
+  'Ringkasan ZIS: diterima = 4090+4100 (sisi kredit), disalurkan = 5090+5100+6030 (sisi debit) periode tahun tsb (konsisten calk item 7).',
+  'Wakaf (1120 + 6020) bersifat memo dan TIDAK dijumlahkan ke total aset.',
+  'Cache 60 detik (TTL backstop) per tahun; mutasi GL tidak otomatis meng-invalidate -- tunggu TTL atau tekan Muat ulang.',
+];
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** as_of 'YYYY-MM-DD' -> batas eksklusif akhir hari (YYYY-MM-DD + 1). */
@@ -100,7 +113,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const report = (url.searchParams.get('report') ?? 'posisi').trim();
-  const supported = ['posisi', 'lka', 'lpe', 'lak', 'calk'];
+  const supported = ['posisi', 'lka', 'lpe', 'lak', 'calk', 'rat'];
   if (!supported.includes(report))
     return NextResponse.json(
       { error: 'report "' + report + '" belum tersedia', supported },
@@ -111,11 +124,28 @@ export async function GET(req: Request) {
   if (!DATE_RE.test(asOf) || Number.isNaN(Date.parse(asOf + 'T00:00:00Z')))
     asOf = wibToday();
 
+  // W8 Item 5: RAT memakai TAHUN (jendela from-to), bukan as_of.
+  // ?tahun=YYYY (divalidasi -> 400); default = tahun WIB kemaren.
+  const isRat = report === 'rat';
+  const tahun =
+    (url.searchParams.get('tahun') ?? '').trim() ||
+    String(Number(wibToday().slice(0, 4)) - 1);
+  if (isRat && !/^\d{4}$/.test(tahun))
+    return NextResponse.json(
+      { error: 'tahun harus YYYY (4 digit), got "' + tahun + '"' },
+      { status: 400 }
+    );
+
   try {
     // `at` dihitung di dalam try: nextDay() dapat melempar RangeError pada
     // tanggal invalid; selalu tertangkap -> balas JSON 500, bukan HTML 500.
     const at = nextDay(asOf);
-    const payload = await cached('lapformal:' + report + ':' + at, async () => {
+    // W8 Item 5: RAT di-cache per tahun (bukan as_of).
+    const cacheKey =
+      report === 'rat'
+        ? 'lapformal:rat:' + tahun
+        : 'lapformal:' + report + ':' + at;
+    const payload = await cached(cacheKey, async () => {
       const d = await db();
       const coa = (await d
         .prepare('SELECT code, name, "group" FROM coa WHERE status = ? ORDER BY code')
@@ -147,6 +177,11 @@ export async function GET(req: Request) {
         const lpe = await buildLpe(d, at);
         // as_of dikirim via ...lpe (LpePayload.as_of = at); tak perlu duplikat.
         return { ...common, ...lpe, notes: LPE_NOTES };
+      }
+      if (report === 'rat') {
+        const rat = await buildRat(d, tahun);
+        // tahun/jendela dikirim via ...rat (RatPayload.tahun/period_from/period_to).
+        return { ...common, ...rat, notes: RAT_NOTES };
       }
       const posisi = await buildPosisi(d, at);
       // as_of dikirim via ...posisi (PosisiPayload.as_of = at); tak perlu duplikat.

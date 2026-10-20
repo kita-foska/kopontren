@@ -20,6 +20,7 @@ import type { LkaPayload } from '@/lib/laporan/lka';
 import type { LpePayload } from '@/lib/laporan/lpe';
 import type { LakPayload, LakActivity } from '@/lib/laporan/lak';
 import type { CalkPayload } from '@/lib/laporan/calk';
+import type { RatPayload } from '@/lib/laporan/rat';
 
 /** V1 (laba/rugi simplifikasi) di-lazy-load -- datanya berat. */
 const V1Client = dynamic(
@@ -28,7 +29,7 @@ const V1Client = dynamic(
   { ssr: false, loading: () => <PageSkeleton /> },
 );
 
-type TabId = 'posisi' | 'lka' | 'lpe' | 'lak' | 'calk' | 'v1';
+type TabId = 'posisi' | 'lka' | 'lpe' | 'lak' | 'calk' | 'rat' | 'v1';
 
 /** Bentuk respons GET /api/laporan/formal?report=posisi (route W2.2). */
 type FormalResp = PosisiPayload & {
@@ -74,6 +75,15 @@ type CalkResp = CalkPayload & {
   coa: { code: string; name: string; group: string }[];
   notes: string[];
 };
+/** Bentuk respons GET /api/laporan/formal?report=rat (W8 Item 5, laporan tahunan). */
+type RatResp = RatPayload & {
+  ok: true;
+  gl_enabled: boolean;
+  coop_registered: boolean;
+  coa: { code: string; name: string; group: string }[];
+  notes: string[];
+};
+
 
 /**
  * /admin/laporan: shell tab. 'posisi' = Laporan Posisi W2.2 (formal,
@@ -89,6 +99,7 @@ export function LaporanFormalClient() {
     { id: 'lpe', label: 'Perubahan Ekuitas' },
     { id: 'lak', label: 'Arus Kas' },
     { id: 'calk', label: 'Catatan LK (CALK)' },
+      { id: 'rat', label: 'RAT (Laporan Tahunan)' },
     { id: 'v1', label: 'Laporan V1' },
   ];
 
@@ -141,10 +152,15 @@ export function LaporanFormalClient() {
           term="D=K"
           tip="Debit harus sama dengan Kredit. Bila tidak seimbang, ada pencatatan yang salah; cek /admin/rekonsiliasi."
         />
+        {' - '}
+        <TermTip
+          term="RAT"
+          tip="Rapat Anggota Tahunan: forum resmi keputusan koperasi (SHU, pengurus). Tab ini menampilkan laporan keuangan satu tahun penuh."
+        />
         {'. Daftar lengkap: menu Glosarium.'}
       </div>
 
-      {tab === 'posisi' ? <PositionPanel /> : tab === 'lka' ? <LkaPanel /> : tab === 'lpe' ? <LpePanel /> : tab === 'lak' ? <LakPanel /> : tab === 'calk' ? <CalkPanel /> : <V1Client />}
+      {tab === 'posisi' ? <PositionPanel /> : tab === 'lka' ? <LkaPanel /> : tab === 'lpe' ? <LpePanel /> : tab === 'lak' ? <LakPanel /> : tab === 'calk' ? <CalkPanel /> : tab === 'rat' ? <RatPanel /> : <V1Client />}
     </div>
   );
 }
@@ -1429,3 +1445,510 @@ function NotesList({ notes }: { notes: string[] }) {
     </div>
   );
 }
+// -----------------------------------------------------------------------------
+// W8 Item 5 -- RAT (Laporan Tahunan, paparan only) + cetak landscape 1-klik.
+// Data via GET /api/laporan/formal?report=rat&tahun=YYYY (route W8 Item 5);
+// panel = P&L + LPE + posisi (reuse PosisiStatement) + LAK + SHU + ZIS.
+// -----------------------------------------------------------------------------
+
+/**
+ * Cetak landscape 1-klik: sementara switch @page ke A4 landscape
+ * (default global @page A4 portrait utk .print-area), kembalikan setelah
+ * dialog print ditutup (pola printReceipt pos-client.tsx). Konten cetak
+ * = div .print-area panel RAT; kontrol (tahun/cetak) ber-class print-hidden.
+ */
+let ratLandscapeSeq = 0;
+function printRatLandscape() {
+  const id = '__kopontren_rat_landscape__' + ++ratLandscapeSeq;
+  const style = document.createElement('style');
+  style.id = id;
+  style.textContent = '@page { size: A4 landscape; margin: 10mm; }';
+  document.head.appendChild(style);
+  const remove = () => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  };
+  window.addEventListener('afterprint', remove, { once: true });
+  setTimeout(remove, 4000); // fallback bila afterprint tak ber-fires
+  window.print();
+}
+
+/**
+ * W8 Item 5 -- tahun picker panel RAT. Baca-on-mount: ?tahun= valid YYYY
+ * -> dipakai; tak valid/tidak ada -> fallback tahun WIB kemaren. Ganti
+ * (setTahun): state lokal + router.replace ?tahun= (tanpa reload).
+ * Kunci API = ?tahun= (GET /api/laporan/formal?report=rat).
+ */
+function useYearPeriod() {
+  const sp = useSearchParams();
+  const router = useRouter();
+  const [tahun, setTahunState] = useState(() => {
+    const p = sp.get('tahun');
+    return p !== null && /^\d{4}$/.test(p) ? p : String(Number(todayWibStr().slice(0, 4)) - 1);
+  });
+  const setTahun = useCallback(
+    (v: string) => {
+      if (!/^\d{4}$/.test(v)) return;
+      setTahunState(v);
+      void router.replace('/admin/laporan?tahun=' + v);
+    },
+    [router],
+  );
+  return [tahun, setTahun] as const;
+}
+
+/** W8 Item 5 -- panel RAT: pilih tahun, muat ?report=rat, render laporan tahunan. */
+function RatPanel() {
+  const [tahun, setTahun] = useYearPeriod();
+  const [data, setData] = useState<RatResp | null>(null);
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr('');
+    const r = await api<RatResp>('/api/laporan/formal?report=rat&tahun=' + tahun);
+    if (r.ok && r.data) {
+      setData(r.data);
+    } else {
+      setData(null);
+      setErr(r.error || 'Gagal memuat Laporan Tahunan (RAT).');
+    }
+    setLoading(false);
+  }, [tahun]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading && !data) return <PageSkeleton />;
+
+  return (
+    <div className="space-y-3">
+      {/* Bar atas: tahun + status D=K + tombol cetak landscape (print-hidden). */}
+      <div className="card flex flex-wrap items-center justify-between gap-3 p-3 print-hidden">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Tahun
+          </label>
+          <input
+            type="number"
+            min={2000}
+            max={2100}
+            step={1}
+            value={tahun}
+            onChange={(e) => e.target.value && setTahun(e.target.value)}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm dark:border-navy-600 dark:bg-navy-800"
+          />
+          <Button variant="ghost" onClick={() => load()}>
+            Muat ulang
+          </Button>
+          <Button variant="secondary" onClick={() => printRatLandscape()}>
+            Cetak (Landscape)
+          </Button>
+        </div>
+        {data && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone={data.d_k.balanced ? 'green' : 'red'}>
+              {data.d_k.balanced ? 'D=K seimbang' : 'Tidak seimbang'}
+            </Badge>
+            {data.gl_enabled ? (
+              <Badge tone="blue">auto-posting</Badge>
+            ) : (
+              <Badge tone="gray">auto-posting off</Badge>
+            )}
+            {data.coop_registered && <Badge tone="amber">kopontren reg.</Badge>}
+          </div>
+        )}
+      </div>
+
+      {err && !loading && (
+        <div className="card p-4">
+          <ErrorState text={err} onRetry={() => load()} />
+        </div>
+      )}
+
+      {/* D=K gagal (rekon #15 JOURNAL_BAL): tolak angka formal. */}
+      {data && !data.d_k.balanced && (
+        <div className="card border-rose-200 bg-rose-50 p-4 dark:border-rose-900 dark:bg-rose-950/30">
+          <p className="text-sm font-bold text-rose-700 dark:text-rose-300">
+            Debit tak sama Kredit s.d. {data.period_to} (selisih {rp(data.d_k.gap)}). Angka
+            formal TIDAK otoritatif.
+          </p>
+          <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+            Perbaiki mutasi jurnal, atau cek JOURNAL_BAL di{' '}
+            <a href="/admin/rekonsiliasi" className="font-bold underline">
+              /admin/rekonsiliasi
+            </a>
+            .
+          </p>
+        </div>
+      )}
+
+      {data && (
+        <div className="print-area">
+          <RatStatement p={data} />
+        </div>
+      )}
+      {data && data.notes.length > 0 && <NotesList notes={data.notes} />}
+    </div>
+  );
+}
+
+/** RAT Statement: judul + P&L + LPE + posisi + LAK + SHU + ZIS (paparan only). */
+function RatStatement({ p }: { p: RatResp }) {
+  return (
+    <div className="space-y-3">
+      {/* Judul + periode + posisi laporan. */}
+      <div className="card p-4">
+        <h3 className="text-sm font-bold">
+          Rapat Anggota Tahunan (RAT) -- Tahun Buku {p.tahun}
+        </h3>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Periode GL: {p.period_from} s.d. {p.period_to} (eksklusif); neraca kumulatif s.d.
+          {p.period_to}. Paparan only: angka dari GL + input admin (SHU), tanpa distribusi
+          otomatis.
+        </p>
+      </div>
+
+      <RatLkaSection p={p} />
+      <RatLpeSection p={p} />
+
+      <div>
+        <p className="mb-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Laporan Posisi (Neraca) akhir {p.tahun}
+        </p>
+        {/* Reuse renderer panel Posisi: bungkus payload posisi dgn bentuk envelope posisi. */}
+        <PosisiStatement
+          p={
+            {
+              ...p.posisi,
+              ok: true,
+              gl_enabled: p.gl_enabled,
+              coop_registered: p.coop_registered,
+              coa: p.coa,
+              notes: p.notes,
+            } as FormalResp
+          }
+        />
+      </div>
+
+      <RatLakSection p={p} />
+      <RatShuSection p={p} />
+      <RatZisSection p={p} />
+    </div>
+  );
+}
+
+/** P&L per tahun (SAK-EP Sek.5.2; formula identik panel Laba-Rugi, rentang 1 tahun). */
+function RatLkaSection({ p }: { p: RatResp }) {
+  const l = p.lka;
+  const pd = l.pendapatan;
+  const hp = l.hpp;
+  return (
+    <div className="card p-4">
+      <h3 className="mb-2 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+        LABA/RUGI TAHUN {p.tahun}
+      </h3>
+      <Line label="Pendapatan bruto (4010)" value={pd.bruto} />
+      <Line label="Potongan & diskon (4020)" value={pd.diskon} />
+      <Line label="Retur penjualan (4030)" value={pd.retur_penjualan} />
+      <Line label="Pendapatan neto" value={pd.neto} strong />
+      <Line label="HPP neto (5010 - 5020)" value={hp.neto} />
+      <Line label="Laba Kotor" value={l.laba_kotor} strong />
+      <Line label="Beban (5030+5040+5060+5070+5080)" value={l.beban} />
+      <Line label="Laba Sebelum ZIS" value={l.laba_sebelum_zis} strong />
+      <Line label="ZIS (5090+5100+6030)" value={l.zis} />
+      {l.pendapatan_lainnya.rows.some((r) => r.value !== 0) ? (
+        <div className="mt-2">
+          <h4 className="mb-1 text-xs font-bold text-sky-700 dark:text-sky-400">
+            PENDAPATAN LAIN KOPERASI (4050-4100)
+          </h4>
+          {l.pendapatan_lainnya.rows.map((r) => (
+            <Line key={r.code} label={r.label + ' (' + r.code + ')'} value={r.value} />
+          ))}
+          <Line label="Total pendapatan lain" value={l.pendapatan_lainnya.total} strong />
+        </div>
+      ) : null}
+      <Line label="Laba Bersih (dikur ZIS, dikur beban, dikur HPP)" value={l.laba_bersih} strong />
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Laba bersih ini ditutup ke 3020 (SHU) manual periodik (jurnal closing, Sek.3.2.6);
+        panel SHU di bawah menampilkan input administrasinya.
+      </p>
+    </div>
+  );
+}
+
+/** LPE per tahun: pembuka = saldo akhir tahun lalu; mutasi = closing + alokasi. */
+function RatLpeSection({ p }: { p: RatResp }) {
+  const t = p.lpe.totals;
+  const nz = (v: number) => (v === 0 ? '-' : rp(v));
+  return (
+    <div className="card p-4">
+      <h3 className="mb-2 text-sm font-bold">PERUBAHAN EKUITAS -- TAHUN {p.tahun}</h3>
+      <div className="overflow-x-auto">
+        <Table minW="min-w-[44rem]">
+          <thead>
+            <tr className="border-b border-slate-200 dark:border-navy-700">
+              <Th>Akun Ekuitas</Th>
+              <Th>Pembuka (akhir {Number(p.tahun) - 1})</Th>
+              <Th>(+) SHU</Th>
+              <Th>(+/-) Alokasi</Th>
+              <Th>(-) Distribusi</Th>
+              <Th>Penutup {p.tahun}</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {p.lpe.columns.map((c) => (
+              <Trow key={c.code}>
+                <Td>
+                  {c.name}{' '}
+                  <span className="font-mono text-xs text-slate-400">{c.code}</span>
+                </Td>
+                <Td className="tabular-nums">{nz(c.pembuka)}</Td>
+                <Td className="tabular-nums">{nz(c.shu)}</Td>
+                <Td className="tabular-nums">{nz(c.alokasi)}</Td>
+                <Td className="tabular-nums">{nz(c.distribusi)}</Td>
+                <Td className="tabular-nums font-bold">{nz(c.penutup)}</Td>
+              </Trow>
+            ))}
+            <Trow>
+              <Td className="font-bold">Total Ekuitas</Td>
+              <Td className="tabular-nums font-bold">{nz(t.pembuka)}</Td>
+              <Td className="tabular-nums font-bold">{nz(t.shu)}</Td>
+              <Td className="tabular-nums font-bold">{nz(t.alokasi)}</Td>
+              <Td className="tabular-nums font-bold">{nz(t.distribusi)}</Td>
+              <Td className="tabular-nums font-bold">{nz(t.penutup)}</Td>
+            </Trow>
+          </tbody>
+        </Table>
+      </div>
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Saldo penuh ekuitas (SUM 30xx s.d. {p.period_to}) = <b>{rp(p.lpe.full_balance_ekuitas)}</b>;
+        total simpanan anggota (kewajiban, bukan ekuitas) = {rp(p.lpe.memos.simpanan_total)}.
+      </p>
+    </div>
+  );
+}
+
+
+
+/** LAK per tahun: identik panel Arus Kas, saldo awal = akhir tahun lalu. */
+function RatLakSection({ p }: { p: RatResp }) {
+  const l = p.lak;
+  const a = l.aktivitas;
+  const nz = (v: number) => (v === 0 ? '-' : rp(v));
+  const actBlock = (title: string, x: { masuk: number; keluar: number; neto: number; codes: string[] }) => (
+    <div key={title}>
+      <h4 className="mb-1 text-xs font-bold text-slate-700 dark:text-slate-300">{title}</h4>
+      <Line label="Masuk" value={x.masuk} />
+      <Line label="Keluar" value={x.keluar} />
+      <Line label="Neto" value={x.neto} strong />
+      {x.codes.length > 0 && (
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Akun lawan: {x.codes.map((c) => p.coa.find((o) => o.code === c)?.name ?? c).join(', ')}
+        </p>
+      )}
+    </div>
+  );
+  return (
+    <div className="card p-4">
+      <h3 className="mb-2 text-sm font-bold">ARUS KAS -- TAHUN {p.tahun}</h3>
+      <div className="overflow-x-auto">
+        <Table minW="min-w-[52rem]">
+          <thead>
+            <tr className="border-b border-slate-200 dark:border-navy-700">
+              <Th>Kas</Th>
+              <Th>Pembuka</Th>
+              <Th>Masuk</Th>
+              <Th>Keluar</Th>
+              <Th>Transfer</Th>
+              <Th>Neto</Th>
+              <Th>Penutup</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {l.kas.map((k) => (
+              <Trow key={k.code}>
+                <Td>
+                  {k.name} <span className="font-mono text-xs text-slate-400">{k.code}</span>
+                </Td>
+                <Td className="tabular-nums">{nz(k.pembuka)}</Td>
+                <Td className="tabular-nums">{nz(k.masuk)}</Td>
+                <Td className="tabular-nums">{nz(k.keluar)}</Td>
+                <Td className="tabular-nums">{nz(k.transfer)}</Td>
+                <Td className="tabular-nums font-bold">{nz(k.neto)}</Td>
+                <Td className="tabular-nums font-bold">{nz(k.penutup)}</Td>
+              </Trow>
+            ))}
+            <Trow>
+              <Td className="font-bold">{l.kas_sosial.name} ({l.kas_sosial.code})</Td>
+              <Td className="tabular-nums">{nz(l.kas_sosial.pembuka)}</Td>
+              <Td className="tabular-nums">{nz(l.kas_sosial.masuk)}</Td>
+              <Td className="tabular-nums">{nz(l.kas_sosial.keluar)}</Td>
+              <Td className="tabular-nums">{nz(l.kas_sosial.transfer)}</Td>
+              <Td className="tabular-nums font-bold">{nz(l.kas_sosial.neto)}</Td>
+              <Td className="tabular-nums font-bold">{nz(l.kas_sosial.penutup)}</Td>
+            </Trow>
+          </tbody>
+        </Table>
+      </div>
+      <div className="mt-3 space-y-3">
+        {actBlock('Aktivitas Operasional', a.operasional)}
+        {actBlock('Aktivitas Investasi', a.investasi)}
+        {actBlock('Aktivitas Pendanaan', a.pendanaan)}
+      </div>
+      {l.kas_sosial.rincian.length > 0 && (
+        <div className="mt-3">
+          <h4 className="mb-1 text-xs font-bold text-sky-700 dark:text-sky-400">
+            Rincian Pergerakan Kas Sosial (1100)
+          </h4>
+          <div className="overflow-x-auto">
+            <Table minW="min-w-[36rem]">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-navy-700">
+                  <Th>Akun Lawan</Th>
+                  <Th>Masuk</Th>
+                  <Th>Keluar</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {l.kas_sosial.rincian.map((r) => (
+                  <Trow key={r.code}>
+                    <Td>{r.label}</Td>
+                    <Td className="tabular-nums">{nz(r.masuk)}</Td>
+                    <Td className="tabular-nums">{nz(r.keluar)}</Td>
+                  </Trow>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        </div>
+      )}
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Footer kas usaha: saldo awal {rp(l.footer.saldo_awal)} + neto aktivitas{' '}
+        {rp(l.footer.neto_aktivitas)} + pergeseran kas sosial {rp(l.footer.pergeseran_kas_sosial)} =
+        saldo akhir {rp(l.footer.saldo_akhir)}.
+      </p>
+    </div>
+  );
+}
+
+
+/** Panel SHU per tahun: total + 4 alokasi + rasio + daftar baris (paparan input admin). */
+function RatShuSection({ p }: { p: RatResp }) {
+  const s = p.shu;
+  const pct = (v: number) => (s.total_shu === 0 ? '-' : ((v / s.total_shu) * 100).toFixed(1) + ' %');
+  return (
+    <div className="card p-4">
+      <h3 className="mb-2 text-sm font-bold text-amber-700 dark:text-amber-400">
+        SHU TAHUN {p.tahun} (paparan input admin)
+      </h3>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Total SHU</p>
+          <p className="text-lg font-bold tabular-nums">{rp(s.total_shu)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Cadangan Umum ({pct(s.totals.cadangan_umum)})
+          </p>
+          <p className="text-lg font-bold tabular-nums">{rp(s.totals.cadangan_umum)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Cadangan Khusus ({pct(s.totals.cadangan_khusus)})
+          </p>
+          <p className="text-lg font-bold tabular-nums">{rp(s.totals.cadangan_khusus)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Jasa Anggota ({pct(s.totals.jasa_anggota)})
+          </p>
+          <p className="text-lg font-bold tabular-nums">{rp(s.totals.jasa_anggota)}</p>
+        </div>
+      </div>
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Dibagi (3060) = {rp(s.totals.dibagi)}; jumlah baris coop_shu = {s.counts}. Angka ini
+        paparan input admin -- modul ini TIDAK melakukan distribusi otomatis.
+      </p>
+      {s.rows.length > 0 && (
+        <div className="mt-3 overflow-x-auto">
+          <Table minW="min-w-[56rem]">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-navy-700">
+                <Th>Periode</Th>
+                <Th>SHU Total</Th>
+                <Th>Cad. Umum</Th>
+                <Th>Cad. Khusus</Th>
+                <Th>Jasa Anggota</Th>
+                <Th>Dibagi</Th>
+                <Th>Rasio (disimpan)</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {s.rows.map((r) => (
+                <Trow key={r.period}>
+                  <Td className="font-mono text-xs">{r.period}</Td>
+                  <Td className="tabular-nums font-bold">{rp(r.shu_total)}</Td>
+                  <Td className="tabular-nums">{rp(r.cadangan_umum)}</Td>
+                  <Td className="tabular-nums">{rp(r.cadangan_khusus)}</Td>
+                  <Td className="tabular-nums">{rp(r.jasa_anggota)}</Td>
+                  <Td className="tabular-nums">{rp(r.dibagi)}</Td>
+                  <Td className="text-xs text-slate-500 dark:text-slate-400">
+                    CU {r.rasio.cad_umum} / CK {r.rasio.cad_khusus} / JA {r.rasio.jasa} /
+                    Dib {r.rasio.dibagi}
+                  </Td>
+                </Trow>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Ringkasan ZIS per tahun: diterima vs disalurkan (GL posting, konsisten calk item 7). */
+function RatZisSection({ p }: { p: RatResp }) {
+  const z = p.zis;
+  return (
+    <div className="card p-4">
+      <h3 className="mb-2 text-sm font-bold text-violet-700 dark:text-violet-400">
+        RINGKASAN ZIS -- TAHUN {p.tahun}
+      </h3>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            DITERIMA (4090 + 4100, sisi kredit)
+          </p>
+          <p className="text-lg font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
+            {rp(z.diterima)}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            DISALURKAN (5090 + 5100 + 6030, sisi debit)
+          </p>
+          <p className="text-lg font-bold tabular-nums text-rose-700 dark:text-rose-400">
+            {rp(z.disalurkan)}
+          </p>
+        </div>
+      </div>
+      <div className="mt-3">
+        {z.rows.map((r) => (
+          <Line
+            key={r.code}
+            label={r.label + ' (' + r.code + ', ' + r.sisi + ')'}
+            value={r.value}
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        Paparan posting GL periode {p.period_from} s.d. {p.period_to}; detail per infak/sedekah
+        ada di calk item 7 + panel ZIS.
+      </p>
+    </div>
+  );
+}
+
