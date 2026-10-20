@@ -2611,4 +2611,30 @@ bikin keputusan fiqih baru demi kebutuhan coding.
       reverted -- sw.js untouched); 0 non-ASCII; frozen utuh
       (public/sw.js, V1, coop.ts); tanpa perubahan skema;
       fiqih: none. Detail: MEMORY.md seksi "PENDING CART LEPAS".
+- [x] **Wave 8 #4 -- Customer Display** -- LEPAS 20 Okt (C1 `0d3e271`,
+      C2 = record ini; ACC Gus Fi via DeepSeek audit LULUS, ruling
+      Opasi B -- kiosk PUBLIK): layar /display (HP lama / monitor
+      kedua) TANPA login (middleware exception /display).
+      GET /api/display/latest = endpoint PUBLIK PII-FREE: transaksi
+      terakhir (id, total, item_count, label metode, jam WIB, QR QRIS
+      dinamis); TANPA nama pelanggan/member, TANPA rincian baris --
+      proyeksi eksplisit per-field di src/lib/display-latest.ts
+      (murni hermetis, tanpa DB/DOM). Kiosk polling 3 dtk (pola
+      confidence banner, bukan SSE/WebSocket -- keputusan ruling);
+      transaksi BARU ditayangkan 15 dtk lalu auto-reset idle;
+      polling pertama tak memutar-ulang transaksi lama. QR QRIS
+      dinamis (nominal terikat, tag 54) bila pembayaran wa/mixed +
+      NMID terisi; belom dikonfigurasi admin = layar jujur "QRIS
+      belum dikonfigurasi -- total tetap tercatat". DB gagal =
+      idle (kiosk tak hang) + log server. 7 file +405/-1
+      (5 new: src/lib/display-latest.ts,
+      src/app/api/display/latest/route.ts, src/app/display/page.tsx,
+      src/components/display-client.tsx,
+      scripts/test-display-latest.ts suite #40, 22 asersi;
+      2 modif: middleware.ts +7, package.json test:all 40 suite).
+      Gate: tsc 0; test:all 40/40; check-route-exports OK;
+      check-theme-gate OK; next build OK; 0 non-ASCII; frozen
+      utuh (public/sw.js, V1, coop.ts); TANPA perubahan skema
+      (v31); TANPA PII di endpoint publik; fiqih: none. Detail:
+      MEMORY.md seksi "CUSTOMER DISPLAY LEPAS".
 

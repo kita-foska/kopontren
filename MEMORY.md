@@ -6016,7 +6016,35 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   `inject-sw-version` -- reverted, sw.js untouched); 0
   non-ASCII; frozen (public/sw.js, V1 laporan-admin-client.tsx,
   src/lib/coop.ts) utuh; tanpa perubahan skema; fiqih: none.
-- **NEXT**: Wave 8 Item 4 (Customer Display -- audit M-L:
-  strategy sinkron polling vs SSE + kemungkinan skema
-  `display_sessions` = PERLU ACC, ruling Gus Fi menunggu) /
-  istirahat (Gus Fi decides).
+- **CUSTOMER DISPLAY LEPAS** (W8 Item 4, 20 Okt, C1 `0d3e271`;
+  ACC Gus Fi via DeepSeek audit LULUS, ruling Opasi B -- kiosk
+  PUBLIK, polling 3 dtk + display 15 dtk, TANPA skema
+  `display_sessions`, tanpa fiqih): layar /display (HP lama /
+  monitor kedua) TANPA login (middleware exception /display,
+  pola /login). GET /api/display/latest = endpoint PUBLIK
+  PII-FREE: transaksi terakhir (id, total, item_count, label
+  metode, jam WIB, QR QRIS dinamis) -- TANPA nama pelanggan/
+  member, TANPA rincian baris (proyeksi eksplisit per-field;
+  field PII di baris sales tak mungkin lolos). `src/lib/
+  display-latest.ts` (murni hermetis, tanpa DB/DOM):
+  buildDisplayPayload + displayPayMethods (satu sumber
+  PAY_METHOD_LABEL, mixed pay_split diperluas + dedup) +
+  displayQrisPayload (QR dinamis tag 54 nominal terikat; hanya
+  bila pembayaran mengandung wa/QRIS + NMID & nama merchant
+  terisi; lainya = null, layar jujur total saja). Kiosk
+  `display-client.tsx`: polling 3 dtk (pola confidence banner --
+  TIDAK SSE/WebSocket, keputusan ruling); transaksi BARU (id
+  berubah) ditayangkan 15 dtk lalu auto-reset idle; polling
+  pertama tak memutar-ulang transaksi lama; DB gagal = idle
+  (kiosk tak hang) + log server. 7 file +405/-1
+  (5 new: lib/display-latest.ts, api/display/latest/route.ts,
+  display/page.tsx force-dynamic, components/display-client.tsx,
+  scripts/test-display-latest.ts suite #40, 22 asersi;
+  2 modif: middleware.ts +7, package.json test:all 40 suite).
+  Gate: tsc 0; test:all 40/40; check-route-exports OK;
+  check-theme-gate OK; next build OK; 0 non-ASCII; frozen
+  (public/sw.js, V1 laporan-admin-client.tsx, coop.ts) utuh;
+  TANPA perubahan skema (v31); TANPA PII di endpoint publik;
+  fiqih: none.
+- **NEXT**: Wave 8 Item 5 (RAT -- paling ageng, menunggu
+  arah Gus Fi) / istirahat (Gus Fi decides).
