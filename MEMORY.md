@@ -6046,5 +6046,59 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   (public/sw.js, V1 laporan-admin-client.tsx, coop.ts) utuh;
   TANPA perubahan skema (v31); TANPA PII di endpoint publik;
   fiqih: none.
-- **NEXT**: Wave 8 Item 5 (RAT -- paling ageng, menunggu
-  arah Gus Fi) / istirahat (Gus Fi decides).
+
+ **RAT LEPAS** (W8 Item 5, 20 Okt, C1 `a42e35f`; ACC Gus Fi
+  via DeepSeek ruling W8 COMPLETE + C2 Docs; paparan ONLY --
+  tanpa fiqih anyar, tanpa skema): modul `src/lib/laporan/rat.ts`
+  (hermetis: import type QueryDb + reuse buildPosisi, tanpa
+  import db/UI -- bisa diuji Node in-memory SQLite).
+  `buildRat(db, tahun)`: jendela `[YYYY-01-01, (YYYY+1)-01-01)`
+  (tahun divalidasi -> lempar RAT_YEAR_INVALID); LKA /
+  LAK-arus / SHU / ZIS = entri PERIODE, Posisi = KUMULATIF s.d.
+  akhir tahun (reuse buildPosisi -- neraca = saldo), LPE pembuka
+  = saldo 30xx kumulatif s.d. awal tahun. Formula identik modul
+  W2.x (LKA SAK-EP Sek.5.2: neto, HPP netting 5020, beban
+  5030+5040+5060+5070+5080, ZIS 5090+5100+6030, pendapatan-lain
+  4050-4100 SUMMED, memo 4040/2030/3020 tak dikolek; LPE
+  Sek.5.3: mutasi bucket closing (shu) + normal|coop (alokasi),
+  distribusi = placeholder 0 pola lpe.ts W2.6; LAK Sek.5.4:
+  pembuka = saldo kas akhir tahun lalu + arus periode
+  (klasifikasi operasional/pendanaan/investasi, transfer
+  antar-kas murni, seksi 1100 anti-campur, identitas footer
+  konstruktif); ZIS ringkasan: diterima = sisi kredit
+  (4090+4100), disalurkan = sisi debit (5090+5100+6030) --
+  konsisten calk item 7; SHU = paparan agregat coop_shu (input
+  admin W4.4 OQ1=A, tanpa hitung anyar); D=K kumulatif +
+  flag_rekon15 (proxy rekon #15 JOURNAL_BAL, pola B4 audit
+  W2.2). Route `?report=rat&tahun=YYYY` (validasi -> 400;
+  default = tahun WIB kemaren) dgn RAT_NOTES (audit, 7 baris) +
+  cache PER TAHUN `lapformal:rat:YYYY` (bukan as_of). UI
+  `RatPanel` (tab RAT di /admin/laporan): pemilih tahun + gate
+  D=K (flag_rekon15=true -> angka formal tak otoritatif) +
+  tombol Cetak landscape (temporary style + afterprint, pola
+  pos-client.tsx). 5 file +1632/-7 (2 new:
+  src/lib/laporan/rat.ts 779 baris + scripts/test-rat.ts 287
+  baris suite #41, 54 asersi -- R0 payload + R1 LKA emas + R2
+  LPE (netting alokasi 30xx total 0, distribusi 0) + R3 batas
+  periode + R4 posisi kumulatif + R5 SHU (rasio json, null -> 0)
+  + R6 LAK (pembuka = saldo akhir tahun lalu) + R7/R7b D=K
+  balanced <-> flag + R8/R8b ZIS + R9 tahun invalid; 3 modif:
+  api/laporan/formal/route.ts +41, komponen
+  laporan-formal-client.tsx +526/-3, package.json test:rat +
+  test:all 41 suite). Gate: tsc 0; test:rat 54/54; test:all
+  chain resik (0 gagal non-nol); check-route-exports OK;
+  check-theme-gate OK; next build OK; 0 non-ASCII (separator
+  box-drawing diganti -); frozen (public/sw.js, V1, coop.ts)
+  utuh; TANPA perubahan skema (v31); Vercel a42e35f = READY
+  (Production).
+- **WAVE 8 COMPLETE (5/5 LEPAS)** -- record C2 Close:
+  1. Audit Anomali (Q72) -- C1 `f7613ff`
+  2. Barcode ID -- C1 `9e04f67`
+  3. Pending Cart -- C1 `6a05bc7`
+  4. Customer Display -- C1 `0d3e271`
+  5. RAT Laporan Tahunan -- C1 `a42e35f`
+  Vercel deploy 5 SHA kabeh READY (Production).
+- **NEXT**: Wave 9 = **Wadi'ah (santri wallet) + Ujrah
+  Konsinyasi** -- fitur Fiqih: TASHIH GUS FI DIBUTUHKAN
+  saderengipun code (audit read-only Cline wis mlebu record C2
+  Wave 9, 20 Okt). / istirahat (Gus Fi decides).

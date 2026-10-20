@@ -2638,3 +2638,55 @@ bikin keputusan fiqih baru demi kebutuhan coding.
       (v31); TANPA PII di endpoint publik; fiqih: none. Detail:
       MEMORY.md seksi "CUSTOMER DISPLAY LEPAS".
 
+- [x] **Wave 8 #5 -- RAT Laporan Tahunan** -- LEPAS 20 Okt (C1
+      `a42e35f`, C2 = record iki; ACC Gus Fi via DeepSeek ruling
+      W8 COMPLETE + C2 Docs; paparan ONLY, tanpa skema):
+      modul `src/lib/laporan/rat.ts` (hermetis: reuse
+      buildPosisi, tanpa import db/UI -- bisa diuji Node
+      in-memory). `buildRat(db, tahun)`: LKA (SAK-EP Sek.5.2:
+      neto + HPP netting 5020 + beban 5030/5040/5060/5070/5080 +
+      ZIS 5090/5100/6030; pendapatan 4xxx tak di-SUMMED,
+      pend-lain 4050-4100 SUMMED, memo 4040/2030/3020 tak
+      dikolek) + LPE (Sek.5.3: mutasi bucket closing|shu +
+      normal|coop; distribusi placeholder 0) + Posisi (kumulatif
+      s.d. akhir tahun, reuse buildPosisi -- neraca = saldo) +
+      LAK (Sek.5.4: pembuka = saldo kas akhir tahun lalu,
+      klasifikasi operasional/pendanaan/investasi, transfer
+      antar-kas murni, seksi 1100 anti-campur) + SHU (paparan
+      agregat coop_shu W4.4 OQ1=A, tanpa hitung anyar) + ZIS
+      ringkasan (diterima = sisi kredit 4090+4100; disalurkan =
+      sisi debit 5090+5100+6030 -- konsisten calk item 7) +
+      rekon D=K kumulatif + flag_rekon15 (proxy #15 JOURNAL_BAL
+      W2.2). Route `?report=rat&tahun=YYYY` (validasi -> 400;
+      default = tahun WIB kemaren) + cache per tahun
+      `lapformal:rat:YYYY` (bukan as_of) + RAT_NOTES audit 7
+      baris. UI `RatPanel` (tab RAT di /admin/laporan): pemilih
+      tahun + gate D=K (flag_rekon15=true -> angka formal tak
+      otoritatif) + tombol Cetak landscape (temporary style +
+      afterprint, pola pos-client.tsx). 5 file +1632/-7 (2 new:
+      src/lib/laporan/rat.ts 779 baris + scripts/test-rat.ts
+      suite #41, 54 asersi R0-R9: payload + LKA emas + LPE
+      netting alokasi (30xx total 0) + batas periode + posisi
+      kumulatif + SHU + LAK pembuka + D=K balanced/flag + ZIS +
+      tahun invalid; 3 modif: route.ts, laporan-formal-client.tsx
+      +526/-3, package.json test:rat + test:all 41 suite).
+      Gate: tsc 0; test:rat 54/54; test:all chain resik
+      (0 gagal non-nol); check-route-exports OK;
+      check-theme-gate OK; next build OK; 0 non-ASCII
+      (separator box-drawing diganti -); frozen utuh
+      (public/sw.js, V1, coop.ts); TANPA perubahan skema (v31);
+      TANPA fiqih anyar; Vercel a42e35f = READY (Production).
+      Detail: MEMORY.md seksi "RAT LEPAS".
+
+**WAVE 8 = COMPLETE (5/5 LEPAS).** Item 1 (Audit Anomali, C1
+`f7613ff`), 2 (Barcode ID, C1 `9e04f67`), 3 (Pending Cart, C1
+`6a05bc7`), 4 (Customer Display, C1 `0d3e271`), 5 (RAT, C1
+`a42e35f`). Vercel deploy kabeh READY.
+
+**WAVE 9 (2 item -- FIQIH, perlu TASHIH Gus Fi saderengipun
+code):** W1 Wadi'ah (santri wallet: COA 2xxx passiva, aturan
+tarik dana) + W2 Ujrah Konsinyasi (dasar hitung komisi / akad
+wakalah bil ujrah -- E25 tashih). Audit read-only Cline 20 Okt
+(report ing chat menika; piwangan + pitakenan tashih mlebu record
+MEMORY.md seksi "WAVE 8 COMPLETE" + NEXT). Tashih = prioritas
+saderengipun code.
