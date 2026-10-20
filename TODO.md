@@ -2567,3 +2567,20 @@ bikin keputusan fiqih baru demi kebutuhan coding.
 
   **WAVE 7 = COMPLETE (10/10 LEPAS) + V2 MULTI-SATUAN LEPAS.**
 
+## WAVE 8 (20 Okt 2026, fitur Gus Fi)
+- [x] **Wave 8 #2 -- Barcode ID** -- LEPAS 20 Okt (C1 `9e04f67`,
+      C2 = record ini; ACC Gus Fi via DeepSeek audit 20 Okt LULUS):
+      Format deterministik KP-{id:05d} (helper murni src/lib/barcode.ts,
+      zero-import); auto-ID saat create produk form admin (R1b);
+      backfill massal tombol "Isi N Barcode" + Generate per-baris
+      (R1a/R3, dgn confirm modal + guard double-klik); cek bentrok
+      tanpa UNIQUE constraint -- per-baris 409, massal skip + laporan
+      (R4, import CSV tetap kompatibel); additive tanpa migrasi
+      (R5, kolom products.barcode existing). 6 file +320/-5
+      (2 new: src/lib/barcode.ts + src/app/api/products/barcode/
+      route.ts; 3 modif: products/route.ts + produk-client.tsx +
+      package.json; 1 new test: scripts/test-barcode.ts suite #38,
+      22 asersi). Gate: tsc 0; test:all 38/38; check-route-exports
+      OK; 0 non-ASCII; frozen utuh; tanpa perubahan skema; fiqih:
+      none. Detail: MEMORY.md seksi "BARCODE ID LEPAS".
+

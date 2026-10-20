@@ -5968,4 +5968,23 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   17/17. Backward compat 100% (qpb=1). V1 integer-only; V2
   (fractional, multi-pack) deferred. Gates: tsc 0, non-ASCII 0,
   frozen files untouched.
-- **NEXT**: Wave 8 / V2 multi-satuan / istirahat (Gus Fi decides).
+- **BARCODE ID LEPAS** (W8 Item 2, 20 Okt, C1 `9e04f67`):
+  Ruling R1-R5 Gus Fi (ACC via DeepSeek audit 20 Okt). Format
+  deterministik KP-{id:05d} dari products.id; helper murni
+  src/lib/barcode.ts (kpBarcode + isKpBarcode, zero-import,
+  hermetic). (R1b) Auto-ID: POST /api/products utk produk baru
+  tanpa barcode mengisi KP-{id:05d} + respons menyertakan
+  barcode. (R1a/R3) POST /api/products/barcode: per-baris
+  {id} (409 bila bentrok kode manual) + massal {allEmpty:true}
+  (UPDATE CASE WHEN tunggal, baris bentrok di-skip + dilaporkan
+  dlm toast skipped). (R4) Cek bentrok query-based, TANPA UNIQUE
+  constraint -- upsert-by-barcode import CSV tetap kompatibel.
+  (R5) Additive tanpa migrasi, kolom products.barcode existing.
+  UI /admin/produk: Generate per-baris (hanya saat kosong,
+  desktop + kartu mobile, guard double-klik) + tombol massal
+  "Isi N Barcode"/"Barcode Lengkap" dgn confirm modal. 6 file
+  +320/-5; suite test-barcode #38 (22 asersi). Gate: tsc 0;
+  test:all 38/38; check-route-exports OK; 0 non-ASCII; frozen
+  utuh; tanpa perubahan skema; fiqih: none.
+- **NEXT**: Wave 8 Item 3 (Pending Cart) / Customer Display /
+  RAT / istirahat (Gus Fi decides).
