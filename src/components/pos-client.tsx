@@ -20,6 +20,14 @@ import { strukWaText, shareWa } from '@/lib/rekap';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { syncLabel, wibTimeSec } from '@/lib/confidence';
 import { POS_QUEUE_KEY, recordLastFetch } from '@/lib/offline-status';
+import {
+  PENDING_CART_KEY,
+  clampPendingCart,
+  pendingCartAgeLabel,
+  readPendingCart,
+  serializePendingCart,
+  type PendingCart,
+} from '@/lib/pending-cart';
 import { useHotkeys } from '@/lib/useHotkeys';
 import { effectiveWholesalePrice, parseWholesaleJson } from '@/lib/wholesale';
 import { T } from '@/lib/tokens';
@@ -29,6 +37,7 @@ import {
   BookOpen,
   CameraOff,
   Check,
+  Clock,
   Copy,
   Landmark,
   Medal,
@@ -340,6 +349,22 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [qrisModal, setQrisModal] = useState(false);
   const [scanModal, setScanModal] = useState(false);
+  // W8 ITEM 3: pending cart (checkout belum jadi) -- dipersist localStorage
+  // (PENDING_CART_KEY, key sendiri -- JAUH dari antrean transaksi beku
+  // POS_QUEUE_KEY) supaya tab di-refresh/ditutup tak menghapus pesanan,
+  // dan tab kedua melihatnya via event storage. pending != null +
+  // keranjang kosong = ada yang bisa dilanjutkan (chip + modal).
+  const [pending, setPending] = useState<PendingCart | null>(() => {
+    try {
+      return readPendingCart(localStorage.getItem(PENDING_CART_KEY));
+    } catch {
+      return null;
+    }
+  });
+  const [pendingModal, setPendingModal] = useState(false);
+  // Tab ini pernah MENULIS konten pending? -- tab kosong yang tak pernah
+  // mengisi TIDAK akan menghapus key milik tab lain (cegah konflik).
+  const hadPendingRef = useRef(false);
   // Hotkey F4 / auto-cetak struk / antrean offline
   const [autoPrint, setAutoPrint] = useState<boolean>(() => {
     try {
@@ -396,6 +421,51 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   // Redemsi harus di-reset tiap ganti/kosongkan member: nominal yang
   // dipreview milik member sebelumnya tidak boleh ikut checkout baru.
   useEffect(() => setRedeemInput(''), [memberId]);
+
+  // W8 ITEM 3: auto-save pending cart (debounce 300ms) -- mirror dari
+  // konten aktif: ada baris/pelanggan/catatan = tulis key; setelah
+  // pernah mengisi lalu dikosongkan = hapus key. Tab kosong yang tak
+  // pernah mengisi (hadPendingRef false) tak menyentuh key (milik
+  // tab lain tetap utuh -- lihat clearPending di 2 reset jalur checkout).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const hasContent = cart.length > 0 || customer.trim() !== '' || note.trim() !== '';
+      try {
+        if (hasContent) {
+          localStorage.setItem(
+            PENDING_CART_KEY,
+            serializePendingCart(cart, customer, memberId, pay, note)
+          );
+          hadPendingRef.current = true;
+        } else if (hadPendingRef.current) {
+          localStorage.removeItem(PENDING_CART_KEY);
+          hadPendingRef.current = false;
+        }
+      } catch {
+        /* storage penuh: pending cart diabaikan, POS tetap jalan */
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [cart, customer, pay, note, memberId]);
+
+  // W8 ITEM 3: multi-tab -- event storage HANYA firing di tab lain yang
+  // menulis; tab ini memperbarui `pending` (chip + modal ikut).
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== PENDING_CART_KEY) return;
+      setPending(readPendingCart(e.newValue));
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // W8 ITEM 3: ada pending saat mount -> tampilkan modal
+  // "Keranjang Menunggu" (Lanjutkan / Hapus) -- komunikatif, tak
+  // mengunci transaksi baru (tutup modal = pending tetap tersimpan).
+  useEffect(() => {
+    if (pending) setPendingModal(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const load = useCallback(async () => {
     const r = await api<ProductsResp>('/api/products?live=1');
@@ -881,10 +951,51 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setMixWa('');
     setDisc('');
     setMemberId('');
+    clearPending(); // W8 ITEM 3: transaksi jadi = pending cart tak relevan lagi
     load();
     loadShift();
     // Auto-cetak struk setelah transaksi (bisa dimatikan di modal struk).
     if (r.data.sale && !r.data.deduped && autoPrint) setTimeout(() => printReceipt(), 900);
+  }
+
+  /** W8 ITEM 3: hapus key pending cart (check-out, resume, atau tombol
+      "Hapus" modal) -- key + state saja; keranjang tab lain tak tersentuh. */
+  function clearPending() {
+    try {
+      localStorage.removeItem(PENDING_CART_KEY);
+    } catch {
+      /* abaikan */
+    }
+    hadPendingRef.current = false;
+    setPending(null);
+    setPendingModal(false);
+  }
+
+  /** W8 ITEM 3: lanjutkan pending cart -- baris diverifikasi ulang ke
+      katalog saat ini (produk basi di-drop, qty di-clamp ke stok;
+      member basi tak di-restore). Harga manual tetap harga tersimpan. */
+  function resumePendingCart() {
+    if (!pending) return;
+    const { items, dropped } = clampPendingCart(pending, products);
+    if (items.length > 0) {
+      setCart(items as CartLine[]);
+      if (pending.member_id !== '' && members.some((m) => m.id === Number(pending.member_id)))
+        setMemberId(pending.member_id);
+      setCustomer(pending.customer);
+      setPay(pending.pay);
+      setNote(pending.note);
+      setSelIdx(0);
+      if (dropped > 0) showToast('Dilanjutkan -- ' + dropped + ' baris dilewati: produk tak tersedia.');
+    } else {
+      showToast('Tidak ada item valid di keranjang menunggu -- semua tak tersedia.', 'error');
+    }
+    clearPending();
+  }
+
+  /** W8 ITEM 3: hapus permanen pending cart (tombol "Hapus" modal). */
+  function discardPending() {
+    clearPending();
+    showToast('Keranjang menunggu dihapus.');
   }
 
   /** Sinkronkan antrean transaksi offline (dipanggil otomatis saat online). */
@@ -991,6 +1102,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           setMemberModal(false);
         } else if (cheatOpen) {
           setCheatOpen(false);
+        } else if (pendingModal) {
+          setPendingModal(false);
         } else if (receipt) {
           setReceipt(null);
         } else {
@@ -1012,6 +1125,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     shiftModalOpen,
     memberModal,
     cheatOpen,
+    pendingModal,
     checkout,
   ]);
 
@@ -1030,7 +1144,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   /** true bila salah satu modal POS terbuka -- hotkey item di-disable. */
   function anyModalOpen(): boolean {
     return (
-      scanModal || qrisModal || shiftModalOpen || memberModal || !!closingSummary || cheatOpen
+      scanModal || qrisModal || shiftModalOpen || memberModal || !!closingSummary || cheatOpen ||
+      pendingModal
     );
   }
   function selIdxSafe(): number {
@@ -1091,6 +1206,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     setQ('');
     setQDeb('');
     setMq('');
+    clearPending(); // W8 ITEM 3: reset pesanan = pending cart tak relevan lagi
     return true;
   }
 
@@ -1551,6 +1667,19 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             <h2 className="font-bold flex items-center gap-2">
               Keranjang Kasir
               {cart.length > 0 && <Badge tone="blue">{cart.length} item</Badge>}
+              {/* W8 ITEM 3: chip pending cart -- klik = buka modal
+                  Lanjutkan / Hapus (terisi oleh auto-save / tab lain). */}
+              {pending && cart.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPendingModal(true)}
+                  title="Klik untuk melanjutkan atau menghapus keranjang menunggu"
+                  className="inline-flex items-center gap-1 rounded-lg border border-violet-500/40 bg-violet-500/10 px-2.5 py-1 text-xs font-bold text-violet-700 hover:bg-violet-500/20 dark:text-violet-300"
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  {pending.items.length} item menunggu
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setCheatOpen(true)}
@@ -2558,6 +2687,59 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             Setiap kelipatan Rp 10.000 belanja otomatis mendapat 1 poin loyalitas.
           </p>
         </div>
+      </Modal>
+
+      {/* W8 ITEM 3: pending cart -- keranjang menunggu (resume antar
+          sesi / multi-tab) atau hapus. "Hapus" = permanen; "Lanjutkan"
+          = isi keranjang (transaksi BELUM disimpan, tak ada duplikat;
+          baris divalidasi ulang ke stok saat ini). */}
+      <Modal
+        open={pendingModal}
+        title="Keranjang Menunggu"
+        onClose={() => setPendingModal(false)}
+        footer={
+          <>
+            <Button variant="danger" onClick={discardPending}>
+              Hapus
+            </Button>
+            <Button variant="primary" onClick={resumePendingCart}>
+              Lanjutkan
+            </Button>
+          </>
+        }
+      >
+        {pending && (
+          <div className="space-y-3 text-sm">
+            <p className="text-slate-600 dark:text-slate-300">
+              Keranjang disimpan {pendingCartAgeLabel(pending.ts)} -- {pending.items.length}{' '}
+              item, {rp(pending.items.reduce((s, l) => s + l.qty * l.price, 0))}
+              {pending.customer ? ', pembeli: ' + pending.customer : ''}
+              {pending.note ? ', catatan: "' + pending.note + '"' : ''}. Saat
+              "Lanjutkan", baris diverifikasi ulang ke stok saat ini (yang
+              tak tersedia di-skip, qty disesuaikan ke stok).
+            </p>
+            <ul className="space-y-1.5">
+              {pending.items.map((l) => (
+                <li
+                  key={l.product.id}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs dark:border-navy-700 dark:bg-navy-900/40"
+                >
+                  <span className="min-w-0 break-words font-semibold text-slate-800 dark:text-slate-200">
+                    {l.product.name}
+                    {l.unitName ? ' (' + l.unitName + ')' : ''} x {l.qty}
+                  </span>
+                  <span className="tabular-nums font-bold">{rp(l.qty * l.price)}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              "Hapus" = hapus permanen. "Lanjutkan" = isi keranjang ini --
+              transaksi belum disimpan, jadi tidak ada duplikat. Tutup
+              modal (X / ESC) = pending tetap tersimpan, bisa dibuka dari
+              chip "item menunggu" di panel keranjang.
+            </p>
+          </div>
+        )}
       </Modal>
 
       {/* UX-2: Panduan kasir -- cara transaksi + pintasan + jika ada masalah
