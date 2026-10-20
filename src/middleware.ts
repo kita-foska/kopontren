@@ -44,6 +44,13 @@ export function middleware(req: NextRequest) {
 
   if (pathname.startsWith('/login')) return res;
 
+  // W8 ITEM 4: /display = kiosk pelanggan PUBLIK (tanpa sesi) -- layaran
+  // PII-free: endpoint /api/display/latest hanya membeber id transaksi,
+  // total, jumlah baris, label metode, jam WIB, QR QRIS (tanpa nama
+  // pelanggan/member, tanpa rincian baris -- lihat
+  // src/lib/display-latest.ts).
+  if (pathname.startsWith('/display')) return res;
+
   const hasSession = !!req.cookies.get(SESSION_COOKIE)?.value;
   if (!hasSession) {
     const url = req.nextUrl.clone();
