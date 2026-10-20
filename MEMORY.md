@@ -5986,5 +5986,37 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   +320/-5; suite test-barcode #38 (22 asersi). Gate: tsc 0;
   test:all 38/38; check-route-exports OK; 0 non-ASCII; frozen
   utuh; tanpa perubahan skema; fiqih: none.
-- **NEXT**: Wave 8 Item 3 (Pending Cart) / Customer Display /
-  RAT / istirahat (Gus Fi decides).
+- **PENDING CART LEPAS** (W8 Item 3, 20 Okt, C1 `6a05bc7`;
+  ACC Gus Fi "mangga sampeyan" via DeepSeek): keranjang
+  checkout-belum-jadi dipersist localStorage -- key
+  `kopontren_pos_pending_cart_v1` (key BAHASA SENDIRI, terpisah
+  dari `POS_QUEUE_KEY` beku W5.1 -- antrean transaksi SUDAH jadi
+  tak tersentuh). `src/lib/pending-cart.ts` (231 baris, pure
+  hermetis: PENDING_CART_KEY + type PendingCart +
+  serializePendingCart + readPendingCart validasi per-baris +
+  clampPendingCart -- drop produk basi, qty clamp pola setQty
+  (floor ((stok+EPS)/qpb); titipan tak capped), harga manual
+  tetap, katalog kosong = snapshot, verifikasi stok final tetap
+  server + pendingCartAgeLabel satu bahasa keluarga confidence).
+  `pos-client.tsx` (+184): auto-save debounce 300ms (ada
+  baris/pelanggan/catatan = tulis; dikosongkan = hapus;
+  hadPendingRef: tab kosong tak hapus key milik tab lain);
+  clear di 2 reset jalur checkout (checkout sukses +
+  resetOrder Ctrl+R); multi-tab via event `storage` (chip +
+  modal di tab lain ikut); chip violet "N item menunggu"
+  (hanya bila keranjang kosong) -> modal "Keranjang Menunggu"
+  (Lanjutkan / Hapus; label umur; daftar baris + total;
+  penjelasan anti-duplikat; tutup modal tak mengunci transaksi
+  baru). mix/received/disc TIDAK dipersist (atribut momen
+  bayar; nominal diulang). 4 file +598/-2;
+  `scripts/test-pending-cart.ts` suite #39 (45 asersi:
+  key/pemisah-key + round-trip + sanitasi + validasi + clamp +
+  age). Gate: tsc 0; test:all 39/39; check-route-exports OK;
+  check-theme-gate OK; next build OK (stamp SW-BUILD
+  `inject-sw-version` -- reverted, sw.js untouched); 0
+  non-ASCII; frozen (public/sw.js, V1 laporan-admin-client.tsx,
+  src/lib/coop.ts) utuh; tanpa perubahan skema; fiqih: none.
+- **NEXT**: Wave 8 Item 4 (Customer Display -- audit M-L:
+  strategy sinkron polling vs SSE + kemungkinan skema
+  `display_sessions` = PERLU ACC, ruling Gus Fi menunggu) /
+  istirahat (Gus Fi decides).

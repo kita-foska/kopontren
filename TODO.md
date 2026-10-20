@@ -2583,4 +2583,32 @@ bikin keputusan fiqih baru demi kebutuhan coding.
       22 asersi). Gate: tsc 0; test:all 38/38; check-route-exports
       OK; 0 non-ASCII; frozen utuh; tanpa perubahan skema; fiqih:
       none. Detail: MEMORY.md seksi "BARCODE ID LEPAS".
+- [x] **Wave 8 #3 -- Pending Cart** -- LEPAS 20 Okt (C1 `6a05bc7`,
+      C2 = record ini; ACC Gus Fi "mangga sampeyan" via DeepSeek,
+      ruling audit 20 Okt): keranjang checkout-belum-jadi
+      dipersist localStorage -- key `kopontren_pos_pending_cart_v1`
+      (key sendiri, TERPISAH dari POS_QUEUE_KEY beku W5.1 = antrean
+      transaksi SUDAH jadi, tak tersentuh). Auto-save debounce
+      300ms (ada baris/pelanggan/catatan = tulis; dikosongkan =
+      hapus; hadPendingRef: tab kosong tak hapus key milik tab
+      lain). Clear di 2 reset jalur checkout (checkout sukses +
+      resetOrder Ctrl+R). Multi-tab via event `storage`: chip +
+      modal di tab lain ikut. UX: chip violet "N item menunggu"
+      (hanya bila keranjang kosong) -> modal "Keranjang Menunggu"
+      (Lanjutkan / Hapus; label umur; daftar baris + total;
+      penjelasan anti-duplikat; tutup modal tak mengunci
+      transaksi baru). Resume = baris divalidasi ulang ke katalog
+      saat ini (produk basi drop, qty clamp pola setQty, harga
+      manual tetap, member basi tak di-restore, katalog kosong =
+      snapshot, verifikasi stok final tetap server). mix /
+      received / disc TIDAK dipersist (atribut momen bayar;
+      nominal diulang). 4 file +598/-2 (2 new:
+      src/lib/pending-cart.ts 231 baris pure hermetis +
+      scripts/test-pending-cart.ts suite #39, 45 asersi; 2 modif:
+      pos-client.tsx +184, package.json test:all 39 suite).
+      Gate: tsc 0; test:all 39/39; check-route-exports OK;
+      check-theme-gate OK; next build OK (stamp SW-BUILD
+      reverted -- sw.js untouched); 0 non-ASCII; frozen utuh
+      (public/sw.js, V1, coop.ts); tanpa perubahan skema;
+      fiqih: none. Detail: MEMORY.md seksi "PENDING CART LEPAS".
 
