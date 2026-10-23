@@ -1043,8 +1043,9 @@ export async function apiRetry<T = unknown>(
 }
 
 /* ── UX-4 FASE D (D1): primitive Tabel — Table/Th/Td/Trow/TEmpty ──
-   Kelas legacy .th/.td/.table-row (globals.css) dibake di sini sebagai
-   Tailwind agar rules CSS-nya bisa dihapus setelah migrasi D2a/D2b.
+   Kelas CSS legacy .th/.td/.table-row di globals.css SUDAH DIHAPUS
+   (migrasi D2a/D2b selesai); styling tabel kini 100% Tailwind via
+   constant TH_CLS / TD_CLS / TROW_BORDER di bawah.
    `Table` hanya render <table> — wrapper div (card/overflow/hidden sm:block)
    & mobile-card sm:hidden tetap milik pemanggil (sudah Tailwind murni).
    Trow menyebarkan atribut tr mentah (key, aria-hidden, style) → spacer
@@ -1088,7 +1089,7 @@ export function Table({
   return <table className={cls}>{children}</table>;
 }
 
-/** Sel header — padanan rule .th. className merge (mis. 'text-right', 'w-8'). */
+/** Sel header (Tailwind murni, constant TH_CLS). className merge (mis. 'text-right', 'w-8'). */
 export function Th({
   className,
   children,
@@ -1099,7 +1100,7 @@ export function Th({
   return <th className={[TH_CLS, className ?? ''].filter(Boolean).join(' ')}>{children}</th>;
 }
 
-/** Sel isi — padanan rule .td. colSpan utk sel gabungan. */
+/** Sel isi (Tailwind murni, constant TD_CLS). colSpan utk sel gabungan. */
 export function Td({
   className,
   colSpan,

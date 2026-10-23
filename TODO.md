@@ -299,13 +299,17 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       SAMA + build lokal/Cloud. Detail: MEMORY.md seksi
       "PWA Installability" item guardrail.
 
-- [ ] **test:wakaf legacy (CLEANUP W5/W6)** -- `test:wakaf` in
-      package.json points to scripts/test-wakaf.ts
+- [x] **test:wakaf legacy (CLEANUP W5/W6) -- SELESAI W10-4 (24 Okt)**
+      -- `test:wakaf` in package.json points to scripts/test-wakaf.ts
       (does not exist). Legacy cleanup needed (W5 or W6).
       Ditemukan saat W2.6 verify 2 Okt 2026 (out-of-scope, TIDAK
       di-fix sekarang). STALE -- 10 Okt 2026 (P3a, skema v28 +
       COA 2080 closed): script `test-wakaf.ts` tak pernah dibuat;
       cleanup tetap = hapus entry `test:wakaf` dari package.json.
+      **AUDIT W10-4 (24 Okt, read-only)**: entry `test:wakaf`
+      SUDAH TAK ADA di package.json (grep 0 match; test:all 42
+      suite tak memuatnya; git history package.json tak pernah
+      memuat string tsb) -> cleanup terbukti no-op; item ditutup.
 - [x] **Phone duplicate guard format-insensitive** -- SELESAI (commit
       `f2b398e`, 23 Sep 2026, dual-push master+main): helper bersama
       `phoneOwner` + `canonicalPhone` di `src/lib/phone.ts` -- duplikat
@@ -1044,9 +1048,9 @@ device oleh Gus Fi -- 4 halaman durung visual diverifikasi:
 (+ tabel FASE D liyane manawa durung ketoke); 79 raw button
 Phase B tetep disengka (chip sub-sm dll). **Berikutnya: FASE E**
 (Card unification + FilterPill/TogglePill).
-- [ ] (follow-up opsional) refresh doc comment stale `ui.tsx`
-  L833/L906 (masih merujuk CSS legacy `.th`/`.td` sing wis
-  dihapus).
+- [x] (follow-up opsional -- SELESAI W10-4, 24 Okt) refresh doc
+  comment stale `ui.tsx` L1045-1102 (blok header FASE D + doc Th/Td
+  sing awiwe mbiyaka CSS legacy `.th`/`.td` sing wis dihapus).
 
 **UPDATE 27 Sep (FASE E):** audit Card + FilterPill/TogglePill
 SELESAI (read-only, ora kode; laporan lengkap nang sesi AI 27
