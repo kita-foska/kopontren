@@ -342,7 +342,7 @@ export function ZakatClient() {
         <ul className="divide-y divide-slate-100 text-sm dark:divide-navy-800">
           <li className="flex items-center justify-between py-1.5">
             <span>
-              Modal (stok × {c?.valuation_mode === 'hpp' ? 'HPP (fallback)' : 'harga jual — proxy pasar, provisional'})
+              Modal (stok × {c?.valuation_mode === 'hpp' ? 'HPP (fallback)' : 'harga jual — proxy pasar (final)'})
             </span>
             <span className="font-bold">{c ? rp(c.modal) : '—'}</span>
           </li>
@@ -492,9 +492,9 @@ export function ZakatClient() {
               <label className="label">
                 <TermTip
                   term="Mode Penilaian"
-                  tip="Cara menghitung modal harta dagang: 'Nilai pasar' = harga jual produk (proxy, provisional; P4 menyusul) atau 'HPP' = harga beli modal (konservatif). Pengaruh langsung pada zakat yang dihitung."
+                  tip="Cara menghitung modal harta dagang: 'Nilai pasar' = harga jual produk (proxy) atau 'HPP' = harga beli modal (konservatif). FINAL (tashih 24 Okt 2026, opsi A); ledger harga pasar P4 menyusul. Pengaruh langsung pada zakat yang dihitung."
                 >
-                  Penilaian harta dagang (provisional)
+                  Penilaian harta dagang (final -- tashih 24 Okt 2026, opsi A)
                 </TermTip>
               </label>
               <select
@@ -502,7 +502,7 @@ export function ZakatClient() {
                 value={s.valuation_mode}
                 onChange={(e) => setSettings({ ...s, valuation_mode: e.target.value })}
               >
-                <option value="market">Nilai pasar (provisional)</option>
+                <option value="market">Nilai pasar (final)</option>
                 <option value="hpp">HPP (konservatif)</option>
               </select>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">

@@ -480,7 +480,7 @@ export function KonsinyasiClient() {
             <label className="label">
               <TermTip
                 term="Komisi"
-                tip="Upah toko dari jual konsinyasi -- disebut 'ujrah' dalam istilah syariah. Disepakati bersama (bisa per pemilik/barang; 0 = tanpa komisi). Catatan otomatis saat barang terjual -- bukan di muka. Bagian pemilik = harga - komisi. (PROVISIONAL sampai tashih)."
+                tip="Upah toko dari jual konsinyasi -- disebut 'ujrah' dalam istilah syariah. Disepakati bersama (bisa per pemilik/barang; 0 = tanpa komisi). Catatan otomatis saat barang terjual -- bukan di muka. Bagian pemilik = harga - komisi. FINAL (tashih 24 Okt 2026, opsi A: ujrah dihitung dari harga perjanjian -- Syafi'i + DSN-MUI, tak ada gharar)."
               >
                 Komisi toko (%)
               </TermTip>
