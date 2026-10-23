@@ -6098,7 +6098,49 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   4. Customer Display -- C1 `0d3e271`
   5. RAT Laporan Tahunan -- C1 `a42e35f`
   Vercel deploy 5 SHA kabeh READY (Production).
-- **NEXT**: Wave 9 = **Wadi'ah (santri wallet) + Ujrah
-  Konsinyasi** -- fitur Fiqih: TASHIH GUS FI DIBUTUHKAN
-  saderengipun code (audit read-only Cline wis mlebu record C2
-  Wave 9, 20 Okt). / istirahat (Gus Fi decides).
+- **STRUK PDF LEPAS (pre-W9, 24 Okt)** -- C1 `822b02e` (dual-push
+  master+main verified, 4 file, +418/-40):
+  1. src/lib/struk-pdf.ts (NEW 190): generator HTML struk 58mm
+     -- @page {size: 58mm auto; margin: 3mm}, monospace
+     black-on-white thermal, field order item -> TOTAL -> Bayar
+     -> Kembali -> Poin, XSS-escape semua field, pakai
+     rp()/rpShort()/payMethodLabel() existing, tanpa
+     dependency enggal.
+  2. pos-client.tsx: tombol enggal 2 di footer modal receipt
+     -- "Struk PDF" (window.open 58mm + document.write, pola
+     ProductBarcodeLabel; dialog print: thermal 58mm ATAU
+     Save as PDF) + "Share WA (PDF)" (navigator.share file
+     HTML kecil tanpa gambar: mobile share sheet -> WhatsApp;
+     desktop fallback unduh) + dedupe buildStrukWaArgs()
+     (handleSendWaStruk & copyStrukText dulu bangun objek
+     identik 2x).
+  3. scripts/test-strukpdf.ts (NEW 130): 20 assert (A ASCII
+     murni, B @page 58mm auto, C tanpa gambar + <8KB, D
+     field order, E XSS, F format Rp/rpShort, G kondisional,
+     H split bayar) + test:strukpdf masuk test:all.
+  Gate: tsc 0; strukpdf 20/20; test:all ALL_PASS (17 suite);
+  gate build 7.0s; 0 non-ASCII; public/sw.js + V1 + coop.ts
+  utuh; TANPA perubahan skema; TANPA fiqih.
+  NOTE REBASE: local base 1325ee1 keteteran 30 commit remote
+  (W8 + DARURAT v31 + V2 fraksional, sampai c867ab7) -> C1
+  di-rebase ke c867ab7 (konflik package.json diselesein:
+  test:all remote +4 suite + strukpdf; pos-client
+  auto-merge; konten commit identik +418/-40).
+- **W9 DIVERGENSI SKEMA (24 Okt)**: remote wis nggoleki label
+  v31 (V2 multi-satuan fraksional: migrate31 rebuild
+  products.stock / sale_items.qty_per_base / purchases.qty ->
+  REAL + DARURAT rewrite db.ts batch/SQLITE_BUSY +253).
+  Konsekuensi: skema Wadi'ah RENUMBER v31 -> **v32**
+  (migrate32: wadi_balances + wadi_ledger, purely additive;
+  DB stempel v31 menjalankan fullInit sekali lagi),
+  SCHEMA_VERSION = 32. Ujrah badhe **v33** (asli rencana
+  v32). Wadi'ah (9 file) wis di-merge manual ke base anyar:
+  db.ts (keep migrate31 V2 + add migrate32 wadi; 1 close
+  brace fix), comment wadi v31->v32 di wadi.ts / test-wadi /
+  api route / features.ts; features + sidebar + TODO
+  auto-merge. Status: UNCOMMITTED (menunggu ACC Gus Fi).
+  Gate tree merged: tsc 0, test:all 17/17 ALL_PASS,
+  test:wadi 13/13, gate build 7.0s.
+- **NEXT**: Wadi'ah v32 commit (9 file) + C2 docs -> Ujrah
+  v33 (audit + code, tashih fiqih Gus Fi saderengipun
+  code) / istirahat (Gus Fi decides).
