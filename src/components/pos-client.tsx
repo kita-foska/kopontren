@@ -18,6 +18,7 @@ import {
 import { rp, rpShort, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
 import { strukPdfHtml } from '@/lib/struk-pdf';
+import { generateStrukJpeg, generateStrukPdf } from '@/lib/struk-media';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { syncLabel, wibTimeSec } from '@/lib/confidence';
 import { POS_QUEUE_KEY, recordLastFetch } from '@/lib/offline-status';
@@ -40,6 +41,8 @@ import {
   Check,
   Clock,
   Copy,
+  FileText,
+  Image,
   Landmark,
   Medal,
   MessageCircle,
@@ -349,6 +352,8 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   const [memberForm, setMemberForm] = useState({ name: '', phone: '', address: '' });
   const [busy, setBusy] = useState(false);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  // Loading state tombol "Unduh PDF" / "Unduh Foto" (generate media).
+  const [mediaBusy, setMediaBusy] = useState(false);
   const [qrisModal, setQrisModal] = useState(false);
   const [scanModal, setScanModal] = useState(false);
   // W8 ITEM 3: pending cart (checkout belum jadi) -- dipersist localStorage
@@ -1411,6 +1416,66 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     showToast('Struk diunduh -- buka lalu Save as PDF bila perlu.');
   }
 
+  /**
+   * Share file (PDF/JPEG) ke WA (mobile) atau unduh (desktop) --
+   * pola sama dgn handleSharePdf, tapi utk File hasil generate.
+   */
+  async function shareOrDownload(file: File, label: string) {
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Struk Kopontren' });
+        showToast(label + ' dibagikan -- pilih WhatsApp di daftar app.');
+        return;
+      }
+    } catch {
+      /* dibatalkan user -- lanjut fallback unduh */
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    showToast(label + ' diunduh');
+  }
+
+  /**
+   * "Unduh PDF": struk 58mm gaya m-banking (bg putih, logo Kopontren)
+   * -> File PDF via jspdf + html2canvas (dynamic import, lib baru tak
+   * membebani chunk POS). Beda "Struk PDF" lama = jendela print
+   * thermal (tetap ada utk printer 58mm).
+   */
+  async function handleStrukPdfFile() {
+    const o = buildStrukWaArgs();
+    if (!o || mediaBusy) return;
+    setMediaBusy(true);
+    try {
+      const f = await generateStrukPdf(o);
+      await shareOrDownload(f, 'PDF struk');
+    } catch (e) {
+      showToast('Gagal membuat PDF: ' + (e instanceof Error ? e.message : String(e)), 'error');
+    } finally {
+      setMediaBusy(false);
+    }
+  }
+
+  /** "Unduh Foto": struk 58mm -> File JPEG (foto struk utk WA/chat). */
+  async function handleStrukJpeg() {
+    const o = buildStrukWaArgs();
+    if (!o || mediaBusy) return;
+    setMediaBusy(true);
+    try {
+      const f = await generateStrukJpeg(o);
+      await shareOrDownload(f, 'Foto struk');
+    } catch (e) {
+      showToast('Gagal membuat foto: ' + (e instanceof Error ? e.message : String(e)), 'error');
+    } finally {
+      setMediaBusy(false);
+    }
+  }
+
   function handleSendWaStruk() {
     const o = buildStrukWaArgs();
     if (!o || !receipt) return;
@@ -2274,6 +2339,20 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   onClick={handleSharePdf}
                 >
                   Share WA (PDF)
+                </Button>
+                <Button variant="ghost" size="sm"
+                  icon={<FileText className="h-3.5 w-3.5" />}
+                  onClick={handleStrukPdfFile}
+                  disabled={mediaBusy}
+                >
+                  Unduh PDF
+                </Button>
+                <Button variant="ghost" size="sm"
+                  icon={<Image className="h-3.5 w-3.5" />}
+                  onClick={handleStrukJpeg}
+                  disabled={mediaBusy}
+                >
+                  Unduh Foto
                 </Button>
                 <Button variant="primary" size="sm"
                   icon={<Printer className="h-3.5 w-3.5" />}
