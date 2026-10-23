@@ -1,16 +1,16 @@
-// 58mm m-banking-style struk media generator (PDF + JPEG) -- tombol
+// 58mm thermal-style struk media generator (PDF + JPEG) -- tombol
 // "Unduh PDF" & "Unduh Foto" POS (pos-client.tsx). Gaya: bg putih,
-// teks hitam, logo Kopontren atas tengah, garis putus, TOTAL tegas.
-// 58mm = 219px @96dpi.
+// teks hitam MONOSPACE (kesan printer thermal), logo Kopontren atas
+// tengah, garis putus, TOTAL tegas. 58mm = 219px @96dpi.
 //
 // Beda dgn jalur thermal lama (struk-pdf.ts, TIDAK diubah):
 //  - jspdf & html2canvas pakai DYNAMIC import (chunk POS tetap ringan;
 //    library baru dibundel saat tombol ditekan, bukan saat load POS).
-//  - logo dicomposite ke canvas SESUDAH html2canvas -- decode
-//    native browser (SVG/PNG aman), tidak mengandalkan render gambar
-//    html2canvas.
+//  - logo EMBED di HTML (<img> data-URI di slot .mb-logo) sehingga
+//    html2canvas merendernya langsung -- deterministik; composite
+//    pasca-canvas ditiadakan (fetch gagal = slot kosong, graceful).
 //  - teks field semua ASCII (gate 0 non-ASCII); logo = binary gambar
-//    (kecuali teks -- bukan bagian HTML).
+//    (kecuali teks -- bukan bagian field).
 //
 // Test hermetis: scripts/test-struk-media.ts (struktur strukMbankingHtml;
 // generateStrukPdf/Jpeg butuh DOM/canvas -- hanya jalan di browser).
@@ -51,18 +51,24 @@ function row(label: string, value: string, cls = ''): string {
 const SEP = '<div class="s"></div>';
 
 /**
- * Bangun HTML struk gaya m-banking 58mm -- fragment (tanpa doctype),
- * dipakai html2canvas di renderStrukCanvas. Slot logo = div.mb-logo
- * kosong (diisi composite canvas, BUKAN <img> base64 -- gate "tanpa
- * base64 di field teks" tetap terjaga di HTML-nya).
+ * Bangun HTML struk thermal 58mm -- fragment (tanpa doctype),
+ * dipakai html2canvas di renderStrukCanvas. Slot logo = div.mb-logo;
+ * bila logoUri diberikan, logo di-embed sebagai <img> data-URI
+ * (html2canvas merender langsung, lebih deterministik). Tanpa
+ * logoUri slot tetap kosong (graceful -- struk tanpa logo).
+ * Data-URI hanya di slot gambar -- bukan bagian field teks.
  */
-export function strukMbankingHtml(o: StrukPdfOpts): string {
+export function strukMbankingHtml(o: StrukPdfOpts, logoUri?: string): string {
   const parts: string[] = [];
-  // Header: slot logo + nama toko (centered, gaya m-banking).
+  // Header: slot logo + nama toko (centered, gaya thermal).
   parts.push(
     '<div class="mb-logo" style="height:' +
       LOGO_SLOT_PX +
-      'px"></div>' +
+      'px">' +
+      (logoUri
+        ? '<img src="' + logoUri + '" width="48" height="48" alt="">'
+        : '') +
+      '</div>' +
       '<div class="hd"><div class="t1">KOPONTREN AL ITTIHAD</div>' +
       '<div class="t2">Kasir &amp; Pembukuan Pondok Pesantren</div></div>'
   );
@@ -128,7 +134,7 @@ export function strukMbankingHtml(o: StrukPdfOpts): string {
   );
 
   const style =
-    '.mb{background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.45;padding:8px;box-sizing:border-box}' +
+    '.mb{background:#fff;color:#111;font-family:\'Courier New\',Consolas,monospace;font-size:11px;line-height:1.45;padding:8px;box-sizing:border-box}' +
     '.mb-logo{display:flex;align-items:center;justify-content:center;margin-bottom:2px}' +
     '.hd{text-align:center;margin-bottom:4px}' +
     '.hd .t1{font-weight:bold;font-size:13px;letter-spacing:0.5px}' +
@@ -186,9 +192,10 @@ export async function resolveLogoUri(): Promise<string | undefined> {
 }
 
 /**
- * Render struk m-banking ke canvas (white bg, scale 3x) + composite
- * logo. Dipakai generateStrukPdf & generateStrukJpeg (1x render,
- * 2 output).
+ * Render struk thermal ke canvas (white bg, scale 3x). Dipakai
+ * generateStrukPdf & generateStrukJpeg (1x render, 2 output).
+ * Logo di-embed di HTML (<img> data-URI) -- html2canvas merender
+ * langsung, tanpa composite pasca-canvas.
  */
 async function renderStrukCanvas(o: StrukPdfOpts): Promise<HTMLCanvasElement> {
   const { default: html2canvas } = await import('html2canvas');
@@ -196,7 +203,7 @@ async function renderStrukCanvas(o: StrukPdfOpts): Promise<HTMLCanvasElement> {
   const host = document.createElement('div');
   host.style.cssText =
     'position:fixed;left:-9999px;top:0;width:' + STRUK_W_PX + 'px;background:#fff';
-  host.innerHTML = strukMbankingHtml(o);
+  host.innerHTML = strukMbankingHtml(o, logoUri);
   document.body.appendChild(host);
   const el = host.querySelector('.mb') as HTMLElement;
   const canvas = await html2canvas(el, {
@@ -204,23 +211,6 @@ async function renderStrukCanvas(o: StrukPdfOpts): Promise<HTMLCanvasElement> {
     backgroundColor: '#ffffff',
     width: STRUK_W_PX,
   });
-  if (logoUri) {
-    const img = await new Promise<HTMLImageElement | undefined>((res) => {
-      const im = new Image();
-      im.onload = () => res(im);
-      im.onerror = () => res(undefined);
-      im.src = logoUri;
-    });
-    if (img) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        const w = LOGO_SLOT_PX * STRUK_SCALE;
-        const x = (canvas.width - w) / 2;
-        const y = 8 * STRUK_SCALE;
-        ctx.drawImage(img, x, y, w, w);
-      }
-    }
-  }
   host.remove();
   return canvas;
 }

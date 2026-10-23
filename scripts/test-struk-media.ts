@@ -3,10 +3,10 @@
  * modul murni src/lib/struk-media.ts (strukMbankingHtml + konstanta).
  * Menutup fitur "Unduh PDF" & "Unduh Foto" POS: output HTML harus
  * (A) ASCII murni, (B) lebar 219px + konstanta 58mm, (C) slot logo
- * (mb-logo) TANPA <img>/base64 di HTML (logo dicomposite ke canvas
- * terpisah), (D) field order item -> TOTAL -> Bayar -> Kembali ->
- * Poin, (E) escaping XSS, (F) format Rp, (G) kondisional, (H) gaya
- * m-banking (bg putih, sans-serif).
+ * (mb-logo) EMBED <img> data-URI bila logoUri diberikan, kosong bila
+ * tidak, (D) field order item -> TOTAL -> Bayar -> Kembali -> Poin,
+ * (E) escaping XSS, (F) format Rp, (G) kondisional, (H) gaya thermal
+ * (bg putih, monospace).
  *
  * generateStrukPdf/Jpeg & resolveLogoUri butuh DOM/canvas + library
  * dynamic import -- TIDAK dites hermetis (hanya jalan di browser);
@@ -74,10 +74,15 @@ function main(): void {
   ok('B2 STRUK_W_PX = 219', STRUK_W_PX === 219, String(STRUK_W_PX));
   ok('B3 lebar 219px di HTML', html.includes('width:' + STRUK_W_PX + 'px'));
   ok('B4 slot logo tinggi 64px', html.includes('height:' + LOGO_SLOT_PX + 'px'));
-  // C. Slot logo -- TANPA <img>/base64 di HTML (gate field teks).
+  // C. Slot logo -- <img> data-URI hanya bila logoUri diberikan
+  // (gate: data-URI tidak boleh masuk field teks).
+  const htmlLogo = strukMbankingHtml(full, 'data:image/png;base64,AAAA');
   ok('C1 ada slot .mb-logo', html.includes('mb-logo'));
-  ok('C2 tanpa tag <img>', !html.includes('<img'));
-  ok('C3 tanpa base64/data-uri', !html.includes('data:image'));
+  ok(
+    'C2 logo di-embed <img> bila logoUri',
+    htmlLogo.includes('<img src="data:image/png;base64,AAAA" width="48" height="48"')
+  );
+  ok('C3 tanpa logo = tanpa tag <img>', !html.includes('<img'));
   // D. Field order: item -> TOTAL -> Bayar -> Diterima -> Kembali -> Poin.
   const iItem = html.indexOf('Kecap');
   const iTotal = html.indexOf('>TOTAL<');
@@ -132,10 +137,13 @@ function main(): void {
   ok('H2 bagian split (Tunai)', s.includes('>- Tunai<'));
   ok('H3 bagian split (QRIS / WA)', s.includes('>- QRIS / WA<'));
   ok('H4 split tanpa baris Kembali', !s.includes('>Kembali<'));
-  // I. Gaya m-banking -- bg putih, teks hitam, sans-serif, TOTAL tegas.
+  // I. Gaya thermal -- bg putih, teks hitam, monospace, TOTAL tegas.
   ok('I1 background putih', html.includes('.mb{background:#fff'));
   ok('I2 teks gelap (#111)', html.includes('color:#111'));
-  ok('I3 sans-serif (Arial)', html.includes('font-family:Arial'));
+  ok(
+    'I3 monospace (Courier New/Consolas)',
+    html.includes("font-family:'Courier New',Consolas,monospace")
+  );
   ok('I4 TOTAL font besar (.tot 14px)', /\.tot\{[^}]*14px/.test(html));
   ok('I5 nama toko', html.includes('KOPONTREN AL ITTIHAD'));
   ok('I6 footer Jazakumullah', html.includes('Jazakumullah Khairan Katsiran'));
