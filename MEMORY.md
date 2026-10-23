@@ -6150,6 +6150,29 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   test:wadi masuk test:all. Gate: tsc 0, test:all 18/18
   ALL_PASS, gate build OK, 0 non-ASCII (byte-diff), frozen
   utuh. Detail: commit message 9c85b02.
-- **NEXT**: Ujrah konsinyasi **v33** -- audit + plan
-  (read-only) saderengipun, tashih fiqih Gus Fi saderengipun
-  code / istirahat (Gus Fi decides).
+- **NEXT**: struk media (PDF/JPEG m-banking) + struk lampau (V2 /admin/laporan) -- menunggu ACC Gus Fi utk code (diff COMPLETE saderengipun commit).
+
+### Ujrah Tashih Opsi A Final -- E25 FLIP (24 Okt 2026, commit f1ff2be, dual-push master+main)
+- **Tashih fiqih Gus Fi (24 Okt 2026)**: dasar hitung ujrah V1 = HARGA PERJANJIAN
+  (opsi A -- Syafi'i + DSN-MUI; tanpa gharar). Tanpa schema change (tetap v32).
+- **FLIP (C1 f1ff2be)**: badge 'provisional' -> 'final' (5 baris, 2 file):
+  zakat-client.tsx (modal/harga pasar proxy + tips Mode Penilaian + label
+  select) & konsinyasi-client.tsx (tip Komisi/ujrah kon). Teks enggal all-ASCII.
+- **MINIMAL (Q2)**: label 'provisional' di luar scope E25 (Haul/Akumulasi,
+  gold 24K, R6, komentar api/zakat + lib/zakat-valuation) TIDAK dipotong --
+  menunggu tashih sakderengipun (catatan TODO E25).
+- **STRUK MEDIA (plan ACC)**: jspdf + html2canvas (dynamic import); lib enggal
+  src/lib/struk-media.ts -- gaya m-banking 58mm (219px @96dpi): bg putih,
+  teks hitam, logo Kopontren (SVG data URI, fallback PNG), TOTAL bold, footer
+  Jazakumullah; generateStrukPdf/Jpeg -> File; 2 tombol enggal POS receipt
+  (PDF + Foto/JPEG) via navigator.share/download. Jalur print thermal lama
+  (struk-pdf.ts + test-strukpdf) TIDAK berubah.
+- **STRUK LAMPAU (plan ACC)**: komponen V2 enggal
+  src/components/admin/struk-lampau-client.tsx (filter 7/30/hari, tabel
+  ringkas, tombol 'Kirim Struk' per baris); mount section di /admin/laporan
+  (V1 laporan-admin-client.tsx FROZEN); data /api/sales?days=N (items + kasir
+  + member) -- tanpa API enggal.
+- **Gates C1**: tsc exit 0; test:all 0 gagal (serial); gate exit 0;
+  non-ASCII 0 di diff enggal; sw.js/V1/coop.ts utuh; tanpa schema change;
+  fiqih aman (ujrah tetap upah, tanpa riba).
+

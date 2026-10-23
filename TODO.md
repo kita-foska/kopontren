@@ -1339,7 +1339,7 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [ ] E22 Dark mode palette -- bukan inverte buta; dark = tenang, high contrast, bukan menyilaukan.
 - [x] E23 Contextual help -- "?", panel bantuan per halaman, jawaban pendek. (UX-1: TermTip per halaman P1/P2 -- GL, Jurnal, Zakat, ZIS, Kasir, laporan formal, akad, zis-client, konsinyasi, member, member-settings, POS.)
 - [x] E24 Istilah syariah dua lapis -- "zakat perdagangan" + tooltip "pengelolaan harta dagang..."; jangan tebar istilah tanpa konteks. (UX-1: bahasa awam di depan, istilah menyusul via TermTip -- mis. "Tagihan belum dibayar" + tip "Settlement".)
-- [ ] E25 Tandai provisional -- label "Menunggu tashih" utk keputusan belum final (P3 Soal 3 modal + P4 dasar hitung ujrah V1 -- aspek lain terjawab 30 Sep; badge "provisional" tetap di UI zakat modal & ujrah kon.).
+- [x] E25 Tandai provisional -- label 'Menunggu tashih' utk keputusan belum final (P3 Soal 3 modal + P4 dasar hitung ujrah V1 -- SEMUA TERJAWAB: tashih 24 Okt 2026 opsi A = ujrah dari HARGA PERJANJIAN (Syafi'i + DSN-MUI, tanpa gharar) + modal harga pasar (proxy) final. Flip badge final: commit f1ff2be (v32, tanpa v33). Label 'provisional' di luar scope E25 (Haul/Akumulasi, gold 24K, R6, komentar api/zakat + lib/zakat-valuation) TIDAK dipotong -- menunggu tashih sakderengipun.
 - [ ] E26 Audit trail komunikatif -- "SIAPA melakukan APA KAPAN"; log filter + timeline.
 - [ ] E27 Mode Pengurus -- view ringkas: kas, stok, piutang, hutang, performa; bukan dashboard teknis.
 - [ ] E28 Sidebar grouping -- Kelola / Keuangan / Laporan / Sistem; jangan semua rata.
