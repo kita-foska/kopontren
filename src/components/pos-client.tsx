@@ -17,6 +17,7 @@ import {
 } from '@/components/ui';
 import { rp, rpShort, fmtDateTime } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
+import { strukPdfHtml } from '@/lib/struk-pdf';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { syncLabel, wibTimeSec } from '@/lib/confidence';
 import { POS_QUEUE_KEY, recordLastFetch } from '@/lib/offline-status';
@@ -49,6 +50,7 @@ import {
   Radio,
   ScanBarcode,
   Search,
+  Share2,
   Shuffle,
   ShoppingCart,
   Smartphone,
@@ -1321,19 +1323,25 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     printReceipt();
   }
 
-  function handleSendWaStruk() {
-    if (!receipt) return;
-    const items = receipt.items.map((it) => ({
-      qty: it.qty,
-      unit: it.product.unit,
-      name: it.product.name,
-      total: it.qty * it.price,
-    }));
-    const text = strukWaText({
+  /**
+   * Argumen struk (salin / WA / PDF) dari transaksi terakhir -- SATU
+   * sumber data: dedupe duplikasi di handleSendWaStruk & copyStrukText
+   * (dulu objek identik dibangun 2x). `points` & `price` utk struk PDF;
+   * bentuk field lain = input strukWaText (lib/rekap.ts).
+   */
+  function buildStrukWaArgs() {
+    if (!receipt) return null;
+    return {
       no: '#' + receipt.sale?.id,
       kasir: receipt.cashier,
       tgl: fmtDateTime(receipt.at),
-      items,
+      items: receipt.items.map((it) => ({
+        qty: it.qty,
+        unit: it.product.unit,
+        name: it.product.name,
+        price: it.price,
+        total: it.qty * it.price,
+      })),
       customer: receipt.customer,
       member: receipt.memberName,
       discount: receipt.disc,
@@ -1341,42 +1349,78 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
       redeem: receipt.redeem,
       cashback: receipt.cashback,
       tier: receipt.tier,
+      points: receipt.points,
       total: receipt.sale?.total ?? 0,
       pay: receipt.pay,
       paySplit: receipt.paySplit,
       received: receipt.received,
       change: receipt.change,
-    });
-    shareWa(text, receipt.memberPhone);
+    };
+  }
+
+  /**
+   * "Struk PDF": buka jendela enggal 58mm (pola ProductBarcodeLabel:
+   * window.open + document.write + @page 58mm) lalu dialog print --
+   * pilih printer thermal 58mm ATAU "Save as PDF". Tanpa dependency.
+   */
+  function handleStrukPdf() {
+    const o = buildStrukWaArgs();
+    if (!o) return;
+    const w = window.open('', '_blank', 'width=430,height=680');
+    if (!w) {
+      showToast('Popup diblokir -- izinkan popup lalu coba lagi.', 'error');
+      return;
+    }
+    w.document.write(strukPdfHtml(o));
+    w.document.close();
+    w.focus();
+    setTimeout(() => {
+      w.print();
+    }, 200);
+  }
+
+  /**
+   * "Share WA (PDF)": bagikan file struk (HTML 58mm kecil, tanpa
+   * gambar) -- mobile: share sheet (pilih WhatsApp); desktop: unduh
+   * file (Save as PDF bila perlu). WA tidak mendukung lampiran PDF
+   * via URL (no API), jadi share memakai file.
+   */
+  async function handleSharePdf() {
+    const o = buildStrukWaArgs();
+    if (!o) return;
+    const html = strukPdfHtml(o);
+    const name = 'struk-' + o.no.replace(/[^0-9A-Za-z-]/g, '') + '.html';
+    const file = new File([html], name, { type: 'text/html' });
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Struk Kopontren' });
+        showToast('Struk dibagikan -- pilih WhatsApp di daftar app.');
+        return;
+      }
+    } catch {
+      /* dibatalkan user -- lanjut fallback unduh */
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    showToast('Struk diunduh -- buka lalu Save as PDF bila perlu.');
+  }
+
+  function handleSendWaStruk() {
+    const o = buildStrukWaArgs();
+    if (!o || !receipt) return;
+    shareWa(strukWaText(o), receipt.memberPhone);
   }
 
   function copyStrukText() {
-    if (!receipt) return;
-    const items = receipt.items.map((it) => ({
-      qty: it.qty,
-      unit: it.product.unit,
-      name: it.product.name,
-      total: it.qty * it.price,
-    }));
-    const text = strukWaText({
-      no: '#' + receipt.sale?.id,
-      kasir: receipt.cashier,
-      tgl: fmtDateTime(receipt.at),
-      items,
-      customer: receipt.customer,
-      member: receipt.memberName,
-      discount: receipt.disc,
-      memberDiscount: receipt.memberDiscount,
-      redeem: receipt.redeem,
-      cashback: receipt.cashback,
-      tier: receipt.tier,
-      total: receipt.sale?.total ?? 0,
-      pay: receipt.pay,
-      paySplit: receipt.paySplit,
-      received: receipt.received,
-      change: receipt.change,
-    });
-    navigator.clipboard.writeText(text);
+    const o = buildStrukWaArgs();
+    if (!o) return;
+    navigator.clipboard.writeText(strukWaText(o));
     showToast('Teks struk disalin ke clipboard');
   }
 
@@ -2210,13 +2254,26 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
               >
                 Salin Struk
               </Button>
-              <div className="ml-auto flex items-center gap-2">
+              <div className="ml-auto flex flex-wrap items-center gap-2">
                 <Button variant="ghost" size="sm"
                   icon={<MessageCircle className="h-3.5 w-3.5" />}
                   className="font-bold"
                   onClick={handleSendWaStruk}
                 >
                   Kirim WA
+                </Button>
+
+                <Button variant="ghost" size="sm"
+                  icon={<Printer className="h-3.5 w-3.5" />}
+                  onClick={handleStrukPdf}
+                >
+                  Struk PDF
+                </Button>
+                <Button variant="ghost" size="sm"
+                  icon={<Share2 className="h-3.5 w-3.5" />}
+                  onClick={handleSharePdf}
+                >
+                  Share WA (PDF)
                 </Button>
                 <Button variant="primary" size="sm"
                   icon={<Printer className="h-3.5 w-3.5" />}
