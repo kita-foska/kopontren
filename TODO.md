@@ -175,6 +175,11 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
   lib/struk-media.ts (gaya m-banking: bg putih /
   teks hitam/logo Kopontren/TOTAL tegas + Unduh PDF + Unduh Foto POS --
   detail MEMORY.md 'STRUK MEDIA PDF/JPEG (GAYA M-BANKING 58mm) LEPAS')
+  + STRUK LAMPAU V2 LEPAS 24 Okt (C1 b38ab48): seksi 'Lihat Struk
+  Lampau' di /admin/laporan -- filter 7/30/Semua, tabel + 'Kirim
+  Struk' (PDF) / 'Foto' (JPEG) per baris; data GET /api/sales
+  (read-only); deviasi ACC: tanpa QRIS qrcode + Diterima/Kembali
+  cash-only; detail MEMORY.md 'STRUK LAMPAU -- LEPAS'.
       `@media print`. Tanpa perubahan kode.
 - [x] AUDIT 3x (21 Sep): `audit_log` auto-purge - SELESAI
       (22 Sep): `purgeAuditLog` di lib/notify.ts (default 90 hari +

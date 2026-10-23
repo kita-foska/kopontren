@@ -6214,3 +6214,36 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   non-ASCII 0 di diff enggal; sw.js/V1/coop.ts utuh; tanpa schema change;
   fiqih aman (ujrah tetap upah, tanpa riba).
 
+## STRUK LAMPAU -- LEPAS (24-10-2026)
+
+Struk Lampau V2 = seksi 'Lihat Struk Lampau' di /admin/laporan
+(regenerasi struk m-banking 58mm transaksi lampau). LEPAS:
+
+- commit C1 = b38ab48 (2 file: struk-lampau-client.tsx enggal 306
+  baris + laporan/page.tsx +5/-2). Dual-push master + main (4 refs
+  verified).
+- C2 docs: commit ini (MEMORY.md +section STRUK LAMPAU di bawah;
+  TODO.md L174 entry struk media + baris STRUK LAMPAU LEPAS).
+
+Detail implementasi:
+
+- Data = GET /api/sales?days=7|30&limit=50&offset (read-only;
+  kasir/member/items ter-embed server-side -- tanpa fetch per baris).
+  Filter 7/30/Semua + tabel (No, Tgl, Pelanggan, Metode, Total, Poin)
+  + 'Muat Lebih' (limit 50/API cap).
+- Per baris: 'Kirim Struk' (PDF) + 'Foto' (JPEG) via lib/struk-media
+  (generateStrukPdf/generateStrukJpeg; jsPDF + html2canvas dynamic
+  import -- chunk laporan tak terbebani sampai tombol ditekan).
+  Mobile = navigator.share (-> WhatsApp), desktop = unduh.
+- buildOpts() = map SaleRow -> StrukPdfOpts hanya field tersimpan di
+  sales/sale_items (tier & saldo member tak tersimpan per transaksi
+  -> dilewati; struk lampau = rekonstruksi, bukan replika persis).
+- Deviasi tercatat (ACC ruling 24 Okt): (1) tanpa QRIS qrcode --
+  /api/sales tak menyimpan kode QRIS (cuma nama metode);
+  (2) Diterima/Kembali tampil utk metode cash saja.
+- V1 (laporan-admin-client.tsx / LaporanFormalClient) TAK disentuh;
+  mount = laporan/page.tsx (+5/-2).
+- Gates: tsc --noEmit 0; test 43 suites ALL_PASS;
+  check-route-exports + check-theme-gate OK; next build Compiled
+  OK (.next/server 86 page stubs); 0 non-ASCII di file enggal;
+  frozen intact (sw.js, V1, coop.ts); tanpa schema change.
