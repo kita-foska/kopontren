@@ -869,7 +869,7 @@ async function migrate(d: Db) {
       ['2070', 'Simpanan Sukarela', '20xx', 'kewajiban', 'open', 0],
       ['2080', 'SHU Berjalan', '20xx', 'kewajiban', 'closed', 0], // W6 P3a (v28): close (ruling Q6 W4 5 Okt: tak dipakai alur Sek.7)
       ['2090', 'ZIS Terkumpul Belum Disalurkan', '20xx', 'kewajiban', 'open', 0], // W2.7 (v22): flip open (ZIS masuk OQ-1)
-      ['2100', 'Kewajiban Lain-lain', '20xx', 'kewajiban', 'pending', 1],
+      ['2100', "Wadi'ah Dana Santri", '20xx', 'kewajiban', 'open', 0], // W9 (v31): flip open (modul wadi'ah santri; tashih 22 Okt: dhana + terpisah, no imbal hasil)
       // 30xx ekuitas
       ['3010', 'Modal Penyertaan', '30xx', 'ekuitas', 'open', 0],
       ['3020', 'SHU Ditahan', '30xx', 'ekuitas', 'open', 0], // W4.1 (v24): flip open (modul koperasi; nilai = input PKGF)
@@ -952,6 +952,16 @@ async function migrate(d: Db) {
     // Idempoten; fresh install = no-op (seed sudah 'closed').
     await d.exec(
       `UPDATE coa SET status = 'closed', needs_decision = 0 WHERE code = '2080'`
+    );
+    // W9 (skema v31) -- upgrade path: rename + flip COA 2100 'Kewajiban
+    // Lain-lain' pending -> "Wadi'ah Dana Santri" open/0 (modul wadi'ah
+    // santri; tashih 22 Okt: dhana + terpisah, no imbal hasil). UPDATE
+    // eksplisit karena seed di atas DO NOTHING (DB v30: baris coa sudah
+    // ada, seed tidak menimpa). Idempoten; fresh install = no-op.
+    // SQL: string literal harus SINGLE-quote (SQLite: double-quote =
+    // identifier kolom); apostrophe diescaped dgn digandakan ('').
+    await d.exec(
+      "UPDATE coa SET name = 'Wadi''ah Dana Santri', status = 'open', needs_decision = 0 WHERE code = '2100'"
     );
   }
   // v30 multi-satuan (Opsi A, 2026-10-16, ruling Gus Fi via DeepSeek audit):
@@ -1359,6 +1369,36 @@ export async function saveZakatSettings(
     );
   }
 
+  // W9 (skema v32, 2026-10-24, tashih Gus Fi via DeepSeek): wadi'ah
+  // santri -- wadi_balances (balance per santri, FK -> members.id) +
+  // wadi_ledger (audit trail setor/tarik; type 'setor'|'tarik'; amount
+  // selalu positif; balance_after = running balance) + index.
+  // Purely additive; DB stempel v31 menjalankan fullInit sekali lagi.
+  // BACKUP DB WAJIB sebelum deploy (lesson v16).
+  async function migrate32(d: Db) {
+    await d.exec(
+      'CREATE TABLE IF NOT EXISTS wadi_balances(' +
+        'member_id INTEGER NOT NULL PRIMARY KEY, ' +
+        'balance INTEGER NOT NULL DEFAULT 0, ' +
+        "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), " +
+        "updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))" +
+        ')'
+    );
+    await d.exec(
+      'CREATE TABLE IF NOT EXISTS wadi_ledger(' +
+        'id INTEGER PRIMARY KEY, ' +
+        'member_id INTEGER NOT NULL, ' +
+        "type TEXT NOT NULL, " +
+        'amount INTEGER NOT NULL, ' +
+        'balance_after INTEGER NOT NULL, ' +
+        "note TEXT NOT NULL DEFAULT '', " +
+        'created_by INTEGER, ' +
+        "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))" +
+        ')'
+    );
+    await d.exec('CREATE INDEX IF NOT EXISTS idx_wadi_ledger_member ON wadi_ledger(member_id, created_at DESC)');
+  }
+
 // Bump v10 (2026): notifikasi admin — tabel notifications,
 // notification_settings, notification_logs (+ index). Idempotent, aman
 // utk DB existing.
@@ -1481,7 +1521,15 @@ export async function saveZakatSettings(
 // tidak berubah. TIDAK purely additive (rebuild tabel): DB stempel v30
 // menjalankan fullInit sekali lagi saat cold start. BACKUP DB WAJIB
 // sebelum deploy (lesson v16).
-export const SCHEMA_VERSION = 31;
+// Bump v32 (W9, 2026-10-24, wadi'ah santri; tashih Gus Fi via DeepSeek):
+// COA 2100 rename 'Kewajiban Lain-lain' -> "Wadi'ah Dana Santri" + flip
+// open/0 (liabilitas; dhana + terpisah, no imbal hasil). Tabel baru:
+// wadi_balances (balance per santri) + wadi_ledger (audit trail
+// setor/tarik; tipe 'setor'|'tarik'; amount selalu positif; balance_after
+// = running balance) + idx_wadi_ledger_member. Purely additive; DB
+// stempel v30 menjalankan fullInit sekali lagi saat cold start. BACKUP DB
+// WAJIB sebelum deploy (lesson v16).
+export const SCHEMA_VERSION = 32;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
@@ -1511,6 +1559,7 @@ async function fullInit(d: Db) {
   await migrate29(d);
   await migrate30(d); // Q62 (P2): tabel approval_requests + index
   await migrate31(d); // V2 multi-satuan: rebuild stock/qty/qty_per_base -> REAL
+  await migrate32(d); // W9 (v32): tabel wadi'ah santri (wadi_balances + wadi_ledger)
   await d.exec(
     `UPDATE sales SET reported_at = strftime('%Y-%m-%dT%H:%M:%fZ', reported_at) WHERE reported_at IS NOT NULL AND instr(reported_at, ' ') > 0;`
   );

@@ -30,6 +30,7 @@ const PREFETCH_PATHS = new Set([
   '/admin/zis',
   '/admin/akad', // W3.3: modul akad syariah (OQ 2: simetris dgn zis)
   '/admin/koperasi', // W4.3: modul koperasi (simetris dgn akad/zis)
+  '/admin/wadi', // W9: modul wadi'ah santri (simetris dgn koperasi)
   '/tutorial',
 ]);
 
@@ -180,11 +181,32 @@ const IconGlosarium = (
 /**
  * Plan A (8 Okt, ruling Gus Fi via DeepSeek, Q1=A / Q2=C): SEMUA item nav
  * dapat ikon inline SVG -- 25 baru (di bawah) + 6 lama = 31/31.
+ *
  * System LOCK: render 16px (width/height "16"), viewBox 24, stroke-2,
  * currentColor, aria-hidden="true"; tanpa emoji/unicode/ikon-font;
  * geometry gaya Lucide (baca jelas di 16px). No sub-menu (Q2=C):
  * group + render TIDAK berubah.
  */
+// W9 (skema v31): ikon modul wadi'ah santri (dompet: kotak + koin --
+// inline SVG, 16px, stroke currentColor; tanpa emoji/unicode/ikon-font).
+const IconWadi = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="2" y="4" width="20" height="16" rx="2" />
+    <path d="M2 8h20" />
+    <circle cx="18" cy="14" r="2" />
+  </svg>
+);
+
 const IconGauge = (
   <svg
     width="16"
@@ -721,6 +743,8 @@ export const MENU_ITEMS: MenuDef[] = [
   // W4.3: modul koperasi (skema v24, Sek.7.1/7.3; tulis = tier koperasi
   // admin/manajer; pengurus = read-only via tier laporan -- pola Q3 akad).
   { href: '/admin/koperasi', label: 'Koperasi', icon: IconKoperasi, level: 'laporan' },
+  // W9: modul wadi'ah santri (dhana + terpisah, no imbal hasil; tier admin/manajer).
+  { href: '/admin/wadi', label: "Wadi'ah", icon: IconWadi, level: 'wadi' },
   { href: '/admin/pengaturan-member', label: 'Keuntungan Member', icon: IconPercent, level: 'admin' },
   { href: '/admin/member', label: 'Member', icon: IconUsers, level: 'member' },
   { href: '/admin/laporan', label: 'Laporan Pengurus', icon: IconClipboard, level: 'laporan' },
@@ -765,6 +789,7 @@ const ADMIN_GROUP_DEFS: { title: string; hrefs: string[] }[] = [
       '/admin/hutang',
       '/admin/zakat',
       '/admin/zis',
+      '/admin/wadi', // W9: modul wadi'ah santri (skema v31; pengurus = read-only)
       '/admin/akad', // W3.3: modul akad syariah (skema v23; pengurus = read-only, Q3)
       '/admin/koperasi', // W4.3: modul koperasi (skema v24; pengurus = read-only, pola Q3)
       '/laporan',

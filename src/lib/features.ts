@@ -59,7 +59,8 @@ export type Feature =
   | 'shu' // W4.4: distribusi SHU rasio input (tulis operasional admin/manajer)
   | 'member'
   | 'personal'
-  | 'approvals'; // P2/Q62: alur persetujuan (queue + decide; tier admin)
+  | 'approvals' // P2/Q62: alur persetujuan (queue + decide; tier admin)
+  | 'wadi'; // W9 (v32): modul wadi'ah santri (dhana + terpisah, no imbal hasil)
 
 export const FEATURE_MATRIX: Readonly<Record<Feature, readonly Role[]>> = {
   pos: ['admin', 'manajer', 'kasir'],
@@ -78,6 +79,7 @@ export const FEATURE_MATRIX: Readonly<Record<Feature, readonly Role[]>> = {
   member: ['admin', 'manajer'],
   personal: ['admin', 'manajer', 'pengurus', 'kasir', 'gudang', 'pembelian', 'member'],
   approvals: ['admin'], // P2/Q62: alur persetujuan -- admin saja (dua orang)
+  wadi: ['admin', 'manajer'], // W9 (v32): wadi'ah santri (tulis operasional)
 };
 
 /** Cek apakah role punya akses ke fitur tertentu (admin selalu lolos). */
