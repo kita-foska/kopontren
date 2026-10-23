@@ -2686,8 +2686,8 @@ bikin keputusan fiqih baru demi kebutuhan coding.
 
 **WAVE 9 (2 item -- FIQIH, perlu TASHIH Gus Fi saderengipun
 code):** W1 Wadi'ah (santri wallet: COA 2xxx passiva, aturan
-tarik dana) + W2 Ujrah Konsinyasi (dasar hitung komisi / akad
-wakalah bil ujrah -- E25 tashih). Audit read-only Cline 20 Okt
+tarik dana) -- **LEPAS 24 Okt (C1 `9c85b02`, skema v32, test 13/13, gate lulus)** + W2 Ujrah Konsinyasi (dasar hitung komisi / akad
+wakalah bil ujrah -- E25 tashih; skema **v33**; NEXT: audit read-only + plan saderengipun code). Audit read-only Cline 20 Okt
 (report ing chat menika; piwangan + pitakenan tashih mlebu record
 MEMORY.md seksi "WAVE 8 COMPLETE" + NEXT). Tashih = prioritas
 saderengipun code.
