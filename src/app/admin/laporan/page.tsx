@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { canAccess, currentUser } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import { LaporanFormalClient } from '@/components/admin/laporan-formal-client';
+import { StrukLampauClient } from '@/components/admin/struk-lampau-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,10 +16,13 @@ export default async function LaporanAdminPage() {
         Laporan <span className="text-accent-500 dark:text-accent-300">Pengurus</span>
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-        Laporan Posisi Keuangan formal (W2.2), neraca saldo GL, dan arsip
-        laporan V1 lama (rekapitulasi penjualan, laba kotor, kas, unduhan CSV).
+        Laporan Posisi Keuangan formal (W2.2), neraca saldo GL, arsip
+        laporan V1 lama (rekapitulasi penjualan, laba kotor, kas, unduhan
+        CSV), + seksi V2 "Lihat Struk Lampau" (regenerasi struk 58mm
+        transaksi lampau).
       </p>
       <LaporanFormalClient />
+      <StrukLampauClient />
     </Shell>
   );
 }
