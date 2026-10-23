@@ -6141,6 +6141,44 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   auto-merge. Status: UNCOMMITTED (menunggu ACC Gus Fi).
   Gate tree merged: tsc 0, test:all 17/17 ALL_PASS,
   test:wadi 13/13, gate build 7.0s.
+## STRUK MEDIA PDF/JPEG (GAYA M-BANKING 58mm) LEPAS (24 Okt 2026)
+- **Latar**: paska struk PDF print-window (822b02e) + ruling E25 enggal
+  (Gus Fi 'struk harus rapi bg putih logo kopontren tengah atas, TOTAL
+  tegas, mirip m-banking, + unduh foto'); Cline plan (58mm=219px @96dpi,
+  3x render, lib enggal, dynamic import, tanpa skema, V2 struk lampau
+  menyusul) -> **ACC 24 Okt** -> **C1 commit 6d57d40 (LEPAS, dual-push,**
+  **4 refs verified)** + C2 docs ini. Tanpa skema enggal, tanpa fiqih,
+  tanpa backend.
+- **Struk media (C1 6d57d40)**:
+  - lib enggal `src/lib/struk-media.ts` (~260): `strukMbankingHtml`
+    (58mm=219px, **bg putih**/teks #111/Arial/slot logo 64px kothak --
+    HTML BEBAS base64), `resolveLogoUri` (public/logo.svg -> data URI,
+    fallback logo.png), `generateStrukPdf`/`generateStrukJpeg` -> `File`
+    (render 1x 3x canvas + composite logo SESUDAH html2canvas -- decode
+    SVG native browser; jsPDF + html2canvas **DYNAMIC import**, chunk POS
+    tak terbebani; deviasi enggal dr plan: logo composite di canvas,
+    diterima -- lebih aman utk html2canvas).
+  - `pos-client.tsx`: 2 tombol enggal di modal receipt: **'Unduh PDF'** +
+    **'Unduh Foto'** (icon FileText/Image); shareOrDownload() = mobile
+    share sheet (-> WA) / desktop unduh; state mediaBusy (loading).
+    Pola LAMA ('Struk PDF' print thermal + 'Share WA (PDF)' + Cetak) TIDAK
+    berubah.
+  - `scripts/test-struk-media.ts` 29 assert hermetis (masuk test:all
+    paling akhir): ASCII murni, 219px/58mm, slot logo tanpa tag img /
+    base64, field order (item->TOTAL->Bayar->Diterima->Kembali->Poin),
+    escaping XSS, Rp penuh/short, kondisional (Cashback/Split/Poin/
+    Kembali), gaya m-banking (I1-I6, J1-J2).
+  - `package.json` +deps jspdf ^4.2.1 + html2canvas ^1.4.1 (+lock),
+    +script test:strukmedia, test:all +1.
+  - **Gate**: tsc --noEmit 0; test:strukmedia 29/29; test:all ALL
+    HAS_FAILURE 0; gate (route-exports + theme + next build) Compiled OK
+    14.4s; 0 non-ASCII (5 file enggal); frozen tak tersentuh (sw.js,
+    laporan-admin-client.tsx, coop.ts).
+- **Next (menunggu ACC Gus Fi)**: struk lampau V2 -- section 'Lihat
+  Struk Lampau' (filter hari 7/30/all + tabel + 'Kirim Struk' per baris,
+  generateStrukPdf + QRCODE_SVG dari lib/qrcode + share) di bawah V1
+  /admin/laporan; V1 tak tersentuh. Plan di atas.
+
 - **WADI'AH v32 LEPAS (24 Okt)** -- C1 `9c85b02` (dual-push
   master+main verified, 9 file, +749/-4): tashih dhana +
   terpisah (W9-1a+c opsi A); migrate32 wadi_balances +
