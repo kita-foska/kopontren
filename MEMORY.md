@@ -6247,3 +6247,42 @@ Detail implementasi:
   check-route-exports + check-theme-gate OK; next build Compiled
   OK (.next/server 86 page stubs); 0 non-ASCII di file enggal;
   frozen intact (sw.js, V1, coop.ts); tanpa schema change.
+
+## STRUK THERMAL + SPLASH PWA + HYGIENE W10 -- LEPAS (24-10-2026)
+C1 a3ffb23 (W10-4 hygiene) + C1 db69724 (W10-3 struk thermal +
+logo + splash); dual-push master+main verified; C2 docs:
+commit ini.
+
+### W10-4 hygiene (C1 a3ffb23)
+- `test:wakaf` legacy (CLEANUP W5/W6): audit read-only 24 Okt
+  = entry SUDAH TAK ADA di package.json (grep 0 match; test:all
+  42 suite tak memuatnya; git history package.json tak pernah
+  memuat string tsb) -> cleanup terbukti no-op; TODO ditutup.
+- Doc comment stale `ui.tsx` L1045-1102 (blok header FASE D +
+  Th/Td) di-refresh -- awiwe mbiyaka CSS legacy `.th`/`.td`
+  sing wis dihapus. Doc-only, 0 risiko.
+
+### W10-3 struk thermal + logo + splash (C1 db69724)
+- **Font**: Arial -> `'Courier New',Consolas,monospace`
+  (struk-media.ts + test-struk-media.ts) -- thermal printer
+  asli monospace (E31 "bukan CSS dump").
+- **Logo**: Kopontren PNG -> data-URI (48x48) embed `<img>`
+  direct ing HTML (bot composite post-canvas) -> html2canvas
+  deterministic.
+- **Splash PWA**: `public/manifest.json` `background_color`
+  #170A0E -> #FFFFFF (splash PWA ngunakakake bg saka manifest,
+  bot saka `#theme-bg`; awiwe logo bot wonten ketoke ing dark
+  bg).
+- Gates: tsc --noEmit 0; test:all 42 suites ALL_PASS
+  (test:strukmedia 29/29); gate build OK; 0 non-ASCII new
+  files; frozen intact (sw.js, V1, coop.ts); tanpa schema
+  change (v32).
+- Residual E31: watermark = ditunda batch enggal.
+
+### Next (menunggu ACC Gus Fi)
+1. W10-2 SW.js refactor template-generate (TODO L293):
+   root-cause fix in-place stamp -> template ter-track
+   (`public/sw.src.js`) + `public/sw.js` generated +
+   gitignored.
+2. W10-1 Ujrah v33: audit read-only + tashih ruling
+   (fiqih: tashih = 2/3 - 1/3).

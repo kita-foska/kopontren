@@ -299,7 +299,7 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       SAMA + build lokal/Cloud. Detail: MEMORY.md seksi
       "PWA Installability" item guardrail.
 
-- [x] **test:wakaf legacy (CLEANUP W5/W6) -- SELESAI W10-4 (24 Okt)**
+- [x] **test:wakaf legacy (CLEANUP W5/W6) -- SELESAI W10-4 (24 Okt, C1 a3ffb23)**
       -- `test:wakaf` in package.json points to scripts/test-wakaf.ts
       (does not exist). Legacy cleanup needed (W5 or W6).
       Ditemukan saat W2.6 verify 2 Okt 2026 (out-of-scope, TIDAK
@@ -1048,7 +1048,7 @@ device oleh Gus Fi -- 4 halaman durung visual diverifikasi:
 (+ tabel FASE D liyane manawa durung ketoke); 79 raw button
 Phase B tetep disengka (chip sub-sm dll). **Berikutnya: FASE E**
 (Card unification + FilterPill/TogglePill).
-- [x] (follow-up opsional -- SELESAI W10-4, 24 Okt) refresh doc
+- [x] (follow-up opsional -- SELESAI W10-4, 24 Okt, C1 a3ffb23) refresh doc
   comment stale `ui.tsx` L1045-1102 (blok header FASE D + doc Th/Td
   sing awiwe mbiyaka CSS legacy `.th`/`.td` sing wis dihapus).
 
@@ -1359,7 +1359,11 @@ dijalankan **setelah UX-3** -- hasilnya jadi input utama UX-4.
 - [ ] E30 First Run Checklist -- alur awal: atur shift → input kas awal → buat produk → login kasir.
 
 **E31–E40 (detail, performa, akuntabilitas):**
-- [ ] E31 Printer premium -- struk rapi, header kopontren, total jelas, watermark; bukan CSS dump.
+- [x] E31 Printer premium -- **LEPAS W10-3 (24 Okt, C1 db69724)**:
+      struk thermal 58mm (font Courier New/Consolas monospace) +
+      header Kopontren (logo embed 48x48) + TOTAL tegas + splash
+      PWA bg putih; bukan CSS dump. Residual: watermark ditunda
+      batch enggal.
 - [ ] E32 Nomor transaksi -- ID mudah dibaca, konsisten, "INV-2026-000123".
 - [ ] E33 Action→Result -- "Simpan" → berubah, toast, refresh relevan; jangan diam.
 - [ ] E34 Performance -- data besar, pagination/infinite scroll, filter cepat.
