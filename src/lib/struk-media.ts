@@ -2,6 +2,10 @@
 // "Unduh PDF" & "Unduh Foto" POS (pos-client.tsx). Gaya: bg putih,
 // teks hitam MONOSPACE (kesan printer thermal), logo Kopontren atas
 // tengah, garis putus, TOTAL tegas. 58mm = 219px @96dpi.
+// Layout resmi (W10 struk Option A, 24 Okt): judul STRUK PEMBELIAN,
+// Tgl + zona WIB, alamat 2 baris, garis ganda ASCII (=), footer
+// "Terima kasih ... Barokallahu fiikum." (garis unicode box-drawing
+// diganti '=' -- gate 0 non-ASCII, precedent repo).
 //
 // Beda dgn jalur thermal lama (struk-pdf.ts, TIDAK diubah):
 //  - jspdf & html2canvas pakai DYNAMIC import (chunk POS tetap ringan;
@@ -26,6 +30,18 @@ export const STRUK_W_PX = 219;
 export const LOGO_SLOT_PX = 64;
 /** Skala render -- 3x utk teks tajam di PDF (657px lebar efektif). */
 export const STRUK_SCALE = 3;
+
+/**
+ * Garis ganda ASCII (Option A resmi) -- 30 char '=' (baris lebar
+ * struk ~30 char monospace @11px). Unicode box-drawing (U+2550)
+ * TIDAK dipakai: gate 0 non-ASCII + precedent repo (W10-4:
+ * box-drawing diganti '-').
+ */
+const LINE_DBL: string = '='.repeat(30);
+
+/** Blok alamat 2 baris (Option A resmi) -- statis; sumber data
+ * (settings) tunggu ruling Gus Fi (residual). */
+const STRUK_ADDR: string[] = ['Jl. Perintis Kemerdekaan, Jurang,', 'Temanggung'];
 
 function esc(s: unknown): string {
   return String(s ?? '')
@@ -60,7 +76,9 @@ const SEP = '<div class="s"></div>';
  */
 export function strukMbankingHtml(o: StrukPdfOpts, logoUri?: string): string {
   const parts: string[] = [];
-  // Header: slot logo + nama toko (centered, gaya thermal).
+  const dbl = '<div class="ln">' + LINE_DBL + '</div>';
+  // Header: slot logo + nama toko + tagline + alamat 2 baris
+  // (Option A resmi; centered, gaya thermal).
   parts.push(
     '<div class="mb-logo" style="height:' +
       LOGO_SLOT_PX +
@@ -70,18 +88,27 @@ export function strukMbankingHtml(o: StrukPdfOpts, logoUri?: string): string {
         : '') +
       '</div>' +
       '<div class="hd"><div class="t1">KOPONTREN AL ITTIHAD</div>' +
-      '<div class="t2">Kasir &amp; Pembukuan Pondok Pesantren</div></div>'
+      '<div class="t2">Kasir &amp; Pembukuan Pondok Pesantren</div>' +
+      STRUK_ADDR.map((l) => '<div class="ad">' + esc(l) + '</div>').join('') +
+      '</div>'
   );
-  // Meta.
+  // Judul resmi -- garis ganda di atas & bawah (Option A).
+  parts.push(dbl);
+  parts.push('<div class="ttl">STRUK PEMBELIAN</div>');
+  parts.push(dbl);
+  // Meta (Tgl + zona WIB -- transparan, Option A).
   parts.push(
     '<div class="meta">' +
       row('No.', o.no) +
-      row('Tgl', o.tgl) +
+      row('Tgl', o.tgl + ' WIB') +
       row('Kasir', o.kasir) +
       (o.customer ? row('Pembeli', o.customer) : '') +
       (o.member ? row('Member', o.member) : '') +
       '</div>'
   );
+  // Item (label ITEM + baris tunggal -- Option A).
+  parts.push(dbl);
+  parts.push('<div class="itmh">ITEM</div>');
   parts.push(SEP);
   // Item (nama tebal, baris kedua: qty unit [x harga] = subtotal).
   parts.push(
@@ -114,6 +141,7 @@ export function strukMbankingHtml(o: StrukPdfOpts, logoUri?: string): string {
     parts.push(row('Saldo Reward', '+' + rp(o.cashback)));
   if (o.tier) parts.push(row('Tier', o.tier === 'gold' ? 'Gold' : 'Silver', 'b'));
   // Bayar: split penuh per bagian, atau metode tunggal (+diterima/kembali).
+  parts.push(dbl);
   if (o.paySplit && o.paySplit.length > 0) {
     parts.push(row('Bayar', 'campur'));
     for (const p of o.paySplit) parts.push(row('- ' + payMethodLabel(p.m), rp(p.a)));
@@ -126,8 +154,14 @@ export function strukMbankingHtml(o: StrukPdfOpts, logoUri?: string): string {
   }
   // Poin (kondisional).
   if (o.points && o.points > 0) parts.push(row('Poin Didapat', '+' + o.points + ' Poin'));
-  parts.push(SEP);
-  // Footer.
+  // Footer: terima kasih + doa (Option A) -- garis ganda di atas
+  // & bawah; lalu footer Jazakumullah.
+  parts.push(dbl);
+  parts.push(
+    '<div class="ft"><div>Terima kasih atas kunjungan Anda.</div>' +
+      '<div>Barokallahu fiikum.</div></div>'
+  );
+  parts.push(dbl);
   parts.push(
     '<div class="ft"><div>Jazakumullah Khairan Katsiran</div>' +
       '<div>Mohon maaf atas segala kekurangan</div></div>'
@@ -139,6 +173,10 @@ export function strukMbankingHtml(o: StrukPdfOpts, logoUri?: string): string {
     '.hd{text-align:center;margin-bottom:4px}' +
     '.hd .t1{font-weight:bold;font-size:13px;letter-spacing:0.5px}' +
     '.hd .t2{font-size:9px;color:#444}' +
+    '.hd .ad{font-size:9px;color:#444;line-height:1.3}' +
+    '.ttl{text-align:center;font-weight:bold;font-size:12px;letter-spacing:1px;margin:4px 0}' +
+    '.ln{text-align:center;font-size:10px;line-height:1;margin:2px 0;overflow:hidden;white-space:nowrap}' +
+    '.itmh{text-align:center;font-weight:bold;font-size:10px;letter-spacing:1px;margin:2px 0}' +
     '.kv{display:flex;justify-content:space-between;gap:6px}' +
     '.kv .v{font-weight:bold}' +
     '.kv.b{font-weight:bold}' +

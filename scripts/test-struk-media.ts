@@ -6,7 +6,9 @@
  * (mb-logo) EMBED <img> data-URI bila logoUri diberikan, kosong bila
  * tidak, (D) field order item -> TOTAL -> Bayar -> Kembali -> Poin,
  * (E) escaping XSS, (F) format Rp, (G) kondisional, (H) gaya thermal
- * (bg putih, monospace).
+ * (bg putih, monospace), (I) style thermal, (J) TOTAL tegas,
+ * (K) layout resmi Option A (judul STRUK PEMBELIAN + WIB + alamat 2
+ * baris + garis ganda '=' + footer terima kasih/Barokallahu).
  *
  * generateStrukPdf/Jpeg & resolveLogoUri butuh DOM/canvas + library
  * dynamic import -- TIDAK dites hermetis (hanya jalan di browser);
@@ -150,6 +152,31 @@ function main(): void {
   // J. TOTAL lebih besar dari baris item -- baris .tot ada, item .it ada.
   ok('J1 ada baris item .it', html.includes('class="it"'));
   ok('J2 ada baris TOTAL .tot', html.includes('class="tot"'));
+  // K. Layout resmi Option A (W10 struk usulan, 24 Okt).
+  ok('K1 judul STRUK PEMBELIAN', html.includes('STRUK PEMBELIAN'));
+  ok('K2 Tgl + zona WIB', html.includes('23 Okt 2026, 10:30 WIB'));
+  ok('K3 alamat baris 1', html.includes('Jl. Perintis Kemerdekaan, Jurang,'));
+  ok('K4 alamat baris 2', html.includes('>Temanggung<'));
+  ok('K5 footer terima kasih', html.includes('Terima kasih atas kunjungan Anda.'));
+  ok('K6 footer Barokallahu', html.includes('Barokallahu fiikum.'));
+  ok(
+    'K7 garis ganda ASCII (=x30)',
+    html.includes('<div class="ln">' + '='.repeat(30) + '</div>')
+  );
+  ok('K8 label ITEM', html.includes('<div class="itmh">ITEM</div>'));
+  ok(
+    'K9 urutan resmi: judul -> meta -> ITEM -> TOTAL -> Bayar -> footer',
+    (() => {
+      const iTtl = html.indexOf('STRUK PEMBELIAN');
+      const iItemHd = html.indexOf('<div class="itmh">ITEM</div>');
+      const iTot = html.indexOf('>TOTAL<');
+      const iB = html.indexOf('>Bayar<');
+      const iTks = html.indexOf('Terima kasih');
+      const iJk = html.indexOf('Jazakumullah');
+      return iTtl > -1 && iItemHd > iTtl && iTot > iItemHd && iB > iTot && iTks > iB && iJk > iTks;
+    })(),
+    'order check'
+  );
 
   console.log('---');
   console.log('PASS: ' + passes + '  FAIL: ' + failures);
