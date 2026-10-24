@@ -290,14 +290,16 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       Konsinyasi") ke pendapatan (4040) + klasifikasi tagihan
       pemilik = settlement payable (2020). Eksekusi = komit terpisah
       saat F3.4+ (setelah implementasi spesifikasi koreksi P3, R6).
-- [ ] **sw.js refactor template-generate (FOLLOW-UP terpisah,
-      BUKAN sekarang)** -- ubah `scripts/inject-sw-version.mjs`
-      dari in-place stamp menjadi MEN-GENERATE: template ter-track
-      (mis. `public/sw.src.js`) + `public/sw.js` menjadi generated
-      + `public/sw.js` masuk `.gitignore`. Eliminasi root-cause
-      mutasi in-place. Verifikasi: perilaku SW di deploy TETAP
-      SAMA + build lokal/Cloud. Detail: MEMORY.md seksi
-      "PWA Installability" item guardrail.
+- [x] **sw.js refactor template-generate (FOLLOW-UP terpisah,
+      BUKAN sekarang) -- SELESAI W10-2 (24 Okt, C1 c8b204a)** -- ubah
+      `scripts/inject-sw-version.mjs` dari in-place stamp menjadi
+      MEN-GENERATE: template ter-track (`public/sw.src.js`) +
+      `public/sw.js` menjadi generated + `public/sw.js` masuk
+      `.gitignore`. Eliminasi root-cause mutasi in-place (skip-worktree
+      flag nembok mutasi SW-BUILD). `package.json` +`predev`
+      (`--stable`: stamp deterministik dev, bebas banner palsu).
+      Frozen list saiki = `public/sw.src.js`. Detail: MEMORY.md seksi
+      W10-2.
 
 - [x] **test:wakaf legacy (CLEANUP W5/W6) -- SELESAI W10-4 (24 Okt, C1 a3ffb23)**
       -- `test:wakaf` in package.json points to scripts/test-wakaf.ts

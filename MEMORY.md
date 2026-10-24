@@ -6286,3 +6286,41 @@ commit ini.
    gitignored.
 2. W10-1 Ujrah v33: audit read-only + tashih ruling
    (fiqih: tashih = 2/3 - 1/3).
+
+## W10-2 SW REFACTOR TEMPLATE-GENERATE -- LEPAS (24-10-2026)
+C1 c8b204a; dual-push master+main verified; C2 docs ing
+commit iki.
+
+### W10-2 (C1 c8b204a)
+- `public/sw.js` -> **`public/sw.src.js`** (git rename,
+  similarity 88%): TEMPLATE ter-track + marker `__STAMP__`
+  (sanes stamp konkrit); logika SW BOT GESER; 8 baris
+  komentar di-ASCII-sanitize (em-dash/arrow/box-drawing =
+  non-ASCII pre-existing sw.js lawas; file enggal = 0
+  non-ASCII).
+- `public/sw.js` saiki = GENERATED + `.gitignore` (comment
+  guardrail). `scripts/inject-sw-version.mjs` rewrite: read
+  template -> replace `__STAMP__` -> write sw.js (generate
+  mode, idempotent, error-guard).
+- **Temuan asil**: `sw.js` nate dipunlindungi via flag
+  `skip-worktree` (`git ls-files -v` = S) = mutasi SW-BUILD
+  katutup git; bukti: HEAD = c1da7f8ceb9a nanging working
+  tree = a7eb74763c2b. W10-2 ngedalaken: sw.js = generated
+  + ignored (guardrail structural, sanes disiplin manual).
+- `package.json` +`predev` = `inject-sw-version.mjs
+  --stable`: dev stamp DETERMINISTIK (sha1 template) ->
+  bebas banner "Versi anyar" palsu setawis dev start;
+  build/Vercel = seed panyantunipun (BUILD_ID+Date.now /
+  random) -> konten beda setawis deploy; gate (`next build`
+  langsung) = bot nggenerate (churn 0).
+- `_pt.py` (scratch) DHAPUS.
+- Gates: tsc --noEmit 0; test:all 45 scripts (44 PASS + 1
+  flake invariants = orphan `next` server nyekel temp DB;
+  re-run environment resik = ALL_PASS 40/40); gate build
+  7.0s; 0 non-ASCII anyar (.gitignore L33/L55 =
+  pre-existing, bot wonten diff).
+- **Frozen list SAIKI = `public/sw.src.js`** (sanes sw.js).
+
+### Next (menunggu ACC Gus Fi)
+1. W10-1 Ujrah v33: audit read-only + tashih ruling
+   (fiqih: tashih = 2/3 - 1/3).
