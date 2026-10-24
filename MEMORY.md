@@ -6324,3 +6324,40 @@ commit iki.
 ### Next (menunggu ACC Gus Fi)
 1. W10-1 Ujrah v33: audit read-only + tashih ruling
    (fiqih: tashih = 2/3 - 1/3).
+
+## STRUK MEDIA OPTION A -- LEPAS (24-10-2026)
+Ruling Gus Fi (via DeepSeek audit 24 Okt): Option A GO COMMIT;
+alamat "Jl. Perintis Kemerdekaan, Jurang, Temanggung" = BENAR;
+settings-driven = TUNDA (static dhisik); Diterima/Kembali
+TIDAK ditambahkan (Option A murni).
+
+- C3 = e2208eb (2 file: src/lib/struk-media.ts +72/-7 &
+  scripts/test-struk-media.ts +27/-1; test 38/38 ALL_PASS).
+  Dual-push master + main verified (e2208eb di kedua refs).
+- C4 docs: commit ini (MEMORY.md +section ini; TODO.md L174
+  entry struk media + baris STRUK MEDIA OPTION A LEPAS).
+
+Detail implementasi (src/lib/struk-media.ts):
+
+- Header: alamat 2 baris (STRUK_ADDR static, .hd .ad).
+- Judul "STRUK PEMBELIAN" (.ttl) dhuwur+ngisor garis ganda.
+- Tgl + " WIB" (jalur media struk only; legacy struk-pdf.ts
+  TIDAK diubah).
+- Label "ITEM" (.itmh) ngarep section item.
+- Footer "Terima kasih atas kunjungan Anda." + "Barokallahu
+  fiikum." (sarep footer Jazakumullah existing).
+- Garis ganda LINE_DBL = 30 char "=" ASCII (mengganti usulan
+  box-drawing U+2550 -- gate 0 non-ASCII; precedent W10-4
+  box-drawing -> '-').
+
+Gates C3: tsc --noEmit 0; test:all 46 suite ALL_PASS
+(struk-media 38/38); gate (check-route-exports + check-theme-
+gate + next build) LULUS (66 pages); 0 non-ASCII di diff;
+frozen intact (sw.src.js, V1, coop.ts); tanpa schema change;
+fiqih: none.
+
+Note: 1x hang "collecting page data" ~22 mnt (anomaly
+environmental -- DB lokal data/kopontren.db stale 29 Sep, CPU
+aktif, DB tak diwrite) -> kill + restart gate lulus wadha.
+Residual: monitor VPS (orphan node + flake W10-2 precedent).
+

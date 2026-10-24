@@ -180,6 +180,13 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
   Struk' (PDF) / 'Foto' (JPEG) per baris; data GET /api/sales
   (read-only); deviasi ACC: tanpa QRIS qrcode + Diterima/Kembali
   cash-only; detail MEMORY.md 'STRUK LAMPAU -- LEPAS'.
+  + STRUK MEDIA OPTION A LEPAS 24 Okt (C3 e2208eb): layout
+  resmi di lib/struk-media.ts (judul STRUK PEMBELIAN, Tgl+WIB,
+  alamat 2 baris, garis ganda '=', label ITEM, footer terima
+  kasih); test Section K (38/38); deviasi ACC: garis '=' ASCII
+  + alamat static (settings TUNDA); detail MEMORY.md 'STRUK
+  MEDIA OPTION A -- LEPAS'.
+
       `@media print`. Tanpa perubahan kode.
 - [x] AUDIT 3x (21 Sep): `audit_log` auto-purge - SELESAI
       (22 Sep): `purgeAuditLog` di lib/notify.ts (default 90 hari +
