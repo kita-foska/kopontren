@@ -65,3 +65,7 @@ i[0-9]_*.cmd
 # scratch .js/.ts sesi agent (lokal only)
 _*.js
 _*.ts
+
+# generated SW (W10-2): sumber = public/sw.src.js (tracked, FROZEN);
+# public/sw.js = generated oleh scripts/inject-sw-version.mjs -- JANGAN commit
+public/sw.js

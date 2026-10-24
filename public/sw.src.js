@@ -1,7 +1,7 @@
 // Kopontren PWA service worker (v11)
 // Strategy:
 // - Immutable static assets (/_next/static, ikon, logo, gambar): cache-first
-// - SEMUA /api/*: NETWORK-ONLY (tidak pernah diintercept/di-cache) — data
+// - SEMUA /api/*: NETWORK-ONLY (tidak pernah diintercept/di-cache) -- data
 //   bisnis & auth tidak boleh pernah basi; respon no-store tidak disimpan
 //   ke cache. (Sebelumnya /api/products & /api/member-settings di-cache
 //   network-first; dihapus total karena respon basi di cache adalah
@@ -9,10 +9,12 @@
 // - Pages & shell: network-first dengan offline fallback (hanya respons 2xx
 //   & tanpa header no-store yang disimpan; no-cache tetap boleh disimpan
 //   sebagai fallback offline karena online-nya selalu network-first).
-// SW-BUILD marker di-stamp ulang setiap build oleh scripts/inject-sw-version.mjs
-// → konten file berubah → browser mendeteksi SW baru → install + skipWaiting
-// + clientsClaim → cache lama di-purge saat activate.
-// SW-BUILD:c1da7f8ceb9a
+// TEMPLATE public/sw.js (file ini yang di-track; sw.js generated +
+// .gitignore oleh scripts/inject-sw-version.mjs).
+// SW-BUILD marker di-stamp ulang setiap build oleh script tsb
+// - konten file berubah -> browser mendeteksi SW baru -> install + skipWaiting
+// + clientsClaim -> cache lama di-purge saat activate.
+// SW-BUILD:__STAMP__
 const CACHE = 'kopontren-v11';
 const PAGE_CACHE = 'kopontren-pages-v8';
 const OFFLINE_FALLBACK = '/login';
@@ -74,7 +76,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
-  // API: SELALU network-only — tidak diintercept, tidak di-cache.
+  // API: SELALU network-only -- tidak diintercept, tidak di-cache.
   // (Sebelumnya /api/products & /api/member-settings di-cache; dihapus
   // karena cache API basi + SW lama adalah sumber bug "0 request".)
   if (url.pathname.startsWith('/api/')) return;
@@ -99,15 +101,15 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(networkFirst(PAGE_CACHE, req, OFFLINE_FALLBACK));
 });
 
-// ── Update PWA: permintaan eksplisit "Perbarui" dari halaman ──
+// -- Update PWA: permintaan eksplisit "Perbarui" dari halaman --
 // skipWaiting() memang sudah otomatis saat install, namun tombol "Perbarui"
-// di halaman mengirim message ini agar aktivasi terjadi SEKARANG →
-// browser memicu `controllerchange` di halaman → halaman reload ke versi baru.
+// di halaman mengirim message ini agar aktivasi terjadi SEKARANG ->
+// browser memicu `controllerchange` di halaman -> halaman reload ke versi baru.
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
-// ── Web Push: tampilkan notifikasi (ikon, judul, isi, link) ──
+// -- Web Push: tampilkan notifikasi (ikon, judul, isi, link) --
 self.addEventListener('push', (event) => {
   let data = {};
   try {
