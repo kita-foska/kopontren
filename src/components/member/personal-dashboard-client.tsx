@@ -6,6 +6,8 @@ import { rp, fmtDateTime } from '@/lib/format';
 import { pointReasonLabel, isPointUnit, type PointEntry } from '@/lib/points';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { MemberQrBadge, type MemberQrMember } from '@/components/admin/member-qr-badge';
+// W14-2: kartu glassmorphic premium (tilt 3D desktop; statis mobile).
+import { MemberGlassCard } from '@/components/member-glass-card';
 // P3c: unduhan "Unduh Data Saya" -- reuse helper unduhan admin P3d
 // (downloadExportCsv/downloadAll, tanpa duplikasi mesin download) +
 // indikator progress P3d (ikon inline SVG, a11y role/aria).
@@ -193,6 +195,10 @@ export function MemberDashboardClient({
 
   return (
     <div className="space-y-4">
+      {/* W14-2: kartu glassmorphic premium di paling atas (QR thumbnail
+          disinkronkan dgn state memberQr; "Lihat Detail" membuka modal
+          kartu QR existing). */}
+      <MemberGlassCard member={member} qr={memberQr} onDetail={() => setQrOpen(true)} />
       {/* -- Ringkasan kartu -- */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="card fade-up p-4">
