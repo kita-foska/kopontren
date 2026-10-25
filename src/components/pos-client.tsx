@@ -45,6 +45,7 @@ import {
   Image,
   Landmark,
   Medal,
+  Link2,
   MessageCircle,
   Minus,
   Package,
@@ -1466,6 +1467,46 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
     }
   }
 
+  /**
+   * "Bagikan Link" (W14-1): e-Struk publik /struk/<token> (HMAC,
+   * lib/struk-link). API guard role kasir; tanpa env STRUK_LINK_SECRET
+   * API balas 503 + pesan (fitur lain POS tak terpengaruh).
+   * Mobile: navigator.share; desktop/fallback: salin ke clipboard.
+   */
+  async function handleShareEstructLink() {
+    const o = buildStrukWaArgs();
+    if (!o || mediaBusy) return;
+    setMediaBusy(true);
+    try {
+      const idNum = o.no.replace(/\D/g, '');
+      const res = await fetch('/api/struk-link?id=' + encodeURIComponent(idNum));
+      const j = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
+      if (!res.ok || !j?.url) {
+        showToast(j?.error ?? 'Gagal membuat link e-Struk', 'error');
+        return;
+      }
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: 'Struk Kopontren ' + o.no,
+            text: 'Struk Kopontren ' + o.no + ' -- ' + j.url,
+            url: j.url,
+          });
+          showToast('Link e-Struk dibagikan');
+          return;
+        }
+      } catch {
+        /* dibatalkan user -- lanjut salin */
+      }
+      await navigator.clipboard?.writeText(j.url);
+      showToast('Link e-Struk disalin -- kirim ke pembeli (WA, chat, dll).');
+    } catch {
+      showToast('Gagal membuat link e-Struk', 'error');
+    } finally {
+      setMediaBusy(false);
+    }
+  }
+
   /** "Unduh Foto": struk 58mm -> File JPEG (foto struk utk WA/chat). */
   async function handleStrukJpeg() {
     const o = buildStrukWaArgs();
@@ -2364,6 +2405,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   disabled={mediaBusy}
                 >
                   Unduh Foto
+                </Button>
+                <Button variant="ghost" size="sm"
+                  icon={<Link2 className="h-3.5 w-3.5" />}
+                  onClick={handleShareEstructLink}
+                  disabled={mediaBusy}
+                >
+                  Bagikan Link
                 </Button>
                 <Button variant="primary" size="sm"
                   icon={<Printer className="h-3.5 w-3.5" />}
