@@ -6277,6 +6277,47 @@ commit ini.
   (test:strukmedia 29/29); gate build OK; 0 non-ASCII new
   files; frozen intact (sw.js, V1, coop.ts); tanpa schema
   change (v32).
+
+## W11 B4 EMPTY STATE RAMAH -- LEPAS (25-10-2026)
+Ruling Gus Fi (via DeepSeek, 25 Okt): B4 GO COMMIT
+(audit DeepSeek: SEDAP, sedaya gate lulus). C1 = 4211d28.
+
+- ui.tsx Empty + prop `tone` (additive; tanpa tone =
+  tampilan lama persis/zero-delta): 'default' (slate,
+  kelas lama), 'success' (emerald: border-success-300/60
+  bg-success-50 text-success-700 + dark variants; ikon
+  text-success-400/500), 'warning' (amber/attention).
+- 10 halaman, 2 jenis:
+  * Sukses-tone (emerald, "Alhamdulillah..."): piutang
+    ("tidak ada piutang terbuka"), retur ("tidak ada
+    retur tercatat"), hutang ("tidak ada utang supplier
+    terbuka"), low-stock ("semua stok aman (min. 10)"),
+    zakat riwayat ("belum ada riwayat zakat tercatat"),
+    laporan transaksi (tone kondisional: filter kosong =
+    default, periode kosong = success "Alhamdulillah,
+    belum ada transaksi pada periode ini.").
+  * Teks ramah netral ("tercatat" / arah CTA): akad
+    ("Belum ada akad tercatat. Gunakan form di atas."),
+    belanja x2 ("Belum ada belanja supplier tercatat." /
+    "Belum ada pengeluaran tercatat."), kas x2 ("Belum
+    ada gerakan kas tercatat. Mulai lewat form di
+    atas."), koperasi ("Belum ada mutasi simpanan
+    tercatat." + "Belum ada pinjaman anggota (qardh)
+    tercatat."), zakat log ("Belum ada log verifikasi
+    harga emas tercatat.").
+- Bonus: simbol non-ASCII di low-stock ("Semua stok aman
+  (lebih-dari-same 10)") diganti "min." (gate 0
+  non-ASCII di baris +).
+- Gates: tsc --noEmit 0; test:all 0 FAIL (ALL_PASS);
+  check-route-exports OK; check-theme-gate OK; next
+  build 0 (66 pages); 0 non-ASCII di baris +; frozen
+  intact; tanpa skema; fiqih: none.
+- Next (GO CODE, menunggu ACC Gus Fi): B1 revisi
+  sapaan -- ganti "Selamat sore WIB, semoga berkah |
+  {date} | login sebagai {nama} ({role})" (kaku) dadi
+  "Sugeng {band}, muga-muga sedaya lancar lan berkah.
+  {date}"; hapus "login sebagai..." (redundant).
+
 - Residual E31: watermark = ditunda batch enggal.
 
 ### Next (menunggu ACC Gus Fi)

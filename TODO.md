@@ -245,6 +245,24 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       intact, tanpa skema, fiqih: none. Detail: entri
       'W11 B3 ... LEPAS' di MEMORY.md. Next: B4 empty
       ramah (GO CODE).
+- [x] **W11 B4 LEPAS 25 Okt (C1 4211d28, dual-push
+      master+main verified)**: empty state ramah --
+      ui.tsx Empty + prop `tone` ('default' zero-delta /
+      'success' emerald / 'warning' amber; additive,
+      tampilan lama persis tanpa tone). 10 halaman:
+      6 sukses-tone "Alhamdulillah..." (piutang, retur,
+      hutang, low-stock, riwayat zakat, laporan -- tone
+      kondisional: filter kosong = default, periode
+      kosong = success) + 5 teks ramah netral ("tercatat",
+      "Mulai lewat form di atas": akad, belanja x2, kas
+      x2, mutasi simpanan + pinjaman qardh). Bonus:
+      simbol non-ASCII "ge" (baca: lebih-dari-same) di
+      low-stock diganti "min.". Gates: tsc
+      0, test:all 0 FAIL (ALL_PASS), check-route-exports
+      OK, check-theme-gate OK, next build 0 (66 pages),
+      0 non-ASCII di baris +, frozen intact, tanpa skema,
+      fiqih: none. Detail: entri 'W11 B4 ... LEPAS' di
+      MEMORY.md. Next: B1 revisi sapaan (GO CODE).
 - [x] AUDIT 3x (21 Sep): `audit_log` auto-purge - SELESAI
       (22 Sep): `purgeAuditLog` di lib/notify.ts (default 90 hari +
       invalidasi cache) + cron job `audit` & diinklusi job `all`;
