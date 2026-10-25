@@ -4,11 +4,14 @@ import { rp, startOfDayJakarta } from '@/lib/format';
 import * as webpush from 'web-push';
 import { salesByMethod } from '@/lib/pay-methods';
 import { detectAnomalies, type AuditLogRow, type AnomalyFlag } from '@/lib/audit-anomaly';
+import { notifyRecipientsSql } from '@/lib/notify-scope';
 
 /**
- * Sistem notifikasi KOPONTREN — HANYA untuk ADMIN.
- * Media: in-app (ikon lonceng) + web push (PWA/Service Worker).
- * TIDAK ada WhatsApp/Telegram/Email.
+ * Sistem notifikasi KOPONTREN.
+ * W13 BATCH 2: penerima = semua role operasional
+ * (admin, manajer, pengurus, kasir) -- skop terpusat di lib/notify-scope.
+ * Media: in-app (ikon lonceng; UI view tetep admin+pengurus) + web push
+ * (PWA/Service Worker). TIDAK ada WhatsApp/Telegram/Email.
  *
  * Semua pengiriman best-effort: error tidak pernah dibuang ke route bisnis
  * (agar pencatatan penjualan/kas/shift tidak terganggu). Kegagalan
@@ -93,12 +96,21 @@ export function typeLabel(type: string): string {
   return NOTIFY_TYPE_MAP.get(type as NotifyType)?.label ?? type;
 }
 
-// ── Admin only ──
-/** Semua user aktif ber-role admin (penerima SATU-SATUNYA notifikasi). */
+// Penerima notifikasi
+/** Semua user aktif ber-role admin (penerima notifikasi). */
 export async function getAdminUserIds(d: Db): Promise<number[]> {
   const rows = (await d
     .prepare("SELECT id FROM users WHERE role = 'admin' AND active = 1")
     .all()) as { id: number }[];
+  return rows.map((r) => Number(r.id));
+}
+
+/**
+ * W13 BATCH 2: semua user AKTIF ber-role penerima
+ * (admin, manajer, pengurus, kasir -- skop terpusat di lib/notify-scope).
+ */
+export async function getNotifyRecipientIds(d: Db): Promise<number[]> {
+  const rows = (await d.prepare(notifyRecipientsSql()).all()) as { id: number }[];
   return rows.map((r) => Number(r.id));
 }
 
@@ -204,14 +216,15 @@ function ph(n: number): string {
 }
 
 /**
- * Kirim notifikasi ke SEMUA admin (in-app + push sesuai prefensi).
+ * Kirim notifikasi ke SEMUA penerima (admin, manajer, pengurus, kasir;
+ * W13 B2) -- in-app + push sesuai prefensi per user.
  * Best-effort: tidak pernah throw. Kegagalan push dicatat di notification_logs.
  */
 export async function notify(input: NotifyInput): Promise<NotifyResult> {
   try {
     const d = await db();
-    const adminIds = await getAdminUserIds(d);
-    if (!adminIds.length) return { ok: true, inApp: 0, push: 0 };
+    const recipientIds = await getNotifyRecipientIds(d);
+    if (!recipientIds.length) return { ok: true, inApp: 0, push: 0 };
 
     const link = input.link || defaultLink(input.type);
     const now = new Date().toISOString();
@@ -227,26 +240,26 @@ export async function notify(input: NotifyInput): Promise<NotifyResult> {
       if (recent && recent.x) return { ok: true, inApp: 0, push: 0 };
     }
 
-    const prefRows = adminIds.length
+    const prefRows = recipientIds.length
       ? ((await d
           .prepare(
             `SELECT user_id, enabled_in_app, enabled_push FROM notification_settings WHERE user_id IN (${ph(
-              adminIds.length
+              recipientIds.length
             )}) AND type = ?`
           )
-          .all(...adminIds, input.type)) as unknown) as {
+          .all(...recipientIds, input.type)) as unknown) as {
         user_id: number;
         enabled_in_app: number;
         enabled_push: number;
       }[]
       : [];
-    const prefs = prefsMap(prefRows, adminIds);
+    const prefs = prefsMap(prefRows, recipientIds);
     await ensureVapidKeys(d); // set detail VAPID global sebelum push
 
     let inApp = 0;
     let push = 0;
 
-    for (const uid of adminIds) {
+    for (const uid of recipientIds) {
       const p = prefs.get(uid) ?? { inApp: true, push: false };
       let notifId: number | null = null;
 

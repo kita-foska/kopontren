@@ -1,18 +1,23 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { currentUser } from '@/lib/auth';
 import { getNotificationSettings, saveNotificationSettings } from '@/lib/notify';
+import { canReceiveNotif } from '@/lib/notify-scope';
 
 /**
- * GET  /api/notification-settings — konfigurasi notifikasi admin (20 jenis,
+ * GET  /api/notification-settings -- konfigurasi notifikasi user (20 jenis,
  *      hasil merge default: in_app ON, push OFF bila belum diset).
- * POST /api/notification-settings — simpan konfigurasi.
+ * POST /api/notification-settings -- simpan konfigurasi.
  *      Body: { settings: [{ type, in_app, push }] }.
+ * W13 B2: semua role penerima (admin, manajer, pengurus, kasir)
+ * mengelola konfigurasi miliknya sendiri.
  */
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
+  if (!canReceiveNotif(user.role)) {
+    return NextResponse.json({ error: 'Role tidak menerima notifikasi' }, { status: 403 });
+  }
   const d = await db();
   const settings = await getNotificationSettings(d, user.id);
   return NextResponse.json({ settings }, { headers: { 'Cache-Control': 'no-store' } });
@@ -21,7 +26,9 @@ export async function GET() {
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
+  if (!canReceiveNotif(user.role)) {
+    return NextResponse.json({ error: 'Role tidak menerima notifikasi' }, { status: 403 });
+  }
   const b = (await req.json().catch(() => ({}))) as {
     settings?: { type: string; in_app?: boolean; push?: boolean }[];
   };

@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { currentUser } from '@/lib/auth';
+import { canReceiveNotif } from '@/lib/notify-scope';
 
 /**
- * POST /api/push/subscribe — daftarkan push subscription admin.
+ * POST /api/push/subscribe -- daftarkan push subscription user.
  * Body: { endpoint: string, keys: { p256dh: string, auth: string } }.
- * HANYA admin yang boleh daftar (notifikasi hanya untuk admin).
+ * W13 B2: semua role penerima (admin, manajer, pengurus, kasir) boleh
+ * mendaftar (notifikasi kini untuk semua role operasional).
  */
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
-  if (!isAdmin(user)) return NextResponse.json({ error: 'Hanya admin' }, { status: 403 });
+  if (!canReceiveNotif(user.role)) {
+    return NextResponse.json({ error: 'Role tidak menerima notifikasi' }, { status: 403 });
+  }
   const b = (await req.json().catch(() => ({}))) as {
     endpoint?: string;
     keys?: { p256dh?: string; auth?: string };

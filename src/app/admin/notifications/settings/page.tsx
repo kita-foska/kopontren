@@ -1,18 +1,20 @@
 import { redirect } from 'next/navigation';
-import { currentUser, isAdmin } from '@/lib/auth';
+import { currentUser, roleHome } from '@/lib/auth';
 import { Shell } from '@/components/shell';
 import { NotificationSettingsClient } from '@/components/admin/notification-settings-client';
+import { canReceiveNotif } from '@/lib/notify-scope';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * /admin/notifications/settings — pengaturan notifikasi admin
- * (toggle in-app/push per jenis + aktivasi push PWA). Hanya role 'admin'.
+ * /admin/notifications/settings -- pengaturan notifikasi per user
+ * (toggle in-app/push per jenis + aktivasi push PWA).
+ * W13 B2: semua role penerima (admin, manajer, pengurus, kasir).
  */
 export default async function AdminNotificationSettingsPage() {
   const user = await currentUser();
   if (!user) redirect('/login');
-  if (!isAdmin(user)) redirect('/admin/notifications');
+  if (!canReceiveNotif(user.role)) redirect(roleHome(user.role));
   return (
     <Shell user={user}>
       <div className="card-hero mb-5">

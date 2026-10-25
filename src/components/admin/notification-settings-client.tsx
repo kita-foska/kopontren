@@ -209,6 +209,16 @@ export function NotificationSettingsClient() {
             </button>
           )}
         </div>
+        {pushState === 'unavailable' && (
+          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            Web Push belum didukung di browser/perangkat ini. Untuk menerima
+            notifikasi di HP, silakan Install Aplikasi (Add to Home Screen)
+            terlebih dahulu: Chrome Android -&gt; menu &ldquo;Install
+            aplikasi&rdquo;, atau iOS Safari -&gt; ikon Bagikan -&gt;
+            &ldquo;Ke Layar Beranda&rdquo;. Setelah terpasang, buka ulang
+            halaman ini.
+          </div>
+        )}
       </div>
 
       {/* Toggle jenis */}
