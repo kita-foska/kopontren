@@ -2,6 +2,36 @@
 
 # MEMORY
 
+## 2026-10-26
+### W13 BATCH 1 -- FLOATING NAV + HAPTIC (commit `935c7c5`, dual-push)
+- **Floating pill (bottom-nav.tsx)**: bar bawah mobile kini pil
+  mengambang `inset-x-3 bottom-3 z-50 rounded-2xl shadow-lg
+  ring-1 ring-black/5 backdrop-blur-md bg-white/90` (dark:
+  navy-900/90) + safe-area. Item aktif = `bg-accent-50 rounded-xl`
+  (dulu: garis dot di bawah ikon -- dihapus). Breakpoint tetep
+  `md:hidden` (pasangan `pb-28 md:pb-16` di shell.tsx).
+- **Hide di /kasir**: SUDAH ADA sejak awal di shell.tsx
+  (`showBottomNav = pathname !== '/kasir'`, L28) -- POS punya
+  sticky bottom bar sendiri (pos-client L2965). Tidak ada
+  duplikasi guard; cukup komentar dokumentasi.
+- **Haptic (format.ts + pos-client.tsx)**: helper `buzz(pattern)`
+  = navigator.vibrate, SSR-safe + try/catch (iPhone/desktop =
+  no-op, tanpa izin). Pola: chip nominal (Lunas/10k/20k/50k/100k)
+  `12ms`; checkout sukses `[18,40,18]`; gagal `[60,40,60]`
+  (guard uang kurang, split beda, server reject). Branch
+  offline-queue TIDAK getar-error (murnu info, transaksi
+  tercatat).
+- **Tutorial**: docs/TUTORIAL-W13-BATCH1.html (commit C3).
+- **Gate**: tsc 0; test:all ALL_PASS 40/40; gate (route-exports +
+  theme-gate + build) 0; 0 non-ASCII file anyar; frozen utuh;
+  tanpa dependency anyar; tanpa perubahan skema.
+- **W13 BATCH 2 (GO, menyusul)**: push notif -- extend notify()
+  ke semua peran (admin, manajer, pengurus, kasir) + guard
+  subscribe dibuka + hint install-PWA di /admin/notifications/
+  settings. Audit: infra 100% ada (SW v11, /api/push/*, VAPID
+  auto-gen, UI "Aktifkan Push"); WA Help = sudah ada W11 (SKIP).
+  Detail audit: _w13_audit.txt.
+
 ## 2026-10-19
 ### R1 DARURAT: 3 TABEL TURSO TERHAPUS -- RESTORE VIA `scripts/restore-db.js` (Gus Fi via DeepSeek, 19 Okt 2026)
 - **INSIDEN**: kesalahan fatal (DeepSeek) menghapus tabel

@@ -2840,3 +2840,17 @@ NEXT: approval Gus Fi -> C1 `feat(auth): W12 -- Google OAuth
 (manual, allowlist)` + C2 docs, dual-push master/main;
 DEPLOY: backup Turso (skema baru) + 3 env Vercel + redeploy.
 WA login (bagian "Google/WA login") = TERTUNDA, menyusul.
+
+**WAVE 13 BATCH 1 (26 Okt 2026, LEPAS -- commit `935c7c5`,
+dual-push terverifikasi):** UX polish mobile: (1) floating pill
+bottom nav (mengambang, bayangan, sudut membulat; otomatis
+disembunyikan di /kasir -- guard sudah ada di Shell sejak awal),
+(2) haptic feedback POS (helper `buzz()` di lib/format.ts: getar
+ringan saat tekan nominal Lunas/10k/20k/50k/100k, getar tenang
+checkout sukses, getar tegas checkout gagal). 3 file kode +
+tutorial TUTORIAL-W13-BATCH1.html (inline SVG, 0 emoji). Gate:
+tsc 0; test:all ALL_PASS 40/40; gate build 0; 0 non-ASCII;
+frozen utuh; tanpa dependency; tanpa perubahan skema.
+**NEXT: W13 BATCH 2 -- push notifikasi diperluas ke semua peran
+(admin, manajer, pengurus, kasir) + hint install PWA di halaman
+pengaturan notifikasi.**
