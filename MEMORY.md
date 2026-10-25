@@ -6530,3 +6530,32 @@ Ruling Gus Fi (via DeepSeek, 25 Okt): B4 GO COMMIT
   "Sugeng {band}, muga-muga sedaya lancar lan berkah.
   {date}"; hapus "login sebagai..." (redundant).
 
+
+## W11 B1 REVISI2 SAPAAN KONSISTEN INDONESIA -- LEPAS (25-10-2026)
+Ruling Gus Fi (via DeepSeek, 25 Okt): B1 revisi2 GO COMMIT
+(audit: sapaan "Sugeng ... muga-muga" = campur basa Jawa
++ Indonesia, ganti ke bahasa Indonesia konsisten).
+C1 = c3fece5.
+
+- Ganti "Sugeng {band}, muga-muga sedaya lancar lan
+  berkah" dadi "Selamat {band}, semoga hari Anda lancar
+  dan berkah" (basa Indonesia konsisten, santun,
+  komunikatif). "Assalamu'alaikum" jagi (salam Islam).
+- 4 file, 5 ganti:
+  * src/app/page.tsx -- kasir (L107, tanpa dateLine) +
+    hero (L200, + dateLine di uwes).
+  * src/app/admin/dashboard/page.tsx (L233) --
+    "Dashboard Admin -- Selamat {band}, semoga hari Anda
+    lancar dan berkah."
+  * src/app/pengurus/dashboard/page.tsx (L211) --
+    "Dashboard Global -- Selamat {band}, ..."
+  * src/app/member/page.tsx (L135) -- "Selamat {band},
+    semoga hari Anda lancar dan berkah. Kartu Member
+    Anda -- ..."
+- Gates: tsc --noEmit 0; test:all ALL_PASS (0 FAIL);
+  check-route-exports OK; check-theme-gate OK; next
+  build 0 (66 pages); 0 non-ASCII; frozen intact;
+  tanpa skema; fiqih: none.
+- Wave 11 saiki sampun COMPLETE (B1-B4 + revisi +
+  revisi2 basa). Next: Wave 12 (Google/WA login).
+
