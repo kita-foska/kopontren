@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { Eye, EyeOff } from 'lucide-react';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 import { Button } from '@/components/ui';
 import { roleHome } from '@/lib/features';
@@ -12,6 +13,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  // Eye toggle (GO CODE tashih Wave 11, 2026-10-24): show/hide password.
+  const [showPw, setShowPw] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -121,15 +124,26 @@ export default function LoginPage() {
             <label className="label" htmlFor="p">
               Password
             </label>
-            <input
-              id="p"
-              className="input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                id="p"
+                className="input pr-10"
+                type={showPw ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="........"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                aria-label={showPw ? 'Sembunyikan password' : 'Tampilkan password'}
+                title={showPw ? 'Sembunyikan password' : 'Tampilkan password'}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-navy-700 dark:hover:text-slate-200"
+              >
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           {err && (
             <p role="alert" className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-300">
