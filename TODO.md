@@ -2818,3 +2818,25 @@ wakalah bil ujrah -- E25 tashih; skema **v33**; NEXT: audit read-only + plan sad
 (report ing chat menika; piwangan + pitakenan tashih mlebu record
 MEMORY.md seksi "WAVE 8 COMPLETE" + NEXT). Tashih = prioritas
 saderengipun code.
+
+**WAVE 12 (1 item -- Google OAuth; DISUSUN 26 Okt 2026,
+MENUNGGU APPROVAL GUS FI):** login Google alur OAuth2 manual
+(zero dependency: native fetch + node:crypto; next-auth
+ditolak krna bentrok session custom + PIN re-auth) + domain
+allowlist fail-closed (GOOGLE_ALLOWED_DOMAINS) + gate per-akun
+users.allow_google (Admin, OFF default, tanpa auto-create;
+self-guard) + anti-replay nonce/anti-CSRF + throttle per-IP.
+Sesi PERSIS jalur password (createSession; PIN idle re-auth
+utuh). Skema **v34** (RENUMBER: v33 itu DICADANGKAN utk
+Ujrah Konsinyasi W9-W2/W10-1 -- jangane tabrakan, detail
+MEMORY.md seksi "Catatan tumpukan skema"). Gate: tsc 0;
+test:oauth 29/29; test:all 46/46; check-route-exports +
+check-theme-gate OK; 0 non-ASCII anyar (diff W12); frozen
+utuh. 8 file: lib/oauth-google.ts + api/auth/google/{redirect,
+callback} + login page + pengguna-client + api/users + db.ts
+v34 + test-oauth.ts + DEPLOY-VERCEL.txt (item "4. LOGIN
+GOOGLE": 3 env Vercel + registrasi Google Cloud Console).
+NEXT: approval Gus Fi -> C1 `feat(auth): W12 -- Google OAuth
+(manual, allowlist)` + C2 docs, dual-push master/main;
+DEPLOY: backup Turso (skema baru) + 3 env Vercel + redeploy.
+WA login (bagian "Google/WA login") = TERTUNDA, menyusul.

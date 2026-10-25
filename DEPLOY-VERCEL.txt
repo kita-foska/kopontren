@@ -434,3 +434,41 @@
      Aplikasi kasir juga sudah dicegah: qty 0/negatif tidak
      bisa lagi tersimpan (penjagaan di server).
 
+  4. LOGIN GOOGLE (W12, OPSIONAL -- fitur MENYALA HANYA KETIKA ADMIN
+     MEMUNGKINKAN LOGIN GOOGLE DI /admin/pengguna; default MATI, login
+     lama utuh)
+
+     a) Cara kerja: di halaman login ada tombol "Masuk dengan Google".
+        Hanya AKUN yang diizinkan pengurus (Admin) yang bisa
+        memakai, dan email Google harus dari domain yang diizinkan
+        (mis. @ppalittihad.com). Username akun = email (contoh:
+        admin@ppalittihad.com). Akun tetap dibuat oleh pengurus
+        di /admin/pengguna -- TIDAK ada pembuatan akun otomatis.
+
+     b) Mengaktifkan di Vercel (3 environment variable):
+        Di Vercel: proyek "kopontren" -> Settings -> Environment
+        Variables -> "+ Add" 3 variabel ini (Environment: All):
+          GOOGLE_CLIENT_ID      = Client ID dari Google Cloud Console
+          GOOGLE_CLIENT_SECRET  = Client Secret
+          GOOGLE_ALLOWED_DOMAINS = @ppalittihad.com
+        (pemisah koma bila lebih dari satu domain)
+        Setelah menambah env: REBUILD proyek (Deploy -> New ->
+        Redeploy) agar variabel terbaca aplikasi.
+
+     c) Mendaftar di Google Cloud Console (perlu Google akun
+        developer -- tanyakan pada yang paham):
+        - console.cloud.google.com -> buat proyek baru.
+        - OAuth consent screen: aplikasi "Kopontren AL ITTIHAD",
+          scopes openid/email/profile.
+        - Credentials -> Create OAuth Client ID (Web application).
+        - Authorized redirect URI PERSIS:
+          https://<alamat-vercel-anda>.vercel.app/api/auth/google/callback
+          (untuk uji lokal: http://localhost:3000/api/auth/google/callback)
+        - Salin Client ID + Client Secret ke env (poin b).
+
+     d) Menyalakan izin per akun:
+        /admin/pengguna -> kolom aksi "Google: ON/OFF" (hanya
+        pengurus; izin untuk akun sendiri tidak bisa dinyalakan).
+        Login lewat Google memakai PIN aturan yang sama seperti
+        login password (re-auth idle, dsb).
+

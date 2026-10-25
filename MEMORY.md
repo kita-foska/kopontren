@@ -6559,3 +6559,104 @@ C1 = c3fece5.
 - Wave 11 saiki sampun COMPLETE (B1-B4 + revisi +
   revisi2 basa). Next: Wave 12 (Google/WA login).
 
+## W12 GOOGLE OAUTH MANUAL + DOMAIN ALLOWLIST + users.allow_google -- DISUSUN 26-10-2026 (menunggu approval Gus Fi -> commit C1 + C2, dual-push)
+Ruling Gus Fi (via DeepSeek): login Google = "pintu masuk"
+BUKAN sumber kredensial -- keputusan: (a) alur OAuth2
+Authorization Code MANUAL (zero dependency; next-auth
+ditolak: bentrok session custom + PIN re-auth), (b) gate
+domain allowlist fail-closed, (c) gate per-akun
+users.allow_google oleh Admin (OFF default, tanpa
+auto-create akun). Sesi tetap lewat createSession()
+(arSITEKTUR SESI TIDAK BERUBAH: PIN idle re-auth, role
+guard, session cache & middleware utuh).
+
+- Arsitektur (8 file; TANPA dependency baru -- native
+  fetch + node:crypto):
+  * src/lib/oauth-google.ts -- PURE/hermetic: googleAuthUrl
+    + nonce state (crypto 128-bit hex), exchangeCodeForToken,
+    fetchGoogleUser, allowedDomains/emailDomainAllowed
+    (fail-closed: env kosong/absen = TIDAK ADA yg lolos),
+    consumeOnce (anti-replay in-memory: Map TTL 15 mnt,
+    cap 500; Vercel multi-instance: replay lintas instance
+    tetap gagal karena authorization code single-use).
+  * src/app/api/auth/google/redirect/route.ts -- GET:
+    fitur OFF (credential env belum diisi) -> 302
+    /login?google_err=disabled (pesan ramah, bukan 404);
+    ON -> nonce -> cookie httpOnly (kopontren_oauth_state,
+    sameSite=lax, secure prod, maxAge 300 dtk) + 302 ke
+    consent Google.
+  * src/app/api/auth/google/callback/route.ts -- GET, gate
+    berjenjang (semua gagal = throttle per-IP + redirect
+    ?google_err=<code>): (a) state wajib cocok cookie
+    httpOnly (anti-CSRF); (b) anti-replay: sha256("g|
+    state|code") consumeOnce; throttle per-IP 10x/15 mnt
+    -> kunci 15 mnt (pola api/auth/login); (c) tukar
+    code -> token -> profil Google; (d) domain email wajib
+    masuk allowlist; (e) username = email -- akun HARUS
+    sudah dibuat Admin (tanpa auto-create) + active;
+    (f) gate amanah: allow_google=1; (g) UPDATE
+    users.oauth_sub (identitas Google terakhir) + bersihkan
+    throttle + audit 'auth:google-login'; (h) SESI PERSIS
+    jalur password (createSession + 2 cookie session +
+    idle exp + redirect sesuai PIN -- belum set ->
+    /login/pin/setup). maxDuration=30.
+  * src/app/login/page.tsx -- tombol "Masuk dengan Google"
+    (inline SVG, tanpa asset/lib baru) + divider "atau" +
+    handler ?google_err (pesan ramah per kode).
+  * src/components/admin/pengguna-client.tsx -- toggle
+    "Google: ON/OFF" per akun (hanya Admin; self-guard:
+    izin utk akun SENDIRI tidak bisa di-toggle -- PUT API
+    menjaganya di sisi server).
+  * src/app/api/users/route.ts -- GET: expose allow_google;
+    POST: opsional saat buat akun; PUT: update allow_google
+    langsung + audit + guard akses diri.
+  * src/db.ts -- skema v34 (RENUMBER dari v33 -- v33
+    DICADANGKAN utk modul Ujrah Konsinyasi W9-W2/W10-1
+    yg belum diimplementasi; lihat catatan tumpukan di
+    bawah). migrate34 additive: users.allow_google
+    (INTEGER NOT NULL DEFAULT 0) + users.oauth_sub
+    (TEXT NULL); execColumn idempoten; fresh DB lewat
+    fullInit. DB stempel v32 fullInit sekali lagi saat
+    cold start. BACKUP DB WAJIB sebelum deploy (lesson
+    v16 -- skema baru).
+  * scripts/test-oauth.ts -- 29 asersi pure-logic
+    (googleAuthUrl, nonce, exchange, userinfo,
+    allowlist fail-closed, consumeOnce). test:oauth di
+    package.json; test:all kini 46 suite.
+  * DEPLOY-VERCEL.txt -- item baru "4. LOGIN GOOGLE":
+    3 env Vercel (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+    GOOGLE_ALLOWED_DOMAINS) + registrasi Google Cloud
+    Console (redirect URI PERSIS
+    https://<domain>.vercel.app/api/auth/google/callback)
+    + cara menyalakan izin per akun di /admin/pengguna.
+- Keamanan (fail-closed): tanpa GOOGLE_ALLOWED_DOMAINS
+  tidak ada email yg lolos; tanpa credential fitur OFF
+  (halaman login tetap berfungsi normal); akun tak
+  dikenal / inactive / allow_google=0 -> ditolak (tdk
+  bocor info: kode galat sama utk unknown/inactive);
+  sesi sama persis jalur password (PIN re-auth tetap
+  berlaku utk login Google).
+- Gates: tsc --noEmit EXIT 0; test:oauth 29/29;
+  test:all 46/46 ALL PASS; check-route-exports OK;
+  check-theme-gate OK; diff W12 = 0 non-ASCII baru
+  (yang terdeteksi pre-existing di code lama); frozen
+  utuh (public/sw.js, V1, coop.ts); tanpa fiqih.
+- NEXT: (1) approval Gus Fi atas diff lengkap W12;
+  (2) C1 commit `feat(auth): W12 -- Google OAuth
+  (manual, allowlist)` + C2 docs (seksi menika +
+  TODO W12), dual-push master/main;
+  (3) DEPLOY: backup Turso dulu (skema v34), isi 3 env
+  Vercel + Google Cloud Console, redeploy;
+  (4) W12 = WACANA Google login -- WA login (bagian
+  "Google/WA login" Wave 12) TERTUNDA, menyusul bila
+  Gus Fi minta.
+
+## Catatan tumpukan skema (26-10-2026) -- JANGAN tabrakan
+v32 = Wadi'ah (LEPAS 24 Okt). v33 DICADANGKAN utk Ujrah
+Konsinyasi (W9-W2/W10-1 -- audit read-only + tashih,
+BELUM diimplementasi). W12 semula memakai v33 ->
+RENUMBER ke **v34** (SCHEMA_VERSION=34, migrate34)
+agar cadangan v33 Ujrah tetap utuh bila Gus Fi
+menashih-kan. Kaidah baru: sebelum bump skema, cek
+seksi menika + MEMORY "W9/W10 Ujrah" dulu.
+
