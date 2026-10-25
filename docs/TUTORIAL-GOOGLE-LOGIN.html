@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial: Login Google -- Kopontren Al Ittihad</title>
+<style>
+  :root {
+    --maroon: #7A1835;
+    --ink: #1f2430;
+    --soft: #5b6472;
+    --line: #e5e0e4;
+    --card: #faf7f8;
+    --ok: #1e7d4f;
+    --warn: #b06a00;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: var(--ink);
+    background: #f3eef0;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  header.hero {
+    background: var(--maroon);
+    color: #fff;
+    border-radius: 14px;
+    padding: 28px 24px;
+    margin-bottom: 24px;
+  }
+  header.hero h1 { margin: 0 0 8px; font-size: 24px; }
+  header.hero p { margin: 0; color: #f3d9e0; font-size: 15px; }
+  section {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+  }
+  section h2 { margin: 0 0 10px; font-size: 19px; color: var(--maroon); }
+  section h2 .no {
+    display: inline-block;
+    background: var(--maroon);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    padding: 2px 8px;
+    margin-right: 8px;
+    vertical-align: 2px;
+  }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  .note {
+    background: var(--card);
+    border-left: 4px solid var(--maroon);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 14.5px;
+    margin: 12px 0;
+  }
+  .note.warn { border-left-color: var(--warn); background: #fbf5ea; }
+  .note.ok { border-left-color: var(--ok); background: #eef8f2; }
+  code {
+    font-family: Consolas, "Courier New", monospace;
+    background: #f1ecee;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 13.5px;
+  }
+  .diagram { text-align: center; margin: 14px 0; }
+  .diagram svg { max-width: 100%; height: auto; }
+  .diagram .cap { font-size: 13px; color: var(--soft); margin-top: 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--card); color: var(--maroon); }
+  footer { font-size: 12.5px; color: var(--soft); text-align: center; margin-top: 28px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Tutorial: Login dengan Google</h1>
+  <p>Panduan awam untuk pengurus Kopontren Al Ittihad --
+  siapa yang boleh, apa yang harus diatur, dan bagaimana cara pakainya.
+  Aplikasi tetap aman karena aturan lama (PIN, hak peran) tidak berubah.</p>
+</header>
+
+<section>
+  <h2><span class="no">1</span> Apa itu Login Google?</h2>
+  <p>
+    Di halaman login aplikasi, sekarang ada tombol
+    <strong>"Masuk dengan Google"</strong>.
+    Tekan tombol itu -- Anda diarahkan ke Google untuk memilih akun
+    (atau masuk ke akun Google yang sudah Anda miliki).
+    Setelah Google memberikan "surat kabar identitas" (nama + email),
+    aplikasi memeriksa surat itu dan, jika semuanya sesuai aturan,
+    Anda langsung masuk ke aplikasi -- <strong>tanpa mengetik password
+    aplikasi</strong>.
+  </p>
+  <div class="note ok">
+    Yang penting: tombol ini <strong>hanya bekerja untuk
+    akun yang diizinkan pengurus</strong>. Akun lain tidak bisa
+    membuatkan diri sendiri lewat Google -- tetap harus dibuat oleh
+    pengurus seperti biasa.
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">2</span> Alur singkatnya (gambaran)</h2>
+  <div class="diagram">
+    <!-- Diagram alur: 4 kotak + panah, inline SVG (tanpa library) -->
+    <svg width="700" height="150" viewBox="0 0 700 150" role="img"
+         aria-label="Alur login Google: aplikasi ke Google, Google kembali, aplikasi memeriksa, Anda masuk">
+      <defs>
+        <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5"
+                orient="auto">
+          <path d="M0,0 L8,4.5 L0,9 Z" fill="#7A1835"></path>
+        </marker>
+      </defs>
+      <g font-family="Segoe UI, Arial" font-size="13" text-anchor="middle">
+        <rect x="15" y="30" width="140" height="90" rx="10"
+              fill="#faf7f8" stroke="#7A1835" stroke-width="2"></rect>
+        <text x="85" y="62" fill="#7A1835" font-weight="bold">Anda</text>
+        <text x="85" y="82">tekan tombol</text>
+        <text x="85" y="99">"Masuk dgn Google"</text>
+
+        <rect x="205" y="30" width="140" height="90" rx="10"
+              fill="#faf7f8" stroke="#7A1835" stroke-width="2"></rect>
+        <text x="275" y="62" fill="#7A1835" font-weight="bold">Google</text>
+        <text x="275" y="82">pilih akun</text>
+        <text x="275" y="99">atau masuk</text>
+
+        <rect x="395" y="30" width="150" height="90" rx="10"
+              fill="#faf7f8" stroke="#7A1835" stroke-width="2"></rect>
+        <text x="470" y="62" fill="#7A1835" font-weight="bold">Aplikasi</text>
+        <text x="470" y="82">memeriksa aturan:</text>
+        <text x="470" y="99">domain + izin + akun</text>
+
+        <rect x="585" y="30" width="100" height="90" rx="10"
+              fill="#eef8f2" stroke="#1e7d4f" stroke-width="2"></rect>
+        <text x="635" y="62" fill="#1e7d4f" font-weight="bold">SELESAI</text>
+        <text x="635" y="82">Anda masuk</text>
+        <text x="635" y="99">ke aplikasi</text>
+      </g>
+      <g stroke="#7A1835" stroke-width="2.4" marker-end="url(#ar)" fill="none">
+        <path d="M155,75 L201,75"></path>
+        <path d="M345,75 L391,75"></path>
+        <path d="M545,75 L581,75"></path>
+      </g>
+    </svg>
+    <div class="cap">Gambar 1. Empat langkah: Anda --&gt; Google --&gt;
+    aplikasi memeriksa --&gt; Anda masuk.</div>
+  </div>
+</section>
+<section>
+  <h2><span class="no">3</span> Tiga aturan (semua harus terpenuhi)</h2>
+  <table>
+    <tr>
+      <th>Aturan</th>
+      <th>Pengertiannya</th>
+      <th>Barang siapa</th>
+    </tr>
+    <tr>
+      <td>1. Domain email terdaftar</td>
+      <td>
+        Email Google harus dari domain yang terdaftar
+        (misalnya <code>@ppalittihad.com</code>).
+        Email dari domain lain akan <strong>ditolak</strong>.
+      </td>
+      <td>Pengurus (di lingkungan server)</td>
+    </tr>
+    <tr>
+      <td>2. Akun sudah dibuat</td>
+      <td>
+        Harus ada akun aplikasi dengan username = email Google
+        itu (contoh: <code>admin@ppalittihad.com</code>).
+        <strong>Tidak ada</strong> akun dibuat otomatis oleh Google.
+      </td>
+      <td>Pengurus, lewat menu Admin --&gt; Pengguna</td>
+    </tr>
+    <tr>
+      <td>3. Izin Google ON</td>
+      <td>
+        Di halaman Admin --&gt; Pengguna, ada tombol
+        <strong>"Google: ON / OFF"</strong> untuk tiap akun.
+        Hanya akun yang ON yang boleh masuk lewat Google.
+        Kondisinya default OFF -- jadi tidak ada yang bisa
+        masuk lewat Google sampai pengurus menyalakannya.
+      </td>
+      <td>Pengurus</td>
+    </tr>
+  </table>
+  <div class="note warn">
+    <strong>Jangan menyalakan untuk akun Anda sendiri.</strong>
+    Ijazah (izin) untuk akun sendiri sengaja tidak bisa
+    diubah -- agar selalu ada pengawas lain.
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">4</span> Cara memakai (untuk pengguna)</h2>
+  <ol>
+    <li>Buka halaman login aplikasi.</li>
+    <li>Tekan tombol <strong>"Masuk dengan Google"</strong>
+       (di bawah tombol login biasa).</li>
+    <li>Anda diarahkan ke Google. Pilih akun -- atau masuk
+       ke akun Google yang lain. Jika ada dua akun tersimpan,
+       Anda bisa memilih.</li>
+    <li>Google meminta persetujuan
+       ("Izinkan aplikasi Kopontren untuk..."). Tekan
+       <strong>Izinkan / Allow</strong>.</li>
+    <li>Anda dibawa kembali ke aplikasi dan langsung masuk.
+       Jika akun Anda belum diset PIN, aplikasi akan meminta
+       membuat PIN terlebih dahulu -- sama persis dengan
+       login biasa.</li>
+  </ol>
+  <div class="note">
+    Setelah masuk lewat Google, semua aturan yang sudah ada
+    berlaku: PIN pengunci layar (idle re-auth), hak per peran
+    (kasir hanya melihat halaman kasir, dst), dan catatan
+    riwayat (siapa kapan masuk) tetap dicatat.
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">5</span> Cara mengatur (untuk pengurus)</h2>
+  <ol>
+    <li>Masuk sebagai pengurus, buka
+       <strong>Admin --&gt; Pengguna</strong>.</li>
+    <li>Pilih akun yang ingin diberi izin masuk lewat Google.
+       Jika username-nya belum ada, buat dulu
+       (username = email Google). Saat membuat, ada centang
+       "Izinkan login Google" -- opsional.</li>
+    <li>Di tabel Pengguna, lihat kolom
+       <strong>"Google: ON / OFF"</strong> di baris akun.
+       Tekan untuk mengubah.</li>
+  </ol>
+  <p>
+    Sebelum tombol Google benar-benar bekerja, lingkungan
+    server harus menyiapkan 3 hal (lihat
+    <strong>DEPLOY-VERCEL.txt</strong>, bagian "4. LOGIN
+    GOOGLE"):
+  </p>
+  <ol>
+    <li>Mendaftarkan aplikasi di Google Cloud Console
+        (oleh yang paham; satu kali saja).</li>
+    <li>Menyetel 3 variabel di Vercel
+        (<code>GOOGLE_CLIENT_ID</code>,
+        <code>GOOGLE_CLIENT_SECRET</code>,
+        <code>GOOGLE_ALLOWED_DOMAINS</code>).</li>
+    <li>Menjalankan ulang (redeploy) aplikasi agar variabel
+        terbaca.</li>
+  </ol>
+  <div class="note ok">
+    Jika 3 hal di atas belum disetel, halaman login
+    tetap normal -- tombol Google hanya akan menampilkan
+    pesan ramah "Belum diaktifkan" jika ditekan.
+    Login password tetap jalan seperti biasa.
+  </div>
+</section>
+<section>
+  <h2><span class="no">6</span> Pesan yang mungkin muncul (di halaman
+  login, setelah menekan tombol Google)</h2>
+  <table>
+    <tr><th>Anda melihat</th><th>Maksudnya</th><th>Apa yang Anda lakukan</th></tr>
+    <tr>
+      <td>"Belum diaktifkan oleh pengurus."</td>
+      <td>Lingkungan server belum menyiapkan
+          3 hal (bagian 5, langkah 1-3).</td>
+      <td>Sampaikan ke pengurus; di luar
+          wewenang Anda. Gunakan login password
+          untuk sekarang.</td>
+    </tr>
+    <tr>
+      <td>"Domain email tidak diizinkan."</td>
+      <td>Email Google Anda bukan dari domain
+          yang terdaftar.</td>
+      <td>Gunakan email dari domain resmi, atau
+          laporkan ke pengurus.</td>
+    </tr>
+    <tr>
+      <td>"Akun tidak ditemukan atau tidak
+          aktif."</td>
+      <td>Tidak ada akun aplikasi dengan
+          username = email itu, atau akun
+          dinonaktifkan.</td>
+      <td>Hubungi pengurus untuk membuat /
+          mengaktifkan akun.</td>
+    </tr>
+    <tr>
+      <td>"Login Google belum diizinkan untuk
+          akun ini."</td>
+      <td>Akun ada, tapi "Google" masih OFF.</td>
+      <td>Minta pengurus menyalakan
+          "Google: ON" di halaman
+          Admin --&gt; Pengguna.</td>
+    </tr>
+    <tr>
+      <td>"Terlalu banyak percobaan. Coba lagi
+          nanti."</td>
+      <td>Sudah mencoba berulang-ulang dalam
+          waktu singkat (pengaman anti penyadapan).</td>
+      <td>Tunggu sekitar 15 menit, lalu coba
+          lagi. Jika masih, hubungi pengurus.</td>
+    </tr>
+    <tr>
+      <td>"Koneksi ke Google gagal."</td>
+      <td>Gangguan jaringan atau kode Google
+          kedaluwarsa.</td>
+      <td>Coba sekali lagi; jika berulang,
+          periksa koneksi internet.</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="no">7</span> Keamanan &amp; syariat (ringkas)</h2>
+  <ul>
+    <li>Google login adalah <strong>pintu masuk</strong>,
+        bukan pengganti password -- data aplikasi tidak
+        dikirim ke Google (hanya nama dan email profil,
+        untuk mengenali Anda). Izin yang diminta
+        terbatas ke profil saja.</li>
+    <li>Semua percobaan (berhasil atau gagal)
+        dicatat ke jurnal kejadian (audit trail) --
+        bisa ditinjau lewat menu Audit.</li>
+    <li>Tidak ada akuntansi / muamalah yang berubah
+        karena fitur ini; hanya pintu masuk. Sesuai
+        tashih: "syariah dulu, fitur belakangan".</li>
+    <li>Semua pengaman bawaan (PIN pengunci layar,
+        hak per peran, penguncian percobaan) tetap
+        bekerja; login Google tidak membuka celah
+        baru.</li>
+  </ul>
+</section>
+
+<footer>
+  Kopontren Al Ittihad -- Tutorial W12 (Login Google).
+  Dibuat 26 Oktober 2026. Untuk detail teknis (env Vercel,
+  Google Cloud Console), lihat DEPLOY-VERCEL.txt.
+</footer>
+
+</div>
+</body>
+</html>
