@@ -263,6 +263,19 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       0 non-ASCII di baris +, frozen intact, tanpa skema,
       fiqih: none. Detail: entri 'W11 B4 ... LEPAS' di
       MEMORY.md. Next: B1 revisi sapaan (GO CODE).
+- [x] **W11 B1 REVISI LEPAS 25 Okt (C1 19be0ad, dual-push
+      master+main verified)**: sapaan natural -- ganti
+      "Selamat {band} WIB, semoga berkah | {date} | login
+      sebagai {nama} ({role})" (kaku) dadi "Sugeng
+      {band}, muga-muga sedaya lancar lan berkah. {date}";
+      "login sebagai..." dihapus (redundant). 4 file:
+      src/app/page.tsx (kasir + hero), admin/dashboard,
+      pengurus/dashboard, member. Gates: tsc 0, test:all
+      ALL_PASS, route-exports/theme-gate OK, next build
+      0, 0 non-ASCII, frozen intact, tanpa skema, fiqih:
+      none. Detail: entri 'W11 B1 REVISI ... LEPAS' di
+      MEMORY.md. Wave 11 COMPLETE (B1-B4 + revisi).
+
 - [x] AUDIT 3x (21 Sep): `audit_log` auto-purge - SELESAI
       (22 Sep): `purgeAuditLog` di lib/notify.ts (default 90 hari +
       invalidasi cache) + cron job `audit` & diinklusi job `all`;

@@ -28,7 +28,7 @@
   backup+target, tampilkan mapping kolom & rencana). `--execute`:
   (1) DROP 3 tabel, (2) CREATE DDL v31, (3) INSERT dari backup
   dgn `client.batch()` chunk 100 DML-only (keyset 500,
-  mapping = irisan kolom backup∩v31), (4) 6 index produksi
+  mapping = irisan kolom backupâˆ©v31), (4) 6 index produksi
   (idx_products_barcode, idx_products_active, idx_si_sale,
   idx_sale_items_sale, idx_purchases_created,
   idx_products_active_name), (5) stempel schema_version
@@ -1964,7 +1964,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
 
 ## 2026-10-01
 ### P3 ZAKAT TIJARAH LEPAS (1 Okt 2026) -- Soal 3 final + sitasi MUI dihapus
-- **P3 Soal 3 (modal / `valuation_mode`) = RESOLVED → Opsi B FINAL**
+- **P3 Soal 3 (modal / `valuation_mode`) = RESOLVED â†’ Opsi B FINAL**
   (commit `66a619b`, C1): modal + untung, harga pasar saat jatuh haul;
   `valuation_mode` = market FINAL.
 - **Sitasi fatwa MUI dihapus dari semua dokumentasi** (commit `ddd35e1`, C2):
@@ -1991,7 +1991,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `test:invariants` 0 gagal; 0 non-ASCII di 8 file;
   `public/sw.js` + file V1 tak tersentuh; ref remote
   `origin/master` + `origin/main` identik @ `f28579a`.
-- **Progres Wave 1 (roadmap §12 proposal)**: W1.1 `3eaf906`
+- **Progres Wave 1 (roadmap Â§12 proposal)**: W1.1 `3eaf906`
   (skema v21 coa 52 + jurnal); W1.2 `105b04e` (GL read-side
   `lib/gl.ts`); W1.3 `2ef3002` (auto-posting Wave 1, gated
   `gl_enabled`); W1.4 `f28579a` (UI); W1.5 `6d23e91` (rekon #15
@@ -2277,7 +2277,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
     bug (pola B1-B4 W2.2); mulai setelah go Gus Fi.
 
 ## 2026-09-30
-### P4 TASHIH KONSINYASI TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
+### P4 TASHIH KONSINYASI TERJAWABâ€“DITERIMA (Gus Fi, 30 Sep) + C5 rekaman keputusan
 - **Tashih dok. P4 (`P4-PROPOSAL-KONSINYASI.md/.html`)**: 3
   Setujuan, 0 Ora Setujuan, 0 Koreksi; **DITERIMA**.
   (1) Skema **wakalah bil ujrah** DISETUJUI (ujrah tercatat
@@ -2295,10 +2295,10 @@ tanpa kode, GO Gus Fi via DeepSeek)
 - **C5 (commit ini)**: rekaman keputusan -- `docs/akuntansi-keputusan.md`
   (seksi baru "Keputusan P4": ringkasan + tindak lanjut + open
   items + lampiran teks jawaban) + `docs/akuntansi-proposal.md`
-  (§0 note, baris 2020/4040 §2, §4.2, §5, §6, R6, W2.1, §14,
-  §15.4 + baru §15.5) + regenerate snapshot
-  `docs/AKUNTANSI-PROPOSAL.html` (banner §0, baris
-  2020/4040, §4.2, §6.2, R6, W2.1, §14 + seksi 15.5 + fnote)
+  (Â§0 note, baris 2020/4040 Â§2, Â§4.2, Â§5, Â§6, R6, W2.1, Â§14,
+  Â§15.4 + baru Â§15.5) + regenerate snapshot
+  `docs/AKUNTANSI-PROPOSAL.html` (banner Â§0, baris
+  2020/4040, Â§4.2, Â§6.2, R6, W2.1, Â§14 + seksi 15.5 + fnote)
   + re-sync `public/tutorial/akuntansi-proposal.html` via
   `node scripts/sync-tutorial.mjs` (SYNC-TUTORIAL-OK, 9 file).
 - **Dampak: R6 (aspek P4) LEPAS -- A1.1 LEPAS**: ujrah
@@ -2311,24 +2311,24 @@ tanpa kode, GO Gus Fi via DeepSeek)
   PERJANJIAN) menunggu konfirmasi ulama (E25; bila koreksi =
   commit terpisah, pola F3.3); (2) eksekusi A1.1 = commit
   F3.4+; badge "provisional" UI ujrah kon. s.d. terjawab.
-### P3 TASHIH ZAKAT TERJAWAB–DITERIMA (Gus Fi, 30 Sep) + revisi docs + snapshot (commit C2 + C3)
+### P3 TASHIH ZAKAT TERJAWABâ€“DITERIMA (Gus Fi, 30 Sep) + revisi docs + snapshot (commit C2 + C3)
 - **Tashih dok. P3 (`P3-TASHIH-ZAKAT.md/.html`)**: 1 Setujuan, 0
   Ora Setujuan, 1 Koreksi; Soal 3 belum dipilih (catatan B);
   keputusan tashih **DITERIMA** ("yang penting manut rumusan
   Nahdliyin ulama lan hasil bahtsul masail pondok pesantren").
   (1) Haul KOREKSI: anchor `2025-10-22` (mulai toko koperasi
-  berjalan) → haul pertama 22 Okt 2026; ta'jil boleh (musyawarah);
+  berjalan) â†’ haul pertama 22 Okt 2026; ta'jil boleh (musyawarah);
   penampang "seolah sudah haul" + keterangan "belum wajib karena
   belum nishab" (bukan nol); pembayaran TIDAK me-reset anchor.
   (2) Harga emas TERENDAH = final (min `zakat_gold_standards`
   jendela haul). (3) Modal (`valuation_mode` market/hpp) belum
-  dipilih → tetap provisional.
+  dipilih â†’ tetap provisional.
 - **C2 `ac00791`**: `P3-TASHIH-ZAKAT.md` (STATUS + seksi G baru) +
   `.html` (kartu jawaban + prefill) + `docs/akuntansi-proposal.md`
-  (§0 note, §8.2, §8.3, baris R6, §14, baru §15.4) +
+  (Â§0 note, Â§8.2, Â§8.3, baris R6, Â§14, baru Â§15.4) +
   `SYARIAH-CHECKLIST.md` seksi F (STATUS TASHIH).
 - **C3 (commit ini)**: regenerate snapshot `docs/AKUNTANSI-PROPOSAL.html`
-  (banner + R6 + §8.3 + §14 + seksi 15 baru + fnote) + re-sync
+  (banner + R6 + Â§8.3 + Â§14 + seksi 15 baru + fnote) + re-sync
   `public/tutorial/akuntansi-proposal.html` + TODO.md (item P3
   terjawab + open item baru: jawaban final Soal 3) + MEMORY.
 - **Sisa/open**: (1) jawaban final Soal 3 (modal) dari pengasuh;
@@ -2338,12 +2338,12 @@ tanpa kode, GO Gus Fi via DeepSeek)
   spesifikasi koreksi + switch `zakat_history` = commit F3.4+
   (R6); P4 konsinyasi tetap open.
 ### F3.3 TERJAWAB -- jawaban tashih GUS FI + revisi + regenerate (3 commit, dual-push master+main)
-- **Jawaban tashih GUS FI (30 Sep)** atas §13
+- **Jawaban tashih GUS FI (30 Sep)** atas Â§13
   `docs/AKUNTANSI-PROPOSAL.html` (14 poin, via
   `/tutorial/akuntansi-proposal`): 12 Setuju, 0 Ora Setuju,
   2 Koreksi. #6: TIDAK ADA denda keterlambatan ("ini tidak
   usah, bisa dengan yang lain. tidak denda.") -> ak. 5050
-  `status=closed`, skema denda dihapus dari §1.2/§5/§6/§8/§12.
+  `status=closed`, skema denda dihapus dari Â§1.2/Â§5/Â§6/Â§8/Â§12.
   #14: WAKAF AKTIF (revisi keputusan #7 "Belum sekarang") ->
   ak. 1120/4100/6020 APL; booking = `zis kind='wakaf'` +
   jurnal manual (PSAK 112); build = W3.5 (total 32 commit
@@ -2354,19 +2354,19 @@ tanpa kode, GO Gus Fi via DeepSeek)
   teks jawaban asli + ringkasan + dampak teknis) -- commit
   terpisah sesuai aturan F3.3.
 - **C2 `3af7250`**: revisi `docs/akuntansi-proposal.md`
-  (baru §15 "Revisi pasca-F3.3"; tabel §13 += kolom Jawaban;
-  COA/LKA/CALK/modul akad/§8/§9/§12 disesuaikan).
-- **C3 (commit ini)**: regenerate snapshot HTML (mirror §15 +
-  band §13 "TERJAWAB 30 SEP" + baris `.ans` per item + update
+  (baru Â§15 "Revisi pasca-F3.3"; tabel Â§13 += kolom Jawaban;
+  COA/LKA/CALK/modul akad/Â§8/Â§9/Â§12 disesuaikan).
+- **C3 (commit ini)**: regenerate snapshot HTML (mirror Â§15 +
+  band Â§13 "TERJAWAB 30 SEP" + baris `.ans` per item + update
   fnote @`3af7250`) + re-sync `public/tutorial` via
   `node scripts/sync-tutorial.mjs` (SYNC-TUTORIAL-OK, 9 file;
   copy = byte identik) + TODO.md + MEMORY.
 - **Sisa**: F3.4+ = mulai implementasi (Wave 1: skema v21
   COA + jurnal double-entry + auto-posting + rekon #15/#17 +
-  golden test, roadmap §12). Tashih P4 konsinyasi tetap
+  golden test, roadmap Â§12). Tashih P4 konsinyasi tetap
   pending (pola interface tashih sama, commit terpisah).
 ### Interface tashih AKUNTANSI-PROPOSAL.html + exception gate sync (3 commit, dual-push master+main)
-- **Keputusan (Gus Fi, 30 Sep, via sesi DeepSeek)**: §13
+- **Keputusan (Gus Fi, 30 Sep, via sesi DeepSeek)**: Â§13
   `docs/AKUNTANSI-PROPOSAL.html` dari snapshot centang (14 kartu,
   H1 `c3ade14`) jadi UI tashih interaktif: radio
   (Setuju / Ora Setuju / Koreksi) + textarea catatan per 14 poin;
@@ -2376,7 +2376,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   inline (clipboard API + fallback execCommand, zero library).
 - **Fix struktural (commit `b2d822b`)**: HTML H1 asli punya
   content stray (tabel 7.2/7.3 di luar `<section>`, langsung di
-  `<main>`) -- direlokasi ke badan §7 + tag tutup konsisten.
+  `<main>`) -- direlokasi ke badan Â§7 + tag tutup konsisten.
 - **Exception gate (commit `ef01d0d`)**: `sync-tutorial.mjs`
   ketambah `SCRIPT_ALLOW` ('AKUNTANSI-PROPOSAL.html') -- file itu
   saja boleh berisi script; docs lain tetap 0-script hard gate
@@ -2424,7 +2424,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `docs/AKUNTANSI-PROPOSAL.html` (748 baris) = snapshot 1:1 dari
   `docs/akuntansi-proposal.md` @ `e3cfd30` utk review F3.3.
   0 tag script (gate sync gagal-hard); tema maroon SOP-ADMIN; TOC
-  anchor pill + `:target` highlight; §13 = 14 kartu keputusan
+  anchor pill + `:target` highlight; Â§13 = 14 kartu keputusan
   amber + checkbox non-persist (print A4 utk rekam centang).
   `sync-tutorial.mjs` MAP += entry; `tutorial-data.ts` TUTORIALS
   += entry -> route `/tutorial/akuntansi-proposal`; public copy
@@ -2432,7 +2432,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   main+master = `c3ade14`. Catatan: lokal `master` ditemukan
   masih di `84a3266` (stale) -> `git branch -f master c3ade14`
   lalu push (fast-forward sah). **Setelah F3.3** (keputusan
-  §13 turun) -> regenerate HTML + re-sync (1 commit kecil).
+  Â§13 turun) -> regenerate HTML + re-sync (1 commit kecil).
   Sumber kebenaran tetap `docs/akuntansi-proposal.md`.
 - **Sisa / catatan**: pixel-check /tutorial + 1 halaman viewer +
   404 (Gus Fi, non-blocking). Deploy: HTML public/ ikut mekanisme
@@ -2477,7 +2477,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `accent-[#7A1835]` -> `accent-[var(--ac500)]`. tsc EXIT 0 +
   `next build` 0/0 (56 halaman).
 - **T4 (commit ini)**: docs (MEMORY + TODO + addendum
-  `docs/color-theme-audit.md` §12) -- fitur theme GENAP T1-T4.
+  `docs/color-theme-audit.md` Â§12) -- fitur theme GENAP T1-T4.
 - **Sync point hex** (ubah bareng, ketiganya): var blocks
   globals.css = map `SWATCH` pengguna-client = map `META`
   shell.tsx (komentar `SYNC POINT` di kedua file TS).
@@ -2510,34 +2510,34 @@ tanpa kode, GO Gus Fi via DeepSeek)
   performance, ongoing).
 ### V2-2 (KRITIS): COGS/HPP reversal -- netting dua sisi - 27 Sep
 - **Perintah (ACC Gus Fi)**: COGS reversal V2-2: P&L/KPI/Zakat net
-  DUA SISI -- pendapatan dikurangi Σ returns.amount (sudah V1), COGS
-  dikurangi Σ returns.cogs (baru V2-2). Snapshot di-write-time;
+  DUA SISI -- pendapatan dikurangi Î£ returns.amount (sudah V1), COGS
+  dikurangi Î£ returns.cogs (baru V2-2). Snapshot di-write-time;
   retur lama = 0 (konservatif, TANPA backfill); 3 commit.
 - **C1 `980d57c`** (schema + write path): `returns.cogs`
   INTEGER NOT NULL DEFAULT 0 via execColumn idempoten (purely
-  additive); SCHEMA_VERSION 19→20 -- Turso fullInit sekali saat cold
+  additive); SCHEMA_VERSION 19â†’20 -- Turso fullInit sekali saat cold
   start berikutnya (~15-20 s). POST /api/returns snapshot `cogs =
-  round(HPP item × qty)` DI-WRITE-TIME; rumus HPP per-item sama
+  round(HPP item Ã— qty)` DI-WRITE-TIME; rumus HPP per-item sama
   persis P&L/reports/zakat: `si.cost_price` (snapshot saat sale);
-  0/kurang (sale pre-V2-1) → fallback harga beli produk saat ini
+  0/kurang (sale pre-V2-1) â†’ fallback harga beli produk saat ini
   (`products.cost_price`, pola COALESCE /api/reports). GET
   /api/returns +`cogs`; audit log +`cogs`; backup export/import
-  +`cogs` (JSON lama → `Number(r.cogs) || 0`).
+  +`cogs` (JSON lama â†’ `Number(r.cogs) || 0`).
 - **C2 `8880ddb`** (netting P&L/KPI/zakat + UI): `lib/keuangan.ts`
-  -- `labaKotor = bersih − hpp + hppRetur` (payload +`hppRetur`
+  -- `labaKotor = bersih âˆ’ hpp + hppRetur` (payload +`hppRetur`
   additive; KEUANGAN_NOTES + header di-update); `api/reports` --
-  KPI `profit = (penjualan − retur) − (HPP − COGS retur)` + payload
+  KPI `profit = (penjualan âˆ’ retur) âˆ’ (HPP âˆ’ COGS retur)` + payload
   +`returns_total`; `api/zakat` -- laba periode net dua sisi;
   `lib/rekap.ts` -- statement WA V2-2 (baris "Dibalik COGS Retur" +
   footnote net); `laporan-admin-client.tsx` -- baris kondisional
-  (hppRetur > 0), sub KPI "net penjualan − net HPP (V2-2)",
+  (hppRetur > 0), sub KPI "net penjualan âˆ’ net HPP (V2-2)",
   heading P&L (V2-2). test:rekap fixture +1 assert (20).
 - **C3 `85d24b0`** (rekonsiliasi #14 + UI + test): cek 14 `RETURN_COGS`
-  (flag-only read-only): `returns.cogs` harus = `si.cost_price ×
+  (flag-only read-only): `returns.cogs` harus = `si.cost_price Ã—
   qty` utk item ber-snapshot (cost_price > 0); baris snapshot 0
   (fallback harga beli produk saat write) tak dapat diverifikasi
-  ulang → dikecualikan; `cogs < 0` selalu drift. UI COLS/MONEY
-  RETURN_COGS; test:rekon skema + seed + korup → PASS 46 (14 cek).
+  ulang â†’ dikecualikan; `cogs < 0` selalu drift. UI COLS/MONEY
+  RETURN_COGS; test:rekon skema + seed + korup â†’ PASS 46 (14 cek).
 - **Verifikasi (27 Sep)**: tsc clean; battery `test:invariants`
   40 / `test:rekon` 46 / `test:rekap` 20 / `test:zakat` 37 /
   `test:golden` 59 / `test:margin` 57; `next build` OK (sw.js
@@ -2549,7 +2549,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   TODO.md item V2-2 dicentang.
 ### P0-C4 (KRITIS): Production release gate + sertifikasi produksi - 27 Sep
 - **Perintah (ACC Gus Fi)**: P0-C4 = C4 finalis P0 Production
-  Certification (C1→C4): gate doc + update docs (MEMORY/TODO) +
+  Certification (C1â†’C4): gate doc + update docs (MEMORY/TODO) +
   cleanup scratch. Deliverable: `docs/qa/PRODUCTION-RELEASE-GATE.md`
   (baru; bahasa Inggris, sejajar GOLDEN-PATH.md/DATA-INVARIANTS.md)
   ngemu: (1) aturan gate ("ora ono sing ship menawa gate abang");
@@ -2558,11 +2558,11 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `tsc --noEmit` + `next build`); (3) gate deploy/verifikasi Vercel
   (dual-push, Ready+Production, SW stamp berubah, sw.js ber-stamp
   PERNAH di-commit, smoke `/admin/produk`, live run rekonsiliasi --
-  `drift_total` 0 ing data sehat); (4) tabel status C1–C4; (5) tabel
+  `drift_total` 0 ing data sehat); (4) tabel status C1â€“C4; (5) tabel
   4 bug produksi temuan P0; (6) cakupan sertifikasi (ORA ngemu:
   tashih P3/P4, batasan V1 KEUANGAN_NOTES, verifikasi operasional
   manual); (7) item P1/P2 non-blocking sisa + V2 ditunda +
-  Kelompok P1–P15 + roadmap pasca-P0; (8) release rules standing.
+  Kelompok P1â€“P15 + roadmap pasca-P0; (8) release rules standing.
 - **4 bug produksi P0 (dokumentasi gate doc)**: (1) SQL products
   koma akhir -- intro `37d0a34` (grosir), 500 SETIAP GET
   /api/products ter-autentikasi, fix `662b654` (C1); (2)
@@ -2575,12 +2575,12 @@ tanpa kode, GO Gus Fi via DeepSeek)
   P0 nemokak bug produksi nyata.
 - **V2 DITUNDA (pasca-sertifikasi, liha gate doc seksi V2)**:
   V2-1 = I-7 void reason struktural (daftar alasan sah + risiko alur
-  bisnis BUTUH ACC pengurus → UX-6.5); V2-2 = COGS/HPP reversal
-  (saiki V1 doc-note KEUANGAN_NOTES: retur COGS ora dibalik →
+  bisnis BUTUH ACC pengurus â†’ UX-6.5); V2-2 = COGS/HPP reversal
+  (saiki V1 doc-note KEUANGAN_NOTES: retur COGS ora dibalik â†’
   laba/HPP ora akurat; implement reversal + sesuaikan invarian +
-  rekonsiliasi). Roadmap pasca-P0: V2 → Fase 3 Akuntansi Terbaru
-  (audit SAK EP/SAK Syariah/PAP → proposal desain → tashih →
-  implementasi) → roadmap bakpao.id (7 fitur).
+  rekonsiliasi). Roadmap pasca-P0: V2 â†’ Fase 3 Akuntansi Terbaru
+  (audit SAK EP/SAK Syariah/PAP â†’ proposal desain â†’ tashih â†’
+  implementasi) â†’ roadmap bakpao.id (7 fitur).
 - **Cleanup**: scratch `_*.txt`/`_build.cmd` ing repo root dihapus
   lokal (git-ignored, ora ke-push). 2 CSV stok 09/23 tetep RETAIN
   (keputusan housekeeping 27 Sep; salah siji inggit tracked).
@@ -2600,32 +2600,32 @@ tanpa kode, GO Gus Fi via DeepSeek)
   lazy, kolom detail per id cek via config `COLS`, MONEY format
   `toLocaleString('id-ID')`) + sidebar (item "Rekonsiliasi" level
   'laporan', grup Sistem) + skrip `test:rekon`.
-- **13 cek**: SALES_PAY (paid−change=total semua baris), SALES_MONEY
-  (nominal tak negatif, INV-7), SPLIT (pay_split JSON valid + Σ=total
+- **13 cek**: SALES_PAY (paidâˆ’change=total semua baris), SALES_MONEY
+  (nominal tak negatif, INV-7), SPLIT (pay_split JSON valid + Î£=total
   + metode cash/tf/wa), SHIFT (30 rekap closed vs recompute window
   [start,end) kasir tsb; by_method tak dibandingkan), RETURN (orphan
   INV-3 + over-return per sale_item), STOCK (negatif, INV-1), DEBTS
-  (remaining=amount−paid, INV-5), PAYABLES (idem, INV-6), POINTS
-  (members.points = Σ point_history earn/redeem/void/return --
+  (remaining=amountâˆ’paid, INV-5), PAYABLES (idem, INV-6), POINTS
+  (members.points = Î£ point_history earn/redeem/void/return --
   penyempurnaan INV-4: reason 'refund' TIDAK ditulis app manapun;
-  'return' = rollback retur penuh), CASHBACK (cashback_balance = Σ
-  reason cashback/cashback_use/return_cash), KONSIN (sisa ≥ 0 per
-  guard 'sell'/'return'; tak overpay per guard 'pay'; settled ⇒
+  'return' = rollback retur penuh), CASHBACK (cashback_balance = Î£
+  reason cashback/cashback_use/return_cash), KONSIN (sisa â‰¥ 0 per
+  guard 'sell'/'return'; tak overpay per guard 'pay'; settled â‡’
   lunas per guard 'close' -- ketiganya mirror /api/konsinyasi),
-  KONSIN_UJRAH (Σ komisi = Σ kas masuk 'Ujrah Kon. %' -- per-row
+  KONSIN_UJRAH (Î£ komisi = Î£ kas masuk 'Ujrah Kon. %' -- per-row
   commission_rate snapshot, floor/unit = SQLite int div), KONSIN_PAY
-  (Σ amount_paid = Σ kas keluar 'Kon. %').
-- **Detail per cek**: status ok/drift + drift_count + ≤20 baris
+  (Î£ amount_paid = Î£ kas keluar 'Kon. %').
+- **Detail per cek**: status ok/drift + drift_count + â‰¤20 baris
   selisih (rows: Record[]); cek agregat kas (UJRAH/PAY) = 1 baris
   {expected, recorded}. Flag-only: modul TIDAK memodifikasi data.
 - **Bug caught saat verifikasi skema**: cek PAYABLES awal menulis
   `owner_name` -- kolom nyata = `supplier_name` (src/db.ts L374,
-  /api/payables, notify.ts) → SQL "no such column" 500 bila tak
+  /api/payables, notify.ts) â†’ SQL "no such column" 500 bila tak
   di-fix. Cek KONSIN ditambah sub-cek overpay (`amount_paid >`
   tagihan) mirror guarded UPDATE aksi 'pay'.
 - **Verifikasi**: `node scripts/test-rekonsiliasi.ts` (43 assert,
-  node:sqlite in-memory, seed selaras-guard → 13 ok; 12 mutation
-  korup → drift_total 16 dgn jumlah persis per cek + DB kosong +
+  node:sqlite in-memory, seed selaras-guard â†’ 13 ok; 12 mutation
+  korup â†’ drift_total 16 dgn jumlah persis per cek + DB kosong +
   sanity NOTES) = **PASS 43 / FAIL 0 / ALL_PASS / EXIT 0**;
   `tsc --noEmit` EXIT 0; `next build` EXIT 0.
 - **Aksi**: commit 8 file (rekonsiliasi.ts, reconciliation/route.ts,
@@ -2704,9 +2704,9 @@ tanpa kode, GO Gus Fi via DeepSeek)
   (Attention System) + rencana implementasi. Eksekusi
   **I-1, I-3, I-4, I-5, I-2, I-6, I-8**; **I-7 (void alasan
   struktural) = DITUNDA** (butuh penentuan pengurus: daftar
-  alasan sah + risiko alur bisnis → fase UX-6.5 setelah ACC).
-  Prioritas: I-3→I-4→I-5→I-2→I-6→I-8. Aturan sesi: per commit
-  diff → ACC → `tsc --noEmit` (+ build utk commit kode) →
+  alasan sah + risiko alur bisnis â†’ fase UX-6.5 setelah ACC).
+  Prioritas: I-3â†’I-4â†’I-5â†’I-2â†’I-6â†’I-8. Aturan sesi: per commit
+  diff â†’ ACC â†’ `tsc --noEmit` (+ build utk commit kode) â†’
   dual-push master+main; sw.js TIDAK PERNAH di-commit; D:
   target tulis, `kp-zip3` = read-only.
 - **Koreksi konteks penting (audit)**: file `ui/toasts.tsx` /
@@ -2716,15 +2716,15 @@ tanpa kode, GO Gus Fi via DeepSeek)
   Toast `L449+`, `useConfirm` `L525+`, `Empty`/`PageSkeleton`/
   Table. Commit H5 `a0b9f79` real = 7 file (bukan 4 + ui/*).
 - **Hasil audit 8 kategori** (verified read-only 27 Sep; detail
-  commit-per-commit di TODO.md § FASE I):
+  commit-per-commit di TODO.md Â§ FASE I):
   - A Attention: 20 jenis notif / 3 prioritas (`notify.ts`
     L41-68); bell 30 dtk + badge 99+ + deep-link SPA (H5) +
     view pengurus read-only; **gap: tone `critical` (toast
     hanya info/success/error/warning), digest 0, DND 0**.
-  - B Empty: 20 situs (16 file): **15 CTA, 5 tanpa CTA** → I-4:
+  - B Empty: 20 situs (16 file): **15 CTA, 5 tanpa CTA** â†’ I-4:
     `low-stock` L84, `notification-list` L141, `zakat` L637+L652,
     member dashboard L153 ("Belum ada transaksi").
-  - C Loading: `PageSkeleton` standar; **3 situs "Memuat…"
+  - C Loading: `PageSkeleton` standar; **3 situs "Memuatâ€¦"
     polos** = `laporan-admin` L459 (laba-rugi), L599 (neraca),
     L312 (jam sibuk).
   - D Error: pesan manusia di helper fetch OK; retry button
@@ -2749,67 +2749,67 @@ tanpa kode, GO Gus Fi via DeepSeek)
   undo = `showToast(msg, tone, action?)` (4 titik contoh
   dikonfirmasi saat implementasi); I-3 = delta server-side
   (admin: hari ini vs kemarin; pengurus: 30h vs 30h-sebelumnya)
-  + TermTip pakan delta, 4–5 kartu; I-4 CTA: low-stock →
-  `/admin/produk`, notification-list → settings (**admin-only**;
-  pengurus = tanpa CTA, pola kondisional H3), zakat x2 → form
-  zakat, member dashboard → POS (kondisional); I-5 = primitive
+  + TermTip pakan delta, 4â€“5 kartu; I-4 CTA: low-stock â†’
+  `/admin/produk`, notification-list â†’ settings (**admin-only**;
+  pengurus = tanpa CTA, pola kondisional H3), zakat x2 â†’ form
+  zakat, member dashboard â†’ POS (kondisional); I-5 = primitive
   `ErrorState` (pesan + "Muat ulang" + `<details>` teknis) di
   2 blok `laporan-admin` + seragamkan pola konsinyasi; I-6 =
   `useConfirm` + `risk:1..5` (L1-2 tombol biasa, L3-4 merah +
   ringkasan dampak, L5 + input nama entitas) -- 3 contoh:
   hapus transaksi L3, purge audit L4, resetAll data L5; I-8 =
-  kartu 2–3 baris di 2 dashboard (5 `/api/audit` terakhir +
-  KPI mover, CTA → Audit).
+  kartu 2â€“3 baris di 2 dashboard (5 `/api/audit` terakhir +
+  KPI mover, CTA â†’ Audit).
 - **Out of scope FASE I** (jangan balik tanpa keputusan baru):
-  DND global · digest harian (dicukupi report P2/P3 harian/
-  mingguan/bulanan) · Help Center central · multi-role M1
+  DND global Â· digest harian (dicukupi report P2/P3 harian/
+  mingguan/bulanan) Â· Help Center central Â· multi-role M1
   (tetap backlog UX-5.5/UX-6, trigger = kebutuhan nyata).
 - **I-1 (commit ini)**: dokumen audit + rencana (MEMORY +
-  TODO § FASE I, termasuk status DITUNDA I-7). 0 kode.
-  Langkah berikutnya = **I-3** (diff → ACC → tsc + build →
+  TODO Â§ FASE I, termasuk status DITUNDA I-7). 0 kode.
+  Langkah berikutnya = **I-3** (diff â†’ ACC â†’ tsc + build â†’
   dual-push).
 - **I-3 (DONE `e484cbb`, dual-push master+main, 27 Sep)**:
   `kpiDelta(cur, prev, label)` di `lib/format.ts` + delta
   server-side 2 dashboard (admin: 2 kartu "Penjualan Hari Ini"
   vs kemarin + "Arus Kas 7 Hari" vs 7d-sebelumnya; pengurus:
   3 kartu 30h vs 30h-sebelumnya + "Member Aktif" absolut
-  "▲ N baru"). Tone emerald/rose/slate; TermTip pakan delta.
+  "â–² N baru"). Tone emerald/rose/slate; TermTip pakan delta.
   tsc + build EXIT 0.
   **Pixel-check Gus (halaman tak bisa dirender di env ini):**
   - `/admin/dashboard` light/dark/mobile -- baris delta 2 kartu;
     TermTip via ikon `?` (hover/tap).
   - `/pengurus/dashboard` light/dark/mobile -- sama, 3 kartu.
-  - Edge case: periode sebelumnya kosong → "▲ baru"; tak
-    berubah (<0.5%) → "≈ stabil"; 0 vs 0 → baris delta tidak
+  - Edge case: periode sebelumnya kosong â†’ "â–² baru"; tak
+    berubah (<0.5%) â†’ "â‰ˆ stabil"; 0 vs 0 â†’ baris delta tidak
     render.
 - **Koreksi audit I-4 (27 Sep, saat re-audit pre-edit)**:
   target I-4 di path aktual -- `notification-list-client.tsx`
   (`src/components/admin/`, dipakai 1 rute `/admin/notifications`
-  view admin+pengurus); zakat ×2 = `zakat-client.tsx` di
+  view admin+pengurus); zakat Ã—2 = `zakat-client.tsx` di
   `/admin/zakat` (empty log verifikasi emas + empty riwayat,
-  **bukan** form "Belum diisi" -- form hanya state "Memuat…"
+  **bukan** form "Belum diisi" -- form hanya state "Memuatâ€¦"
   saat load); member dashboard "Transaksi Saya" =
   `personal-dashboard-client.tsx` (sudah ada pola CTA
   kondisional `showPosCta` di "Riwayat Poin & Reward").
   Guard target diverifikasi: `/admin/produk` = `canAccess('stock')`
-  (admin/manajer/gudang; pengurus & kasir tak termasuk → CTA
-  low-stock dibuat KONDISIONAL, pola H3) ·
-  `/admin/notifications/settings` = `isAdmin` (admin saja →
+  (admin/manajer/gudang; pengurus & kasir tak termasuk â†’ CTA
+  low-stock dibuat KONDISIONAL, pola H3) Â·
+  `/admin/notifications/settings` = `isAdmin` (admin saja â†’
   CTA notif list juga kondisional, prop `canManageNotif`).
 - **I-4 (DONE `6222bc70`, dual-push master+main, 27 Sep)**:
-  6 file src + MEMORY + TODO (+123/−15): CTA kondisional di 5
-  empty -- low-stock → `/admin/produk` (prop `canManageStock` =
+  6 file src + MEMORY + TODO (+123/âˆ’15): CTA kondisional di 5
+  empty -- low-stock â†’ `/admin/produk` (prop `canManageStock` =
   `canAccess(user,'stock')`, di-pass dari admin/dashboard/page.tsx);
-  notification-list → `/admin/notifications/settings` (prop
+  notification-list â†’ `/admin/notifications/settings` (prop
   `canManageNotif` = `isAdmin`, dari admin/notifications/page.tsx);
-  zakat ×2 → CTA in-page `ctaOnClick` scroll ke anchor baru
+  zakat Ã—2 â†’ CTA in-page `ctaOnClick` scroll ke anchor baru
   `#zakat-aksi` / `#zakat-gold` (tanpa rute anyar); "Transaksi
-  Saya" member → CTA POS kondisional (pola `showPosCta`, match
+  Saya" member â†’ CTA POS kondisional (pola `showPosCta`, match
   "Riwayat Poin & Reward"). 0 endpoint anyar, 0 fetch anyar.
   tsc + build EXIT 0 (53/53 rute).
   **Catatan commit**: commit pertama `38538af` punya subject korup
-  (BOM + `++` di depan, akibat `Out-File -Encoding utf8` PS) →
-  di-amend pre-push → `6222bc70` (verified: byte subject
+  (BOM + `++` di depan, akibat `Out-File -Encoding utf8` PS) â†’
+  di-amend pre-push â†’ `6222bc70` (verified: byte subject
   `f,e,a,t,(`; master = main = `6222bc70`). Pelajaran wajib:
   file commit message ditulis `[IO.File]::WriteAllLines(path,
   $lines, [Text.UTF8Encoding]::new($false))` + byte-verify
@@ -2826,7 +2826,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `ErrorState` primitive baru di ui.tsx (insert setelah `Empty`):
   `{text, onRetry?, tech?}` -- kartu rose + tombol "Muat ulang"
   (ghost) + `<details>` "Detail teknis" berisi `<pre>`
-  `text-1xs` (perbaikan ACC: `text-[11px]` → `text-1xs`,
+  `text-1xs` (perbaikan ACC: `text-[11px]` â†’ `text-1xs`,
   token F1). Dipakai di 3 blok: laporan-admin LaporanTab
   (`GET /api/keuangan`) + NeracaTab (`GET /api/neraca`; tombol
   header "Muat ulang" A3 TETAP, tidak disentuh) + konsinyasi
@@ -2835,38 +2835,38 @@ tanpa kode, GO Gus Fi via DeepSeek)
   awal; import `Button` tetap -- 12 use di file).
   0 endpoint/fetch anyar. tsc + build EXIT 0.
   **Pixel-check Gus (3 item)**: paksa gagal load (putus
-  network / API error) → `/admin/laporan` tab Laba-Rugi:
+  network / API error) â†’ `/admin/laporan` tab Laba-Rugi:
   kartu rose + "Muat ulang" + collapsible "Detail teknis"
   (isi `GET /api/keuangan -- <err>`); tab Neraca: `GET
   /api/neraca -- <err>`; `/admin/konsinyasi`: `GET
   /api/konsinyasi -- <err>` (tombol "Coba lagi" ad-hoc hilang
-  → ErrorState seragam).
+  â†’ ErrorState seragam).
 - **I-2 (DONE, 27 Sep -- commit I-2 = 6 file (4 src + MEMORY +
   TODO); backfill: hash I-5 = `99c973c`)**: tone `critical`
   ditambahkan ke `ToastTone` (ui.tsx): bg-rose-500, role=alert +
   assertive; auto-dismiss critical & warning = 90 dtk (error tetap
   6 dtk, tone lain 4 dtk). Slot `ToastAction {label, run}` =
   tombol di dalam toast (klik = run() lalu tutup). `useToast` kini
-  5-tuple -- backward-compat: destructure 2–4 elemen lama tetap
+  5-tuple -- backward-compat: destructure 2â€“4 elemen lama tetap
   valid, jadi host lain tak perlu diubah; hanya host produk/shift/
   zakat yang += prop `action`. 4 titik contoh: (1) produk-client
-  delete ber-riwayat = soft-archive → critical + "Urungkan"
-  (PUT `active=1`); (2) bulk delete → critical + "Urungkan" --
+  delete ber-riwayat = soft-archive â†’ critical + "Urungkan"
+  (PUT `active=1`); (2) bulk delete â†’ critical + "Urungkan" --
   refinement ACC: `ids` di-capture sebagai snapshot SEBELUM sukses
   clear `selected`; `bulk()` kini terima `extra.ids` + union
   action += `'active'` (endpoint sama, tier akses sama); (3)
-  shift-client tutup shift → critical tanpa undo ("rekap
-  terkunci"); (4) zakat logGold `apply=true` → warning 90 dtk +
+  shift-client tutup shift â†’ critical tanpa undo ("rekap
+  terkunci"); (4) zakat logGold `apply=true` â†’ warning 90 dtk +
   pesan bahasa-plain "koreksi dengan entri baru, log lama tidak
   dihapus" (deviasi kecil dari draft "(OOS undo)" -- jargon,
   diganti bahasa manusia). OOS tercatat: undo zakat (log
-  append-only → keputusan pengurus) + sound toast (SKIP V1).
+  append-only â†’ keputusan pengurus) + sound toast (SKIP V1).
   tsc + build EXIT 0.
-  **Pixel-check Gus (4 item)**: hapus produk ber-riwayat →
+  **Pixel-check Gus (4 item)**: hapus produk ber-riwayat â†’
   toast rose + tombol "Urungkan" (klik = reaktifkan, tabel
-  refresh); bulk hapus 2+ → "Urungkan" (semua diaktifkan lagi);
-  tutup shift → toast rose 90 dtk tanpa tombol; verifikasi harga
-  emas dengan "Sinkronkan ke Pengaturan" → toast amber 90 dtk.
+  refresh); bulk hapus 2+ â†’ "Urungkan" (semua diaktifkan lagi);
+  tutup shift â†’ toast rose 90 dtk tanpa tombol; verifikasi harga
+  emas dengan "Sinkronkan ke Pengaturan" â†’ toast amber 90 dtk.
 
 ### UX-5 H4: Breadcrumb visual (nested /admin/* /pengurus/*) -- SELESAI 27 Sep
 - Implementasi (commit H4, 27 Sep, dual-push master+main):
@@ -2895,18 +2895,18 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `shell.tsx` L93 bell admin|pengurus; `notification-bell.tsx`
   `onItem` = `router.push` (SPA, tanpa reload) + link eksternal
   `window.open('_blank')`; guard `/api/notifications` (list/count/
-  read) + halaman `/admin/notifications` saka `isAdmin` →
+  read) + halaman `/admin/notifications` saka `isAdmin` â†’
   `isNotifViewer`, guard-fail = `roleHome(user.role)` (pola H2);
   copy hero "(admin & pengurus)".
 - **Keputusan Q3 = opsi (a)**: VIEW = admin + pengurus
   (read-only); PENERIMA notifikasi tetep **admin-only**
-  (`notify.ts` `getAdminUserIds` unchanged) → bell pengurus =
+  (`notify.ts` `getAdminUserIds` unchanged) â†’ bell pengurus =
   count 0. Follow-up "pengurus sebagai penerima" (prefensi +
   opt-in push) = backlog UX-6+. Settings + send + cron tetep
   admin-only.
-- Pixel-check (Gus Fi, 6 item): (1) login **pengurus** → bell
+- Pixel-check (Gus Fi, 6 item): (1) login **pengurus** â†’ bell
   keliatan (count 0); (2) `/admin/notifications` bukak
-  (read-only); (3) settings tetep guarded; (4) login **kasir** →
+  (read-only); (3) settings tetep guarded; (4) login **kasir** â†’
   `/admin/notifications` = redirect `roleHome`; (5) link internal
   = SPA (ora reload); (6) link eksternal = new tab (bila ana).
 - `tsc --noEmit` EXIT 0. **Pixel-check Gus Fi (BELUM)**:
@@ -2929,7 +2929,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   "mode switch"/dedicated link; audit log ngemot "acting as primary
   role"; session nggolongi role context. **Langkung aman ketimbang
   "union sagedhah role"** (menu campur + audit bingung). Estimasi
-  ~4–5 commit: (1) skema v18 `users.roles` + migrasi idempoten;
+  ~4â€“5 commit: (1) skema v18 `users.roles` + migrasi idempoten;
   (2) auth/session role context; (3) pilih role login + menu adaptif;
   (4) audit "acting as"; (5) docs + resync kp-zip3.
   **Trigger**: nalika Gus Fi ngramesake kabutuhan nyata (contone
@@ -2939,7 +2939,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   per-akun tetep resik); admin bisa ndeleng card member dhewe ing
   `/member` (H3) menawa dipasangke.
 - **EKSEKUSI M1 (ACC Gus Fi, 27 Sep)**: urutane M1 sadurunge P0
-  Production Certification (Golden Path C1→C4). Patang keputusan desain
+  Production Certification (Golden Path C1â†’C4). Patang keputusan desain
   wis ACC: (1) model **primary + additional (mode switch),
   active-role-only** (ora union-all); (2) kabeh user saged multi-role,
   admin ngassign via Pengguna page; (3) default role aktif mung login
@@ -2949,8 +2949,8 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `{active_role: {before, after}, primary_role}`, **ora nambah kolom
   anyar** ing audit_log. Skema **Option A**: `users.roles` JSON +
   `sessions.active_role`, migrasi **V19**. Dokumen:
-  `docs/m1-multirole.md`. Commit plan: M1-1 docs → M1-2 skema V19 →
-  M1-3 auth → M1-4 UI → M1-5 audit → M1-6 test + release gate.
+  `docs/m1-multirole.md`. Commit plan: M1-1 docs â†’ M1-2 skema V19 â†’
+  M1-3 auth â†’ M1-4 UI â†’ M1-5 audit â†’ M1-6 test + release gate.
   **Renomer (ACC 27 Sep)**: commit `cc45511` ditag **M1-3-prep**
   (header shell, bagian dari M1-4) -- bukan M1-3. Maka: M1-3 = auth.ts +
   POST /api/auth/switch-role + session active-role; M1-4 = UI switcher
@@ -2959,21 +2959,21 @@ tanpa kode, GO Gus Fi via DeepSeek)
   M1-2 selesai (`411f5b7`), M1-3-prep selesai (`cc45511`),
   M1-3 selesai (`b3b4f34`), M1-4 selesai (`0908155`),
   M1-6 selesai (`9a5f73c`).
-  - **M1-4 `0908155` (4 file, +368/−28, 27 Sep)**: UI role
+  - **M1-4 `0908155` (4 file, +368/âˆ’28, 27 Sep)**: UI role
     switcher (dropdown shell/sidebar) + `pengguna-client`
     multi-role editor + `api/users/route.ts`: GET now includes
-    `role` + `roles`; PUT validates explicit -- unknown role →
+    `role` + `roles`; PUT validates explicit -- unknown role â†’
     400 "Role tidak valid." (BUKAN diam-diam 'kasir' / silent
     demote); guard self primary role; guard last admin demote;
     audit `user:roles` with before/after.
-  - **M1-6 `9a5f73c` (4 file, +118/−24, 27 Sep)**:
+  - **M1-6 `9a5f73c` (4 file, +118/âˆ’24, 27 Sep)**:
     `parseUserRoles` moved to pure module `lib/features.ts`
     (testable under Node, no server deps); `scripts/test-roles.ts`
     added (30 assertions: ROLES set, normRole, parseUserRoles,
     release-gate gate); `package.json` += `"test:roles"` script
     (release-gate = `npm run test:roles` hijau).
     **Pitfall Node 24 + Windows**: `process.exit()` di akhir
-    test → libuv fastfail `UV_HANDLE_CLOSEREG` (exit 0xC0000409);
+    test â†’ libuv fastfail `UV_HANDLE_CLOSEREG` (exit 0xC0000409);
     fix = `process.exitCode` + keluar alamiah. tsc EXIT 0,
     build EXIT 0, test-roles ALL_PASS.
   - **M1-5 (audit)**: `auth:switch-role` + `user:roles` events
@@ -3004,30 +3004,30 @@ tanpa kode, GO Gus Fi via DeepSeek)
   guard per halaman (zakat/kas/qris/konsinyasi = isManager atau
   canAccess; pengaturan-member/pengguna/data/migrate = admin-only;
   notifications = isAdmin).
-- **10 temuan (I-1..I-10)**: I-1 menu manajer "Keuntungan Member" →
+- **10 temuan (I-1..I-10)**: I-1 menu manajer "Keuntungan Member" â†’
   `/admin/pengaturan-member` admin-only = dead-end; I-2 filter
   group-level kasar (group "Sistem" ngusir item legal `/admin/laporan`
   dr manajer); I-3 hierarchy route adhoc (top-level `/` `/kasir`
   `/laporan` `/piutang` `/retur` vs nested `/admin/*` `/pengurus/*`);
   I-4 member ndeleng ringkasan toko purno (matriks: member =
   dashboard pribadi read-only); I-5 ora ana role-home (redirect
-  unauthorized selalune → `/`); I-6 alur shift kasir sakabèh 3 layar
+  unauthorized selalune â†’ `/`); I-6 alur shift kasir sakabÃ¨h 3 layar
   (ora ana shift-day screen); I-7 ora ana onboarding wizard first-run
   (mung banner `pw_default` ing `/` L80-97); I-8 breadcrumb = 0 situs;
   I-9 notif deep-link statik per jenis + full reload + bell mung
   admin; I-10 copy stale `/` L286-290 "baris atas di desktop"
   (ora ana top-row -- navigasi = hamburger drawer + bottom nav).
-- **ACC Gus Fi Q1-Q4 (27 Sep)**: Q1 Loyalty **fold → OPERASIONAL**
+- **ACC Gus Fi Q1-Q4 (27 Sep)**: Q1 Loyalty **fold â†’ OPERASIONAL**
   (4 group: UTAMA/OPERASIONAL/KEUANGAN/SISTEM); Q2 home `/`
   tetep kanggo kabeh role (ora redirect role home; dashboard =
   drill-down, ora home); Q3 bell **+ pengurus read-only**
   (ORA kasir -- shift alerts wis ana ing POS UI); Q4 shift-day
-  screen (I-6) + onboarding wizard (I-7) **defer → UX-6+** (backlog).
-- **H1 -- mapping item→level (verifikasi 27 Sep)**: saben item menu
-  entuk level `Feature | 'ops' | 'admin'`: `Feature` → `canAccess`;
-  `'ops'` → `isManager` (mirror guard Konsinyasi/Kas/QRIS -- ora ana
+  screen (I-6) + onboarding wizard (I-7) **defer â†’ UX-6+** (backlog).
+- **H1 -- mapping itemâ†’level (verifikasi 27 Sep)**: saben item menu
+  entuk level `Feature | 'ops' | 'admin'`: `Feature` â†’ `canAccess`;
+  `'ops'` â†’ `isManager` (mirror guard Konsinyasi/Kas/QRIS -- ora ana
   Feature key 'ops' ing FEATURE_MATRIX, sengaja: menu level mung
-  display, guard tetep isManager); `'admin'` → mirror guard
+  display, guard tetep isManager); `'admin'` â†’ mirror guard
   admin-only (pengaturan-member, notifications, pengguna, data,
   migrate). Mapping: UTAMA = Dashboard(laporan), Dashboard
   Global(laporan), Ringkasan(personal); OPERASIONAL = Kasir(pos),
@@ -3035,32 +3035,32 @@ tanpa kode, GO Gus Fi via DeepSeek)
   Retur(pos), Member(member), Keuntungan Member(admin);
   KEUANGAN = Kas(ops), QRIS(ops), Piutang(piutang), Hutang(supplier),
   Zakat(zakat), Laporan & Rekap(laporan); SISTEM = Laporan
-  Pengurus(laporan), Notifikasi(admin→H5), Audit(audit),
+  Pengurus(laporan), Notifikasi(adminâ†’H5), Audit(audit),
   Pengguna(admin), Data & Backup(admin), Import CSV(admin).
   Dampak: I-1/I-2 sirna (filter item-level, sumber siji = guard);
   label role-specific ("Produk & Stok (Opname)", "Hutang Supplier")
-  → label global siji (nuansa UX = tau Gus Fi).
+  â†’ label global siji (nuansa UX = tau Gus Fi).
 - **H5 -- verifikasi 27 Sep**: `/admin/produk` **ORA** support
   `?focus=` (produk-client: search client-side `q`, ora ngguyu
   searchParams) + tabel `notifications` ora ana kolom
   entity-id/meta (schema: user_id,type,title,message,link,read,
-  created_at) → **V1 = link statik + navigasi SPA** (router,
+  created_at) â†’ **V1 = link statik + navigasi SPA** (router,
   ganti `location.href`); entity-focus `?focus=<id>` = backlog
   follow-up (butuh schema + produk-client). Side-requirement Q3:
   bell pengurus **wajib** ngemong guard `/api/notifications`
-  (GET/count) + `/admin/notifications` saka `isAdmin` →
+  (GET/count) + `/admin/notifications` saka `isAdmin` â†’
   admin|pengurus (view read-only).
 - **H5 -- SELESAI 27 Sep @ `a0b9f79`** (Q3 opsi (a)): viewer =
   admin + pengurus (read-only); penerima notifikasi tetep
-  admin-only (`getAdminUserIds` unchanged → bell pengurus = 0);
-  detail + pixel-check 6 item = § UX-5 H5; follow-up "pengurus
+  admin-only (`getAdminUserIds` unchanged â†’ bell pengurus = 0);
+  detail + pixel-check 6 item = Â§ UX-5 H5; follow-up "pengurus
   sebagai penerima" (prefensi + opt-in push) = backlog UX-6+.
-- **Plan commit (ACC'd)**: H0 docs (iki) → H1 regroup +
-  item-level filter + fix I-10 → H3 member personal dashboard
+- **Plan commit (ACC'd)**: H0 docs (iki) â†’ H1 regroup +
+  item-level filter + fix I-10 â†’ H3 member personal dashboard
   (filtered: poin/status/QR + transaksi saya; read-only; CTA QR
-  badge) → H2 role-aware redirect (ora ana redirect anyar saka `/`)
-  → H4 breadcrumb (mung nested `/admin/*` `/pengurus/*`, visual
-  only) → H5 deep-link SPA + bell pengurus (+ guard notif) →
+  badge) â†’ H2 role-aware redirect (ora ana redirect anyar saka `/`)
+  â†’ H4 breadcrumb (mung nested `/admin/*` `/pengurus/*`, visual
+  only) â†’ H5 deep-link SPA + bell pengurus (+ guard notif) â†’
   H6 docs + resync `kp-zip3` + pixel-check list. Total 6 commit
   + H0. Oka scope: I-3 route hierarchy, I-6, I-7, G2-full
   ternary `pos-client:714/892/901`, entity-focus = mangkase UX-6+.
@@ -3068,12 +3068,12 @@ tanpa kode, GO Gus Fi via DeepSeek)
 ### UX-4 FASE G: Modal size + Toast tones - G1+G2 SELESAI 27 Sep
 - **G1 @ `99a3b20` (dual-push master+main, 3 file)**: `Modal`
   entuk prop `size?: 'sm'|'md'|'lg'` (default `'md'` = kelas
-  lawas persis → zero-delta). Token `MODAL_WIDTH`: sm=`max-w-xs`
+  lawas persis â†’ zero-delta). Token `MODAL_WIDTH`: sm=`max-w-xs`
   (320), md=`max-w-lg` (512, default), lg=`max-w-2xl` (672).
   Migrasi 2 dialog manual: `member-qr-badge` (default `md` --
   layar QR + meta) + `product-label` (`sm` -- 1 kolom label).
   tsc EXIT 0, build EXIT 0 (53/53).
-- **G2 @ `0ffb072` (dual-push, 23 file +156/−108)**: toast
+- **G2 @ `0ffb072` (dual-push, 23 file +156/âˆ’108)**: toast
   semantik. `ToastTone = 'info'|'success'|'error'|'warning'`
   (ui.tsx) + `TOAST_TONE_CLASS` (info = kelas lawas persis
   zero-delta; success emerald-600, error rose-600 +
@@ -3099,7 +3099,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   -- ditinggal `'info'`; butuh keputusan per kasus (mangkase
   ngrusak UX-5).
 - **G3 (commit iki, dual-push)**: docs (MEMORY + TODO) + resync
-  `kp-zip3` (kp ← D: full-mirror `src/` + `README.md`;
+  `kp-zip3` (kp â† D: full-mirror `src/` + `README.md`;
   `TODO.md`/`MEMORY.md` out-of-scope konvensi -- kp snapshot
   tanpa docs; `belanja-db.ts`/`backup.ts` = ora ana nang 2
   sisi = konsisten).
@@ -3111,16 +3111,16 @@ tanpa kode, GO Gus Fi via DeepSeek)
   1-3. 3 modals: **Panduan Kasir** (UX-2, ora owah G1/G2 --
      kontrol), **QR member** (`md` default), **label produk**
      (`sm`).
-  4. Toast `'error'` (contone: kas save gagal →
+  4. Toast `'error'` (contone: kas save gagal â†’
      `bg-rose-600`, auto-close 6s).
-  5. Toast default `'info'` (kelas lawas persis →
+  5. Toast default `'info'` (kelas lawas persis â†’
      zero-delta visual; kontrol positif).
 - **Aturane git (pencatetan FASE G)**: repo = **1 remote
   tunggal `origin`** (github.com/kita-foska/kopontren,
   dikonfirmasi 27 Sep) -- dual-push = `git push origin master`
   + `git push origin master:main`. `public/sw.js` =
   untracked/gitignored (stempel build lokal; JANGAN
-  di-commit -- sesuai aturan § Cleanup).
+  di-commit -- sesuai aturan Â§ Cleanup).
 
 ### UX-4 FASE F: Typography scale cleanup - SELESAI 27 Sep (F0-F3, dual-push master+main; sisa: pixel-check HP)
 - **Audit read-only (27 Sep, F0)**: `text-[10px]` = 26 +
@@ -3150,9 +3150,9 @@ tanpa kode, GO Gus Fi via DeepSeek)
   Weight: bold 214 / extrabold 83 / semibold 44 / medium 5.
 - **ACC Gus Fi (27 Sep, kabeh saranku ditampi)**:
   - Q1: **Opsi A** - keep `text-2xs`/`text-1xs` + swap
-    mekanis (10px→2xs, 11px→1xs); Opsi B (retire →
+    mekanis (10pxâ†’2xs, 11pxâ†’1xs); Opsi B (retire â†’
     text-xs) ditolak.
-  - Q2: include `ui.tsx:33 Badge`→`text-xs` (F2 = 10
+  - Q2: include `ui.tsx:33 Badge`â†’`text-xs` (F2 = 10
     situs: pengurus-dashboard 316/324, pos-client
     2267/2296/2319, notification-bell 203,
     notification-list 157, ui Badge :33).
@@ -3171,7 +3171,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
 - **Risk note (dicathet)**: `text-[10px]`/`text-[11px]`
   mung ngowahi font-size (line-height = inherit);
   `text-2xs`/`text-1xs` uga ngowahi line-height (15px) -
-  delta ≤1px nang titik kenceng (badge h-5, receipt
+  delta â‰¤1px nang titik kenceng (badge h-5, receipt
   preview `pos-client:1833/1876`, bottom-nav `:88` +
   `leading-none`) - bagean pixel-check (item 1/2/6/7/8).
 - **F0 SELESAI @ `d1f7574`**: catat audit + ACC (MEMORY +
@@ -3179,10 +3179,10 @@ tanpa kode, GO Gus Fi via DeepSeek)
   (`D:\Ngudi Susilo\`, di luar repo, konvensi
   git-ignored lokal). Dual-push.
 - **F1 SELESAI @ `2ff5091`**: token map 61 owah 17 file
-  (`text-[10px]`→`text-2xs`, `text-[11px]`→`text-1xs`;
+  (`text-[10px]`â†’`text-2xs`, `text-[11px]`â†’`text-1xs`;
   mekanis - weight/tracking/leading/werna saka situs
   tetep padha; blok receipt inline + print OUT-OF-
-  SCOPE). 62 situs audit − 1 (sidebar:172 Q4 as-is) = 61.
+  SCOPE). 62 situs audit âˆ’ 1 (sidebar:172 Q4 as-is) = 61.
   Verify: residual `text-[10px]` = 1 (mung sidebar:172),
   `text-[11px]` = 0; tsc EXIT 0 + build EXIT 0 (sw.js
   revert) + dual-push master+main.
@@ -3192,10 +3192,10 @@ tanpa kode, GO Gus Fi via DeepSeek)
   globals.css:93) + unifikasi 10 situs (Q2): pengurus-
   dashboard:316/324, pos-client:2267/2296/2319,
   notification-bell:203, notification-list:157,
-  Badge ui.tsx:33 `text-1xs`→`text-xs`. 6 file +13/−8.
-  Delta visual (ACC'd): KPI label 11px→12px + dark
-  variant; pos h3 tracking-wider→wide; bell/list meta
-  10px semibold→12px bold. Residual `tracking-wider` =
+  Badge ui.tsx:33 `text-1xs`â†’`text-xs`. 6 file +13/âˆ’8.
+  Delta visual (ACC'd): KPI label 11pxâ†’12px + dark
+  variant; pos h3 tracking-widerâ†’wide; bell/list meta
+  10px semiboldâ†’12px bold. Residual `tracking-wider` =
   sidebar:172 (Q4) + member-qr-badge:231 (ora nang Q2
   list = out-of-scope, ora disentuh). tsc EXIT 0 +
   build EXIT 0 + dual-push master+main.
@@ -3208,16 +3208,16 @@ tanpa kode, GO Gus Fi via DeepSeek)
      10k...100k + hotkey hint.
   2. `/kasir` - tab kategori + payment pills + KPI
      badges (TogglePill badge 2xs extrabold; chip
-     emerald/amber 10px→2xs) + modal Panduan Kasir h3
+     emerald/amber 10pxâ†’2xs) + modal Panduan Kasir h3
      `.card-label` 12px (delta F2).
   3. `/home` + dashboard pengurus - label kartu KPI
-     `.card-label` 12px bold (delta F2: 11px→12px +
+     `.card-label` 12px bold (delta F2: 11pxâ†’12px +
      dark variant) + sub-line nilai (1xs).
   4. `/laporan` - label KPI + sub-line "Periode
      terpilih".
   5. `/admin/notifikasi` - label meta panel bell/list
      `.card-label` 12px bold (delta F2: 10px semibold
-     →12px).
+     â†’12px).
   6. Cetak kartu member / QR / label - konfirmasi
      muat 58mm (blok print durung disentuh).
   7. `/admin/produk` - chip sku mono (2xs) + garis
@@ -3339,18 +3339,18 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `migrate-client` (3 tabel: T1 stickyHead + T2/T3 rose panel,
   `Trow border="none"` + pemisah border-t rose), `zakat-client`
   (2 tabel: T4 `border="bottom"` + highlight emerald kondisional +
-  last:border-0; T5 log history). 5 file, +126/−141; rules
-  `.th`/`.td`/`.table-row` dihapus dr `globals.css` (−9 baris).
+  last:border-0; T5 log history). 5 file, +126/âˆ’141; rules
+  `.th`/`.td`/`.table-row` dihapus dr `globals.css` (âˆ’9 baris).
   `kas`+`pengguna` = 2 file terakhir yg pakai CSS legacy (scan
-  repo-wide); `migrate`+`zakat` manual Tailwind → dimigrasi utk
+  repo-wide); `migrate`+`zakat` manual Tailwind â†’ dimigrasi utk
   konsistensi, bukan cleanup CSS.
 - **Delta approved (keputusan 27 Sep, Opsi A -- 6+2)**:
-  (1) header `px-3 py-2`→`px-3 py-2.5` + bold uppercase slate-500;
-  (2) sel `py-1.5`/`py-2`→`py-2.5` (8→10px); (3) rose panel
-  (migrate T2/T3) teks 12→14px; (4) `w-full`→`min-w-[32rem]`;
+  (1) header `px-3 py-2`â†’`px-3 py-2.5` + bold uppercase slate-500;
+  (2) sel `py-1.5`/`py-2`â†’`py-2.5` (8â†’10px); (3) rose panel
+  (migrate T2/T3) teks 12â†’14px; (4) `w-full`â†’`min-w-[32rem]`;
   (5) weight/werna header dibake nang primitive; (6) zakat
-  `w-full`→`min-w-[32rem]` + sel 10px; (7) kas+pengguna: dividers
-  & hover `.table-row` ilang → selaras bahasa app-wide D2a (ora
+  `w-full`â†’`min-w-[32rem]` + sel 10px; (7) kas+pengguna: dividers
+  & hover `.table-row` ilang â†’ selaras bahasa app-wide D2a (ora
   dividers, ora hover; konsistensi nggantosi keunikan per-file;
   manawa dikepengke, siji baris `Trow className` per file);
   (8) kolom pungkasan `px-3` simetris (zakat T4/T5 + migrate
@@ -3368,16 +3368,16 @@ tanpa kode, GO Gus Fi via DeepSeek)
 - **Pixel-check real device: GUS FI pasca-push** -- 4 halaman durung
   visual diverifikasi: `/admin/audit`, `/admin/member`,
   `/admin/produk`, `/admin/data` (+ tabel FASE D liyane manawa
-  durung ketoke). Breakage → follow-up commit.
+  durung ketoke). Breakage â†’ follow-up commit.
 
 ### UX-4 FASE C: migrasi Button + hapus CSS legacy -- SELESAI 27 Sep (commit 3a59c9a, dual-push master+main)
-- 30 file (+561/−583): ~120 tombol raw `.btn/*` digantikan komponen
+- 30 file (+561/âˆ’583): ~120 tombol raw `.btn/*` digantikan komponen
   `<Button>` (FASE B.1 @ `592b230`: 5 varian primary/outline/ghost/
-  danger/link × 3 ukuran sm 36 / md 44 / lg 52 px + link override
+  danger/link Ã— 3 ukuran sm 36 / md 44 / lg 52 px + link override
   teks via `className` aman). Aturan legacy dihapus dr `globals.css`:
   `.btn`, `.btn-primary/-secondary/-ghost/-danger/-success/-sm`,
   `.btn-xs`, `.field`, `.card-field`, `.card-field-error`. Error state
-  diseragamkan `text-red` → `text-rose` (token `risk`=rose; 22 file).
+  diseragamkan `text-red` â†’ `text-rose` (token `risk`=rose; 22 file).
 - Exception disengka (keputusan FASE B2/C2/C3 di atas): chip sub-sm
   ("Maks" `pos-client`, toggle `px-2.5 py-0.5` tabel `produk-client`)
   + tombol fill emerald "Riwayat" kartu mobile `member-client` TETAP
@@ -3388,7 +3388,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   dihapus, jadi tak bisa hidup diam-diam); `next build` EXIT 0;
   `public/sw.js` skip-worktree tak terganggu.
 - **Pixel-check real device: GUS FI pasca-push** -- tombol kini global
-  min-height 44px + werna varian; bila ada breakage → follow-up commit.
+  min-height 44px + werna varian; bila ada breakage â†’ follow-up commit.
 
 ### UX-4 FASE B2 (C2): keputusan chip sub-sm -- "Maks" (27 Sep)
 - Chip sub-sm (mis. "Maks" di `pos-client`, toggle status `px-2.5 py-0.5`
@@ -3396,26 +3396,26 @@ tanpa kode, GO Gus Fi via DeepSeek)
   button** -- tak di-`<Button>`-kan. Alasan: terlalu kecil untuk size
   Button saiki (sm 36 / md 44 / lg 52 px) + override min-height via
   `className` rapuh (Tailwind CSS order). **Revisit manawa mudhun
-  5+ chip sub-sm** → tambah size `xs` ing wiwitan.
+  5+ chip sub-sm** â†’ tambah size `xs` ing wiwitan.
 - Link variant: override werna teks via `className` aman & deterministik
   (slate/rose/emerald mudhun accent ing CSS generated -- alphabetik),
-  nalika override werna fill (bg-*) LORA bisa (slate/rose menang) →
+  nalika override werna fill (bg-*) LORA bisa (slate/rose menang) â†’
   tombol fill emerald (mis. "Riwayat" kartu mobile `member-client`)
-  tetep raw button, dilaporaké minangka exception.
+  tetep raw button, dilaporakÃ© minangka exception.
 
 ## 2026-09-26
 ### UX-4 FASE A: Design Tokens -- SELESAI 26 Sep (commit 5698b74, dual-push master+main)
 - Acuan: goal document UX (95 usulan, 8 fase; roadmap E1-E40/P1-P15/Q41-Q95).
-  Re-implementasi dari versi kp (D: primary mulai 26 Sep). 9 file, +143/−47:
+  Re-implementasi dari versi kp (D: primary mulai 26 Sep). 9 file, +143/âˆ’47:
   (1) `tailwind.config.ts`: role alias `risk`=rose, `success`=emerald,
   `attention`=amber, `info`=blue, `gold`=amber, `wine`=#7A1C1C; fontSize
   2xs/1xs; radius card/field; shadow card; zIndex nav/overlay/modal/toast/pop.
-  (2) `globals.css`: var semantik `:root`; `.card`/`.input`/`.btn`/`.hero-bg` → token.
+  (2) `globals.css`: var semantik `:root`; `.card`/`.input`/`.btn`/`.hero-bg` â†’ token.
   (3) `src/lib/tokens.ts` BARU: objek `T` (25 key) utk JS/SVG/inline/print.
   (4) `layout.tsx`: themeColor `T.accent500`.
-  (5)–(9) `member-qr-badge` (13 edit), `migrate-client` (8), `audit-client` (2),
-  `product-label` (7), `pos-client` (8): red→rose, sky→blue,
-  hex mentah → `T.*` / `bg-wine-700`.
+  (5)â€“(9) `member-qr-badge` (13 edit), `migrate-client` (8), `audit-client` (2),
+  `product-label` (7), `pos-client` (8): redâ†’rose, skyâ†’blue,
+  hex mentah â†’ `T.*` / `bg-wine-700`.
 - Aturan ke depan: hex mentah di komponen larangan; wajib `T.*` /
   kelas Tailwind. (Hex sisa hanya di file token + 1 komentar doc
   `ui.tsx:17`, bukan style -- accepted.)
@@ -3446,36 +3446,36 @@ tanpa kode, GO Gus Fi via DeepSeek)
 - **Acuan goal document (Gus Fi, 3 file, 95 usulan, 8 fase UX-2 s.d.
   UX-8).** UX-2 = R2 (EmptyState CTA) + R4 (PanduanKasir) -- SELESAI
   hari ini, 2 commit, dual-push master+main tiap commit.
-- **R2 -- EmptyState CTA** (commit `32d0538`, 12 file, +225/−51):
+- **R2 -- EmptyState CTA** (commit `32d0538`, 12 file, +225/âˆ’51):
   `EmptyState` menerima `ctaVariant="primary"` -- hanya dashboard +
   laporan yang pakai primary; CTA scroll-to-form (6 ID target
   terverifikasi) + import `canAccess` di laporan; upgrade banner
   shift di POS. Verifikasi: tsc 0, `next build` EXIT 0 (53 rute --
   +1 `/api/zakat/gold-standards` dari `ebe2e8a`, expected), smoke
-  10/10 route (307→login utk guarded), dual-push @ `32d0538`.
+  10/10 route (307â†’login utk guarded), dual-push @ `32d0538`.
 - **R4 -- PanduanKasir** (commit `e7130c3`, 1 file `pos-client.tsx`,
-  +90/−19): tombol ghost "Panduan kasir" (ikon `BookOpen`) di banner
+  +90/âˆ’19): tombol ghost "Panduan kasir" (ikon `BookOpen`) di banner
   shift + modal "Panduan Kasir" 3 seksi: (1) **Cara transaksi** --
   5 langkah: 1 pilih produk (F1/scan), 2 pilih pembeli
   **(opsional)**: F2 nama bebas / F8 member terdaftar (poin
-  loyalitas otomatis), 3 bayar: 1 tunai · 2 QRIS · 3 transfer ·
+  loyalitas otomatis), 3 bayar: 1 tunai Â· 2 QRIS Â· 3 transfer Â·
   4 campur (F6) + F3 uang diterima, 4 simpan (F4), 5 struk
   (F5 / Ctrl+P) + bagikan WA; (2) **Pintasan** -- CHEAT_ROWS +
   catatan (panah/+/-/Del di luar kolom ketik; Ctrl+H bisa ditahan
-  Chrome → via menu Laporan); (3) **Jika ada masalah** -- 4 bullet
+  Chrome â†’ via menu Laporan); (3) **Jika ada masalah** -- 4 bullet
   aksi konkret: internet mati (lanjutkan saja, antre offline
-  sinkron otomatis), item salah (↑↓ / +− / Del / Ctrl+R), sudah
+  sinkron otomatis), item salah (â†‘â†“ / +âˆ’ / Del / Ctrl+R), sudah
   tersimpan tapi keliru (buka Laporan & Rekap Ctrl+H; retur via
   halaman Retur), lupa pintasan (tekan ?). Opsionalnya pembeli
   terverifikasi di `checkout()`: payload `customer`/`member_id`
   boleh kosong. Verifikasi: tsc 0, build EXIT 0, dual-push @
   `e7130c3`. **Pixel-check real device: Gus Fi pasca-push** --
-  bila ada breakage → follow-up commit.
+  bila ada breakage â†’ follow-up commit.
 - **SW.js guard -- KOREKSI 26 Sep (verifikasi `git ls-files` +
   `check-ignore` + `ls-files -v` + `git log --all`)**: `public/sw.js`
   **TER-TRACK** ing index; **bukan** gitignored (`check-ignore`
   kosong, ora ana pattern sw ing `.gitignore`). `git ls-files -v` =
-  `S public/sw.js` → skip-worktree AKTIF, file katon werni ing
+  `S public/sw.js` â†’ skip-worktree AKTIF, file katon werni ing
   `git status`. `git log --all -- public/sw.js` katon stempel
   SW-BUILD sawetara commit kepungkur (`3b38685`, `d3e99f5`, etc.) --
   file iki saged ing repo. Dadi bener = opsi (a), **bukan** (b)
@@ -3488,7 +3488,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   - **TermTip** (`src/components/ui.tsx`): hover + click/tap pin, ikon
     `CircleHelp` (lucide), render di bawah label, `max-w-[220px]`,
     anchor `left`/`right` otomatis via `getBoundingClientRect()`
-    (elemen di separuh kanan layar → tooltip ke kiri). ESC + klik luar
+    (elemen di separuh kanan layar â†’ tooltip ke kiri). ESC + klik luar
     tutup. Diterapkan di: `laporan-admin-client` (HPP, Laba Kotor),
     `zakat-client` (Nishab, Haul, Kadar, Mode Penilaian),
     `produk-client` (HPP tabel + form), `konsinyasi-client` (Komisi).
@@ -3500,7 +3500,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
     dinamis. Diterapkan di: `piutang-client`, `hutang-client`,
     `konsinyasi-client` (status Selesai/Aktif), `produk-client`
     (Habis/Tipis/Aman).
-  - **Rename `.grad-hero` → `.hero-bg`**: definisi di `globals.css`
+  - **Rename `.grad-hero` â†’ `.hero-bg`**: definisi di `globals.css`
     + 7 file tsx (login, pin, pin/setup, admin/dashboard,
     admin/notifications, admin/notifications/settings, page.tsx,
     pengurus/dashboard). Alasan: nama lama "grad" menipu karena
@@ -3509,7 +3509,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
 
 ### Konsolidasi revisi progres + rencana depan UX (26 Sep, sesi AI)
 - **Revisi user (10 poin) diterapkan di dokumen** (tidak mengubah kode):
-  "SIAP PRODUKSI" → **Engineering: Production Candidate;
+  "SIAP PRODUKSI" â†’ **Engineering: Production Candidate;
   Operational/Syariah: Pending Verification/Tashih**; klaim "0
   engineering WIP" dihapus (UX-2 masih berjalan, UX-3 belum mulai);
   **zakat 24K diturunkan ke PROVISIONAL/configurable** (MUI Komisi
@@ -3519,18 +3519,18 @@ tanpa kode, GO Gus Fi via DeepSeek)
   akumulasi harian = mekanisme implementasi (bukan fiqih final);
   ta'jil = provisional, tidak menggeser haul; **P4 "default 20%" =
   preset operasional, bukan ketentuan syariah**; mapping akuntansi
-  (supplier goods ≠ revenue; ujrah → revenue; hak pemilik →
+  (supplier goods â‰  revenue; ujrah â†’ revenue; hak pemilik â†’
   settlement payable) = **provisional nunggu tashih P4**.
 - **BARU `PROGRESS-2026-09.md`**: laporan 36 bagian (periode
-  18–26 Sep) versi revisi + rujukan (MUI, BAZNAS zakat perdagangan,
+  18â€“26 Sep) versi revisi + rujukan (MUI, BAZNAS zakat perdagangan,
   DSN-MUI 113/2017, BAZNAS zakat penghasilan 2026). HEAD git aktual
-  saat konsolidasi = `10c8e87` (komit UX-1a P1–P4), clean.
+  saat konsolidasi = `10c8e87` (komit UX-1a P1â€“P4), clean.
 - **TODO.md**: seksi baru "RENCANA KEDEPAN -- UX MASTER PLAN & BACKLOG
   (usulan, nunggu ACC)" -- roadmap fase UX-2..UX-8 (UX-4 = Design
   System, UX-5 = IA/role-based, UX-6 = Attention + Explain This
   Number, UX-7 = Power User/Ctrl+K, UX-8 = Operational Safety),
   10 prioritas utama, gate kualitas "5 rasa / 6 kata", backlog
-  **E1–E40 (Experience Layer) + P1–P15 + Q41–Q95** (95 item,
+  **E1â€“E40 (Experience Layer) + P1â€“P15 + Q41â€“Q95** (95 item,
   BELUM kode -- tunggu ACC), aturan "jangan dulu" Bagian-35, +
   checklist HP **"TermTip mobile viewport edge check"** (masuk
   daftar Gus setelah UX-3).
@@ -3545,7 +3545,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   (UI + API). 4 nilai: `cash` (tunai) / `transfer` (transfer bank) /
   `qris` / `other` (lainnya); nilai tak dikenal atau kosong
   dinormalisasi ke `cash` (konservatif, selaras default baris lama).
-- **Skema v16→17** (`src/db.ts`): kolom additive
+- **Skema v16â†’17** (`src/db.ts`): kolom additive
   `zakat_history.payment_type TEXT NOT NULL DEFAULT 'cash'`; DB
   existing dapat kolom lewat `execColumn` idempoten (guard
   `PRAGMA table_info`) saat cold start -- tanpa rewrite baris lama.
@@ -3554,10 +3554,10 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `zakat-period.ts`, tanpa dependensi Next): `ZAKAT_PAYMENT_TYPES`
   (readonly const) + `ZakatPaymentType` + `normalizePaymentType(v)`.
   Catatan: Next.js melarang *value export* selain HTTP handler di
-  `route.ts` (type-check `OmitWithNull` gagal) → helper TIDAK boleh
+  `route.ts` (type-check `OmitWithNull` gagal) â†’ helper TIDAK boleh
   diekspor dari `src/app/api/zakat/route.ts`, dipindah ke lib.
-- **POST `/api/zakat`**: field opsional `payment_type` di body →
-  `normalizePaymentType` → INSERT `zakat_history`; `logAudit`
+- **POST `/api/zakat`**: field opsional `payment_type` di body â†’
+  `normalizePaymentType` â†’ INSERT `zakat_history`; `logAudit`
   `zakat:record` after-JSON memuat payment_type.
 - **GET `/api/zakat/history`**: SELECT + tipe baris + ekspor CSV
   kol. `payment_type` (setelah `note`); baris lama tampil 'cash'
@@ -3579,13 +3579,13 @@ tanpa kode, GO Gus Fi via DeepSeek)
   tashih pengasuh (`P3-TASHIH-ZAKAT.md`). (Step 2 provisional
   terapkan di entry di bawah: "ZAKAT -- FASE 2 Step 2".)
 - **Catatan audit (waktu itu) -- formula yang live masih FORMULA
-  LAMA**: `modal + laba + piutang − hutang` + HPP, harga emas
+  LAMA**: `modal + laba + piutang âˆ’ hutang` + HPP, harga emas
   manual 24K (v17 hanya menambah pencatatan media pembayaran,
   TANPA mengubah formula). Status provisional = keputusan untuk
   MENJAGANYA secara sementara, BUKAN formula baru. (Koreksi
-  trancribes lama: kutipan "modal + laba − hutang − piutang" salah;
+  trancribes lama: kutipan "modal + laba âˆ’ hutang âˆ’ piutang" salah;
   code asli `src/app/api/zakat/route.ts` = `modal + laba +
-  piutang − hutang`.)
+  piutang âˆ’ hutang`.)
 
 ### ZAKAT -- FASE 2 Step 2: logika P3 provisional (26 Sep)
 - **Lakukan Step 2 SEBELUM hasil tashih** (keputusan user): logika
@@ -3595,19 +3595,19 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `zakat-period.ts`, tanpa dependensi Next): `computeValuation`
   (mode market/hpp; market default, V1 proxy = harga jual produk),
   `computeAccrual` (proporsional hari haul sejak anchor),
-  `computeHaulAnchor` (fallback: `haul_start_date` →
-  `last_zakat_date` → awal bulan WIB; clamp ≤1 thn utk anomali
+  `computeHaulAnchor` (fallback: `haul_start_date` â†’
+  `last_zakat_date` â†’ awal bulan WIB; clamp â‰¤1 thn utk anomali
   + 29 Feb), `computeBalance`.
 - **Haul anchor**: `last_zakat_date` TIDAK lagi me-reset siklus
   akumulasi -- pembayaran zakat = ta'jil, hanya audit trail +
   fallback bila `haul_start_date` kosong.
-- **Skema v17→18** (`src/db.ts`, add-ops `execAdditive`):
+- **Skema v17â†’18** (`src/db.ts`, add-ops `execAdditive`):
   `zakat_gold_standards` (append-only: karat, price, source,
   price_date, created_by; index `price_date` DESC) +
   `ZAKAT_SETTING_DEFAULTS.valuation_mode = 'market'`.
 - **Route `/api/zakat`**: GET+POST memuat `valuation_mode`,
   `haul_anchor`, `accrued`, `days_in_haul`; GET juga
-  `gold_standard` (log terbaru) → harga efektif; cache
+  `gold_standard` (log terbaru) â†’ harga efektif; cache
   `zakat:calc` TTL 15 mtk.
 - **Route anyar `/api/zakat/gold-standards`**: GET (tier
   `laporan`+) 100 baris terbaru; POST admin-only (insert).
@@ -3627,7 +3627,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   musyarakah, domain DSN-MUI muamalah) tidak berlaku utk zakat.
   Dasar tashih kini memakai konsensus ulama (Syafi'i / Maliki /
   Hanbali) + Muktamar NU ke-35 (nisab 85 g emas murni 24K). Tersimpan di
-  `P3-TASHIH-ZAKAT.md` §D (md+html), SYARIAH-CHECKLIST §F, TODO.
+  `P3-TASHIH-ZAKAT.md` Â§D (md+html), SYARIAH-CHECKLIST Â§F, TODO.
 - **Catatan**: skema v18 add-ops -- DB turunan (Vercel Turso)
   butuh migration/PRAGMA saat cold start; jangan rewrite data.
 
@@ -3638,7 +3638,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
 - **Mapping akuntansi P4** (posisi fiqh terkuat, PROVISIONAL)
   ditambahkan ke `SYARIAH-CHECKLIST.md` (item P4) +
   `P4-PROPOSAL-KONSINYASI.html`: (a) barang supplier (pemilik
-  titipan) ≠ revenue Kopontren; (b) ujrah Kopontren = revenue --
+  titipan) â‰  revenue Kopontren; (b) ujrah Kopontren = revenue --
   V1 off-P&L (memo baris "Ujrah Konsinyasi"), dipindahkan ke
   pendapatan setelah tashih pengasuh; (c) hak supplier =
   settlement payable (tagihan neto komisi). Label: "Provisional --
@@ -3649,13 +3649,13 @@ tanpa kode, GO Gus Fi via DeepSeek)
 - **Status: SELESAI -- Commit 3 (26 Sep, dual-push origin master +
   master:main; 5 file: SYARIAH-CHECKLIST + P4 html/md + TODO +
   MEMORY).** Klarifikasi user 26 Sep: `P4-PROPOSAL-KONSINYASI.md`
-  (sumber md) KINI ikut di-update agar md ≡ html (divergence =
+  (sumber md) KINI ikut di-update agar md â‰¡ html (divergence =
   risiko audit).
 
-### UI/UX audit high-priority: perbaikan P1–P4 (26 Sep)
+### UI/UX audit high-priority: perbaikan P1â€“P4 (26 Sep)
 - **P1 font**: 'Plus Jakarta Sans' dideklarasikan di
   `tailwind.config.ts`/`globals.css` tapi TIDAK PERNAH di-load
-  (tanpa @import/fontsource) → app render pakai system font.
+  (tanpa @import/fontsource) â†’ app render pakai system font.
   Fix: `next/font/google` `Plus_Jakarta_Sans` di `src/app/layout.tsx`
   (self-hosted, `variable: '--font-jakarta'`, `display: 'swap'`) +
   `<html className={jakarta.variable}>`; `globals.css`
@@ -3667,51 +3667,51 @@ tanpa kode, GO Gus Fi via DeepSeek)
   fallback catch tetap dark. `globals.css`: `:root{color-scheme:
   light}` + `html.dark{color-scheme:dark}` (scrollbar/control browser
   ikut tema).
-- **P3 kontras WCAG AA**: `text-amber-600` → `text-amber-700` di
+- **P3 kontras WCAG AA**: `text-amber-600` â†’ `text-amber-700` di
   20 tempat/11 file (dashboard, banner POS, badge, kartu
   hutang/piutang, migrate, zakat, laporan, `admin/data`,
   member-qr; tone Badge `amber` di `ui.tsx` ikut); pair
-  `text-slate-500 dark:text-slate-500` → `text-slate-600
+  `text-slate-500 dark:text-slate-500` â†’ `text-slate-600
   dark:text-slate-400` di 26 tempat/9 file; label sumbu/legenda
-  chart & 'Memuat data…' PageSkeleton (ui.tsx) diperkuat serupa.
+  chart & 'Memuat dataâ€¦' PageSkeleton (ui.tsx) diperkuat serupa.
 - **P4 input & keseragaman**: keyboard numerik fisik di
-  `pin-pad.tsx` (angka 0–9 = digit, Backspace = hapus, Escape =
+  `pin-pad.tsx` (angka 0â€“9 = digit, Backspace = hapus, Escape =
   clear; guard: abaikan bila fokus di input/textarea/select; handler
   via ref agar listener satu-kali tetap fresh); target sentuh 44px --
-  hamburger sidebar mobile & notification bell `h-9 w-9`→`h-10 w-10`;
+  hamburger sidebar mobile & notification bell `h-9 w-9`â†’`h-10 w-10`;
   `tabular-nums` pada nilai kartu dashboard, blok totals/mix/
   close-shift POS, rata-rata chart; `role="alert"` pada paragraf
   error login + PIN auth + PIN setup; `prefers-reduced-motion` kini
   mematikan juga utilitas Tailwind (pulse/ping/bounce/spin);
-  `manifest.json` `background_color` → `#170A0E` (brand, bukan
+  `manifest.json` `background_color` â†’ `#170A0E` (brand, bukan
   putih).
 - **Verifikasi**: `next build` OK (52/52 static pages, type check
   lulus). Sisa audit yang TIDAK dikerjakan hari ini (prioritas
   lanjutan di TODO): rekap kasir `GET /` tanpa data (P1 fungsional)
   & label total belanja menipu di `belanja-client` -- masih open.
 
-### UX-6 FASE I: I-6 useConfirm risk levels L1–L5 (27 Sep, commit I-6)
+### UX-6 FASE I: I-6 useConfirm risk levels L1â€“L5 (27 Sep, commit I-6)
 - `useConfirm` ui.tsx kini menerima param `risk` (default 2):
-  L1 = tanpa modal (proceed langsung) · L2 = confirm biasa (15 situs
-  lama tak berubah, backward-compat) · L3 = tombol merah + box
-  "Dampak" (`impact[]`) · L4 = L3 + textarea alasan wajib (tombol
+  L1 = tanpa modal (proceed langsung) Â· L2 = confirm biasa (15 situs
+  lama tak berubah, backward-compat) Â· L3 = tombol merah + box
+  "Dampak" (`impact[]`) Â· L4 = L3 + textarea alasan wajib (tombol
   disabled sampai teks non-kosong setelah `trim()`; alasan
   diteruskan ke `proceed(info?.reason)` -- **V1: BELUM dikirim ke
   server; wire V2 = tambah param `reason` di DELETE `/api/audit`
-  + rekam ke audit log**) · L5 = L3 + kolom `typeToConfirm`
+  + rekam ke audit log**) Â· L5 = L3 + kolom `typeToConfirm`
   (ketik frasa persis, case-sensitive).
 - Heuristic lama `variant={confirmLabel==='Hapus'?'danger':'primary'}`
-  **PENSION** → `variant={risk>=3?'danger':'primary'}` (label
-  'Hapus' lama di produk L224/L452 = soft-archive → primary aman).
+  **PENSION** â†’ `variant={risk>=3?'danger':'primary'}` (label
+  'Hapus' lama di produk L224/L452 = soft-archive â†’ primary aman).
 - 3 situs: `/admin/kas` `removeEntry` (L3 + impact[2]),
   `/admin/audit` `purge` (L4 + alasan), `/admin/data` `resetAll`
   (L5 + ketik `RESET SEMUA DATA`). OOS: migrasi L1 utk aksi
   non-destruktif; `importJson` tetap L2.
-- Backfill hash: I-2 = `8d585f4` · I-5 = `99c973c` · I-6 = `4de83fd`
+- Backfill hash: I-2 = `8d585f4` Â· I-5 = `99c973c` Â· I-6 = `4de83fd`
   (report di seksi ini; backfill dilakukan di seksi I-8).
-- Pixel-check Gus (3 item): (1) kas → box rose "Dampak" + tombol
-  merah; (2) audit → textarea alasan, tombol disabled sampai diisi;
-  (3) data → harus ketik `RESET SEMUA DATA` persis.
+- Pixel-check Gus (3 item): (1) kas â†’ box rose "Dampak" + tombol
+  merah; (2) audit â†’ textarea alasan, tombol disabled sampai diisi;
+  (3) data â†’ harus ketik `RESET SEMUA DATA` persis.
 - Backfill hash I-6 (selesai di commit I-8 docs): I-6 = `4de83fd`.
 
 ### UX-6 FASE I: I-8 activity feed "Apa yang berubah" (27 Sep, commit I-8)
@@ -3756,8 +3756,8 @@ tanpa kode, GO Gus Fi via DeepSeek)
 - **API anyar `GET/POST /api/products/[id]/prices`** (Turbo/`db.ts`):
   GET = login (POS & admin baca); POST = admin/manajer (gate
   `canAccess(user,'products')`), semantik REPLACE dalam `tx()`
-  (Turso atomic batch, lokal sekuensial), validasi (min_qty int ≥ 1
-  ≤ 100000, discount 0–99, duplikat min_qty → diskon terbesar,
+  (Turso atomic batch, lokal sekuensial), validasi (min_qty int â‰¥ 1
+  â‰¤ 100000, discount 0â€“99, duplikat min_qty â†’ diskon terbesar,
   maks 20 tier), audit `product:wholesale` (before/after JSON),
   `invalidate('products:')`.
 - **`/api/products` (GET)**: kolom anyar `wholesale` (subquery
@@ -3767,13 +3767,13 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `idx_product_prices_product (product_id, min_qty)` di `db.ts`.
 - **POS (`pos-client.tsx`)**: `autoPrice(product, qty)` dari modul
   (tier produk + global); harga otomatis di `add`/`setQty`
-  (naik/kurang qty → recompute kecuali baris manual); `setPrice`
+  (naik/kurang qty â†’ recompute kecuali baris manual); `setPrice`
   (input "Ubah harga") set flag `manual` -- harga tidak di-restore;
-  baris dihapus/ditambah lagi → balik auto; effect recompute saat
+  baris dihapus/ditambah lagi â†’ balik auto; effect recompute saat
   `memberSettings` tiba (setting global bisa lambat dari produk).
   Badge: kartu grid "Grosir" (produk punya tier) + baris keranjang
-  "Grosir −X%" (harga otomatis) / "Harga manual" (kasir set).
-  Checkout payload `unit_price` tak berubah → struk & server tetap benar.
+  "Grosir âˆ’X%" (harga otomatis) / "Harga manual" (kasir set).
+  Checkout payload `unit_price` tak berubah â†’ struk & server tetap benar.
 - **Verifikasi**: `tsc --noEmit` 0 error; `next build` 0 (route
   `/api/products/[id]/prices` terdaftar); `npm run test:wholesale`
   (anyar) 38/38; regresi semua suite PASS (margin, split, phone,
@@ -3785,22 +3785,22 @@ tanpa kode, GO Gus Fi via DeepSeek)
 
  ### QrisClient: encoder QRIS + admin UI + monitor grosir v1 (25 Sep)
  - **QRIS (PLACEHOLDER pralayar, disetujui user):** NMID provider belum
-   turun → fitur dibangun offline-first. `src/lib/qris.ts` = modul MURNI
+   turun â†’ fitur dibangun offline-first. `src/lib/qris.ts` = modul MURNI
    (TLV + CRC16-CCITT, tanpa DB/DOM/Node API; deterministik):
    `buildQris/buildQrisStatic/buildQrisDynamic/crc16Ccitt/parseQrisTlv`.
    Standar QRIS-BI: PFI 0111 statis / 0112 dinamis (+tag 54), tag
    29 'ID' + 30 NMID + 31 NMID2?, 52 MCC?, 53 '360', 58 'ID', 59 nama,
    60 kota?, 62 '1', 63 CRC (CCITT-FALSE 0xFFFF; check value publik
-   "123456789"→29B1). UI `/admin/qris` (isManager, sidebar item "QRIS"
+   "123456789"â†’29B1). UI `/admin/qris` (isManager, sidebar item "QRIS"
    antaraman "Kas" & "Shift & Kasir"): form NMID/NMID2/MCC/kota +
    preview QR statis 1024px (`qrcode` `toDataURL` client-side) +
    download PNG + copy payload + state "QRIS OFFLINE" bila NMID kosong;
    nama merchant = `store_name` (bukan key tersendiri). Settings key
    `qris_nmid/qris_nmid2/qris_mcc/qris_city` (default kosong di
    `SHOP_SETTING_DEFAULTS`; saveSettings hanya menulis key yang ada di
-   defaults → WAJIB ada di situ; audit otomatis via `saveSettings`).
-   PUT `/api/settings` validasi: nmid/nmid2 ≤32, mcc 4 digit|'', kota
-   ≤30. POS mock barcode (`pos-client.tsx` L2086-2121) TIDAK disentuh
+   defaults â†’ WAJIB ada di situ; audit otomatis via `saveSettings`).
+   PUT `/api/settings` validasi: nmid/nmid2 â‰¤32, mcc 4 digit|'', kota
+   â‰¤30. POS mock barcode (`pos-client.tsx` L2086-2121) TIDAK disentuh
    (batch #5 scope). Test `npm run test:qris` 28/28.
  - **Monitor grosir v1 `scripts/zz-grosir-monitor.mjs`** (ops, disetujui):
    READ-ONLY. Dua mode koneksi: Turso **raw HTTP** (pola
@@ -3809,35 +3809,35 @@ tanpa kode, GO Gus Fi via DeepSeek)
    lokal). Cek: row grosir 7 hari via `effectiveWholesalePrice`
    DIIMPORT dari `src/lib/wholesale.ts` (satu sumber rumus; harga
    manual kasir diflag INFO sesuai aturan 3), margin per baris
-   (omzet−HPP−komisi konsinyasi), konsinyasi via
+   (omzetâˆ’HPPâˆ’komisi konsinyasi), konsinyasi via
    `sales.konsinyasi/konsinyasi_commission`, audit log 7d, probe
    HTTP 5xx `APP_URL` (default
    `https://kopontren-hijrah.vercel.app`, `APP_URL=off` utk skip;
    200/401/403 = sehat). Exit 1 bila 5xx / baris rugi / DB tak
    terjangkau. Fallback skema lama (tanpa kolom P4) otomatis.
-   Uji live 25 Sep: 5 route produksi bebas 5xx ✅, 0 baris rugi.
+   Uji live 25 Sep: 5 route produksi bebas 5xx âœ…, 0 baris rugi.
 
 ### KONSINYASI: fix 2 bug + UX perjelas form (25 Sep) -- DUAL-PUSH dbc5d45
-- **Bug 2 (kritis) -- tombol "Terima Konsinyasi" → error "Aksi tidak dikenal"**
+- **Bug 2 (kritis) -- tombol "Terima Konsinyasi" â†’ error "Aksi tidak dikenal"**
   (regresi P4-B `0e34c45`): `create()` di `konsinyasi-client.tsx` tidak pernah
   mengirim field `action` ke `POST /api/konsinyasi`, sedangkan server P4-B
-  switch-case pada `b.action` → default = 400. Skenario nyata = klien PWA
+  switch-case pada `b.action` â†’ default = 400. Skenario nyata = klien PWA
   ber-cache LAMA (pre-P4-B) bertemu server P4-B. Fix commit `e027596`:
   client kirim `action: 'create'` eksplisit (+ validasi harga), dan server
   toleran `if (!b.action) b.action = 'create'` (defense-in-depth; semua
   aksi selain create TETAP wajib mengirim `action`).
 - **Bug 1 -- kolom "Rp / unit (harga perjanjian)" 0 nyangkut**: default
-  `agree_price: 0` (number) → klik/ketik tak mengilangkan 0. Fix `e027596`:
+  `agree_price: 0` (number) â†’ klik/ketik tak mengilangkan 0. Fix `e027596`:
   default `'' as string | number` + `placeholder="0"` + onChange raw-string
   + konversi `Number()` saat submit (kosong = 0 = valid).
-- **UX Perjelas (`dbc5d45`, 1 file +208/−115):** card panduan "Cara Kerja
+- **UX Perjelas (`dbc5d45`, 1 file +208/âˆ’115):** card panduan "Cara Kerja
   Konsinyasi" (4 langkah + contoh Rp 100.000 komisi 20% = toko Rp 20.000 /
-  pemilik Rp 80.000); form re-layout step 1·Pemilik / 2·Barang / 3·Harga &
+  pemilik Rp 80.000); form re-layout step 1Â·Pemilik / 2Â·Barang / 3Â·Harga &
   Komisi + hint sederhana tiap field; kotak "Perhitungan otomatis (per unit)"
   LIVE via `splitConsignment` (rumus PERSIS server: floor komisi, pemilik =
-  harga − komisi; + baris total qty); card "Rate per-pemilik" → "Komisi
+  harga âˆ’ komisi; + baris total qty); card "Rate per-pemilik" â†’ "Komisi
   Khusus Pemilik" (label "Komisi tersimpan:"); istilah teknis dihapus dari UI
-  ("Pre-fill", "Rate", "Ujrah" → "Komisi otomatis terisi", "Komisi",
+  ("Pre-fill", "Rate", "Ujrah" â†’ "Komisi otomatis terisi", "Komisi",
   "Pendapatan toko"); paragrah syariah disederhanakan tanpa membuang inti
   (disepakati saat titipan, tercatat otomatis saat terjual, tidak di muka,
   titipan berjalan tak bisa diubah sepihak).
@@ -3847,110 +3847,110 @@ tanpa kode, GO Gus Fi via DeepSeek)
   push `main` pertama REJECTED (local `main` masih `13945f4`/v16,
   origin/main = `d461ef5`; di-fix via `git branch -f main origin/main`
   + `git push origin master:main`).
-- MANUAL QA tunggun user (HP): klik kolom harga → 0 hilang (placeholder),
-  langsung ketik; "Terima Konsinyasi" → toast "Konsinyasi diterima &
+- MANUAL QA tunggun user (HP): klik kolom harga â†’ 0 hilang (placeholder),
+  langsung ketik; "Terima Konsinyasi" â†’ toast "Konsinyasi diterima &
   tercatat"; kolom komisi auto-terisi saat nama pemilik cocok.
 
 ### PWA: notifikasi update -- banner "Versi anyar tersedia" (25 Sep)
 - **Audit awal:** `public/sw.js` sudah `skipWaiting()` (install) +
-  `clients.claim()` (activate) + marker SW-BUILD per build ✅; yang
+  `clients.claim()` (activate) + marker SW-BUILD per build âœ…; yang
   KURANG: tidak ada listener `message` SKIP_WAITING, dan
-  `sw-register.tsx` tidak mendeteksi `updatefound` → user tak pernah
+  `sw-register.tsx` tidak mendeteksi `updatefound` â†’ user tak pernah
   tahu ada versi baru (SW baru aktif di navigasi berikutnya saja).
 - **Implementasi (2 file):**
-  1. `sw.js`: `self.addEventListener('message', …)` →
-     `SKIP_WAITING` → `skipWaiting()` (eksplisit, untuk tombol Perbarui).
+  1. `sw.js`: `self.addEventListener('message', â€¦)` â†’
+     `SKIP_WAITING` â†’ `skipWaiting()` (eksplisit, untuk tombol Perbarui).
   2. `sw-register.tsx`: state `updateAvailable` -- listener
-     `updatefound` → `reg.installing` `statechange` → bila `installed`
-     DAN halaman masih punya `controller` → banner; + race-check
+     `updatefound` â†’ `reg.installing` `statechange` â†’ bila `installed`
+     DAN halaman masih punya `controller` â†’ banner; + race-check
      (`reg.installing !== reg.active` saat register). Banner kuning
      bawah layar (fixed, z-50, 44px, print:hidden):
-     - **"Perbarui"** → postMessage SKIP_WAITING → tunggu
-       `controllerchange` → `location.reload()`; fallback `setTimeout`
+     - **"Perbarui"** â†’ postMessage SKIP_WAITING â†’ tunggu
+       `controllerchange` â†’ `location.reload()`; fallback `setTimeout`
        2 detik bila event tak fire; guard double-reload.
-     - **"Nanti"** → `sessionStorage['kopontren_sw_update_dismissed']`
-       → banner lenyap utk sesi tab ini; muncul lagi saat aplikasi
+     - **"Nanti"** â†’ `sessionStorage['kopontren_sw_update_dismissed']`
+       â†’ banner lenyap utk sesi tab ini; muncul lagi saat aplikasi
        ditutup & dibuka ulang (load baru).
   Desain: TIDAK ada auto-reload (kasir boleh tetap mengetik; SW baru
   otomatis ambil alih di navigasi berikutnya via claim-on-activate).
 - Verifikasi: `node --check sw.js` OK; `tsc --noEmit` exit 0;
   `next build` EXIT 0 (51/51 halaman); regresi 6 suite 0 gagal
   (margin 57, split 15, phone 26, konsinyasi 47, neraca 33, points 27).
-- Manual QA tunggun user di HP: deploy → tutup paksa PWA → buka lagi →
-  banner "🆕 Versi anyar tersedia" → tap "Perbarui" → reload versi baru;
-  atau "Nanti" → lenyap; tutup PWA → buka → banner muncul lagi.
+- Manual QA tunggun user di HP: deploy â†’ tutup paksa PWA â†’ buka lagi â†’
+  banner "ðŸ†• Versi anyar tersedia" â†’ tap "Perbarui" â†’ reload versi baru;
+  atau "Nanti" â†’ lenyap; tutup PWA â†’ buka â†’ banner muncul lagi.
 
-### KEPUTUSAN FINAL P3+P4 → GUS FI · A3 LIVE · v16 MENUNGGU DEPLOY VERCEL
+### KEPUTUSAN FINAL P3+P4 â†’ GUS FI Â· A3 LIVE Â· v16 MENUNGGU DEPLOY VERCEL
 - **P3 (tashih zakat) + P4 (proposal konsinyasi)**: keputusan user/Gus Fi (25 Sep) --
-  dikirimkan sendiri oleh Gus Fi (P3 → ke ulama, P4 → ke pengurus); Cline standby
+  dikirimkan sendiri oleh Gus Fi (P3 â†’ ke ulama, P4 â†’ ke pengurus); Cline standby
   sampai ada hasilnya. Cline tidak perlu action apa pun.
 - **A3 (Neraca) KONFIRMASI LIVE di Vercel:**
-  - `/api/neraca` (produksi) → 401 "Belum login" = endpoint ADA (build pr-A3 = 404);
-    middleware sengaja lewati `/api/*` → 401 datang dari handler route sendiri.
+  - `/api/neraca` (produksi) â†’ 401 "Belum login" = endpoint ADA (build pr-A3 = 404);
+    middleware sengaja lewati `/api/*` â†’ 401 datang dari handler route sendiri.
   - Marker sw.js produksi kini `3f017aa7ef77` -- ubah dari `4c31dc0c5819`
-    (ikon fix `7e6cb37`) → build ter-deploy memuat A3 `15266cd`.
-  - Konfirmasi visual tab "Neraca" di PWA = bagian user-test ② (HP).
-- **v16 `13945f4` (SCHEMA_VERSION 15→16 + retry UI konsinyasi) BELUM live di Vercel**:
+    (ikon fix `7e6cb37`) â†’ build ter-deploy memuat A3 `15266cd`.
+  - Konfirmasi visual tab "Neraca" di PWA = bagian user-test â‘¡ (HP).
+- **v16 `13945f4` (SCHEMA_VERSION 15â†’16 + retry UI konsinyasi) BELUM live di Vercel**:
   push dual-branch terverifikasi (`main` = `master` = `13945f4`; git lokal bersih,
-  hanya 3 CSV user untracked = material item ④), tapi marker sw.js produksi masih
-  `3f017aa7ef77` (build A3) → build Vercel utk `13945f4` belum sampai production.
+  hanya 3 CSV user untracked = material item â‘£), tapi marker sw.js produksi masih
+  `3f017aa7ef77` (build A3) â†’ build Vercel utk `13945f4` belum sampai production.
   CATATAN TEKNIS: marker Vercel di-stamp acak per build (`inject-sw-version.mjs`
   fallback randomBytes di env fresh -- seed BUILD_ID baru dibuat `next build`
-  setelah inject) → canary-nya "marker ≠ `3f017aa7ef77`", BUKAN hex tertentu.
-  Tak ada Vercel CLI/token lokal → user cek dashboard (project kopontren →
-  Deployments: cari `13945f4`; status Build failed/queued → baca log).
+  setelah inject) â†’ canary-nya "marker â‰  `3f017aa7ef77`", BUKAN hex tertentu.
+  Tak ada Vercel CLI/token lokal â†’ user cek dashboard (project kopontren â†’
+  Deployments: cari `13945f4`; status Build failed/queued â†’ baca log).
 - **KABAR (25 Sep, screenshot user): v16 `13945f4` WIS LIVE di Vercel**
   (deployments: Ready + Production, branch `main` & `master`). Form konsinyasi
   nang HP: kolom Komisi Toko (%) muncul (P4-B live); statistik 0/0/0 render
-  normal → `/api/konsinyasi` produksi OK → migrasi Turso v16 wis keeksekusi
+  normal â†’ `/api/konsinyasi` produksi OK â†’ migrasi Turso v16 wis keeksekusi
   (kolom `commission_rate` kedherek; menawi gagal kudu 500 "no such column"
   + tombol "Coba lagi").
 - **Anomali sw.js (pentang kanggo canary):** probe langsung produksi
-  `/sw.js` (curl, 25 Sep) → header `age: 37220` (≈10,3 jam, pr-v16) +
-  `cache-control: public, max-age=0, must-revalidate` → edge Vercel isih
+  `/sw.js` (curl, 25 Sep) â†’ header `age: 37220` (â‰ˆ10,3 jam, pr-v16) +
+  `cache-control: public, max-age=0, must-revalidate` â†’ edge Vercel isih
   nyebar sw.js basi (marker isih `3f017aa7ef77`). Marker git v16 =
   `67561e9c440e` (owah saka `05c129e243ec` commit 13945f4); nilai riil
   build Vercel = stamp random anyar (inject-sw-version). Dadi canary
-  "marker ≠ `3f017aa7ef77`" kudu ditindak sawise edge re-validate /
+  "marker â‰  `3f017aa7ef77`" kudu ditindak sawise edge re-validate /
   deploy sabanjane -- PWA HP entuk SW anyar nalika muat maneh. Mboten
   blocker; kode app v16 wis live (runtime serverless tiasa stale-cache).
 
 - **Checklist pasca-deploy v16 (user)**:
   1. Reload PWA di HP (SW update -- marker baru)
-  2. Buka /admin/konsinyasi → request AUTH pisanan memicu migrasi Turso v16
-     sekali jalan (cold start ±15–20 s; request anonim ora njampuh DB)
-  3. Error transien → tombol "Coba lagi" (retry UI v16)
+  2. Buka /admin/konsinyasi â†’ request AUTH pisanan memicu migrasi Turso v16
+     sekali jalan (cold start Â±15â€“20 s; request anonim ora njampuh DB)
+  3. Error transien â†’ tombol "Coba lagi" (retry UI v16)
 - **Roadmap final (25 Sep):**
   - Engineering WIP = 0. "A4 (Jam Sibuk)" TIDAK ada di roadmap -- "A4" = Top
-    produk (✅ sudah bangun); bagian "Jam Sibuk" tak pernah dipplanning (0 hit
+    produk (âœ… sudah bangun); bagian "Jam Sibuk" tak pernah dipplanning (0 hit
     kode/docs; dikonfirmasi 24 Sep).
-  - TUNDA (keputusan user): QRIS asli (NMID) · grosir · `point_history`
+  - TUNDA (keputusan user): QRIS asli (NMID) Â· grosir Â· `point_history`
     (redemsi poin).
-  - `[r]` risiko rendah diterima: throttle XFF per-instance · PII GET
-    `/api/audit` · `cash_low` monitoring · validasi `pay_split` import backup
-    (TER-KUNCI 25 Sep: `normalizeSaleImport` + test:split) · ZAKAT known
-    issues ±7 jam UTC (boundary laba + CSV riwayat DIFIX 25 Sep; sisa
+  - `[r]` risiko rendah diterima: throttle XFF per-instance Â· PII GET
+    `/api/audit` Â· `cash_low` monitoring Â· validasi `pay_split` import backup
+    (TER-KUNCI 25 Sep: `normalizeSaleImport` + test:split) Â· ZAKAT known
+    issues Â±7 jam UTC (boundary laba + CSV riwayat DIFIX 25 Sep; sisa
     `reports/csv` timestamp kosmetik).
   - P5 (denda) = di luar cakupan (tak pernah diimplementasi; tak perlu dibangun).
-  - Sisa non-engineering: ② uji manual HP · ③ checklist /admin/zakat ·
-    ④ upload CSV ke Turso · P3/P4 (Gus Fi).
-  - ① test ikon PWA Edge sudah LULUS 24 Sep.
+  - Sisa non-engineering: â‘¡ uji manual HP Â· â‘¢ checklist /admin/zakat Â·
+    â‘£ upload CSV ke Turso Â· P3/P4 (Gus Fi).
+  - â‘  test ikon PWA Edge sudah LULUS 24 Sep.
 
 ## 2026-09-25
 ### Batch integrity #1 + #3 (25 Sep, ACC Gus Fi)
 - **#1 validasi pay_split import backup** -- audit nembokake logika wis
   ana (Batch F, inline `backup/route.ts`); diekstrak dadi helper murni
   `normalizeSaleImport` (`src/lib/pay-methods.ts`, semantik identik:
-  JSON well-formed + whitelist `cash/tf/wa` + Σ===total → simpan;
-  mung → null legacy; `amount_paid` ≥ total; `change` cash mung).
+  JSON well-formed + whitelist `cash/tf/wa` + Î£===total â†’ simpan;
+  mung â†’ null legacy; `amount_paid` â‰¥ total; `change` cash mung).
   Lock: `test:split` **22 checks** (7 anyar).
-- **#3 zakat WIB (±7 jam)** -- bug: `created_at >= 'YYYY-MM-DD'` (tgl
-  WIB) vs ISO-UTC → periode miwiti 07:00 WIB. FIX: modul murni
+- **#3 zakat WIB (Â±7 jam)** -- bug: `created_at >= 'YYYY-MM-DD'` (tgl
+  WIB) vs ISO-UTC â†’ periode miwiti 07:00 WIB. FIX: modul murni
   `src/lib/zakat-period.ts` (`wibDayStartUtc`, `currentWibMonthDate`,
   `wibToday`, `isoToWib`); `/api/zakat` query laba+COGS pake
   `wibDayStartUtc(period_start)`; CSV riwayat kolom `paid_at (WIB)` +
   nama file `wibToday()`. Lock: `test:zakat` **18 checks** (anyar).
-- TSC exit 0 · build OK · `npm run test:split` + `test:zakat` ALL_PASS.
+- TSC exit 0 Â· build OK Â· `npm run test:split` + `test:zakat` ALL_PASS.
   Sisa (low): timestamp export `reports/csv` isih UTC (kosmetik).
 
 ## 2026-09-24
@@ -3964,25 +3964,25 @@ tanpa kode, GO Gus Fi via DeepSeek)
 - **Koreksi hash:** commit sebenarnya = `9dbc22c` (laporan user
   menulis `8cedb6b` -- hasil git log/ls-remote = `9dbc22c`).
 - **Sinkronisasi main (temuan saat konfirmasi):** `origin/main`
-  masih `0e34c45` (tertinggal), `origin/master` = `9dbc22c` →
-  dual-push `git push origin master:main` → kini `origin/main` =
+  masih `0e34c45` (tertinggal), `origin/master` = `9dbc22c` â†’
+  dual-push `git push origin master:main` â†’ kini `origin/main` =
   `origin/master` = `9dbc22c`. Vercel (build saka `main`) kini
   deploy seluruh seri 24 Sep (P4-A/B + P3 + terminologi + 24K +
   dokumen).
-- Keputusan Gus Fi: P3 → kirim ulama (tashih zakat); P4 → kirim
+- Keputusan Gus Fi: P3 â†’ kirim ulama (tashih zakat); P4 â†’ kirim
   pengurus (keputusan konsinyasi); update setelah keputusan.
 - Sisa item tersusun: tashih P3 (3 pertanyaan: haul, verifikasi
-  harga emas 24K, modal HPP vs pasar) · keputusan P4 pengurus +
-  tashih ulama basis ujrah V1 · user-test ② uji manual pasca-deploy
-  nang HP · ③ checklist /admin/zakat 10 item (TODO L259–268; item 9
-  = sub-test "Bug #1 (A1–A5)") · ④ upload CSV ke Turso sendiri ·
-  [r] risiko rendah diterima (termasuk `cash_low` monitoring) ·
-  TUNDA: QRIS (NMID) · grosir · point_history.
+  harga emas 24K, modal HPP vs pasar) Â· keputusan P4 pengurus +
+  tashih ulama basis ujrah V1 Â· user-test â‘¡ uji manual pasca-deploy
+  nang HP Â· â‘¢ checklist /admin/zakat 10 item (TODO L259â€“268; item 9
+  = sub-test "Bug #1 (A1â€“A5)") Â· â‘£ upload CSV ke Turso sendiri Â·
+  [r] risiko rendah diterima (termasuk `cash_low` monitoring) Â·
+  TUNDA: QRIS (NMID) Â· grosir Â· point_history.
 ### KONFIRMASI FINAL GUS FI + CHECK A2/A3/A4 (24 Sep, pasca P4-B)
-- P4-B `0e34c45` KONFIRMASI OK: 8 file +360/−36; tsc 0, build 0,
+- P4-B `0e34c45` KONFIRMASI OK: 8 file +360/âˆ’36; tsc 0, build 0,
   `test:konsinyasi` 47/47, regresi `test:margin` 57/57 +
-  `test:split` ALL_PASS. Chain lengkap: P4-A `4f12818` → P4-B
-  `0e34c45` → P3 `9dbc22c` → docs `d1c0c7e`/`6c6ab64` (main=master).
+  `test:split` ALL_PASS. Chain lengkap: P4-A `4f12818` â†’ P4-B
+  `0e34c45` â†’ P3 `9dbc22c` â†’ docs `d1c0c7e`/`6c6ab64` (main=master).
 - **Check "sisa A2/A3/A4?" -- JAWABAN BUKTI KODE:**
   - A2 (Arus Kas) = **SUDAH BANGUN**: `/admin/kas` (jurnal + auto),
     dashboard admin "Arus Kas 7 Hari", WA push pengurus "Arus Kas
@@ -3993,15 +3993,15 @@ tanpa kode, GO Gus Fi via DeepSeek)
     `laporan-admin-client.tsx`.
   - A3 (Neraca) + A4 bagian "Jam Sibuk" = **TAK PERNAH
     DIPLANNING** (0 hit di TODO/MEMORY/SYARIAH-CHECKLIST + kode)
-    → bukan sisa WIP; hanya request baru kalo Gus Fi mau.
+    â†’ bukan sisa WIP; hanya request baru kalo Gus Fi mau.
   - A1 (P&L Laba-Rugi) = SELESAI `0564e71` (MEMORY L1159).
-- **① Test ikon PWA Edge = LULUS 24 Sep** (TODO L603) → sisa
-  user-test tinggal ② HP + ③ checklist zakat + ④ upload CSV.
+- **â‘  Test ikon PWA Edge = LULUS 24 Sep** (TODO L603) â†’ sisa
+  user-test tinggal â‘¡ HP + â‘¢ checklist zakat + â‘£ upload CSV.
 - **0 WIP engineering**: working tree bersih utk kode/docs; sisa
   hanya ` M public/sw.js` (artefak lokal -- JANGAN commit, policy
   PWA; Vercel stamp sendiri) + 3 CSV user untracked
   (`_products_update.csv`, `stok-export-20260923.csv`,
-  `stok-import-admin-20260923.csv`) = material item ④.
+  `stok-import-admin-20260923.csv`) = material item â‘£.
 ### P4 Konsinyasi + komisi store / akad WAKALAH BIL UJRAH (24 Sep, FASE P4)
 - Keputusan pengurus: komisi toko 20% dr harga jual. Akad
   **wakalah bil ujrah** (koreksi 24 Sep dsr riset Syafi'i + Bahtsul
@@ -4009,7 +4009,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   pemilik, upah TIDAK di muka, hanya terhitung saat barang terjual;
   barang dikembalikan (ora payu) tanpa komisi; pemilik dapat 80%.
   (Awalnya tertulis "ju'alah" -- dsr Syafi'i, bentuk "laku = beli,
-  tidak laku = kembali" = gharar → BUKAN ju'alah; mekanik tidak
+  tidak laku = kembali" = gharar â†’ BUKAN ju'alah; mekanik tidak
   berubah.)
 - Setting baru `konsinyasi_commission` (SHOP_SETTING_DEFAULTS, default
   '20', admin bisa ubah 0-100 via PUT /api/settings).
@@ -4023,20 +4023,20 @@ tanpa kode, GO Gus Fi via DeepSeek)
   + aksi save/delete_owner_rate di /admin/konsinyasi, audit log).
   Prioritas rate titipan baru: input eksplisit > per-pemilik > global.
   Titipan aktif TIDAK bisa diubah rate-nya oleh app (snapshot --
-  tanpa perubahan sepihak; utk ubah: tutup → titip ulang, musyawarah).
+  tanpa perubahan sepihak; utk ubah: tutup â†’ titip ulang, musyawarah).
   Helper `resolveCommissionRate`/`parseOwnerRates` (lib/konsinyasi.ts,
   tanpa dependensi); audit create + `commission_source`.
 - `src/lib/konsinyasi.ts` (helper murni): `clampRate` + `splitConsignment`
   (komisi floor per unit; pemilik + komisi = harga persis, tanpa pecahan).
 - `/api/konsinyasi`: tagihan pemilik NETO komisi; action `sell` mencatat
-  OTOMATIS kas masuk `Ujrah Kon. <pemilik> - <barang>` = qty × komisi
+  OTOMATIS kas masuk `Ujrah Kon. <pemilik> - <barang>` = qty Ã— komisi
   unit (hanya jika >0) + invalidate kas/reports.
 - Laporan: memo P&L V1 baris baru `Ujrah Konsinyasi` (keuangan.ts,
   UI P&L, WA rekap, CSV). Catatan V1 baru: JANGAN catat manual --
   otomatis, anti dobel hitung.
 - Backup: kolom `commission_rate` ikut export/restore (backup lama
-  tanpa key → 20).
-- UI konsinyasi: badge "Komisi toko X% · Ujrah Rp …", "Tagihan pemilik",
+  tanpa key â†’ 20).
+- UI konsinyasi: badge "Komisi toko X% Â· Ujrah Rp â€¦", "Tagihan pemilik",
   hint akad wakalah bil ujrah dr `commission_rate_default`.
 - Verifikasi: `tsc --noEmit` exit 0; `test:konsinyasi` 47/47
   (P4-B: parseOwnerRates + resolveCommissionRate); `test:margin`
@@ -4044,18 +4044,18 @@ tanpa kode, GO Gus Fi via DeepSeek)
   sukses.
 - Dokumen `P4-PROPOSAL-KONSINYASI.md` (24 Sep): proposal pengurus --
   tabel opsi deliberasi + permohonan keputusan + risiko/penahan.
-  Status: menunggu approval pengurus; tashih sisa → ulama.
+  Status: menunggu approval pengurus; tashih sisa â†’ ulama.
 - TASHIH tersisa utk ulama (BASIS UJRAH -- hasil riset 24 Sep): V1 =
-  % harga PERJANJIAN (ma'lum → SESUAI Syafi'i); harga jual aktual =
+  % harga PERJANJIAN (ma'lum â†’ SESUAI Syafi'i); harga jual aktual =
   gharar dlm Syafi'i klasik (DSN-MUI No. 112/DSN-MUI/IX/2017
   membolehkan persentase asal disepakati & diketahui; alternatif:
   ujrah mitsli). V1: komisi dr harga perjanjian -- konsisten, harga
   jual tidak direkam terpisah; off-sales.
 ### P4-Tashih + P3 Zakat (riset Syafi'i & Bahtsul Masail, 24 Sep 2026)
-- **Koreksi akad konsinyasi: ju'alah → WAKALAH BIL UJRAH** -- dsr
+- **Koreksi akad konsinyasi: ju'alah â†’ WAKALAH BIL UJRAH** -- dsr
   madzhab Syafi'i, bentuk "barang laku = dibeli, tidak laku =
   kembali" = gharar (Ibnu Qudamah al-Mughni; Syekh Ibnu Utsaimin)
-  → akad yang tepat: pemilik (muwakkil) memberi kuasa ke toko
+  â†’ akad yang tepat: pemilik (muwakkil) memberi kuasa ke toko
   (wakil) utk menjual + upah (ujrah). Ref. Fatwa DSN-MUI No.
   113/DSN-MUI/IX/2017. Mekanik & data TIDAK berubah; hanya
   terminologi UI/dokumen/komentar kode yang disetel.
@@ -4078,12 +4078,12 @@ tanpa kode, GO Gus Fi via DeepSeek)
 ### PWA icon-180 fix + exact-source headers (lanjutan 24 Sep)
 - **Akar masalah (final):** `public/icon-180.png` server-side KORUP
   (1,921 B, kotak putih + garis biru); ikon/logo/manifest
-  cache-first nang SW v11 + Windows icon-cache → .ico taskbar PWA
+  cache-first nang SW v11 + Windows icon-cache â†’ .ico taskbar PWA
   kothakan putih, stuck (PWA terinstall di periode rusak).
 - **`608074d` (master+main):** regen `public/icon-180.png`
-  (11,493 B = logo ✓ pixel-inspected sharp) + `?v=2` cache-busting
+  (11,493 B = logo âœ“ pixel-inspected sharp) + `?v=2` cache-busting
   (`manifest.json` + `apple-touch-icon` di `layout.tsx`) + aturan
-  cache ikon/logo/logo → `max-age=86400` (ora immutable global).
+  cache ikon/logo/logo â†’ `max-age=86400` (ora immutable global).
 - **`7e6cb37` (master+main):** aturan ikon/logo `next.config.mjs`
   diganti source EXACT (`/icon-180.png`, `/icon-192.png`,
   `/icon-512.png`, `/logo-kopontren.svg`, `/favicon.ico`,
@@ -4091,37 +4091,37 @@ tanpa kode, GO Gus Fi via DeepSeek)
   sing curiga bikin build Vercel stall/queue stuck.
 - **Verifikasi lokal:** `tsc --noEmit` exit 0 + `npm run build`
   EXIT 0 (48 page) ngemuhi config anyar (Register-ScheduledTask +
-  `.build-out4.txt` = `BUILD_EXIT=0`). stamp sw.js lokál
+  `.build-out4.txt` = `BUILD_EXIT=0`). stamp sw.js lokÃ¡l
   `c0aac38143af` = artefak build, JANGAN commit.
 - **Cutover Vercel LIVE (~14:30 24 Sep):** sw.js
-  `SW-BUILD 4c31dc0c5819`; `icon-180.png` live = 11,493 B ✓;
-  `manifest.json` live `?v=2` ✓; ikon/logo/favicon CC =
-  `public, max-age=86400` ✓; `/sw.js` = `max-age=0,
-  must-revalidate`; `/_next/static/*` tetep `immutable` ✓.
+  `SW-BUILD 4c31dc0c5819`; `icon-180.png` live = 11,493 B âœ“;
+  `manifest.json` live `?v=2` âœ“; ikon/logo/favicon CC =
+  `public, max-age=86400` âœ“; `/sw.js` = `max-age=0,
+  must-revalidate`; `/_next/static/*` tetep `immutable` âœ“.
 - **Test user "Nuclear Reset" LULUS (24 Sep):** uninstall PWA +
   hapus folder Edge (`Chrome (PWA)`/`Default\Service Worker`/
-  `Cache`/`Code Cache`) + `iconcache*.db`/`thumbcache*.db` →
-  `ie4uinit.exe -show` → reboot → clear browsing "All time" →
-  install maneh → **logo taskbar KATON ✓ + Start menu KATON ✓ +
-  PWA fungsional ✓**. Item PWA/Favicon TUTUP -- 0 engineering.
+  `Cache`/`Code Cache`) + `iconcache*.db`/`thumbcache*.db` â†’
+  `ie4uinit.exe -show` â†’ reboot â†’ clear browsing "All time" â†’
+  install maneh â†’ **logo taskbar KATON âœ“ + Start menu KATON âœ“ +
+  PWA fungsional âœ“**. Item PWA/Favicon TUTUP -- 0 engineering.
 - **Prosedur "nuclear reset" kanggo user (UDH LULUS -- saka
   reference bilangan kali balik gagal):**
-  ① Uninstall PWA (klik kanan shortcut taskbar/Start → Uninstall)
-  ② Tutup Edge total → hapus `%LOCALAPPDATA%\Microsoft\Edge\User
+  â‘  Uninstall PWA (klik kanan shortcut taskbar/Start â†’ Uninstall)
+  â‘¡ Tutup Edge total â†’ hapus `%LOCALAPPDATA%\Microsoft\Edge\User
      Data\Chrome (PWA)` + `Default\Service Worker` + `Default\Cache`
      + `Default\Code Cache` + `%LOCALAPPDATA%\Microsoft\Windows\
-     Explorer\iconcache*.db` & `thumbcache*.db` → `ie4uinit.exe
-     -show` → reboot
-  ③ Edge → Clear browsing data "All time" (cached images + site
+     Explorer\iconcache*.db` & `thumbcache*.db` â†’ `ie4uinit.exe
+     -show` â†’ reboot
+  â‘¢ Edge â†’ Clear browsing data "All time" (cached images + site
      data/service workers)
-  ④ Install PWA maneh → ikon taskbar/Start menu = logo (detail
-     kelèk: TODO.md seksi "PWA / Favicon").
+  â‘£ Install PWA maneh â†’ ikon taskbar/Start menu = logo (detail
+     kelÃ¨k: TODO.md seksi "PWA / Favicon").
 ### Cleanup file scratch root (24 Sep, commit `ba5f272`)
 - 113 file scratch dihapus nang root (SEMUA untracked/gitignored --
   aman, tak anatracked yg kena): `.audit-*.txt` (17),
   `.build-*.txt`+`.tsc-*.txt` (7), `_*.txt`/`_*.log`/`_*.json`
   (88), `*.log` top-level (6: swc, build_utf8, build-check,
-  build-payables, rebuild_bs, server2.err). Root: 119 → 24 file.
+  build-payables, rebuild_bs, server2.err). Root: 119 â†’ 24 file.
 - 6 `.mjs` DIPINDAH ke `desktop-archive/` (gitignored, tetep
   available -- ora dihapus): `_txlib.mjs` + `_probe4.mjs`
   (bukti bug `tx()` -- sesuai komentar .gitignore "Bukti yg
@@ -4143,14 +4143,14 @@ tanpa kode, GO Gus Fi via DeepSeek)
 - **integrity (commit `1a07ed1`)**: `amount_paid`/`change` tak lagi
   dipercaya dari klien. POST /api/sales: `amount_paid = max(total,
   paid)` (partial paid tak mungkin lagi) + `change` di-recompute
-  server (cash = paid−total; tf/wa/split = 0). POST /api/backup
+  server (cash = paidâˆ’total; tf/wa/split = 0). POST /api/backup
   (import) dinormalkan identik (`paidNorm`/`changeNorm`) agar
   restore tak memvalidasikan kembali inkonsistensi. Alur
   offline-queue tak berubah -- clamp hanya di sisi penerima.
 - **tz WIB (commit `c392237`)**: boundary periode kini WIB (UTC+7),
   bukan tengah malam UTC: cutoff overdue `payables/route.ts`,
   `piutang-client` + `hutang-client` (baca timezone device),
-  `laporan-client`, `reports/csv` (`startOfDayJakarta` →
+  `laporan-client`, `reports/csv` (`startOfDayJakarta` â†’
   `T00:00:00+07:00`). Akar bug periode lama: regex server menolak
   tanggal ISO-UTC penuh, sehingga parameter periode terabaikan
   diam-diam & semua query tercap 365 hari.
@@ -4162,7 +4162,7 @@ tanpa kode, GO Gus Fi via DeepSeek)
   `c392237`). `public/sw.js` TIDAK ikut commit (aturan: Vercel
   stamp sendiri). Test PWA Edge taskbar masih **PENDING hasil**
   (lihat TODO seksi "PWA / Favicon").
-- **Catatan lingkungan dev (verified 24 Sep 2026, diuji 4×):**
+- **Catatan lingkungan dev (verified 24 Sep 2026, diuji 4Ã—):**
   - Proses panjang (mis. `npm run build`, `tsc`) **kudu** dijalankan via
     **`Register-ScheduledTask`** (trigger *Once* di now+2 detik,
     RunLevel Limited, `-ExecutionPolicy Bypass` di dalam action
@@ -4181,34 +4181,34 @@ tanpa kode, GO Gus Fi via DeepSeek)
     foreground akan timeout sebelum build selesai.
 - **FINAL (24 Sep 2026) -- konfirmasi 4 commit, engineering TUTUP 0 sisa.**
   Head `8ba2885` (`origin/master` = `origin/main`): `1a07ed1`
-  (integrity) · `c392237` (tz WIB) · `f6ccfbc` (docs Batch F) ·
-  `8ba2885` (docs lingkungan). FASE 2+3, Batch B–F: semua live.
-- **Sisa `[r]` risiko rendah (diterima, BUKAN bug -- TODO.md L98–232):**
+  (integrity) Â· `c392237` (tz WIB) Â· `f6ccfbc` (docs Batch F) Â·
+  `8ba2885` (docs lingkungan). FASE 2+3, Batch Bâ€“F: semua live.
+- **Sisa `[r]` risiko rendah (diterima, BUKAN bug -- TODO.md L98â€“232):**
   1. throttle login keyed `X-Forwarded-For` (per-instance, bisa
-     dirotasi) -- accepted; mitigasi PIN 3× salah → sesi dimusnahkan
+     dirotasi) -- accepted; mitigasi PIN 3Ã— salah â†’ sesi dimusnahkan
      + lock 5 mnt.
   2. GET `/api/audit` menampilkan `old_value/new_value` (termasuk
      PII member) ke tier pengurus -- sesuai desain role internal;
      tinjau bila perlu.
   3. `cash_low`: pemicu `notifyCashBalance()` hanya monitoring,
      tanpa aksi otomatis -- diterima.
-  4. Validasi `pay_split` saat IMPORT backup (🟠 review) --
+  4. Validasi `pay_split` saat IMPORT backup (ðŸŸ  review) --
      opsional; POST /api/sales kini sudah dinormalisasi (`1a07ed1`),
      import backup punya guard dasar.
   5. ZAKAT known issues (TODO L113): export CSV riwayat + boundary
      periode laba masih basis UTC (`created_at >= date-only`
-     leksikografis) → meleset ±7 jam; **`c392237` TIDAK menutup
+     leksikografis) â†’ meleset Â±7 jam; **`c392237` TIDAK menutup
      ini** (6 file: payables/reports-csv/2-client/laporan-client/
      format.ts saja). Sisa tracked [r].
 - **TUNDA (keputusan user, 3 fitur):** QRIS resmi (NMID belum
-  siap) · grosir/perks member · `point_history` (loyalty).
+  siap) Â· grosir/perks member Â· `point_history` (loyalty).
 - **User-test PENDING hasil (4):** (1) test ikon taskbar PWA di
-  Edge -- user handle 24 Sep: uninstall → clear site data → restart
-  Explorer → install ulang → cek logo; jika gagal → debug sesuai
-  TODO L333–343 (`chrome://serviceworker-internals`,
+  Edge -- user handle 24 Sep: uninstall â†’ clear site data â†’ restart
+  Explorer â†’ install ulang â†’ cek logo; jika gagal â†’ debug sesuai
+  TODO L333â€“343 (`chrome://serviceworker-internals`,
   `chrome://components`, flag `edge-automatic-https-encryption-
   disabled`). (2) uji manual pasca-deploy nang HP (22 Sep).
-  (3) checklist `/admin/zakat` 10 item (TODO L259–268).
+  (3) checklist `/admin/zakat` 10 item (TODO L259â€“268).
   (4) upload CSV ke Turso sendiri.
 
 ## 2026-09-23
@@ -4219,18 +4219,18 @@ tanpa kode, GO Gus Fi via DeepSeek)
   4 grup: admin/belanja-client (in/out L107), admin/data-client
   (backup/audit L160), admin/konsinyasi-client (active/done L333),
   POS kategori (tablist L1154 + pill `role="tab"`/`aria-selected`,
-  getKey i→i===0?'':categories[i-1]). tsc EXIT 0, next build EXIT 0
+  getKey iâ†’i===0?'':categories[i-1]). tsc EXIT 0, next build EXIT 0
   (compile 4.8 s, Overall passed, route /admin/* ter-build).
-- TODO L204: item audit a11y UI lama (Modal ✕/ESC/focus-trap,
+- TODO L204: item audit a11y UI lama (Modal âœ•/ESC/focus-trap,
   skeleton kontras, panel hotkey, Toast aria-live) ditandai [x] --
-  sudah live @ `c364b2c` (+ batch 5 hotkey POS F6–F9 & cheatsheet `?`),
+  sudah live @ `c364b2c` (+ batch 5 hotkey POS F6â€“F9 & cheatsheet `?`),
   diverifikasi 23 Sep: grep 0 sisa + `git merge-base --is-ancestor`.
-- ⚠️ TRAP KETEMU: working copy pagi ini sempat berisi modifikasi
+- âš ï¸ TRAP KETEMU: working copy pagi ini sempat berisi modifikasi
   BELUM ter-commit (belanja-client 2-tablist inTab/outTab ~550 baris
   vs HEAD 266 baris single-tab; imports ui.tsx beda). Semua kerja
   di atas berbasis HEAD `46708a1`. Jika ada perubahan lokal yg
   belum di-commit di mesin lain, itu belum masuk repo.
-- Vercel: live production @ `46708a1` terkonfirmasi (HTTP 307→/login,
+- Vercel: live production @ `46708a1` terkonfirmasi (HTTP 307â†’/login,
   buildId baru `UOsfn6k55w3NuzxN8AV64`, bukan pre-21 Sep
   `GCE-OvNduy2JlV5shvyiS`). Dashboard "Ready @ 46708a1" = cek user.
 
@@ -4246,13 +4246,13 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   (`startOfDayJakarta()` kembalikan string UTC ISO, BUKAN format spasi WIB --
   jangan bandingkan string campur format).
 - `src/db.ts`: skema + migrasi idempoten + **gate `schema_version`**
-  (SAAT INI `SCHEMA_VERSION = 15`). Cold start: kalau versi DB < 15 →
+  (SAAT INI `SCHEMA_VERSION = 15`). Cold start: kalau versi DB < 15 â†’
   `fullInit` sekali; selain itu 1 SELECT saja. **Aturan: statement skema
   baru WAJIB diiringi bump `SCHEMA_VERSION`** (kalau tidak, DB lama tidak
   akan pernah dapat migrasi).
 - Transaksi: `tx(d, fn)` -- Turso: `c.transaction('write')` lalu
   `commit()` bila sukses / `rollback()` bila gagal (perbaikan 24 Sep:
-  dulu close() saja DROP transaksi → write `tx()` hilang di produksi;
+  dulu close() saja DROP transaksi â†’ write `tx()` hilang di produksi;
   kini eksplisit commit/rollback). `file:` lokal: sekuensial
   auto-commit (bug @libsql/client 0.15 -- tx file LOST, jangan pakai
   lokal utk test integritas).
@@ -4268,15 +4268,15 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
 - Sesi: cookie HttpOnly `kopontren_session` + cookie pendamping non-HttpOnly
   `kopontren_session_exp` (plafon countdown klien). Idle timeout via
   `settings.session_timeout` (default 3600 dtk; PUT `/api/settings` admin,
-  clamp 60–7 hari).
-- PIN: 4–6 digit, anti-pattern (sekuensial/semua sama/sama password),
-  lockout `PIN_MAX_ATTEMPTS=5` → `PIN_LOCK_SECONDS=900` (tabel `user_pins`).
+  clamp 60â€“7 hari).
+- PIN: 4â€“6 digit, anti-pattern (sekuensial/semua sama/sama password),
+  lockout `PIN_MAX_ATTEMPTS=5` â†’ `PIN_LOCK_SECONDS=900` (tabel `user_pins`).
   **`changePin` juga menghitung kegagalan + lockout** (audit 18 Sep 2026).
-- Throttle login: per username+IP, 10 gagal/15 mnt → kunci 15 mnt
+- Throttle login: per username+IP, 10 gagal/15 mnt â†’ kunci 15 mnt
   (in-memory per instance, di `src/app/api/auth/login/route.ts`).
-- Role: **7 role + matriks terpusat** (implementasi 18–20 Sep 2026,
+- Role: **7 role + matriks terpusat** (implementasi 18â€“20 Sep 2026,
   commit `b83b75e`) -- detail di bagian "## Matriks Permission 7 Role"
-  di bawah. `normRole` menormalkan nilai tak dikenal → `kasir`;
+  di bawah. `normRole` menormalkan nilai tak dikenal â†’ `kasir`;
   `isManager` = admin + manajer (pengurus keluar dari tier ops sejak
   18 Sep -- kini read-only). Kasir tetap hanya mutasi data miliknya
   (sale.kasir_id === user.id, retur shift sendiri, retur hanya
@@ -4291,11 +4291,11 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   WRITE yang menyentuh data tersebut (`products:`, `kas:`, `reports:`,
   `members:`, `belanja:`, `notif:`, `audit:`, `settings:member`).
   **Catatan `kas:` (23 Sep, verifikasi FASE 1):** prefix `kas:` = BACKSTOP
-  -- saat ini TIDAK ADA key cache `kas:…` (key nyata: `reports:<from>`,
+  -- saat ini TIDAK ADA key cache `kas:â€¦` (key nyata: `reports:<from>`,
   `products:active`, `belanja:totals`, `members:totals:<q>`,
-  `settings:member`, `audit:tables`, `notif:list:<…>`, `reports:hourly:<from>` (Batch #5, jam sibuk)), jadi
+  `settings:member`, `audit:tables`, `notif:list:<â€¦>`, `reports:hourly:<from>` (Batch #5, jam sibuk)), jadi
   `invalidate('kas:')` di 10 route tulis adalah no-op yang INTENTIONAL
-  (ongkos ~0): kalau kelak ada `cached('kas:…')`, semua route mutasi
+  (ongkos ~0): kalau kelak ada `cached('kas:â€¦')`, semua route mutasi
   sudah memanggil invalidate -- tidak perlu disisir ulang. Didokumentasi
   juga di doc-header `src/lib/ref-cache.ts` (commit `ae430f6`).
 - `src/lib/ttl-cache.ts`: helper terpisah (cap 100) -- legacy, dipakai
@@ -4319,16 +4319,16 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
 - Git: `C:\Program Files\Git\cmd\git.exe`; node: `C:\Program Files\nodejs\node.exe`.
 - **JANGAN commit `public/sw.js`**: setiap `npm run build`,
   `inject-sw-version.mjs` men-stamp ulang `// SW-BUILD:<hex>` (seed
-  `.next/BUILD_ID` + timestamp) → file berubah tiap build lokal;
+  `.next/BUILD_ID` + timestamp) â†’ file berubah tiap build lokal;
   Vercel men-stamp sendiri saat build. (Aturan sama utk `out/`, `data.db`.)
 - `.gitignore`: pola `_*` menyeluruh (file scratch `_*.{txt,log,...}`
   otomatis diabaikan) + `*.log` + tsbuildinfo.
 
 ## Konvensi kode
-- Route handler API: `currentUser()` → 401; guard role → 403; validasi
+- Route handler API: `currentUser()` â†’ 401; guard role â†’ 403; validasi
   body defensif (`Number(...)` + floor + clamp; `req.json().catch(()=>({}))`).
-- Query Turso: cap baris (limit ≤ 50 + offset) utk daftar; agregat global
-  lewat `cached('...')`; N+1 → batch `IN (...)` (pola ada di
+- Query Turso: cap baris (limit â‰¤ 50 + offset) utk daftar; agregat global
+  lewat `cached('...')`; N+1 â†’ batch `IN (...)` (pola ada di
   `/api/sales`, `/api/shifts`).
 - Notifikasi: SEMUA best-effort (`try/catch` + `console.warn`), tidak
   boleh memblokir/merollback transaksi bisnis.
@@ -4368,7 +4368,7 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
   maskable`), `icon-180.png`=180 (Apple). Jangan percaya field
   `sizes` manifest saja.
 - Build lokal: `next build` langsung TIDAK men-stamp SW (stamp hanya
-  jalan via `npm run build` → `scripts/inject-sw-version.mjs`) ⇒
+  jalan via `npm run build` â†’ `scripts/inject-sw-version.mjs`) â‡’
   `public/sw.js` tak berubah di git saat test lokal; Vercel
   men-stamp sendiri tiap deploy.
 - **Guardrail sw.js (26 Sep -- keputusan user, commit docs
@@ -4394,20 +4394,20 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
 
 ## PWA Favicon -- Ikon Taskbar/Start Menu (22 Sep 2026, commit `046b80c`)
 - **Akar masalah:** `public/favicon.ico` lama KORUP (10.861 byte, ICO
-  tidak valid) → Edge tak bisa ekstrak ikon aplikasi PWA; ikon taskbar
+  tidak valid) â†’ Edge tak bisa ekstrak ikon aplikasi PWA; ikon taskbar
   & Start menu tampil default/generic.
 - **Fix (046b80c):** generate ulang `public/favicon.ico` = ICO
   multi-size VALID (4 entry: 16/32/48/64) dari `icon-512.png` via
   `sharp` (`scripts/_gen-favicon.mjs`), hasil 5.635 byte;
-  + bump cache `public/sw.js` → v11 (paksa SW lama re-fetch aset).
+  + bump cache `public/sw.js` â†’ v11 (paksa SW lama re-fetch aset).
 - **Verifikasi LIVE (22 Sep):** `https://kopontren-gamma.vercel.app`
   menyajikan `/favicon.ico` = 5.635 byte (`image/vnd.microsoft.icon`),
-  PERSIS file lokal → deploy `046b80c` Ready & produksi live
+  PERSIS file lokal â†’ deploy `046b80c` Ready & produksi live
   (halaman login app + manifest.json valid: icon-180/192/512,
   theme `#8A1538`).
 - **Test client-side (DIANGKAT USER, Edge laptop -- PENDING hasil):**
-  tunggu deploy → uninstall PWA di Edge → clear site data → restart
-  Explorer → install ulang PWA → cek logo nang taskbar/Start menu.
+  tunggu deploy â†’ uninstall PWA di Edge â†’ clear site data â†’ restart
+  Explorer â†’ install ulang PWA â†’ cek logo nang taskbar/Start menu.
   Bila masih gagal: hapus cache ikon Windows manual + restart +
   install ulang, lalu laporkan. Cache ikon taskbar milik sisi
   Windows -- fix server baru terlihat setelah PWA di-install ulang /
@@ -4420,33 +4420,33 @@ Memory permanen utk sesi pengembangan berikutnya. Detail kronologis ada di
 Audit menyeluruh request terakhir (fungsional / keamanan /
 performa-integritas). `tsc --noEmit` BERSIH. Temuan:
 
-- **🔴 Backup import `audit_log` PK collision (DIFIX):** import INSERT
+- **ðŸ”´ Backup import `audit_log` PK collision (DIFIX):** import INSERT
   baris `audit_log` dgn id eksplisit (`insA`), tapi daftar DELETE import
-  & `/api/backup/reset` TIDAK membersihkan `audit_log` → di DB live
+  & `/api/backup/reset` TIDAK membersihkan `audit_log` â†’ di DB live
   (ada log audit), import gagal 500. Fix: DELETE-then-INSERT per tabel
   (aman; audit = forensik, boleh terhapus saat restore).
-- **🟠 `sales/[id]` DELETE vs retur:** FK `returns.sale_id` (ON) --
-  jika transaksi punya retur, `DELETE FROM sales` bisa throw FK → 500;
+- **ðŸŸ  `sales/[id]` DELETE vs retur:** FK `returns.sale_id` (ON) --
+  jika transaksi punya retur, `DELETE FROM sales` bisa throw FK â†’ 500;
   meski lolos, retur sudah restock +1 dan delete restock penuh lagi
   (stok dobel) & jurnal kas (sale/refund) tidak direverse.
-- **🟠 Race read-then-write:** plafon retur dibaca SEBELUM `tx`
-  (returns/route.ts:94→109) -- 2 POST concurrent bisa melebihkan restock;
+- **ðŸŸ  Race read-then-write:** plafon retur dibaca SEBELUM `tx`
+  (returns/route.ts:94â†’109) -- 2 POST concurrent bisa melebihkan restock;
   cek stok POS (`prod.stock < qty`) vs `UPDATE stock = stock - ?` bisa
   oversell bila 2 transaksi concurrent. Probability rendah (kasir
   tunggal), dampak integritas data.
-- **🟡 `debts/[id]` payment TIDAK masuk `cash_entries`** (bandingkan
+- **ðŸŸ¡ `debts/[id]` payment TIDAK masuk `cash_entries`** (bandingkan
   `payables/[id]` yang tulis 'expense' dalam 1 tx + invalidasi kas) --
   inkonsistensi pembukuan piutang vs hutang.
-- **🟡 Retur refund pakai `unit_price` asli baris, mengabaikan
-  `sale_items.discount`** → refund/jurnal bisa lebih besar dari yang
+- **ðŸŸ¡ Retur refund pakai `unit_price` asli baris, mengabaikan
+  `sale_items.discount`** â†’ refund/jurnal bisa lebih besar dari yang
   benar-benar dibayar pelanggan.
-- **⚪ `audit_log.ip_address` ambil `x-forwarded-for`/`x-real-ip` mentah**
+- **âšª `audit_log.ip_address` ambil `x-forwarded-for`/`x-real-ip` mentah**
   -- bisa di-forge klien (dampak forensik saja, bukan auth).
-- **✅ Diverifikasi BAIK:** matriks 7 role + guard tiap route konsisten
+- **âœ… Diverifikasi BAIK:** matriks 7 role + guard tiap route konsisten
   (DELETE debts/payables = admin-only; kasir hanya transaksi sendiri);
   PIN lockout + timingSafeEqual; `CRON_SECRET` constant-time; SQL semua
   parameterized; `sales.client_ref` punya UNIQUE index partial
-  (`idx_sales_client_ref WHERE client_ref != ''`) → dedupe offline queue
+  (`idx_sales_client_ref WHERE client_ref != ''`) â†’ dedupe offline queue
   aman sampai di level DB; ref-cache berbatas 256 key + TTL 60 dtk.
 
 ## ZAKAT Tijarah & Known Issues (18 Sep 2026)
@@ -4455,19 +4455,19 @@ performa-integritas). `tsc --noEmit` BERSIH. Temuan:
   `SUM(payables.remaining)` dgn `status='open'` -- dari harta bersih
   (dulu hard-coded `hutang = 0`; statcard "Hutang" selalu Rp 0).
   Arahnya: piutang (`receivables` open) **ditambah**, hutang dagang
-  **dikurangkan** → harta bersih = modal + laba + piutang − hutang
+  **dikurangkan** â†’ harta bersih = modal + laba + piutang âˆ’ hutang
   (konsisten fiqh zakat tijarah).
 - **Known issues:**
-  - ✅ (25 Sep, batch #1+#3) Batas periode LABA zakat TIDAK LAGI
+  - âœ… (25 Sep, batch #1+#3) Batas periode LABA zakat TIDAK LAGI
     perbandingan UTC mentah: 00:00 WIB dikonversi 17:00 UTC hari
     sebelumnya via `wibDayStartUtc` (`src/lib/zakat-period.ts`); export
     CSV riwayat zakat memformat `paid_at` WIB (header `paid_at (WIB)`);
     nama file pakai `wibToday()`. Test: `npm run test:zakat` (18 checks).
-  - ⏳ `reports/csv` export: timestamp masih ditulis **UTC mentah**,
-    UI tampil WIB (beda ±7 jam) -- kosmetik, di luar batch 25 Sep
+  - â³ `reports/csv` export: timestamp masih ditulis **UTC mentah**,
+    UI tampil WIB (beda Â±7 jam) -- kosmetik, di luar batch 25 Sep
     (belum difix).
 - **Known behavior -- `/sw.js` redirect (temuan 18 Sep 2026, bukan
-  regression):** fetch `/sw.js` **tanpa cookie sesi → 307 redirect ke
+  regression):** fetch `/sw.js` **tanpa cookie sesi â†’ 307 redirect ke
   `/login`** (whitelist `isStaticPublic` di `src/middleware.ts` hanya
   mengontrol header `Cache-Control`, TIDAK melewati session guard).
   Implikasi: PWA tidak bisa diinstall dari halaman publik -- service
@@ -4477,7 +4477,7 @@ performa-integritas). `tsc --noEmit` BERSIH. Temuan:
 
 ## Matriks Permission 7 Role (commit b83b75e, teruji manual 20 Sep 2026)
 - **7 role**: admin, manajer, pengurus, kasir, gudang, pembelian, member
-  (`ROLES` di `src/lib/auth.ts`; nilai tak dikenal → `kasir` via
+  (`ROLES` di `src/lib/auth.ts`; nilai tak dikenal â†’ `kasir` via
   `normRole`).
 - Matriks terpusat: `FEATURE_MATRIX` + `canAccess(user, feature)`
   di `src/lib/auth.ts` (admin selalu lolos; guard API = 403; layout
@@ -4509,7 +4509,7 @@ performa-integritas). `tsc --noEmit` BERSIH. Temuan:
     (diff per-field: `old_value`/`new_value` JSON `{field:{before,
     after}}`) + form legacy tetap jalan; event LOGIN/LOGOUT
     per-user; UI `/admin/audit` tampilkan snapshot "nama (role)" +
-    tooltip IP/UA. **`SCHEMA_VERSION` 10→11**: WAJIB, agar DB
+    tooltip IP/UA. **`SCHEMA_VERSION` 10â†’11**: WAJIB, agar DB
     prod (v10) menjalankan `fullInit`+`migrate()` sekali lagi saat
     cold start berikutnya -- tanpa bump, kolom baru tak akan pernah
     sampai ke DB lama dan semua `logAudit` (INSERT 4 kolom) gagal
@@ -4527,19 +4527,19 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   `notification_logs` (export/DELETE/INSERT), import `audit_log`
   kini 13 kolom skema v11 (user_name, user_role, ip_address,
   user_agent) -- bug PK collision tetap ditutup oleh
-  DELETE-before-INSERT; payload version 2 → 3. `point_history`
+  DELETE-before-INSERT; payload version 2 â†’ 3. `point_history`
   TUNDA (di luar cakupan, keputusan user).
 - Import `audit_log` kini DELETE-then-INSERT; urutan DELETE
-  FK-safe (returns → sale_items → sales → … → debts/payables/
-  audit_log) → bug PK collision selesai.
+  FK-safe (returns â†’ sale_items â†’ sales â†’ â€¦ â†’ debts/payables/
+  audit_log) â†’ bug PK collision selesai.
 - `sales/[id]` DELETE: restock di-clamp qty sudah diretur (net),
   jurnal `cash_entries` "Retur #id" dihapus, baris `returns`
-  dihapus → tidak ada lagi stok menggembung / kas terdistorsi.
+  dihapus â†’ tidak ada lagi stok menggembung / kas terdistorsi.
 - `returns` POST: re-validasi plafon `SUM(qty)` DI DALAM `tx`
-  (TOCTOU tertutup); violasi → 400 + rollback.
+  (TOCTOU tertutup); violasi â†’ 400 + rollback.
 - `sales` POST: guarded decrement
-  `UPDATE … SET stock = stock - ? WHERE id = ? AND stock >= ?` +
-  cek `changes === 1` → race oversell tertutup, stok tak negatif.
+  `UPDATE â€¦ SET stock = stock - ? WHERE id = ? AND stock >= ?` +
+  cek `changes === 1` â†’ race oversell tertutup, stok tak negatif.
 - `backup/reset`: + DELETE returns/debts/payables; `audit_log`
   sengaja TIDAK dihapus (akun + rekam jejak audit).
 - UI `admin/data-client.tsx`: teks entitas & warning
@@ -4548,17 +4548,17 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
 **Batch B -- `f280f60` (minor hardening, 9 file):**
 - konsinyasi: guarded UPDATE sell/return/pay di level SQL
   (`qty_sold + ? <= qty_received`, `amount_paid + ? <= tagihan`)
-  → double-submit tak lagi overpay/oversell.
+  â†’ double-submit tak lagi overpay/oversell.
 - debts/[id] pay: guarded update + jurnal kas MASUK
-  `cash_entries` "Bayar piutang · …" (sejajar payables
+  `cash_entries` "Bayar piutang Â· â€¦" (sejajar payables
   "Bayar hutang") + `invalidate('kas:','reports:')`.
-- payables/[id] pay: guarded update; data berubah → 400.
+- payables/[id] pay: guarded update; data berubah â†’ 400.
 - members: DELETE kini dalam `tx` + urutan FK-safe (null
   `sales.member_id` dulu); pencarian LIKE escape meta-char
   (`% _ \`) + `ESCAPE '\'`.
-- products POST/PUT: harga/HPP/stok clamp ≥0 (mencegah angka
+- products POST/PUT: harga/HPP/stok clamp â‰¥0 (mencegah angka
   negatif merusak laba, COGS & kalkulasi zakat).
-- reports GET: `days` clamp 1–3650 (dulu ≤0 → full-scan 1970).
+- reports GET: `days` clamp 1â€“3650 (dulu â‰¤0 â†’ full-scan 1970).
 - logout: fallback `findSessionUser()` -- logout sesi
   idle-expired kini tetap tercatat di audit.
 - notifications GET: error `pruneOldNotifications` kini
@@ -4566,8 +4566,8 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
 
 **Known issues (belum difix / accepted -- 21 Sep 2026):**
 - Throttle login pakai `X-Forwarded-For` (per-instance, bisa
-  dirotasi); mitigasi: 3x salah PIN → sesi dimusnahkan + lock
-  5 mnt → accepted risk.
+  dirotasi); mitigasi: 3x salah PIN â†’ sesi dimusnahkan + lock
+  5 mnt â†’ accepted risk.
 - GET `/api/audit` menampilkan `old_value/new_value` (termasuk
   PII member) ke tier pengurus -- sesuai desain role internal;
   tinjau bila perlu.
@@ -4578,7 +4578,7 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   `wa.me` (nomor disterilkan non-digit). Lihat TODO.md [x].
 -`audit_log` auto-purge harian (job `audit` di cron; default 90
   hari) - TODO [x] SELESAI; purge manual admin tetap tersedia.
-- Stale cache lintas instance Vercel ≤60 dtk (accepted,
+- Stale cache lintas instance Vercel â‰¤60 dtk (accepted,
   terdokumentasi).
 - Retur refund KININ dihitung dari harga efektif (commit
   `2a34a8f`, 22 Sep) - TODO [m] ditutup.
@@ -4586,10 +4586,10 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   2026, keputusan user, di luar cakupan perluasan backup).
 
 ## Status Produksi & Uji (update sesi akhir)
-- 17 fix live di Vercel (chain `851e219` → `a4fdd00`; Batch A
+- 17 fix live di Vercel (chain `851e219` â†’ `a4fdd00`; Batch A
   `c02421b`+`d435f57`, Batch B `f280f60`, dst.). **Test manual
   12 langkah DITUNDA** (Makfi sibuk) -- checklist tetap terbuka;
-  import backup legacy v2 → skema v3 tetap berisiko data lama
+  import backup legacy v2 â†’ skema v3 tetap berisiko data lama
   (kolom notification/audit kosong), bukan error.
 - **XSS struk print/WA: DIVERIFIKASI AMAN** (commit dokumen
   `a4fdd00`): cetak = JSX auto-escape + `window.print()` (tanpa
@@ -4608,11 +4608,11 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
 - **Audit 4-fase otonom (perbarui terkini)**: sweep ulang delta
   (margin guard, split payment, redemsi parsial, returns guard,
   migrasi idx_sales_member, tx() commit, PWA whitelist/retry,
-  print 58mm) -- tanpa 🔴/🟠 baru; 🟡 kelengkapan jejak `pay_split`
+  print 58mm) -- tanpa ðŸ”´/ðŸŸ  baru; ðŸŸ¡ kelengkapan jejak `pay_split`
   di audit `sales:create` difix (`4431e80`). Perf terukur:
   First Load JS maks 133 kB (< target 150), shared 103 kB,
   Middleware 34 kB, 48 page. FASE UI/UX = laporan menunggu
-  approval (Modal ✕ <44px + tanpa ESC/focus-trap; kontras teks
+  approval (Modal âœ• <44px + tanpa ESC/focus-trap; kontras teks
   skeleton rendah; belum ada panel bantuan hotkey POS) -- kode UI
   belum diubah apa pun.
 
@@ -4644,8 +4644,8 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   `barcode` produk -- discan CameraScan kasir (jsQR, lookup
   `addByBarcode`) atau diketik manual; nomor barcode juga dicetak
   teks monospace utk scanner USB 1D / input manual. Grid 2 kolom A4,
-  pilihan 2–24 lembar, print window + `document.write` (pola
-  MemberQrBadge; semua nilai di-escape HTML). Produk tanpa barcode →
+  pilihan 2â€“24 lembar, print window + `document.write` (pola
+  MemberQrBadge; semua nilai di-escape HTML). Produk tanpa barcode â†’
   toast penunjuk ke tombol Ubah. Lib `qrcode` sudah ada di deps
   (dipakai juga MemberQrBadge). TODO [x].
 
@@ -4686,22 +4686,22 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   57 test). JANGAN tambah import proyek di sini -- harus tetap
   bisa dieksekusi Node langsung (type-stripping).
 - Pipeline perk (urutan): (1) diskon member = % dari subtotal
-  SETELAH diskon manual, cap 90%; ultah aktif → MAX(birthday,
+  SETELAH diskon manual, cap 90%; ultah aktif â†’ MAX(birthday,
   base); (2) redeem: nominal, poin (1 poin = `point_value` Rp)
   dipakai DULU, sisa dari `cashback_balance`, cap di total
   setelah diskon + ketersediaan saldo; (3) cashback = % dari
-  total SETELAH diskon & redeem → kredit saldo (liabilitas,
+  total SETELAH diskon & redeem â†’ kredit saldo (liabilitas,
   TIDAK mengurangi total saat ini); (4) poin = total /
   `points_every`; (5) auto-tier dari akumulasi `total_spent`
   (badge/status saja).
-- PENJAGA MARGIN (anti rugi): margin kotor = subtotal − Σ(cost×
-  qty); cap perk otomatis = max(0, margin − diskon manual);
-  pangkas berurutan cashback → redeem → diskon (diskon paling
-  "keras" utk pembeli → dipertahankan terakhir). Diskon manual
+- PENJAGA MARGIN (anti rugi): margin kotor = subtotal âˆ’ Î£(costÃ—
+  qty); cap perk otomatis = max(0, margin âˆ’ diskon manual);
+  pangkas berurutan cashback â†’ redeem â†’ diskon (diskon paling
+  "keras" utk pembeli â†’ dipertahankan terakhir). Diskon manual
   menembus margin = SOFT: flag `manual_over_margin` (audit
   `sales:margin_clamped` / `sales:manual_over_margin` + notifikasi
   admin `margin_alert`), penjualan TIDAK diblokir (keputusan
-  user). HPP produk = 0 → margin dianggap = subtotal (guard tak
+  user). HPP produk = 0 â†’ margin dianggap = subtotal (guard tak
   pernah memotong -- aman).
 - POST /api/sales kini balas blok `sale.margin` (diagnostik:
   grossMargin, cap, clamped, clampedAmount, manualOutflow,
@@ -4710,7 +4710,7 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   `cashback_use` (delta NEGATIF = Rp terpakai), `void`,
   `refund`, `refund_cash`. Kolom baru `sales.redeem` +
   `sales.cashback`. UPDATE members guarded
-  `WHERE points ≥ ? AND cashback_balance ≥ ?` (race 2 transaksi
+  `WHERE points â‰¥ ? AND cashback_balance â‰¥ ?` (race 2 transaksi
   paralel satu member tak bisa oversell saldo).
 
 ## Redemsi Poin + Saldo Cashback -- rollback DELETE (baseline
@@ -4721,7 +4721,7 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
   + 2 baris struk.
 - DELETE /api/sales/[id]: guard anti-double-delete -- hapus baris
   sales DULU, cek `changes === 1` baru restock/rollback member;
-  race 2 DELETE paralel → seluruh batch di-rollback (tak ada
+  race 2 DELETE paralel â†’ seluruh batch di-rollback (tak ada
   restock/kredit dobel). Tier di-rehitung setelah
   `total_spent` turun (badge tak stale). Rollback redemsi
   terbaca PRESISI dari ledger (`SUM ABS(delta)` per reason +
@@ -4733,24 +4733,24 @@ Semua temuan diverifikasi ulang ke kode; fix dijalankan 2 batch
 
 ## Redemsi Parsial -- input nominal (follow-up UI, 24 Sep 2026)
 - Checkbox "Tebus poin/saldo" (auto-max) GANTI jadi input nominal
-  Rp (`redeemInput`) di POS: kasir ketik nominal bebas, di-clamp ≤
-  `redeemMax` (= poin×point_value + cashback_balance, plafon total).
+  Rp (`redeemInput`) di POS: kasir ketik nominal bebas, di-clamp â‰¤
+  `redeemMax` (= poinÃ—point_value + cashback_balance, plafon total).
   Tombol "Maks" = perilaku auto-max lama (shortcut).
-- Preview live "Tebus −Rp X (N poin + Rp Y cashback)" pakai rumus
+- Preview live "Tebus âˆ’Rp X (N poin + Rp Y cashback)" pakai rumus
   SAMA server (perks.ts): `N=min(floor(redeem/pointValue),
-  availPoints)`, `Y=min(redeem−N·pointValue, availCb)`. Nominal >
-  saldo → warning + auto-clamp. Backend TIDAK berubah (POST
+  availPoints)`, `Y=min(redeemâˆ’NÂ·pointValue, availCb)`. Nominal >
+  saldo â†’ warning + auto-clamp. Backend TIDAK berubah (POST
   /api/sales sudah terima `b.redeem` nominal sejak baseline Fitur 2).
   TSC + `next build` lolos. **Fitur 2 (redemsi) 100% selesai.**
 
 ## Bug check 3x utk perk/redemsi/DELETE (23 Sep -- tanpa temuan
 blocking)
-- FUNGSIONAL: POST↔DELETE konsisten -- ledger reason simetris,
+- FUNGSIONAL: POSTâ†”DELETE konsisten -- ledger reason simetris,
   jumlah `amount` per reason sama, re-hitung tier memakai ambang
   `tier_silver`/`tier_gold` yang sama dgn `computePerks`. Edge
   pre-ada (tercatat TODO [r]): `amount_paid`/`change` dipercaya
   dari klien (tak di-cross-check vs total) -- rencana Fitur 3
-  menutup utk transaksi bercampur (Σ split divalidasi server).
+  menutup utk transaksi bercampur (Î£ split divalidasi server).
 - KEAMANAN: guard utuh (POST `canAccess 'pos'`; override harga,
   diskon line & transaksi HANYA manager; DELETE `isManager`;
   PATCH sales status sendiri-atau-manager); SQL tetap
@@ -4763,15 +4763,15 @@ blocking)
   di-cache 60 dtk; `point_history(member_id)` terindeks.
 
 ## Fitur 3 -- Pembayaran Campuran (SELESAI -- approval user)
-- Keputusan user: SPLIT PENUH saja (Σ = total, tanpa piutang;
+- Keputusan user: SPLIT PENUH saja (Î£ = total, tanpa piutang;
   bayar-sebagian = follow-up terpisah). Whitlist metode {cash,
   tf, wa} (QRIS resmi menyusul bila NMID siap -> tambah `qris`
   ke whitelist + PAY_LABEL).
 - Skema v13: `sales.pay_split` JSON TEXT NULL
   (`[{"m":"cash","a":50000},{"m":"tf","a":50000}]`); baris lama /
   1-metode = NULL (fallback `pay_method` + `total`).
-- Validasi server POST /api/sales: metode ⊂ whitelist, nominal
-  integer > 0 per bagian; **Σ(split) = total final PERSIS**
+- Validasi server POST /api/sales: metode âŠ‚ whitelist, nominal
+  integer > 0 per bagian; **Î£(split) = total final PERSIS**
   (dicek di dalam tx, setelah perk member); `change` = 0 &
   `amount_paid` = total; `pay_method` = metode dominan (bagian
   terbesar) -- baris lama tak berubah.
@@ -4785,7 +4785,7 @@ blocking)
 - Consumer selesai: rekap/struk WA + struk POS modal/cetak
   (rincian per metode), kas label "(cash+campur)", csv kolom
   `pembayaran_campur`, backup export/import (payload v4, legacy
-  tetap valid), laporan baris "(campur)", UI POS: tombol "🔀
+  tetap valid), laporan baris "(campur)", UI POS: tombol "ðŸ”€
   Campur" + input nominal per metode + indikator Lunas/Selisih
   live; payload `pay_split` ikut antrean offline.
 - Uji: `npm run test:split` (node:sqlite in-memory -- agregat
@@ -4799,13 +4799,13 @@ blocking)
 - **Batch 3 (c3ce06c): tema + keluar pindah ke hamburger.** `shell.tsx`
   kini `'use client'` (+ `useRouter`): handler `toggleTheme` (logika cookie
   identik ThemeToggle lama) & `handleLogout` (POST `/api/auth/logout` +
-  `router.push('/login')`) di-pass ke `HamburgerNav` → `Sidebar`. Di bawah
-  nav panel: item "Ganti Tema" (ikon dinamis CSS: dark→Sun, light→Moon) +
+  `router.push('/login')`) di-pass ke `HamburgerNav` â†’ `Sidebar`. Di bawah
+  nav panel: item "Ganti Tema" (ikon dinamis CSS: darkâ†’Sun, lightâ†’Moon) +
   "Keluar" (rose). `themetoggle.tsx` & `logout.tsx` DIHAPUS (f03d6b7).
   Header kini: hamburger + logo/brand | nama+badge role + bell (admin).
 - **Batch 4 (c364b2c): a11y.** `Modal` (ui.tsx): ESC tutup, focus-trap
   Tab/Shift+Tab, fokus awal elemen pertama + restore saat tutup,
-  `role="dialog" aria-modal aria-label`, tombol ✕ min 44px (`min-h-11
+  `role="dialog" aria-modal aria-label`, tombol âœ• min 44px (`min-h-11
   min-w-11`). `Toast`: live region `role="status" aria-live="polite"`
   PERSISTEN (kosong = sr-only, jangan unmount -- SR tak mau live region
   baru). `PageSkeleton`: kontras naik (`bg-slate-300`/`dark:bg-navy-500`,
@@ -4813,31 +4813,31 @@ blocking)
 - **Batch 5 (7ab05d2 + 9782a89): hotkey kasir.** Hook baru
   `src/lib/useHotkeys.ts` (map handler stabil via useRef: listener 1x,
   isi map fresh tiap render; handler yang preventDefault -- di luar aksi
-  input teks & shortcut browser tetap normal). F1–F5 + ESC TIDAK berubah
+  input teks & shortcut browser tetap normal). F1â€“F5 + ESC TIDAK berubah
   (memori otot). Baru: F6 toggle split (cart tidak kosong, di luar modal),
   F7 buka/tutup shift (modal sesuai `currentShift`), F8 fokus select
-  member, F9 fokus input diskon (hanya admin), panah ↑/↓ seleksi item
+  member, F9 fokus input diskon (hanya admin), panah â†‘/â†“ seleksi item
   keranjang (+ highlight ring, clamp), +/- qty item terpilih (clamp stok
   via setQty), Del/Backspace hapus item, Enter di kolom uang diterima =
   checkout (guard uang kurang tetap jalan), Ctrl+P cetak struk, Ctrl+M
-  member, Ctrl+H → `/laporan` (CATATAN: Chrome menahan Ctrl+H -- tak
+  member, Ctrl+H â†’ `/laporan` (CATATAN: Chrome menahan Ctrl+H -- tak
   bisa dicegah page-side; Firefox/Edge OK; fallback = menu), Ctrl+R reset
   pesanan tanpa transaksi (antrean offline TIDAK disentuh). Cheatsheet:
   tombol `?` di judul keranjang + key `?` (guard: ketik `?` di input teks
   tidak membuka panel).
 - **REGRESI DB (3724e36) -- temuan bug check, PENTING:** `sales.kasir_id`
   cuma ada di `CREATE TABLE` (tak berlaku utk DB existing) + tak ada
-  `execColumn` → di Turso produksi kolom HILANG: `CREATE INDEX
-  idx_sales_kasir` gagal, `INSERT INTO sales (kasir_id,…)` & guard retur
-  `SELECT … kasir_id` = "no such column". FIX: `execColumn(d, 'ALTER
+  `execColumn` â†’ di Turso produksi kolom HILANG: `CREATE INDEX
+  idx_sales_kasir` gagal, `INSERT INTO sales (kasir_id,â€¦)` & guard retur
+  `SELECT â€¦ kasir_id` = "no such column". FIX: `execColumn(d, 'ALTER
   TABLE sales ADD COLUMN kasir_id INTEGER')` (idempoten) + bump
   `SCHEMA_VERSION 14`. Baris lama kasir_id NULL = transaksi historis
   tanpa atribusi; guard hanya membatasi role kasir (pengurus/admin leluwa).
-- **Verifikasi:** `tsc --noEmit` exit 0 · `next build` 48/48 ·
-  `test:split` 15/15 · `test:margin` 57/57 · dual-push master+main
+- **Verifikasi:** `tsc --noEmit` exit 0 Â· `next build` 48/48 Â·
+  `test:split` 15/15 Â· `test:margin` 57/57 Â· dual-push master+main
   `9782a89` (ff juga membawa 7 commit main tertinggal). `public/sw.js`
   tetap tidak di-commit (stamp di-inject lokal saat build).
-- **STATUS LIVE (22 Sep 2026):** 8 commit (`95c70b5`…`f0d17c8`) sudah
+- **STATUS LIVE (22 Sep 2026):** 8 commit (`95c70b5`â€¦`f0d17c8`) sudah
   di master + main; Vercel auto-deploy dari `main`. **skema v14 terpasang
   pada cold start pertama pasca-deploy** -- buktinya = smoke test transaksi
   POS baru di HP user: INSERT `kasir_id` jalan tanpa "no such column".
@@ -4855,12 +4855,12 @@ blocking)
 - Artefak: `stok-export-YYYYMMDD.csv` di root project (untracked,
   jangan di-commit -- user ambil lokal). Header:
   `id,nama_produk,barcode,kategori,stok,hpp,harga_jual,status`.
-- Mapping kolom DB→CSV: `products.name`→nama_produk,
-  `products.category`→kategori (kategori = TEXT langsung di tabel
-  `products`, bukan join tabel `categories`), `products.cost_price`→hpp,
-  `products.base_price`→harga_jual, `products.active`→status
-  (1='aktif' / 0='nonaktif'), `products.barcode`→barcode (banyak
-  masih kosong → field dibiarkan kosong).
+- Mapping kolom DBâ†’CSV: `products.name`â†’nama_produk,
+  `products.category`â†’kategori (kategori = TEXT langsung di tabel
+  `products`, bukan join tabel `categories`), `products.cost_price`â†’hpp,
+  `products.base_price`â†’harga_jual, `products.active`â†’status
+  (1='aktif' / 0='nonaktif'), `products.barcode`â†’barcode (banyak
+  masih kosong â†’ field dibiarkan kosong).
 - Generator: `_gen-stok-csv.mjs` (scratch gitignored, re-runnable):
   buka `data/kopontren.db` read-only via `node:sqlite`, tulis UTF-8
   TANPA BOM + quoting RFC-4180 (field mengandung koma/quote
@@ -4873,7 +4873,7 @@ blocking)
 ## Phone guard format-insensitive + purchases floor (23 Sep 2026)
 - **Commit `f2b398e` fix(members): phone duplicate guard
   format-insensitive + test 26 checks** (dual-push master+main):
-  - `src/lib/phone.ts`: `canonicalPhone` (normalize "+62/62/0" →
+  - `src/lib/phone.ts`: `canonicalPhone` (normalize "+62/62/0" â†’
     digit kanonik) + `phoneOwner(d, phone, exceptId)` -- pemilik nomor
     selain `exceptId` lewat pembanding DUA bentuk (teks apa adanya
     sesuai kolom/index `idx_members_phone_uniq` + bentuk kanonik),
@@ -4886,11 +4886,11 @@ blocking)
   - `scripts/test-members-phone.ts` (`npm run test:phone`): **26
     checks, 0 gagal** -- index unik tolak teks mentah, index terima
     teks beda kanonik sama (bukti guard app wajib), query kanonik vs
-    tersimpan "+62…", kecuali diri → null, dll.
-  - Verifikasi: `tsc --noEmit` exit 0 · `test:phone` 26/26.
+    tersimpan "+62â€¦", kecuali diri â†’ null, dll.
+  - Verifikasi: `tsc --noEmit` exit 0 Â· `test:phone` 26/26.
 - **Commit `6b4b179` fix(purchases): floor unit_cost ke rupiah penuh**
   -- `Math.max(0, Math.floor(...))`: nominal pecahan tak lagi membuat
-  `qty×unit_cost` pecahan → agregat kas/laporan & harga modal
+  `qtyÃ—unit_cost` pecahan â†’ agregat kas/laporan & harga modal
   konsisten.
 - `public/sw.js` TIDAK di-commit (stamp lokal `ea8ac407f7aa` =
   artefak build lokal; Vercel re-stamp saat build). CSV stok
@@ -4945,9 +4945,9 @@ blocking)
   baru `DROP TABLE IF EXISTS stock_opname` + `DROP INDEX IF EXISTS
   idx_stock_opname_created` sebelum stamp versi. DB produksi (stempel
   14) akan menjalankan `fullInit` SEKALI saat cold start pertama pasca
-  deploy (pola sama dengan bump v9→14 -- terbukti aman); data lama
+  deploy (pola sama dengan bump v9â†’14 -- terbukti aman); data lama
   (bila pernah diinput manual) tetap bisa dipulihkan dari snapshot
-  backup Turso pra-drop. Butuh opname lagi → migration baru + v16.
+  backup Turso pra-drop. Butuh opname lagi â†’ migration baru + v16.
 - **FASE 2 (UI Modern + Komunikatif): AUDIT UI/UX LENGKAP SELESAI,
   TUNGGU APPROVAL user sebelum ubah UI.** Detail temuan per halaman di
   `TODO.md` (seksi "FASE 2 -- Audit UI/UX"). Prinsip yang disepakati:
@@ -4962,7 +4962,7 @@ blocking)
      Setiap submit async kini `if (busy) return` + `finally
      setBusy(false)`, tombol `disabled` saat request.
   2. **Label belanja tidak menyesatkan:** "(50 transaksi/pengeluaran
-     terbaru)" → "(dari semua data)" -- total memang agregat global
+     terbaru)" â†’ "(dari semua data)" -- total memang agregat global
      server, daftar di bawah hanya 50 baris.
   3. **Feedback sunyi diurai:** `removeEntry` (kas) kini toast sukses/
      gagal; `toggleActive` (pengguna) kini toast "Aktiv/Nonaktif".
@@ -4977,11 +4977,11 @@ blocking)
     logika double-tap sudah dipertahankan di level guard + disabled.
 
    - **Test manual 4 poin Batch A nang HP: SEMUA OK (23 Sep, hasil
-     user):** (1) double-tap form → tap ke-2 diabaikan ✓,
-     (2) label total belanja "dari semua data" ✓,
-     (3) footer "Menampilkan X dari N transaksi" ✓,
-     (4) toast kas + pengguna ✓. → Batch B di-approve.
-- **FASE 2 BATCH B (mobile tabel→card): DISELESAIKAN -- commit
+     user):** (1) double-tap form â†’ tap ke-2 diabaikan âœ“,
+     (2) label total belanja "dari semua data" âœ“,
+     (3) footer "Menampilkan X dari N transaksi" âœ“,
+     (4) toast kas + pengguna âœ“. â†’ Batch B di-approve.
+- **FASE 2 BATCH B (mobile tabelâ†’card): DISELESAIKAN -- commit
   `cb792aa` (23 Sep 2026).** 5 file, +273/-8, MURNI RENDER LAYER
   (state/logika/data tak disentuh): kas, shift, produk, member,
   audit. Pola: tabel `hidden sm:block` + card list `sm:hidden`
@@ -4992,7 +4992,7 @@ blocking)
   card `h-11` mobile / `sm:h-9` desktop; `.btn`/`.input` sudah
   bawa `min-height:44px` sehingga tombol `.btn-*` lama tak perlu
   diubah. Fix khusus Batch B: (a) hapus jurnal kas di card = ikon
-  `Trash2` (lucide) 44×44 + `aria-label` (tabel desktop tetap link
+  `Trash2` (lucide) 44Ã—44 + `aria-label` (tabel desktop tetap link
   teks "hapus"), (b) toggle Aktif/Nonaktif produk kini TERGUNA
   di mobile lewat card (dulu hanya tabel desktop; checkbox
   "Setor kas" shift di card 44px utk admin, load-more 44px).
@@ -5002,26 +5002,26 @@ blocking)
   build` exit 0 (rute export lengkap, First Load JS shared
   103 kB). Dual-push `master` + `main` @ `cb792aa`.
 - **FASE 2 BATCH C (konsistensi UI): DISELESAIKAN -- commit
-  `ec9d9c9` (23 Sep 2026).** 22 file, +181/−77, MURNI
+  `ec9d9c9` (23 Sep 2026).** 22 file, +181/âˆ’77, MURNI
   PRESENTASIONAL (tak ada ubah data/state/API/DB):
   1. **Label metode bayar terpusat:** `lib/pay-methods.ts`
      kini punya `PAY_METHOD_LABEL` + `payMethodLabel()`; 6 map
      lokal (rekap, pengurus-dashboard, pos-client, laporan-client,
-     shift-client, home) dihapus → 16 call-site pakai helper.
+     shift-client, home) dihapus â†’ 16 call-site pakai helper.
   2. **Skeleton seragam:** 7 page wrapper `next/dynamic` (audit,
      hutang, pengaturan-member, shift, zakat, piutang, retur)
-     `loading="Memuat komponen..."` → `<PageSkeleton />`.
-  3. **Low-stock badge:** "14hr: 0/j" → "belum ada penjualan
-     14 hari", "±N hr" → "habis dalam N hari".
+     `loading="Memuat komponen..."` â†’ `<PageSkeleton />`.
+  3. **Low-stock badge:** "14hr: 0/j" â†’ "belum ada penjualan
+     14 hari", "Â±N hr" â†’ "habis dalam N hari".
   4. **Aksen h1:** konsinyasi/produk/belanja dapat span
-     `text-accent-500`; laporan amber→accent.
+     `text-accent-500`; laporan amberâ†’accent.
   5. **Bug pin/setup:** status tak dikenal/fetch gagal dulu
-     nyangkut "Memeriksa sesi…" → kini lanjutkan UI + state
+     nyangkut "Memeriksa sesiâ€¦" â†’ kini lanjutkan UI + state
      `checkFailed` + hint amber "tak bisa cek sesi, lanjutkan
      saja" (POST tetap memvalidasi sesi server-side).
   6. **Unduhan tanpa tab flicker:** 4 tempat
-     `window.open('/api/backup')` & `window.open('/api/reports/csv…')`
-     (data-client ×2, laporan-client, laporan-admin-client) →
+     `window.open('/api/backup')` & `window.open('/api/reports/csvâ€¦')`
+     (data-client Ã—2, laporan-client, laporan-admin-client) â†’
      `fetch`+Blob+`URL.createObjectURL`+`<a download>`+revoke,
      busy `dl` + toast sukses/gagal.
   - Verifikasi: `tsc --noEmit` exit 0, `npm run build` EXIT 0
@@ -5032,34 +5032,34 @@ blocking)
   - Belum teruji di UI langsung; menunggu test manual user
     (pola sama dgn Batch A/B).
   - **UPDATE (23 Sep):** 6 titik test manual user nang HP
-    SEMUA OK -- (1) label bayar ✓, (2) skeleton ✓, (3) low-stock ✓,
-    (4) aksen h1 ✓, (5) pin/setup ✓, (6) unduhan blob ✓.
-    Batch C final → Batch D di-approve.
+    SEMUA OK -- (1) label bayar âœ“, (2) skeleton âœ“, (3) low-stock âœ“,
+    (4) aksen h1 âœ“, (5) pin/setup âœ“, (6) unduhan blob âœ“.
+    Batch C final â†’ Batch D di-approve.
 
 ## FASE 2 BATCH D (a11y polish): DISELESAIKAN -- commit `e9ebfdb`
   (23 Sep 2026)
-  - 30 file, +194/−161, MURNI ATRIBUT (tak ada ubah
+  - 30 file, +194/âˆ’161, MURNI ATRIBUT (tak ada ubah
     data/state/API/DB, tak ada ubah layout/perilaku):
-    1. **aria-expanded ×3** (sebelumnya 0 di seluruh repo):
+    1. **aria-expanded Ã—3** (sebelumnya 0 di seluruh repo):
        `laporan-client` (akordion transaksi, `aria-controls=
        lap-detail-{id}` + id di panel), `notification-bell`
        (toggle panel, `aria-controls="notif-panel"` + id di panel),
        `sidebar` (tombol menu mobile drawer).
-    2. **role=tablist ×3 baru** (+ `role="tab"` +
+    2. **role=tablist Ã—3 baru** (+ `role="tab"` +
        `aria-selected` di 6 tombol tab): `belanja-client`
        (in/out), `data-client` (backup/audit), `konsinyasi-client`
        (active/done). Catatan: `pos-client` L1139 sudah punya
        `role="tablist"` bawaan (tak diubah). Panel tab berupa
        fragment/kondisional -- wiring `aria-controls` panel
        sengaja dilewati (minimal viable, tanpa wrap baru).
-    3. **type="button" ×154 tombol di 30 file** (estimasi awal
+    3. **type="button" Ã—154 tombol di 30 file** (estimasi awal
        grep single-line ~65; scanner nesting-aware menemukan
        lebih banyak karena banyak tag `type=`-nya beda baris /
        auditor melewatkan tombol tanpa atribut di beberapa file).
        Tombol submit form login (`type="submit"`) TIDAK diubah --
        satu-satunya `<form>` di app.
     4. **Sumbu chart:** label x `SalesBarChart`
-       (`charts.tsx`) `text-[9px]` → `text-[11px]`.
+       (`charts.tsx`) `text-[9px]` â†’ `text-[11px]`.
   - Verifikasi: `tsc --noEmit` exit 0, `npm run build` EXIT 0;
     grep: `aria-expanded`=3 (full coverage -- tak ada kontrol
     fold/collapse lain di repo), `role="tablist"`=4 (3 baru +
@@ -5067,7 +5067,7 @@ blocking)
     `<button` tanpa `type` = 0 pelanggaran.
   - `public/sw.js` tidak di-commit (di-restore pasca build,
     stamp lokal `9aa319458960`). Dual-push `master` + `main`
-    @ `e9ebfdb` (ls-remote kedua ref = `e9ebfdb…`).
+    @ `e9ebfdb` (ls-remote kedua ref = `e9ebfdbâ€¦`).
   - Sisa pending: test ikon PWA di Edge (urutan 3 test user),
     QRIS / grosir / point_history (tunda, NMID).
 
@@ -5081,18 +5081,18 @@ blocking)
 ## Re-Verifikasi LIVE -- Batch A `bf52f63` (23 Sep 2026, 19.00)
 - **URL produksi = `https://kopontren-gamma.vercel.app`** (project
   Vercel terhubung `kita-foska/kopontren`, build dari `main`).
-  ⚠️ `kopontren-app-sapiens-ai.vercel.app` (URL lama di dokumen awal)
+  âš ï¸ `kopontren-app-sapiens-ai.vercel.app` (URL lama di dokumen awal)
   sekarang **404 semua path**, dan `kopontren-app.vercel.app` masih
   menyajikan build **lawas (pra-21 Sep)**: `/sw.js`, `/manifest.json`,
-  `/api/*` → 307 `/login`, `/login/pin*` → 404, buildId
+  `/api/*` â†’ 307 `/login`, `/login/pin*` â†’ 404, buildId
   `GCE-OvNduy2JlV5shvyiS`. Keduanya BUKAN produksi -- JANGAN dipakai
   utk verifikasi.
 - Vercel dashboard (screenshot user 23 Sep): `bf52f63`, `9ef700e`,
-  `c46f4fa`, `bd86ffa`, `e0aed83` semua **Ready + Production** ✓.
-- Fingerprint LIVE ✓ (HTTP 23 Sep, `kopontren-gamma`): `/sw.js` 200
+  `c46f4fa`, `bd86ffa`, `e0aed83` semua **Ready + Production** âœ“.
+- Fingerprint LIVE âœ“ (HTTP 23 Sep, `kopontren-gamma`): `/sw.js` 200
   (baru, bukan 307), `/manifest.json` 200, `/api/shifts` &
-  `/api/sales` → **401 JSON** (middleware passthrough -- behavior
-  post-`db10160` ✓), `/login/pin` 200, `/login/pin/setup` 200.
+  `/api/sales` â†’ **401 JSON** (middleware passthrough -- behavior
+  post-`db10160` âœ“), `/login/pin` 200, `/login/pin/setup` 200.
 - **Semantik stamp SW-BUILD**: `// SW-BUILD:<12hex>` =
   `sha1(.next/BUILD_ID + Date.now())` yang ditulis
   `scripts/inject-sw-version.mjs` SAAT BUILD (vercel.json
@@ -5101,14 +5101,14 @@ blocking)
   `db032f04f915` ter-commit lokal -- NORMAL (tiap build men-stamp
   ulang; isi file 137 baris selain stempelnya IDENTIK).
 - Cold start v15: terpenuhi pada **akses pertama dari HP setelah
-  deploy ini** -- browser deteksi diff /sw.js → install SW baru →
-  `skipWaiting` → activate purge cache lama → `fullInit` sekali.
+  deploy ini** -- browser deteksi diff /sw.js â†’ install SW baru â†’
+  `skipWaiting` â†’ activate purge cache lama â†’ `fullInit` sekali.
 - Koreksi bagian "Batch A" di atas: sejak `c46f4fa` (commit
   `public/sw.js` + `scripts/inject-sw-version.mjs`), `public/sw.js`
   **DI-COMMIT** (dengan stamp); build Vercel men-stamp ulang tiap
   build, jadi diff git per push tetap ada.
 
-## ⚠️ ATURAN POKOK -- SYARIAH FIQH MUAMALAH (24 Sep 2026)
+## âš ï¸ ATURAN POKOK -- SYARIAH FIQH MUAMALAH (24 Sep 2026)
 
 > **Prinsip: "Syariah nomer 1, fitur nomer 2."** Semua fitur BERSifat AMANAH + SYAR'I.
 > Setiap fitur BARU wajib: (1) tentukan akad, (2) cek bebas riba, (3) cek bebas gharar,
@@ -5116,61 +5116,61 @@ blocking)
 > bila ada syubhat. Checklist lengkap: **`SYARIAH-CHECKLIST.md`** (root repo).
 
 ### Hasil Audit Syariah (24 Sep 2026, 6 fase, seluruh kodebase)
-- **Riba: ✅ TIDAK ADA** -- grep seluruh src: tidak ada bunga, denda keterlambatan, biaya
+- **Riba: âœ… TIDAK ADA** -- grep seluruh src: tidak ada bunga, denda keterlambatan, biaya
   admin tersembunyi. Piutang (debts) & hutang (payables) = qardh/utang dagang tanpa
   tambahan; pembayaran capped di sisa (overpay mustahil); due_date hanya pengingat ("Tunggak" = badge, bukan biaya).
-- **Gharar: ✅** -- semua akad ma'lum: harga (base_price/cost_price per produk), qty stok,
+- **Gharar: âœ…** -- semua akad ma'lum: harga (base_price/cost_price per produk), qty stok,
   agree_price konsinyasi, due_date, dan preview perk (diskon+redeem+cashback) dihitung
   client SEBELUM submit (rumus satu sumber: `src/lib/perks.ts`).
-- **Maysir: ✅ TIDAK ADA** -- tidak ada undian/lotre/giveaway.
-- **Dzalim: ✅ umumnya** -- penjaga marjin (perks cap = margin kotor, trim urut
-  cashback→redeem→diskon) melindungi store dari penjualan rugi; manual diskon > margin
+- **Maysir: âœ… TIDAK ADA** -- tidak ada undian/lotre/giveaway.
+- **Dzalim: âœ… umumnya** -- penjaga marjin (perks cap = margin kotor, trim urut
+  cashbackâ†’redeemâ†’diskon) melindungi store dari penjualan rugi; manual diskon > margin
   hanya "soft-flag" (catatan minor operasional).
 
 ### Klasifikasi fiqh per fitur
 | Fitur | Akad | Status |
 |-------|------|--------|
-| POS jual-beli | Bai' | ✅ |
-| Piutang | Qardh tijari (tanpa bunga) | ✅ |
-| Hutang supplier | Dayn tijari | ✅ |
-| Konsinyasi | Salam al-bi' / wakalah -- 100% hasil ke pemilik (agree_price), BELUM ada komisi store | ✅ (jika kelak ada komisi → ju'alah, % disepakati di muka) |
-| Poin loyalty | Tawadhi'/hibah (gratis, jadi potongan, tak bisa ditarik tunai) | ✅ |
-| Cashback | Ta'diyah/pengecualian utang (store-credit, tebus = potongan, tak tunai) | ✅ label "Saldo Reward" terpasang (f1, commit f4479b3) |
-| Tier | Status kumulatif (badge, ambang jelas) | ✅ |
-| Diskon member/grosir/ultah | Hibah (ultah = tawadhi') | ✅ |
-| Retur | Khiyar 'aib/syarat | ✅ DITRIM (f2): retur 100% membatalkan poin & saldo reward transaksi tsb (ledger 'return'/'return_cash', plafon MAX(…−?,0) anti-negatif) |
-| Zakat tijarah | Kewajiban | ❓ formula periodik (laba sejak last_zakat_date; modal @ HPP; harga emas manual) → perlu tashih ulama |
+| POS jual-beli | Bai' | âœ… |
+| Piutang | Qardh tijari (tanpa bunga) | âœ… |
+| Hutang supplier | Dayn tijari | âœ… |
+| Konsinyasi | Salam al-bi' / wakalah -- 100% hasil ke pemilik (agree_price), BELUM ada komisi store | âœ… (jika kelak ada komisi â†’ ju'alah, % disepakati di muka) |
+| Poin loyalty | Tawadhi'/hibah (gratis, jadi potongan, tak bisa ditarik tunai) | âœ… |
+| Cashback | Ta'diyah/pengecualian utang (store-credit, tebus = potongan, tak tunai) | âœ… label "Saldo Reward" terpasang (f1, commit f4479b3) |
+| Tier | Status kumulatif (badge, ambang jelas) | âœ… |
+| Diskon member/grosir/ultah | Hibah (ultah = tawadhi') | âœ… |
+| Retur | Khiyar 'aib/syarat | âœ… DITRIM (f2): retur 100% membatalkan poin & saldo reward transaksi tsb (ledger 'return'/'return_cash', plafon MAX(â€¦âˆ’?,0) anti-negatif) |
+| Zakat tijarah | Kewajiban | â“ formula periodik (laba sejak last_zakat_date; modal @ HPP; harga emas manual) â†’ perlu tashih ulama |
 
 ### Keputusan terikat (WAJIB, sampai tashih ulama)
 1. **JANGAN** implementasi denda keterlambatan sebagai pendapatan store (haram).
-   Jika butuh insentif ketepatan waktu → uang ke kas amal/pondok (ta'zir sosial).
+   Jika butuh insentif ketepatan waktu â†’ uang ke kas amal/pondok (ta'zir sosial).
 2. **JANGAN** tambah undian/lotre/giveaway maysir.
 3. **JANGAN** bikin penarikan tunai cashback/poin (tetap store-credit).
-4. UI: label "Cashback" → **"Saldo Reward"**, "Poin" tetap. ✅ SELESAI (f1, 24 Sep 2026, commit f4479b3).
-5. Fix minor: balikkan poin/reward saat retur penuh ✅ SELESAI (f2, 24 Sep 2026, commit f4479b3).
+4. UI: label "Cashback" â†’ **"Saldo Reward"**, "Poin" tetap. âœ… SELESAI (f1, 24 Sep 2026, commit f4479b3).
+5. Fix minor: balikkan poin/reward saat retur penuh âœ… SELESAI (f2, 24 Sep 2026, commit f4479b3).
    Detail: `returns/route.ts` cek "notFull" (semua item sudah diretur penuh), lalu ambil
    SUM delta `point_history` scope sale_id untuk reason 'earn' (poin) & 'cashback' (rupiah)
-   → tolak pakai `MAX(points−?,0)` / `MAX(cashback_balance−?,0)` + jejak 'return'/'return_cash'.
+   â†’ tolak pakai `MAX(pointsâˆ’?,0)` / `MAX(cashback_balanceâˆ’?,0)` + jejak 'return'/'return_cash'.
    `sales/route.ts` tak perlu diubah (sudah menulis 'earn' & 'cashback' per sale_id).
-   Bonus: sign error void di `sales/[id]/route.ts` (cashback_balance + bukan −) ikut dibetulkan.
+   Bonus: sign error void di `sales/[id]/route.ts` (cashback_balance + bukan âˆ’) ikut dibetulkan.
 6. Tashih ulama: (P3) formula zakat -- haul 1 tahun tetap, laba konservatif, harga emas;
    (P4) skema komisi konsinyasi bila store mau margin.
 
 ### Status FASE A1 (P&L UI) -- SELESAI & COMMITTED (0564e71, 24 Sep 2026)
 - `laporan-admin-client.tsx`: import + tipe (LabaRugi, PlPreset, PlRow, plPresetRange,
-  plPeriodLabel) + shell tab "Ringkasan|Laba-Rugi" ✅. **LabaRugiTab body SELESAI** (blok 24 Sep 2026):
-  tab menampilkan: preset 1/7/30/bulan/tahun + rentang custom, statement bruto→bersih→HPP→laba kotor→
-  beban (accordion byCategory)→laba bersih, blok Memo di luar laba, kotak Catatan V1, tombol Bagikan WA.
+  plPeriodLabel) + shell tab "Ringkasan|Laba-Rugi" âœ…. **LabaRugiTab body SELESAI** (blok 24 Sep 2026):
+  tab menampilkan: preset 1/7/30/bulan/tahun + rentang custom, statement brutoâ†’bersihâ†’HPPâ†’laba kotorâ†’
+  beban (accordion byCategory)â†’laba bersih, blok Memo di luar laba, kotak Catatan V1, tombol Bagikan WA.
 - Backend A1 juga sudah ada: `src/app/api/keuangan/` + `src/lib/keuangan.ts`
   (queryKeuangan + KEUANGAN_NOTES), `rekap.ts` (+ buildLabaRugiWa, label 'Saldo Reward').
-- tsc --noEmit ✅ & next build ✅ (24 Sep 2026). Kode commit `0564e71` (4 file) --
+- tsc --noEmit âœ… & next build âœ… (24 Sep 2026). Kode commit `0564e71` (4 file) --
   approval user (tes manual P2 rollback + tab Laba-Rugi: preset, rentang custom, bagikan WA).
-- Lanjut (non-eng, ditanam user 24 Sep 2026): P3 tashih ulama (zakat) -- user siapin dokumen tashih · P4 keputusan pengurus (konsinyasi/ju'alah) -- user siapin proposal · P5 ✅ (denda tak pernah diimplementasi) · ②③④ tes manual.
+- Lanjut (non-eng, ditanam user 24 Sep 2026): P3 tashih ulama (zakat) -- user siapin dokumen tashih Â· P4 keputusan pengurus (konsinyasi/ju'alah) -- user siapin proposal Â· P5 âœ… (denda tak pernah diimplementasi) Â· â‘¡â‘¢â‘£ tes manual.
 - Follow-up (24 Sep 2026, commit 552c8e2): label sisa P1 -- `perks.ts` soft-flag,
-  `rekap.ts` baris WA rekap ("Saldo Reward"), SYARIAH-CHECKLIST P1/P2 ✅.
+  `rekap.ts` baris WA rekap ("Saldo Reward"), SYARIAH-CHECKLIST P1/P2 âœ….
   Label CSV P&L (`api/keuangan/csv/route.ts`) ter-commit di A1 `0564e71`.
 
-## Fix "Kesalahan Jaringan" Neraca + Fitur Riwayat Poin (24–25 Sep 2026)
+## Fix "Kesalahan Jaringan" Neraca + Fitur Riwayat Poin (24â€“25 Sep 2026)
 
 ### Fix Kesalahan Jaringan (tab Neraca) -- SELESAI & DUAL-PUSH
 - Root cause: exception tak tertangani di /api/neraca (Turso/Vercel transien)
@@ -5209,7 +5209,7 @@ blocking)
   (per-produk + global + POS) SELESAI 25 Sep (lihat bagian GROSIR
   di atas & TODO item [x]); tinggal QRIS asli.
 
-## ⚠️ ATURAN BAKU NGUDI SUSILO (24 Sep 2026, WIS DIBACA)
+## âš ï¸ ATURAN BAKU NGUDI SUSILO (24 Sep 2026, WIS DIBACA)
 
 ### Konteks
 Folder `D:\Ngudi Susilo\` = induk ekosistem **Yayasan Pendidikan Islam Ngudi Susilo**
@@ -5222,17 +5222,17 @@ Panti-Asuhan, Berkah-Tour, kitab, Pegon-AlIttihad, dll). Setiap folder lembaga p
    jangan ngoko); **mengaturkan, bukan mendikte** (beri pilihan + untung-rugi); jaga aib; ringkas.
 2. **RAMBU BERKAS**: jangan mengubah berkas tanpa diminta; TUNJUKKAN dulu apa yang akan
    diubah, baru kerjakan setelah setuju; jangan hapus apa pun; jangan susun ulang dari
-   nol rancangan lama (baca dulu, kerja di atasnya); file baru → folder lembaga yang sesuai.
+   nol rancangan lama (baca dulu, kerja di atasnya); file baru â†’ folder lembaga yang sesuai.
 3. **RAMBU FIQIH (PALING UTAMA)**: **JANGAN menyimpulkan hukum fiqih sendiri** -- bukan
    wewenang AI. Sebut kitab + bab bila merujuk; bila tak yakin, KATAKAN TIDAK YAKIN.
    Membantu berpikir, bukan menetapkan hukum. Gono-gini = bahan musyawarah, bukan fatwa qath'i.
-4. **JANGAN mengarang angka** -- data tak diketahui → bilang tidak tahu, periksa ke sumber.
+4. **JANGAN mengarang angka** -- data tak diketahui â†’ bilang tidak tahu, periksa ke sumber.
 5. **Data pribadi = amanah** (nama santri, no. HP wali, identitas anggota, mustahik, anak
    asuh) -- jangan ditempelkan ke luar.
 6. **Sistem produksi via Mas Eko** (pengguna meminta; AI merumuskan permintaan dengan jelas).
 7. **Keputusan koperasi (akad, SHU, harga) ada forumnya** -- Pengurus & RAT; AI hanya
    menghitung & menyiapkan usulan.
-8. **Bila ragu, bertanya.** Kekeliran sendiri → koreksi terus terang.
+8. **Bila ragu, bertanya.** Kekeliran sendiri â†’ koreksi terus terang.
 
 ### Prinsip utama (PRINSIP JANGKAR, semua lembaga)
 - Usaha = **jalan ngaji** (dunia + akhirat).
@@ -5241,27 +5241,27 @@ Panti-Asuhan, Berkah-Tour, kitab, Pegon-AlIttihad, dll). Setiap folder lembaga p
 - Adab pesantren jadi bingkai, termasuk urusan teknologi.
 - **Aspek syar'i & muamalah WAJIB tashih ulama.**
 - Setiap orang yang terlibat unit muamalah (pengurus, anggota, nasabah) **wajib mengaji/
-  memahami muamalahnya lebih dulu** (dhawuh Gus Fi 23 Ags 2026) → aplikasi unit usaha
+  memahami muamalahnya lebih dulu** (dhawuh Gus Fi 23 Ags 2026) â†’ aplikasi unit usaha
   perlu komponen edukasi/literasi muamalah, bukan cuma fitur transaksi.
 
 ### Konfirmasi
 Setiap perintah yang menyalahi aturan baku KUDU dikonfirmasi ulang ke user sebelum
 dieksekusi. Cek terakhir (24 Sep 2026): audit syariah + file `SYARIAH-CHECKLIST.md`
-sesuai aturan (tashih ulama tetap jalur pemutus; AI tidak menetapkan hukum). ✅
+sesuai aturan (tashih ulama tetap jalur pemutus; AI tidak menetapkan hukum). âœ…
 
 ### Ringkasan
 - Folder: `D:\Ngudi Susilo\` (root proyek; repo kita = `D:\Ngudi Susilo\kopontren-app\`)
 - File aturan: `CLAUDE.md` (dasar, auto-read), `README.md` (peta induk ekosistem),
   tiap lembaga punya `CLAUDE.md` sendiri. Operasi: `PASANG-DI-LAPTOP-GUS-FI.md`,
   `SUDAH-PINDAH.md`, `DAFTAR-GARAPAN.md`.
-- Prinsip: halal-thoyyib · meringankan · adab pesantren · tashih ulama wajib · muamalah
+- Prinsip: halal-thoyyib Â· meringankan Â· adab pesantren Â· tashih ulama wajib Â· muamalah
   didahului literasi.
-- Ekosistem: YPI Ngudi Susilo (induk) → PP Al Ittihad, Sekolah Formal, Madin & TPQ, Panti
+- Ekosistem: YPI Ngudi Susilo (induk) â†’ PP Al Ittihad, Sekolah Formal, Madin & TPQ, Panti
   Asuhan | Kopontren, BMT, Berkah Tour, Agribisnis (unit usaha) | PT Sewangi Hati N. (F&B).
   **Aturan baca: pondok SEJAJAR unit usaha, tidak menaungi.**
 
 ### Siap
-Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
+Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. âœ…
 ## Sesi 25 Sep 2026 -- Batch #4 UX polish + reports/csv WIB (ACC Gus Fi)
 
 - **Konteks**: setelah Batch #1 (pay_split import, `0dbecf4`) + #3 (zakat WIB,
@@ -5269,29 +5269,29 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   low-priority `reports/csv` UTC. #2 `stock_opname` dikonfirmasi selesai
   (drop 24 Sep, `c46f4fa`).
 - **Hasil**:
-  - P3 teks "Menu pengurus … navigasi atas" (`src/app/page.tsx` L279) →
+  - P3 teks "Menu pengurus â€¦ navigasi atas" (`src/app/page.tsx` L279) â†’
     diupdate: "menu navigasi -- baris atas di desktop, tombol hamburger di
     layar kecil".
   - P3 dropdown filter user `/admin/audit` (sebelumnya hanya user dari 50
-    log pertama) → **fix server-side**: `GET /api/audit` kini kembalikan
+    log pertama) â†’ **fix server-side**: `GET /api/audit` kini kembalikan
     `users` dari tabel `users WHERE active=1` (cache 60 dtk `audit:users`);
     `audit-client.tsx` pakai `data.users` + fallback turunan log (kompat
     respons lama).
-  - P3 hint `pin/setup` → **TERVERIFIKASI SUDAH ADA** sejak Batch C
-    (banner amber "Tak bisa cek sesi -- lanjutkan saja…",
+  - P3 hint `pin/setup` â†’ **TERVERIFIKASI SUDAH ADA** sejak Batch C
+    (banner amber "Tak bisa cek sesi -- lanjutkan sajaâ€¦",
     `src/app/login/pin/setup/page.tsx` L147-152). Tak ada kerja.
-  - Keyboard-nav tablist (APG, 4 grup) → **TERVERIFIKASI 4/4 terwired**
+  - Keyboard-nav tablist (APG, 4 grup) â†’ **TERVERIFIKASI 4/4 terwired**
     (belanja in/out L41, data backup/audit L36, konsinyasi L62, POS
     kategori L227; hook `useTablistNav` di `src/components/ui.tsx`).
-  - `reports/csv` timestamp UTC mentah → helper baru `utcToWib()` di
+  - `reports/csv` timestamp UTC mentah â†’ helper baru `utcToWib()` di
     `lib/format.ts` (pure UTC+7, deterministik, tak tergantung TZ mesin);
     kolom CSV kini `created_at_wib` ('YYYY-MM-DD HH:MM').
 - **Commit + push**: `61dadd4` polish(ux) + `74f704d` fix(reports/csv) +
-  `349ffa0` docs, dual-push `master` + `main` → Vercel auto-deploy.
+  `349ffa0` docs, dual-push `master` + `main` â†’ Vercel auto-deploy.
 - **Verifikasi**: `tsc --noEmit` exit 0; `test:split` 22 + `test:zakat`
   18 + `test:wholesale` PASS; `next build` EXIT 0 (SW-BUILD
   `a228a8be2623`).
-- **Catatan gotcha**: `npm`/`npx` PowerShell kena execution policy →
+- **Catatan gotcha**: `npm`/`npx` PowerShell kena execution policy â†’
   `npm.cmd`/`npx.cmd`; `git push 2>&1` muncul NativeCommandError (kosmetik)
   tapi push sukses; `src/components/ui` itu FILE `ui.tsx`, bukan dir --
   grep dir kosong menipu.
@@ -5317,18 +5317,18 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
     Poin/Cashback/Total Belanja, footer baku: "Tunjukkan kartu ini
     saat berbelanja -- poin & cashback (uang kembali) diterapkan
     otomatis." (basa awam + istilah asli, sesuai catatan Gus).
-  - Auto-generate: `qr_code` kosong → PATCH `{regenerate_qr}` otomatis
-    saat modal dibuka (peran admin; non-admin 403 → hint amber,
+  - Auto-generate: `qr_code` kosong â†’ PATCH `{regenerate_qr}` otomatis
+    saat modal dibuka (peran admin; non-admin 403 â†’ hint amber,
     placeholder "QR belum dibuat", tombol Perbarui menampilkan pesan
     403 dari server).
-  - Tombol "Perbarui QR" (bukan "Ulangi") → dialog `useConfirm`
-    "semua kartu lama … tidak akan berlaku lagi" SEBELUM PATCH --
+  - Tombol "Perbarui QR" (bukan "Ulangi") â†’ dialog `useConfirm`
+    "semua kartu lama â€¦ tidak akan berlaku lagi" SEBELUM PATCH --
     sesuai catatan syariah/data pribadi.
   - Aksi "Kartu" di daftar member (desktop antar `Riwayat|Hapus`,
     kartu mobile h-11); `onQrChanged` sinkron `qr_code` baris daftar.
 - **C2 -- Jam Sibuk** (`api/reports/hourly/route.ts` baru +
   `charts.tsx` + `laporan-admin-client.tsx`):
-  - `GET /api/reports/hourly?days=1..365` (default 30, clamp; NaN → 30),
+  - `GET /api/reports/hourly?days=1..365` (default 30, clamp; NaN â†’ 30),
     tier guard `laporan` (sama persis dgn /api/reports); respons
     `{days, from, hours[24]}` tiap `{h, c, t}`; bucket jam WIB lewat
     `strftime('%H', created_at, '+7 hours')`.
@@ -5340,23 +5340,23 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   - `HourBarChart` (charts.tsx): CSS murni, TANPA dependency baru.
     24 bar min-width 480px + scroll horizontal di layar HP (dipilih
     Gus vs agregasi-2-jam -- sederhana & aksesibel); setiap bar
-    `role="img"` + `aria-label` + `title` ("17.00–18.00 WIB · N
-    transaksi · Rp X"); jam puncak disorot amber + legenda.
+    `role="img"` + `aria-label` + `title` ("17.00â€“18.00 WIB Â· N
+    transaksi Â· Rp X"); jam puncak disorot amber + legenda.
   - Kartu "Jam Sibuk" di tab Ringkasan (antar KPI grid & Top produk):
     label periode sinkron preset 1/7/30/365 + callout puncak
-    ("Puncak: 17.00–18.00 WIB · N transaksi · Rp X"); silent-fail
-    (`console.error` + teks "Gagal memuat…", tak merusak tab).
+    ("Puncak: 17.00â€“18.00 WIB Â· N transaksi Â· Rp X"); silent-fail
+    (`console.error` + teks "Gagal memuatâ€¦", tak merusak tab).
 - **Verifikasi**: `tsc --noEmit` exit 0; `next build` EXIT 0 (52 rute;
   `/api/reports/hourly` ada di route table; /admin/member 138 kB,
   /admin/laporan 131 kB First Load JS).
 - **Sisa uji manual (checklist Gus Fi, nang HP pasca-deploy)**:
   (1) cetak kartu member tanpa tier / silver / gold -- badge & layout;
-  (2) member `qr_code` kosong → modal → auto-generate → cetak → token
+  (2) member `qr_code` kosong â†’ modal â†’ auto-generate â†’ cetak â†’ token
   discan (endpoint lookup scanner = luar scope batch ini);
-  (3) preset 1/7/30/365 di Jam Sibuk sinkron; (4) role kasir →
+  (3) preset 1/7/30/365 di Jam Sibuk sinkron; (4) role kasir â†’
   `PATCH regenerate_qr` 403 (halaman /admin/member sendiri tak
   terjangkau kasir -- tier 'member' = admin+manajer);
-  (5) 24 bar di HP → scroll horizontal.
+  (5) 24 bar di HP â†’ scroll horizontal.
 - **Versi HTML P3 & P4 (25 Sep, ACC Gus Fi -- "digawe ceklist html wae")**:
   `P3-TASHIH-ZAKAT.html` + `P4-PROPOSAL-KONSINYASI.html` (standalone,
   tanpa JS/dependency, mobile-friendly, print-ready, maroon
@@ -5377,77 +5377,77 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   (auth.ts L65): gudang/pembelian/pengurus = 403, `qr_code` tak
   bocor ke role yang tak perlu; `PATCH /api/members/[id]`
   (regenerate_qr) `isAdmin()`-only. Ceklist manual diperluas:
-  (b) persistence qr_code (tutup→buka modal, QR harus sama),
+  (b) persistence qr_code (tutupâ†’buka modal, QR harus sama),
   (d) 403 kasir di level API (bukan hanya UI), (e) visual-check
   scroll 24 bar (aria-label sudah ada; fallback agregasi 2-jam).
-  Lanjut: lapor hasil uji HP → Gus mutusake Batch UX-1 (font,
+  Lanjut: lapor hasil uji HP â†’ Gus mutusake Batch UX-1 (font,
   kontras, retry, `rp()`) vs nunggu validasi non-eng (P3/P4/NMID/
   monitor grosir); grosir v2 + QRIS asli tetep nunggu trigger.
 
 ### UX-7D/7E ACC + audit UX-8 (read-only) -- 27 Sep
-- **7D+7E ACC user**: commit `a844b54` (5 file, +113/−5),
+- **7D+7E ACC user**: commit `a844b54` (5 file, +113/âˆ’5),
   dual-push master=main. tsc 0; build 54/54 (+1 route = `/api/search`
   UX-7A, expected). **Audit-note 7D (VERIFIED, wajib inget)**:
   pengurus TIDAK akses tier `kas` (guard isManager = admin+manajer)
-  MAUPUN `piutang` (allowlist ['admin','manajer','kasir']) → 5 CTA
+  MAUPUN `piutang` (allowlist ['admin','manajer','kasir']) â†’ 5 CTA
   pengurus (Laporan/Zakat/Audit/Ringkasan/Dashboard) = Option C,
   SATU-SATUNYA pilihan valid. Jangan asumsikan pengurus bisa
   piutang/kas di fitur baru.
 - **.gitignore**: `i[0-9]_*.txt` + `i[0-9]_*.cmd` + `.cline/` sudah
-  masuk commit `572cb2e` (ikut 8 file SOP docs/ + dual-push) →
+  masuk commit `572cb2e` (ikut 8 file SOP docs/ + dual-push) â†’
   request "i7_* small commit" = SELESAI via pola generik itu.
 - **Hasil audit UX-8** (grep/read-only, 27 Sep):
   - **Responsive**: modifier sm:=59 / md:=18 / lg:=14 (POS sudah
-    tuned: min-w-0 grid, kartu bayar 2×2, 44px, bottom-nav).
+    tuned: min-w-0 grid, kartu bayar 2Ã—2, 44px, bottom-nav).
     0 modifier di: command-palette, activity-feed, notification-bell,
-    low-stock-client, breadcrumb, pin-pad, dsb. → cek visual 360px
+    low-stock-client, breadcrumb, pin-pad, dsb. â†’ cek visual 360px
     utk palette + feed (Gus Fi).
-  - **A11y**: Batch D sudah ada (aria-expanded ×3, tablist ×3,
-    role=tab ×10 + aria-selected, Modal ESC+focus-trap+aria-modal,
+  - **A11y**: Batch D sudah ada (aria-expanded Ã—3, tablist Ã—3,
+    role=tab Ã—10 + aria-selected, Modal ESC+focus-trap+aria-modal,
     toast role=alert/assertive, `prefers-reduced-motion` @globals L149,
     ring focus-visible di Button ui.tsx). **GAP**: (1) keyboard-nav
-    APG tablist (ArrowLeft/Right/onTabKeyDown) = **0** → Batch E
+    APG tablist (ArrowLeft/Right/onTabKeyDown) = **0** â†’ Batch E
     TIDAK pernah selesai; (2) command-palette (UX-7B) = 0
     onKeyDown (tanpa panah/Enter/Escape); (3) skip-link = 0;
     (4) aria-current = 5 (sidebar OK).
   - **Perf**: N+1 sudah batched (09d5f2d), ref-cache/ttl-cache +
     invalidate('members:/products:/kas:/reports:') saat mutasi,
     API no-store, statis 1th immutable, compress + no-sourcemap.
-    POS lazy (pos-lazy dynamic) → jsQR masuk chunk POS, BUKAN main.
-    next/image ×6, next/font ×3. `loading.tsx` HANYA
+    POS lazy (pos-lazy dynamic) â†’ jsQR masuk chunk POS, BUKAN main.
+    next/image Ã—6, next/font Ã—3. `loading.tsx` HANYA
     admin/dashboard (situs lain = PageSkeleton in-component,
     acceptable).
   - **Visual**: token T.* (hex mentah dilarang, enforced), rp()/
     fmtDateTime/fmtDate/fmtTime/utcToWib/todayWibStr terpusat
     (WIB + id-ID). Empty=74, useConfirm=25, TermTip=33,
     PageSkeleton=58. I-2 DONE: ToastTone 'critical' + 90 dtk +
-    action undo (ui.tsx L449-496; dipakai produk-client ×2,
-    shift-client ×1). **Sisa GAP: 3 "Memuat…" polos di
+    action undo (ui.tsx L449-496; dipakai produk-client Ã—2,
+    shift-client Ã—1). **Sisa GAP: 3 "Memuatâ€¦" polos di
     laporan-admin-client: laba-rugi L472, jam-sibuk L325,
     neraca L616 (ErrorState sudah punya prop `tech` collapsible
     -- hanya loading-nya yang belum skeleton).**
   - **Golden path (VERIFIED end-to-end)**: banner shift
-    pos-client L1074-1130 → handleOpenShift L965 (POST /api/shifts,
-    guard 409 kalau sudah ada open) → F4 simpan (POST /api/sales
-    tx: stok−, snapshot cost, points, cashback, margin-guard,
-    cache-invalidate, notifikasi) → handleCloseShift L980 (PATCH,
+    pos-client L1074-1130 â†’ handleOpenShift L965 (POST /api/shifts,
+    guard 409 kalau sudah ada open) â†’ F4 simpan (POST /api/sales
+    tx: stokâˆ’, snapshot cost, points, cashback, margin-guard,
+    cache-invalidate, notifikasi) â†’ handleCloseShift L980 (PATCH,
     hanya kasir tsb/manager; windowStats by_method + audit
-    shift:close + notifyShiftClosed) → modal rekap L2182.
+    shift:close + notifyShiftClosed) â†’ modal rekap L2182.
     /api/returns: restock guarded changes===1, rollback tx.
     **Finding utk Gus**: sales TIDAK di-gate shift terbuka
     (sengaja?) -- transaksi di luar jendela shift tak masuk rekap
     shift; perlu keputusan.
   - **Financial reconciliation (KONSISTEN, tanpa takaran bug)**:
-    rumus kas kanonis = /api/kas kasAgg (Σsales + cash_in −
-    purchases − expenses − cash_out), dipakai juga /api/neraca
+    rumus kas kanonis = /api/kas kasAgg (Î£sales + cash_in âˆ’
+    purchases âˆ’ expenses âˆ’ cash_out), dipakai juga /api/neraca
     (komen eksplisit "identik dgn halaman Kas"); rumus HPP
     snapshot SAMA PERSIS /api/reports (komen keuangan.ts L144).
     V1 DOKUMENTASI (KEUANGAN_NOTES/NERACA_NOTES, bkn bug):
     retur COGS belum dibalik; piutang/hutang = kas-only (bukan
     P&L); zakat difilter paid_at; stok dinilai cost_price
-    (stok−/cost 0 diabaikan); modal "setara" ≠ ekuitas formal.
+    (stokâˆ’/cost 0 diabaikan); modal "setara" â‰  ekuitas formal.
 - **Rencana implementasi UX-8 (NUNGGU ACC user)**:
-  - **8A** (P1, ~6 baris): 3 "Memuat…" → PageSkeleton/skeleton baris.
+  - **8A** (P1, ~6 baris): 3 "Memuatâ€¦" â†’ PageSkeleton/skeleton baris.
   - **8B** (P2, ~80-120 baris): keyboard-nav APG utk 4 grup tablist
     (roving focus + ArrowLeft/Right/Home/End) + command-palette
     (ArrowUp/Down + Enter + Escape + aria-activedescendant).
@@ -5455,8 +5455,8 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
     focus-restore pasca Modal close.
   - **8D** (opsional): loading.tsx utk /admin/laporan +
     /pengurus/dashboard; keputusan gating shift utk sales.
-  - Est. 3 commit (8A/8B/8C) + dual-push; tiap commit: diff → tsc
-    0 → build → push master+main. Cek visual 4 viewport (360/768/
+  - Est. 3 commit (8A/8B/8C) + dual-push; tiap commit: diff â†’ tsc
+    0 â†’ build â†’ push master+main. Cek visual 4 viewport (360/768/
     1024/1440) = Gus Fi, non-blocking.
 
 ## W2.7 Modul ZIS LEPAS 2 Okt 2026 (`488d679`, dual-push master+main)
@@ -5808,7 +5808,7 @@ Cline siap konfirmasi ulang kalau ada perintah menyalahi aturan baku. ✅
   ALL_EXIT=0 (0 HAS_FAILURE); gate (check-route-exports +
   next build) GATE_EXIT=0; perubahan baris = ASCII (test
   file pre-existing non-ASCII tak disentuh gaya baris baru
-  kecuali pemisah "─" fase yang mengikuti gaya file itu).
+  kecuali pemisah "â”€" fase yang mengikuti gaya file itu).
 - **Note proses:** terminal echo flaky + kill-on-foreground
   -> test:all & gate dijalankan detached via
   `_w53b_runall.vbs` (wscript, window 0) + marker
@@ -6277,47 +6277,6 @@ commit ini.
   (test:strukmedia 29/29); gate build OK; 0 non-ASCII new
   files; frozen intact (sw.js, V1, coop.ts); tanpa schema
   change (v32).
-
-## W11 B4 EMPTY STATE RAMAH -- LEPAS (25-10-2026)
-Ruling Gus Fi (via DeepSeek, 25 Okt): B4 GO COMMIT
-(audit DeepSeek: SEDAP, sedaya gate lulus). C1 = 4211d28.
-
-- ui.tsx Empty + prop `tone` (additive; tanpa tone =
-  tampilan lama persis/zero-delta): 'default' (slate,
-  kelas lama), 'success' (emerald: border-success-300/60
-  bg-success-50 text-success-700 + dark variants; ikon
-  text-success-400/500), 'warning' (amber/attention).
-- 10 halaman, 2 jenis:
-  * Sukses-tone (emerald, "Alhamdulillah..."): piutang
-    ("tidak ada piutang terbuka"), retur ("tidak ada
-    retur tercatat"), hutang ("tidak ada utang supplier
-    terbuka"), low-stock ("semua stok aman (min. 10)"),
-    zakat riwayat ("belum ada riwayat zakat tercatat"),
-    laporan transaksi (tone kondisional: filter kosong =
-    default, periode kosong = success "Alhamdulillah,
-    belum ada transaksi pada periode ini.").
-  * Teks ramah netral ("tercatat" / arah CTA): akad
-    ("Belum ada akad tercatat. Gunakan form di atas."),
-    belanja x2 ("Belum ada belanja supplier tercatat." /
-    "Belum ada pengeluaran tercatat."), kas x2 ("Belum
-    ada gerakan kas tercatat. Mulai lewat form di
-    atas."), koperasi ("Belum ada mutasi simpanan
-    tercatat." + "Belum ada pinjaman anggota (qardh)
-    tercatat."), zakat log ("Belum ada log verifikasi
-    harga emas tercatat.").
-- Bonus: simbol non-ASCII di low-stock ("Semua stok aman
-  (lebih-dari-same 10)") diganti "min." (gate 0
-  non-ASCII di baris +).
-- Gates: tsc --noEmit 0; test:all 0 FAIL (ALL_PASS);
-  check-route-exports OK; check-theme-gate OK; next
-  build 0 (66 pages); 0 non-ASCII di baris +; frozen
-  intact; tanpa skema; fiqih: none.
-- Next (GO CODE, menunggu ACC Gus Fi): B1 revisi
-  sapaan -- ganti "Selamat sore WIB, semoga berkah |
-  {date} | login sebagai {nama} ({role})" (kaku) dadi
-  "Sugeng {band}, muga-muga sedaya lancar lan berkah.
-  {date}"; hapus "login sebagai..." (redundant).
-
 - Residual E31: watermark = ditunda batch enggal.
 
 ### Next (menunggu ACC Gus Fi)
@@ -6529,4 +6488,45 @@ Ruling Gus Fi (via DeepSeek, 25 Okt): B3 GO COMMIT
   Empty: default/success/warning; "Alhamdulillah! ..." +
   aksen emerald; 8-10 halaman prioritas transaksi/stok/
   laporan).
+
+
+## W11 B4 EMPTY STATE RAMAH -- LEPAS (25-10-2026)
+Ruling Gus Fi (via DeepSeek, 25 Okt): B4 GO COMMIT
+(audit DeepSeek: SEDAP, sedaya gate lulus). C1 = 4211d28.
+
+- ui.tsx Empty + prop `tone` (additive; tanpa tone =
+  tampilan lama persis/zero-delta): 'default' (slate,
+  kelas lama), 'success' (emerald: border-success-300/60
+  bg-success-50 text-success-700 + dark variants; ikon
+  text-success-400/500), 'warning' (amber/attention).
+- 10 halaman, 2 jenis:
+  * Sukses-tone (emerald, "Alhamdulillah..."): piutang
+    ("tidak ada piutang terbuka"), retur ("tidak ada
+    retur tercatat"), hutang ("tidak ada utang supplier
+    terbuka"), low-stock ("semua stok aman (min. 10)"),
+    zakat riwayat ("belum ada riwayat zakat tercatat"),
+    laporan transaksi (tone kondisional: filter kosong =
+    default, periode kosong = success "Alhamdulillah,
+    belum ada transaksi pada periode ini.").
+  * Teks ramah netral ("tercatat" / arah CTA): akad
+    ("Belum ada akad tercatat. Gunakan form di atas."),
+    belanja x2 ("Belum ada belanja supplier tercatat." /
+    "Belum ada pengeluaran tercatat."), kas x2 ("Belum
+    ada gerakan kas tercatat. Mulai lewat form di
+    atas."), koperasi ("Belum ada mutasi simpanan
+    tercatat." + "Belum ada pinjaman anggota (qardh)
+    tercatat."), zakat log ("Belum ada log verifikasi
+    harga emas tercatat.").
+- Bonus: simbol non-ASCII di low-stock ("Semua stok aman
+  (lebih-dari-same 10)") diganti "min." (gate 0
+  non-ASCII di baris +).
+- Gates: tsc --noEmit 0; test:all 0 FAIL (ALL_PASS);
+  check-route-exports OK; check-theme-gate OK; next
+  build 0 (66 pages); 0 non-ASCII di baris +; frozen
+  intact; tanpa skema; fiqih: none.
+- Next (GO CODE, menunggu ACC Gus Fi): B1 revisi
+  sapaan -- ganti "Selamat sore WIB, semoga berkah |
+  {date} | login sebagai {nama} ({role})" (kaku) dadi
+  "Sugeng {band}, muga-muga sedaya lancar lan berkah.
+  {date}"; hapus "login sebagai..." (redundant).
 
