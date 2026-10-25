@@ -6428,3 +6428,34 @@ B2 GO CODE; B3/B4 sasampunipun B2; Google/WA login TUNDA
   "hidden sm:table"), B3 palet/glass/ambient, B4 empty
   ramah.
 
+## W11 B2 MOBILE CARD STANDARD -- LEPAS (25-10-2026)
+Ruling Gus Fi (via DeepSeek, 25 Okt): B2 GO COMMIT
+(audit DeepSeek: SEDAP, sedaya gate lulus).
+
+- Temuan audit 7 file target: 6 file sampun
+  ngginakaken pola standar (desk wrapper "card hidden
+  overflow-x-auto sm:block" + kartu mobile "card
+  sm:hidden" + baris 3-garis + hit-area 44px):
+  audit-client (L222/293), persetujuan-client
+  (L317/402), zis-client (3 pasangan), produk-client
+  (L633/818), shift-client (L126/191), member-client
+  (L330/448).
+- C1 = eec03fc (satur file: src/components/admin/
+  hutang-client.tsx, +3/-2): hutang boten wonten tabel
+  (list card mung, mobile-friendly sagedadi) namung
+  struktur mboten standar -> container "space-y-2"
+  (kartu-kartu rengganing) dipun ganti container
+  "card" mung siji + baris "card p-3" dipun ganti
+  "border-b ... last:border-0" (pola kas-client).
+  Isian baris sampun 3-garis: supplier+HP/jumlah&
+  tempo | StatusBadge, tanggal | Bayar/Hapus, detail.
+- C2 docs: commit iki.
+- Gates: tsc --noEmit 0; gate (route-exports + theme +
+  next build) LULUS; test:all 0 FAIL (18 ALL_PASS,
+  tanpa flake); 0 non-ASCII di diff; frozen intact;
+  tanpa skema; fiqih: none.
+- Next (menunggu ACC Gus Fi): B3 palet+glass
+  (--shadow-ambient token, utility .card-glass,
+  promosi palet emerald KPI positif + gold SHU),
+  B4 empty ramah.
+
