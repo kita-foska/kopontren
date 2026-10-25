@@ -241,12 +241,13 @@ export function HutangClient({ admin }: { admin: boolean }) {
         <div className="card mb-2 p-3">
           <p className="text-sm font-bold">Daftar hutang</p>
         </div>
-        <div className="space-y-2">
+        {/* Mobile card standard (pola kas-client): satu card, baris border-b. */}
+        <div className="card">
           {payables.map((x) => {
             const overdueRow = isOverdue(x);
             const dueSoonRow = isDueSoon(x);
             return (
-              <div key={x.id} className="card p-3">
+              <div key={x.id} className="border-b border-slate-200 p-3 last:border-0 dark:border-navy-700">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold">
