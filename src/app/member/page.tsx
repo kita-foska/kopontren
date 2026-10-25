@@ -3,6 +3,7 @@ import { canAccess, currentUser } from '@/lib/auth';
 import { db } from '@/db';
 import { queryPointHistory, type PointEntry } from '@/lib/points';
 import { wibToday } from '@/lib/zakat-period';
+import { wibDayBand } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import lazy from 'next/dynamic';
 import { PageSkeleton } from '@/components/ui';
@@ -128,10 +129,11 @@ export default async function MemberPage() {
   return (
     <Shell user={user}>
       <h1 className="mb-1 text-2xl font-extrabold tracking-tight">
-        Kartu <span className="text-accent-500 dark:text-accent-300">Member Saya</span>
+        Assalamu&apos;alaikum, {member?.name || user.display_name || user.username}
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-        Ringkasan poin, saldo reward, transaksi, dan pinjaman koperasi Anda - read-only.
+        Selamat {wibDayBand()} WIB, semoga berkah. Kartu Member Anda -- poin, saldo reward,
+        transaksi, dan pinjaman koperasi (read-only).
       </p>
       <MemberDashboardClient
         member={member}

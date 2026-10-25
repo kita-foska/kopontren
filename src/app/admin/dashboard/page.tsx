@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { canAccess, currentUser, roleHome } from '@/lib/auth';
 import { db } from '@/db';
-import { kpiDelta, rp, startOfDayJakarta } from '@/lib/format';
+import { kpiDelta, rp, startOfDayJakarta, wibDayBand } from '@/lib/format';
 import { dataPerLabel, wibTime } from '@/lib/confidence';
 import { Shell } from '@/components/shell';
 import { LowStockClient } from '@/components/admin/low-stock-client';
@@ -227,14 +227,14 @@ export default async function AdminDashboardPage() {
               </span>
             </div>
             <h1 className="mt-1 text-2xl font-extrabold tracking-tight">
-              Dashboard <span className="text-white/85">Admin</span>
+              Assalamu&apos;alaikum, {user.display_name || user.username}
             </h1>
             <p className="mt-1 text-xs text-white/80 sm:text-sm">
+              Dashboard Admin -- Selamat {wibDayBand()} WIB, semoga berkah |{' '}
               {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
                 new Date()
               )}{' '}
-              · {dataPerLabel(wibTime(new Date().toISOString()))}
-              · Ringkasan operasional Kopontren Al Ittihad
+              | {dataPerLabel(wibTime(new Date().toISOString()))}
             </p>
           </div>
           <div className="flex items-center gap-2">

@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, MessageCircle } from 'lucide-react';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
+import { shareWa } from '@/lib/rekap';
 import { Button } from '@/components/ui';
 import { roleHome } from '@/lib/features';
 
@@ -81,6 +82,26 @@ export default function LoginPage() {
     } finally {
       setBusy(false);
     }
+  }
+
+  // Wave 11 UI/UX P1: Bantuan WA di halaman login -- deep-link wa.me
+  // reuse shareWa (lib/rekap, pola low-stock alert). Nomor toko dari
+  // /api/settings bila dapat; bila tak auth/offline -> fallback share
+  // sheet (shareWa tanpa nomor).
+  async function helpWa() {
+    let phone = '';
+    try {
+      const r = await fetch('/api/settings');
+      if (r.ok) {
+        const d = (await r.json().catch(() => null)) as {
+          data?: { store_phone?: string };
+        };
+        phone = d?.data?.store_phone || '';
+      }
+    } catch {
+      /* offline -> share sheet */
+    }
+    shareWa('Assalamu\'alaikum, saya membutuhkan bantuan Kopontren.', phone);
   }
 
   return (
@@ -161,6 +182,16 @@ export default function LoginPage() {
         </form>
         <p className="mt-5 text-center text-xs text-slate-500 dark:text-slate-400">
           Akun dibuat oleh Pengurus. Hubungi pengurus jika belum punya username.
+        </p>
+        <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
+          Butuh bantuan?{' '}
+          <button
+            type="button"
+            onClick={helpWa}
+            className="inline-flex items-center gap-1 font-semibold text-accent-700 hover:text-accent-500 dark:text-accent-300 dark:hover:text-accent-200"
+          >
+            <MessageCircle className="h-3.5 w-3.5" /> Hubungi via WhatsApp
+          </button>
         </p>
       </div>
     </div>

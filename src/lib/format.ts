@@ -115,3 +115,16 @@ export function utcToWib(v: string | number | Date): string {
 export function todayWibStr(): string {
   return startOfDayJakarta(0).slice(0, 10);
 }
+
+/**
+ * Wave 11 UI/UX (P1): band jam WIB untuk sapaan Islami di hero
+ * dashboard. WIB = UTC+7 tanpa DST -> deterministik dari jam UTC.
+ * pagi 04-10, siang 10-15, sore 15-18, selain itu malam.
+ */
+export function wibDayBand(now: Date = new Date()): 'pagi' | 'siang' | 'sore' | 'malam' {
+  const h = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' })).getHours();
+  if (h >= 4 && h < 10) return 'pagi';
+  if (h >= 10 && h < 15) return 'siang';
+  if (h >= 15 && h < 18) return 'sore';
+  return 'malam';
+}

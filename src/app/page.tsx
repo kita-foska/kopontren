@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { canAccess, currentUser, isManager } from '@/lib/auth';
 import { db } from '@/db';
-import { rp, startOfDayJakarta } from '@/lib/format';
+import { rp, startOfDayJakarta, wibDayBand } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { Button, Empty, StatusBadge } from '@/components/ui';
 import { payMethodLabel } from '@/lib/pay-methods';
@@ -100,7 +100,13 @@ export default async function DashboardPage() {
            TRANSAKSI TERAKHIR (read-only). ===== */
         <div className="space-y-4">
           <div className="card fade-up p-4 sm:p-5">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="text-xl font-extrabold tracking-tight">
+              Assalamu&apos;alaikum, {user.display_name || user.username}
+            </p>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+              Selamat {wibDayBand()} WIB -- semoga hari Anda berkah.
+            </p>
+            <p className="mt-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Sesi kasir · {dateLine}
             </p>
             <Button
@@ -188,10 +194,11 @@ export default async function DashboardPage() {
         <div className="space-y-4">
           <div className="card-hero mb-5">
             <h1 className="text-2xl font-extrabold tracking-tight">
-              Ringkasan <span className="text-white/80">Hari Ini</span>
+              Assalamu&apos;alaikum, {user.display_name || user.username}
             </h1>
             <p className="mt-1 text-sm text-white/70">
-              {dateLine} · login sebagai {user.display_name || user.username} ({user.role})
+              Selamat {wibDayBand()} WIB, semoga berkah | {dateLine} | login sebagai{' '}
+              {user.display_name || user.username} ({user.role})
             </p>
           </div>
 

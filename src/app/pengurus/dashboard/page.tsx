@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { canAccess, currentUser, isManager, roleHome } from '@/lib/auth';
 import type { Feature } from '@/lib/features';
 import { db } from '@/db';
-import { kpiDelta, rp, startOfDayJakarta, type KpiDelta } from '@/lib/format';
+import { kpiDelta, rp, startOfDayJakarta, type KpiDelta, wibDayBand } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { PengurusDashboardClient } from '@/components/pengurus-dashboard-client';
 import { ActivityFeed, type FeedItem, type KpiMover } from '@/components/activity-feed';
@@ -205,13 +205,14 @@ export default async function PengurusDashboardPage() {
               </span>
             </div>
             <h1 className="mt-1 text-2xl font-extrabold tracking-tight">
-              Dashboard <span className="text-white/85">Global</span>
+              Assalamu&apos;alaikum, {user.display_name || user.username}
             </h1>
             <p className="mt-1 text-xs text-white/80 sm:text-sm">
+              Dashboard Global -- Selamat {wibDayBand()} WIB, semoga berkah |{' '}
               {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
                 new Date()
               )}{' '}
-              · Laporan keseluruhan Kopontren (Rapat Pengurus)
+              | Laporan keseluruhan Kopontren (Rapat Pengurus)
             </p>
           </div>
           <div className="flex items-center gap-2">
