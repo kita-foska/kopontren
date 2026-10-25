@@ -1,16 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { currentUser } from '@/lib/auth';
-import { db, SCHEMA_VERSION } from '@/db';
-import { cacheStats } from '@/lib/ref-cache';
 import {
   buildHealthCards,
   healthSummary,
   type HealthCard,
   type HealthTone,
 } from '@/lib/health';
+import { collectHealthInput } from '@/lib/health-collector';
 import { fmtDateTime } from '@/lib/format';
 import { Shell } from '@/components/shell';
 import { Badge, Button } from '@/components/ui';
@@ -34,7 +31,9 @@ export const dynamic = 'force-dynamic';
  * Log, Backup terakhir, Notifikasi (definisi P13, TODO L1298).
  * Server component: query DB langsung (pola dashboard); tanpa client
  * component; "Muat Ulang" = link ke halaman ini (tanpa polling).
- * Logika status = modul pure src/lib/health.ts (suite 33).
+ * Logika status = modul pure src/lib/health.ts (suite 33/44);
+ * pengumpulan input = kolektor shared W14-3 (src/lib/health-collector.ts,
+ * dipakai juga dashboard pengurus -- jantung yang sama, UX-4).
  */
 
 /** Ikon per kartu (lucide = inline SVG; gaya identik dashboard admin). */
@@ -59,81 +58,13 @@ export default async function AdminHealthPage() {
   if (!user || user.role !== 'admin') redirect(user ? '/' : '/login');
 
   const nowIso = new Date().toISOString();
-  const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
 
-  // -- DB + skema: satu round-trip = ukur latensi sekaligus versi. --
-  let dbOk = false;
-  let dbMs: number | null = null;
-  let schemaVersion: number | null = null;
-  let audit24h = 0;
-  let lastAuditAt: string | null = null;
-  let backupLast: string | null = null;
-  let backupLastBy: string | null = null;
-  let vapidConfigured = false;
-  let notifCount = 0;
-  try {
-    const d = await db();
-    const t0 = Date.now();
-    const svRow = (await d
-      .prepare('SELECT version FROM schema_version LIMIT 1')
-      .get()) as { version: number } | undefined;
-    dbMs = Date.now() - t0;
-    dbOk = true;
-    schemaVersion = svRow ? Number(svRow.version) : null;
-    const auditRow = (await d
-      .prepare(
-        `SELECT COUNT(*) c, MAX(created_at) m FROM audit_log WHERE created_at >= ?`
-      )
-      .get(dayAgo)) as { c: number; m: string | null };
-    audit24h = Number(auditRow.c);
-    lastAuditAt = auditRow.m;
-    const bRow = (await d
-      .prepare(`SELECT value FROM settings WHERE key = 'backup_last'`)
-      .get()) as { value: string } | undefined;
-    backupLast = bRow ? bRow.value : null;
-    const byRow = (await d
-      .prepare(`SELECT value FROM settings WHERE key = 'backup_last_by'`)
-      .get()) as { value: string } | undefined;
-    backupLastBy = byRow ? byRow.value : null;
-    const vRow = (await d
-      .prepare('SELECT public_key FROM vapid_keys WHERE id = 1')
-      .get()) as { public_key: string } | undefined;
-    vapidConfigured = Boolean(vRow && String(vRow.public_key).trim());
-    const nRow = (await d.prepare('SELECT COUNT(*) c FROM notifications').get()) as {
-      c: number;
-    };
-    notifCount = Number(nRow.c);
-  } catch {
-    // DB tak terjangkau: kartu tetap dirender dengan status GAGAL/OFFLINE
-    // (itulah gunanya halaman ini -- jangan 500, laporkan).
-  }
-
-  // -- Stempel build: marker SW-BUILD di public/sw.js (frozen; hanya dibaca).
-  let buildStamp = '';
-  try {
-    const sw = readFileSync(join(process.cwd(), 'public', 'sw.js'), 'utf8');
-    const m = sw.match(/^\/\/ SW-BUILD:(\S+)/m);
-    if (m) buildStamp = m[1];
-  } catch {
-    // dev tanpa build: kartu menampilkan "stempel tidak tersedia".
-  }
-
-  const cacheKeys = cacheStats().keys;
-  const cards = buildHealthCards({
-    dbOk,
-    dbMs,
-    schemaVersion,
-    expectedSchema: SCHEMA_VERSION,
-    buildStamp,
-    cacheKeys,
-    audit24h,
-    lastAuditAt,
-    backupLast,
-    backupLastBy,
-    vapidConfigured,
-    notifCount,
-    nowIso,
-  });
+  // -- W14-3: kolektor shared -- query DB + stempel build + ref-cache
+  //    kini satu fungsi (src/lib/health-collector.ts), dipakai bersama
+  //    dashboard pengurus. DB tak terjangkau = input degraded, bukan 500.
+  const input = await collectHealthInput(nowIso);
+  const cacheKeys = input.cacheKeys;
+  const cards = buildHealthCards(input);
   const summary = healthSummary(cards);
   const kpiCards: KpiCardDef[] = cards.map((c) => ({
     label: c.label,

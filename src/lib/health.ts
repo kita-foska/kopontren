@@ -241,3 +241,63 @@ export function healthSummary(cards: HealthCard[]): {
     };
   return { ok: true, tone: 'good', label: 'Sedaya sehat' };
 }
+
+/**
+ * W14-3 HEALTH METER (dashboard pengurus, 26 Okt 2026): skor agregat
+ * 0-100 dari 7 kartu + 3 baris rasio + ambang zona. SATU sumber data
+ * dgn /admin/health (buildHealthCards) -- jantung yang sama, dua tampilan.
+ * Tetap hermetis: tanpa dependensi server.
+ */
+
+/** Ambang zona (ruling W14-3): >= 90 hijau, >= 40 amber, < 40 merah. */
+export const HEALTH_SCORE = { good: 90, ok: 40 } as const;
+
+export type MeterTone = 'green' | 'amber' | 'red';
+
+/**
+ * Skor agregat: 100 - 30 per kartu `bad` - 10 per kartu `warn`
+ * (bawah 0, atas 100). Kartu `good` tak mengurangi apa pun.
+ * 7 kartu semua good = 100; DB gagal (db+koneksi bad + versi warn) = 30.
+ */
+export function healthScore(cards: HealthCard[]): number {
+  let s = 100;
+  for (const c of cards) {
+    if (c.tone === 'bad') s -= 30;
+    else if (c.tone === 'warn') s -= 10;
+  }
+  return Math.max(0, Math.min(100, s));
+}
+
+/** Zona warna jarum/lingkaran: >= 90 green, >= 40 amber, < 40 red. */
+export function healthScoreTone(score: number): MeterTone {
+  if (score >= HEALTH_SCORE.good) return 'green';
+  if (score >= HEALTH_SCORE.ok) return 'amber';
+  return 'red';
+}
+
+/** Baris rasio speedometer (DB / Backup / Push) -- proyeksi 3 kartu dari 7. */
+export interface HealthMeterRow {
+  key: 'db' | 'backup' | 'notifikasi';
+  label: string;
+  value: string;
+  sub: string;
+  tone: HealthTone;
+  warn: boolean;
+}
+
+/** Ambil baris db/backup/notifikasi (urutan tetap) dari kartu kesehatan. */
+export function healthMeterRows(cards: HealthCard[]): HealthMeterRow[] {
+  const byKey = new Map(cards.map((c) => [c.key, c] as const));
+  const want: Array<[HealthMeterRow['key'], string]> = [
+    ['db', 'Database'],
+    ['backup', 'Backup'],
+    ['notifikasi', 'Push'],
+  ];
+  const out: HealthMeterRow[] = [];
+  for (const [key, label] of want) {
+    const c = byKey.get(key);
+    if (!c) continue;
+    out.push({ key, label, value: c.value, sub: c.sub, tone: c.tone, warn: c.warn });
+  }
+  return out;
+}

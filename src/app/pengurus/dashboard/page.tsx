@@ -8,6 +8,9 @@ import { PengurusDashboardClient } from '@/components/pengurus-dashboard-client'
 import { ActivityFeed, type FeedItem, type KpiMover } from '@/components/activity-feed';
 import { Button } from '@/components/ui';
 import { KpiGrid, type KpiCardDef } from '@/components/kpi-card';
+import { HealthMeter } from '@/components/health-meter';
+import { buildHealthCards } from '@/lib/health';
+import { collectHealthInput } from '@/lib/health-collector';
 import {
   TrendingUp,
   Wallet,
@@ -180,6 +183,11 @@ export default async function PengurusDashboardPage() {
   // Pengurus read-only: kas/piutang bukan miliknya, jadi CTA ke-5 =
   // dashboard admin (tier 'laporan').
   type QuickAction = { label: string; href: string; tier: Feature };
+  // W14-3: Health meter -- kolektor shared dgn /admin/health (UX-4:
+  // jantung yang sama). DB tak terjangkau = skor merah, halaman tetap
+  // ter-render (kolektor degraded, bukan throw).
+  const healthCards = buildHealthCards(await collectHealthInput());
+
   const quickActions: QuickAction[] = [
     { label: 'Laporan', href: '/admin/laporan', tier: 'laporan' },
     { label: 'Zakat', href: '/admin/zakat', tier: 'zakat' },
@@ -230,6 +238,16 @@ export default async function PengurusDashboardPage() {
       </div>
 
       <KpiGrid cards={cards} />
+
+      {/* W14-3: Health meter -- speedometer kesehatan sistem (DB/backup/
+          push + skor agregat). Drill-detail hanya role admin
+          (/admin/health guard = admin-only). */}
+      <div className="card p-4">
+        <HealthMeter
+          cards={healthCards}
+          drillHref={user.role === 'admin' ? '/admin/health' : undefined}
+        />
+      </div>
 
       <div className="card fade-up p-4">
         <h2 className="mb-2 font-bold">Aksi cepat</h2>
