@@ -137,6 +137,58 @@
   - **NEXT W14**: W14-3 Dashboard Health Meter (O5) -- 4 gauge
     (transaksi pending, antrean offline, kesehatan DB, kesiapan
     PWA).
+  ### FIX NAV -- BUG HAMBURGER MOBILE: BOTTOM NAV z-50 -> z-30 (ACC GO FIX 26 Okt, ruling DeepSeek)
+  - **Insiden**: menu hamburger mobile -- saat drawer terbuka,
+    overlay (z-40) tidak menutupi pill navigasi bawah
+    (z-50, setara drawer z-50): pill tetap cemerlang & bisa
+    diklik di atas scrim (layak "nutupi" menu).
+  - **Root cause**: src/components/bottom-nav.tsx (pill
+    `fixed inset-x-3 bottom-3 z-50`). Lapisan target: Drawer
+    z-50 > Overlay/Header z-40 > Bottom Nav z-30 > konten.
+  - **Fix minimal (ruling: 1 file 1 kelas)**: z-50 -> z-30 +
+    komentar desain di header komponen. State shell
+    (sidebarOpen), scrim, aria-hidden + inert TIDAK diubah;
+    perilaku desktop tak terpengaruh (pill `md:hidden`).
+  - **Gate**: tsc 0; test:all 44/44; gate build 0; 0
+    non-ASCII (file batch); frozen utuh; TANPA perubahan
+    skema (v34).
+   ### W14-3 -- HEALTH METER: SPIDOMETER DASHBOARD PENGURUS (ACC GO CODE 26 Okt, ruling DeepSeek)
+   - **lib/health.ts (pure, perluasan suite 33)**:
+     `HEALTH_SCORE {good:90, ok:40}`; `healthScore(cards)` =
+     100 - 30/bad - 10/warn (floor 0; DB gagal total = 30);
+     `healthScoreTone` (>=90 green / >=40 amber / <40 red);
+     `healthMeterRows` (3 baris db/backup/notifikasi dari 7
+     kartu, urutan tetap, robust utk kartu degraded).
+   - **lib/health-collector.ts (anyar, server-only)**:
+     `collectHealthInput(nowIso)` -- kolektor SHARED (query
+     schema_version + audit_log + settings backup_last/_by +
+     vapid_keys + notifications, stempel SW-BUILD, ref-cache).
+     /admin/health di-refactor memakai kolektor ini (jantung
+     yang sama, UX-4). DB tak terjangkau = input degraded,
+     BUKAN throw/500.
+   - **components/health-meter.tsx (anyar, server-safe)**:
+     spidometer SVG busur 180 derajat + 3 zona (merah 0-39 /
+     amber 40-89 / hijau 90-100) + jarum + busur progres +
+     angka skor; 3 baris rasio (Database/Backup/Push) dgn
+     titik tone; drill-down /admin/health HANYA role admin
+     (guard halaman = admin-only), selain itu teks
+     informatif. 0 hook (SVG statis dari prop -- hydration
+     aman), 0 emoji, semua bentuk = inline SVG.
+   - **pengurus/dashboard/page.tsx**: ter-mount di bawah
+     KpiGrid, `buildHealthCards(await collectHealthInput())`.
+   - **Test**: scripts/test-health-meter.ts suite #44 (28
+     check: ambang zona, skor deterministik 7bad=0 /
+     DBgagal=30 / mix=70, boundary tone 90/89/40/39, 3 baris
+     + robust degraded, hermetis health.ts, ASCII + server-safe
+     komponen). test:all kini = 45 suite.
+   - **Tutorial**: docs/TUTORIAL-W14-3.html (inline SVG,
+     0 emoji, bahasa awam: baca spidometer, 3 zona, 3 baris,
+     drill-down admin, kapan angka berubah, ringkasan cepat).
+   - **Gate**: tsc 0; test:all 45/45; gate build 0; 0
+     non-ASCII (file batch); frozen utuh; tanpa dependency
+     anyar; TANPA perubahan skema (v34).
+   - **NEXT W14**: Wave 14 TUNTAS (W14-1 + W14-2 + FIX NAV +
+     W14-3); tunggu Wave 15.
 
 
 ## 2026-10-19

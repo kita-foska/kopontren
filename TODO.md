@@ -2897,7 +2897,35 @@ Dashboard Health Meter.**
   Gate: tsc 0; test:all 44/44; gate build 0; 0 non-ASCII
   (file batch); frozen utuh; TANPA perubahan skema (v34).
   Detail: MEMORY.md seksi "W14-2".
-- [ ] **W14-3 Dashboard Health Meter (O5): 4 gauge
-  (transaksi pending, antrean offline, kesehatan DB,
-  kesiapan PWA). NEXT.**
+- [x] **FIX NAV -- bug hamburger mobile (z-index bottom-nav)
+  -- SELESAI (ACC GO FIX 26 Okt, ruling DeepSeek):** Bottom Nav
+  z-50 = drawer z-50, di atas overlay z-40 -> saat drawer
+  terbuka pill navigasi bawah tetap cemerlang & bisa diklik
+  di atas scrim. Fix minimal: z-50 -> z-30 (1 file 1 kelas,
+  src/components/bottom-nav.tsx + komentar desain); state
+  shell / scrim / aria-hidden tidak diubah. Gate: tsc 0;
+  test:all 44/44; gate build 0; 0 non-ASCII (file batch);
+  frozen utuh; TANPA perubahan skema (v34). Detail:
+  MEMORY.md seksi "FIX NAV".
+- [x] **W14-3 Dashboard Health Meter (O5) -- SELESAI
+  (kode + test + tutorial; ACC GO CODE 26 Okt, ruling
+  DeepSeek):** spidometer kesehatan sistem di dashboard
+  pengurus (/pengurus/dashboard, di bawah KPI grid):
+  speedometer SVG busur 180 derajat + 3 zona (merah
+  0-39 / amber 40-89 / hijau 90-100) + jarum + busur
+  progres + angka skor 0-100 (100 - 30/bad - 10/warn,
+  floor 0); 3 baris rasio Database/Backup/Push +
+  drill-down ke /admin/health (hanya role admin; selain
+  itu teks informatif). lib/health.ts perluas pure API
+  (healthScore/healthScoreTone/healthMeterRows/
+  HEALTH_SCORE); lib/health-collector.ts (anyar, server):
+  kolektor HealthInput SHARED -- /admin/health di-refactor
+  memakai kolektor ini (jantung yang sama, UX-4); DB tak
+  terjangkau = input degraded, bukan 500. Komponen
+  server-safe (tanpa hook -- SVG statis dari prop).
+  Test: test-health-meter suite #44 (28 check).
+  TUTORIAL-W14-3.html (inline SVG, 0 emoji). Gate: tsc 0;
+  test:all 45/45; gate build 0; 0 non-ASCII (file batch);
+  frozen utuh; TANPA perubahan skema (v34). Detail:
+  MEMORY.md seksi "W14-3".
 
