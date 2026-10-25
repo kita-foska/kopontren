@@ -17,6 +17,8 @@ function publicUser(r: Record<string, unknown>) {
     roles: parseUserRoles(r.roles as string | null, role),
     active: r.active,
     pw_default: r.pw_default,
+    // W12 (v34): gate login Google per akun (Admin; OFF default).
+    allow_google: Number(r.allow_google ?? 0),
     created_at: r.created_at,
   };
 }
@@ -29,11 +31,11 @@ export async function GET() {
   const d = await db();
   const users = (
     await d
-      .prepare('SELECT id, username, display_name, role, roles, active, pw_default, created_at FROM users ORDER BY username')
+      .prepare('SELECT id, username, display_name, role, roles, active, pw_default, allow_google, created_at FROM users ORDER BY username')
       .all()
   ).map((u) => publicUser(u as Record<string, unknown>));
   const self = (await d
-    .prepare('SELECT id, username, display_name, role, roles, active, pw_default, created_at FROM users WHERE id = ?')
+    .prepare('SELECT id, username, display_name, role, roles, active, pw_default, allow_google, created_at FROM users WHERE id = ?')
     .get(user.id)) as Record<string, unknown>;
   return NextResponse.json({ users, self: publicUser(self as Record<string, unknown>) });
 }
@@ -115,6 +117,12 @@ export async function POST(req: Request) {
       hashPassword(password, salt),
       user.id
     );
+  // W12 (v34): opsional -- saat buat akun, Admin sekaligus mengizinkan
+  // login Google (username = email akun Google; gate tetap di tangan
+  // Admin -- tanpa auto-create).
+  if ((b as Record<string, unknown>).allow_google === true) {
+    await d.prepare('UPDATE users SET allow_google = 1 WHERE id = ?').run(Number(info.lastInsertRowid));
+  }
   await logAudit(user, 'user:create', 'users', Number(info.lastInsertRowid), undefined, {
     username,
     role,
@@ -132,7 +140,16 @@ export async function PUT(req: Request) {
   if (!id) return NextResponse.json({ error: 'id tidak valid' }, { status: 400 });
   const d = await db();
   const target = (await d.prepare('SELECT * FROM users WHERE id = ?').get(id)) as
-    | { id: number; salt: string; pass_hash: string; username: string; role: string; roles: string | null; active: number }
+    | {
+        id: number;
+        salt: string;
+        pass_hash: string;
+        username: string;
+        role: string;
+        roles: string | null;
+        active: number;
+        allow_google: number;
+      }
     | undefined;
   if (!target) return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 });
 
@@ -170,6 +187,32 @@ export async function PUT(req: Request) {
     await logAudit(user, 'user:reset-password', 'users', id, undefined, {
       username: (target as { username?: string }).username,
     }, req);
+    return NextResponse.json({ ok: true });
+  }
+
+  // W12 (v34): gate amanah login Google per akun (tashih ruling Gus Fi
+  // via DeepSeek): hanya Admin, tulis LANGSUNG + audit (bukan approval
+  // flow -- approval flow untuk aksi sensitif: active/role/create-admin).
+  // Guard: mengizinkan login Google utk DIRI SENDIRI = memberi bypass
+  // verifikasi password ke akun sendiri -> dilarang (amanah).
+  if (b.allow_google !== undefined) {
+    const allow = b.allow_google ? 1 : 0;
+    if (allow === 1 && id === user.id) {
+      return NextResponse.json(
+        { error: 'Izin Google untuk akun sendiri tidak bisa diaktifkan' },
+        { status: 400 }
+      );
+    }
+    await d.prepare('UPDATE users SET allow_google = ? WHERE id = ?').run(allow, id);
+    await logAudit(
+      user,
+      'user:allow-google',
+      'users',
+      id,
+      { allow_google: Number(target.allow_google ?? 0) },
+      { allow_google: allow },
+      req
+    );
     return NextResponse.json({ ok: true });
   }
 

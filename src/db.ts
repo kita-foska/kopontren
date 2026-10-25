@@ -1399,6 +1399,18 @@ export async function saveZakatSettings(
     await d.exec('CREATE INDEX IF NOT EXISTS idx_wadi_ledger_member ON wadi_ledger(member_id, created_at DESC)');
   }
 
+  // W12 (v34, 2026-10-26): Google OAuth manual -- 2 kolom additive utk
+  // tabel users. Idempoten (execColumn cek PRAGMA table_info); DB fresh
+  // juga mendapat keduanya (CREATE di atas tanpa kolom ini; fullInit
+  // jalankan migrate34 di semua kasus).
+  // RENUMBER: semula v33 -- versi itu telah DICADANGKAN utk modul Ujrah
+  // Konsinyasi (W9-W2/W10-1, belum diimplementasi -- lihat MEMORY.md);
+  // agar tumpukan skema tak tabrakan, W12 dipindah ke v34.
+  async function migrate34(d: Db) {
+    await execColumn(d, 'ALTER TABLE users ADD COLUMN allow_google INTEGER NOT NULL DEFAULT 0');
+    await execColumn(d, 'ALTER TABLE users ADD COLUMN oauth_sub TEXT');
+  }
+
 // Bump v10 (2026): notifikasi admin — tabel notifications,
 // notification_settings, notification_logs (+ index). Idempotent, aman
 // utk DB existing.
@@ -1529,7 +1541,17 @@ export async function saveZakatSettings(
 // = running balance) + idx_wadi_ledger_member. Purely additive; DB
 // stempel v30 menjalankan fullInit sekali lagi saat cold start. BACKUP DB
 // WAJIB sebelum deploy (lesson v16).
-export const SCHEMA_VERSION = 32;
+// Bump v34 (W12, 2026-10-26, Google OAuth manual; tashih amanah ruling
+// Gus Fi via DeepSeek): users.allow_google (INTEGER NOT NULL DEFAULT 0 --
+// gate amanah: login Google hanya utk akun yang diizinkan Admin; OFF
+// default, tanpa auto-create akun) + users.oauth_sub (TEXT NULL --
+// identitas Google 'sub' utk mapping identitas + audit; siapkan
+// integrasi ppalittihad.com). Purely additive (execColumn idempoten);
+// DB stempel v32 menjalankan fullInit sekali lagi saat cold start.
+// RENUMBER: W12 semula memakai v33 -- v33 DICADANGKAN utk modul Ujrah
+// Konsinyasi (W9-W2/W10-1, belum diimplementasi); geser ke v34 agar
+// tumpukan skema tak tabrakan. BACKUP DB WAJIB sebelum deploy (lesson v16).
+export const SCHEMA_VERSION = 34;
 
 /** One-time full initialization (fresh DB or schema upgrade). */
 async function fullInit(d: Db) {
@@ -1560,6 +1582,7 @@ async function fullInit(d: Db) {
   await migrate30(d); // Q62 (P2): tabel approval_requests + index
   await migrate31(d); // V2 multi-satuan: rebuild stock/qty/qty_per_base -> REAL
   await migrate32(d); // W9 (v32): tabel wadi'ah santri (wadi_balances + wadi_ledger)
+  await migrate34(d); // W12 (v34): Google OAuth manual (users.allow_google + oauth_sub)
   await d.exec(
     `UPDATE sales SET reported_at = strftime('%Y-%m-%dT%H:%M:%fZ', reported_at) WHERE reported_at IS NOT NULL AND instr(reported_at, ' ') > 0;`
   );

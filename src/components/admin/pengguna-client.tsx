@@ -14,6 +14,7 @@ type User = {
   roles: string[];
   active: number;
   pw_default: number;
+  allow_google: number;
   created_at: string;
 };
 type Resp = { users: User[]; self: User };
@@ -49,6 +50,8 @@ export function PenggunaClient() {
   const [createBusy, setCreateBusy] = useState(false);
   const [resetPwBusy, setResetPwBusy] = useState(false);
   const [toggleBusyId, setToggleBusyId] = useState<number | null>(null);
+  // W12 (v34): gate amanah login Google per akun (ON/OFF; tulis langsung).
+  const [googleBusyId, setGoogleBusyId] = useState<number | null>(null);
   const [ownPwBusy, setOwnPwBusy] = useState(false);
   const [ownPinBusy, setOwnPinBusy] = useState(false);
   const [resetPinBusy, setResetPinBusy] = useState(false);
@@ -156,6 +159,30 @@ export function PenggunaClient() {
       load();
     } finally {
       setToggleBusyId(null);
+    }
+  }
+
+  async function toggleGoogle(u: User) {
+    if (googleBusyId !== null) return;
+    setGoogleBusyId(u.id);
+    try {
+      const next = u.allow_google ? 0 : 1;
+      const r = await api<{ pending?: boolean; request_id?: number } | undefined>('/api/users', {
+        method: 'PUT',
+        body: JSON.stringify({ id: u.id, allow_google: next === 1 }),
+      });
+      // W12 (v34): gate amanah login Google -- tulis langsung oleh Admin
+      // (bukan approval flow; approval utk aksi sensitif: aktif/role).
+      showToast(
+        r.ok
+          ? next === 1
+            ? 'Login Google diizinkan untuk ' + u.username
+            : 'Login Google dimatikan untuk ' + u.username
+          : r.error || 'Gagal mengubah izin Google'
+      );
+      load();
+    } finally {
+      setGoogleBusyId(null);
     }
   }
 
@@ -522,13 +549,33 @@ export function PenggunaClient() {
                     Reset PIN
                   </button>
                   {u.id !== self?.id && (
-                    <button type="button"
-                      onClick={() => toggleActive(u)}
-                      disabled={toggleBusyId === u.id}
-                      className="ml-2 font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                    >
-                      {u.active ? 'Nonaktifkan' : 'Aktifkan'}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => toggleGoogle(u)}
+                        disabled={googleBusyId === u.id}
+                        title={
+                          u.allow_google
+                            ? 'Login Google diizinkan -- klik untuk mematikan'
+                            : 'Login Google belum diizinkan -- klik untuk mengizinkan (tashih amanah: Admin)'
+                        }
+                        className={
+                          'ml-2 font-bold ' +
+                          (u.allow_google
+                            ? 'text-emerald-600 hover:text-emerald-500 dark:text-emerald-400'
+                            : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300')
+                        }
+                      >
+                        {u.allow_google ? 'Google: ON' : 'Google: OFF'}
+                      </button>
+                      <button type="button"
+                        onClick={() => toggleActive(u)}
+                        disabled={toggleBusyId === u.id}
+                        className="ml-2 font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                      >
+                        {u.active ? 'Nonaktifkan' : 'Aktifkan'}
+                      </button>
+                    </>
                   )}
                 </Td>
               </Trow>

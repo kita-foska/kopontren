@@ -1,12 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Eye, EyeOff, MessageCircle } from 'lucide-react';
 import { fetchTimeout, isAbort } from '@/lib/fetch-util';
 import { shareWa } from '@/lib/rekap';
 import { Button } from '@/components/ui';
 import { roleHome } from '@/lib/features';
+
+// W12 (v34): pesan galat alur Google OAuth (?google_err=<code>, dipasang
+// oleh /api/auth/google/redirect & /callback). Nilai code tak membeber
+// detail teknis; pesan ramah & komunikatif.
+const GOOGLE_ERR: Record<string, string> = {
+  disabled: 'Login Google belum diaktifkan di server. Hubungi admin.',
+  unknown: 'Akun ini belum terdaftar. Hubungi pengurus untuk membuat akun (username = email Anda).',
+  not_allowed: 'Akun ini belum diizinkan login Google oleh admin. Hubungi pengurus.',
+  domain: 'Domain email Google Anda tidak diizinkan untuk sistem ini.',
+  google_failed: 'Verifikasi Google gagal. Silakan ulangi dari tombol Google.',
+  invalid: 'Permintaan Google tidak valid. Silakan ulangi dari tombol Google.',
+  rate_limited: 'Terlalu banyak percobaan. Silakan coba lagi dalam beberapa menit.',
+};
 
 
 export default function LoginPage() {
@@ -16,6 +29,13 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   // Eye toggle (GO CODE tashih Wave 11, 2026-10-24): show/hide password.
   const [showPw, setShowPw] = useState(false);
+  // W12 (v34): pesan galat alur Google (dari ?google_err=<code>). Diisi
+  // setelah hydrate (tidak dibaca saat render awal -> tanpa mismatch).
+  const [googleErr, setGoogleErr] = useState('');
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('google_err');
+    if (code && GOOGLE_ERR[code]) setGoogleErr(GOOGLE_ERR[code]);
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -180,6 +200,51 @@ export default function LoginPage() {
             {busy ? 'Memproses…' : 'Masuk'}
           </Button>
         </form>
+        {/* W12 (v34): pintu Google OAuth (alur manual, zero dependensi).
+            Tashih amanah: default OFF per akun (users.allow_google=0) +
+            domain allowlist (GOOGLE_ALLOWED_DOMAINS); tanpa auto-create
+            akun. Sesi yg dihasilkan PERSIS jalur password. */}
+        <div className="mt-5">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200 dark:bg-navy-700"></div>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              atau
+            </span>
+            <div className="h-px flex-1 bg-slate-200 dark:bg-navy-700"></div>
+          </div>
+          <a
+            href="/api/auth/google/redirect"
+            className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-navy-600 dark:bg-navy-800 dark:text-slate-100 dark:hover:bg-navy-700"
+          >
+            {/* G monokrom (inline SVG, currentColor -- tak bergantung
+                library ikon; brand Google tak ada di lucide). */}
+            <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden="true">
+              <path
+                d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+              />
+              <path
+                d="M12 12h7.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+              />
+            </svg>
+            Masuk dengan Google
+          </a>
+          {googleErr && (
+            <p
+              role="alert"
+              className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-300"
+            >
+              {googleErr}
+            </p>
+          )}
+        </div>
         <p className="mt-5 text-center text-xs text-slate-500 dark:text-slate-400">
           Akun dibuat oleh Pengurus. Hubungi pengurus jika belum punya username.
         </p>
