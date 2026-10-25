@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W14-2: Kartu Member Glass (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .demo-card { width: 300px; height: 100px; margin: 12px 0; border-radius: 14px; overflow: hidden;
+    background: linear-gradient(135deg, #7A1C1C 0%, #5E1414 55%, #420E0E 100%);
+    position: relative; box-shadow: 0 8px 24px rgba(66,14,14,.35); }
+  .demo-card .glass { position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,.16), rgba(255,255,255,.05) 40%, transparent); }
+  .demo-card .body { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; height: 100%; }
+  .demo-card .txt { flex: 1; min-width: 0; }
+  .demo-card .txt .nm { color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .demo-card .txt .ph { color: rgba(253,216,216,.8); font-size: 11px; }
+  .demo-card .txt .st { color: rgba(255,255,255,.8); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .demo-card .qr { width: 48px; height: 48px; flex-shrink: 0; background: #fff; border-radius: 6px; padding: 2px; }
+  .demo-card .tier { position: absolute; right: 8px; top: 8px; background: #fbbf24; color: #451a03;
+    font-size: 10px; font-weight: 800; letter-spacing: .06em; padding: 2px 7px; border-radius: 5px; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial: Kartu Member Glass (W14-2)</h1>
+<p><b>Untuk siapa:</b> anggota (member) Kopontren yang membuka <b>Dashboard Anggota</b> (layar /member).
+   Tidak perlu paham teknologi apa pun -- cukup ikuti dari atas ke bawah.</p>
+<p><b>Apa yang baru:</b> di bagian paling atas dashboard kini tampil <b>kartu keanggotaan
+   bergaya kaca (glass)</b> warna maroon -- mirip kartu ATM premium. Di kartu itu Anda bisa
+   melihat QR, poin, saldo reward, dan badge tingkat (tier) Anda dalam satu tempat.</p>
+
+<h2>1. Mengenal Kartu Glass</h2>
+<div class="demo-card" aria-label="Contoh kartu member glass">
+  <div class="glass"></div>
+  <div class="tier">GOLD</div>
+  <div class="body">
+    <div class="txt">
+      <svg width="24" height="18" viewBox="0 0 24 18" aria-hidden="true" style="margin-bottom:4px">
+        <rect x="1" y="1" width="22" height="16" rx="3" fill="#fcd34d"/>
+        <rect x="7" y="5" width="10" height="8" rx="1.5" fill="none" stroke="rgba(66,14,14,.6)" stroke-width="1.5"/>
+      </svg>
+      <div class="nm">Ahmad Fauzan</div>
+      <div class="ph">0812-3456-7890</div>
+      <div class="st">Poin 1.250 &middot; Reward Rp 50.000</div>
+    </div>
+    <svg class="qr" viewBox="0 0 40 40" role="img" aria-label="Contoh QR code">
+      <rect width="40" height="40" fill="#fff"/>
+      <g fill="#0f172a">
+        <rect x="3" y="3" width="10" height="10"/><rect x="27" y="3" width="10" height="10"/><rect x="3" y="27" width="10" height="10"/>
+        <rect x="6" y="6" width="4" height="4" fill="#fff"/><rect x="30" y="6" width="4" height="4" fill="#fff"/><rect x="6" y="30" width="4" height="4" fill="#fff"/>
+        <rect x="17" y="5" width="3" height="3"/><rect x="22" y="9" width="3" height="3"/><rect x="17" y="14" width="3" height="3"/>
+        <rect x="15" y="20" width="3" height="3"/><rect x="20" y="24" width="3" height="3"/><rect x="26" y="19" width="3" height="3"/>
+        <rect x="31" y="21" width="3" height="3"/><rect x="17" y="27" width="3" height="3"/><rect x="23" y="31" width="3" height="3"/>
+        <rect x="28" y="28" width="3" height="3"/><rect x="33" y="32" width="3" height="3"/><rect x="14" y="33" width="3" height="3"/>
+      </g>
+    </svg>
+  </div>
+</div>
+<table>
+  <tr><th>Bagian</th><th>Makna</th></tr>
+  <tr><td>Chip kuning (kiri atas)</td><td>Lambang kartu -- estetika saja, sama seperti chip pada kartu ATM.</td></tr>
+  <tr><td>Nama + nomor HP</td><td>Identitas member. Bila nama panjang, dipotong otomatis (tidak merusak tata letak).</td></tr>
+  <tr><td><b>Poin</b></td><td>Akumulasi poin belanja Anda (sesuai kebijakan kasir/poin).</td></tr>
+  <tr><td><b>Reward</b></td><td>Saldo "uang kembali" (cashback) yang bisa dipotong otomatis saat belanja.</td></tr>
+  <tr><td><b>QR code</b> (kanan)</td><td>Tanda pengenal Anda di kasir. QR kecil di kartu ini hanyalah <i>pratinjau</i> -- QR penuh ada di tombol "Lihat Detail".</td></tr>
+  <tr><td>Badge <b>GOLD</b> / <b>SILVER</b></td><td>Tingkat belanja Anda: GOLD (total belanja mencapai ambang emas) atau SILVER (mencapai ambang perak). Belum ada badge = masih mengumpulkan belanja.</td></tr>
+</table>
+
+
+<h2>2. Efek 3D (Kartu Miring)</h2>
+<p>Pada <b>komputer</b> (punya mouse), arahkan kursor ke kartu: kartu akan <b>miring halus</b>
+mengikuti posisi kursor, lalu kembali lurus saat kursor keluar. Ini hanya efek visual
+(meniru kartu premium); <b>tidak mengubah data apa pun</b>.</p>
+<div class="hint">
+  <b>Pada HP / tablet</b> (layar sentuh) kartu <b>statis</b> -- tidak miring, agar nyaman
+  dipegang tanpa "bergetar". Jika sistem Anda menyalakan mode
+  "kurangi gerakan" (reduce motion), efek ini juga dimatikan.
+</div>
+
+<h2>3. Tombol di Bawah Kartu</h2>
+<table>
+  <tr><th>Tombol</th><th>Kegunaan</th></tr>
+  <tr><td><b>Salin Nomor</b></td><td>Menyalin "nomor kartu" Anda ke papan salin (clipboard) agar bisa ditempel di chat / dokumen.
+      Bila QR sudah dibuat, yang disalin adalah <b>token QR</b> (karena itulah yang dipindai kasir);
+      bila QR belum dibuat, yang disalin adalah <b>nomor anggota</b> Anda. Setelah disalin, tulisan berubah
+      menjadi <b>"Disalin"</b> selama beberapa detik sebagai tanda berhasil.</td></tr>
+  <tr><td><b>Lihat Detail</b></td><td>Membuka <b>modal kartu lengkap</b> (QR ukuran penuh, statistik
+      poin/cashback/total belanja, dan tombol <i>Cetak Kartu</i>). Ini modal yang sama dengan
+      tombol "Lihat &amp; Cetak Kartu" di bagian bawah dashboard -- hanya jalan pintas dari kartu
+      glass ke modal tersebut, tanpa duplikasi fitur.</td></tr>
+</table>
+<p>Teks kecil "Terdaftar &lt;tanggal&gt;" di samping tombol adalah tanggal anggota Anda didaftarkan.</p>
+
+<h2>4. Mencetak Kartu</h2>
+<p>Gunakan tombol <b>Lihat Detail</b>, lalu <b>Cetak Kartu</b> di dalam modal. Untuk hasil terbaik
+cetak kertas <b>potret (portrait)</b>: sistem telah menyiapkan halaman A4 potret untuk kartu ini.
+Kartu kecil di layar tidak perlu dicetak langsung -- gunakan modal bila butuh salinan fisik
+(untuk ditunjukkan ke kasir tanpa HP).</p>
+
+<h2>5. Bila QR Belum Ada</h2>
+<p>Anggota baru? Kolom kanan kartu menampilkan kotak bertulisan <b>"Belum"</b> artinya QR Anda
+belum dibuat. Cara membuatnya: klik <b>Lihat Detail</b> -- bila Anda berperan administrasi,
+QR dibuat otomatis saat modal pertama kali dibuka; bila peran Anda bukan administrasi,
+permintaan pembuatan QR ditangani pengurus. Sementara itu, fitur lain tetap berfungsi normal
+(tidak ada yang rusak).</p>
+
+<h2>6. Ringkasan Cepat</h2>
+<table>
+  <tr><th>Situasi</th><th>Yang Anda Lihat</th></tr>
+  <tr><td>Dashboard dibuka (HP)</td><td>Kartu maroon diam di atas, di bawahnya tombol Salin Nomor + Lihat Detail.</td></tr>
+  <tr><td>Dashboard dibuka (komputer)</td><td>Sama, plus kartu miring halus mengikuti mouse.</td></tr>
+  <tr><td>Tier GOLD / SILVER</td><td>Badge kecil di pojok kanan atas kartu (emas / perak).</td></tr>
+  <tr><td>QR belum dibuat</td><td>Kotak "Belum" di kanan kartu; buat lewat Lihat Detail.</td></tr>
+</table>
+<p style="margin-top:40px;font-size:.85rem;color:#666">
+  Tutorial W14-2 -- Kartu Member Glass. Dokumentasi internal Kopontren AL Ittihad.
+</p>
+</main>
+</body>
+</html>
