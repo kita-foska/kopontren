@@ -2851,6 +2851,11 @@ checkout sukses, getar tegas checkout gagal). 3 file kode +
 tutorial TUTORIAL-W13-BATCH1.html (inline SVG, 0 emoji). Gate:
 tsc 0; test:all ALL_PASS 40/40; gate build 0; 0 non-ASCII;
 frozen utuh; tanpa dependency; tanpa perubahan skema.
-**NEXT: W13 BATCH 2 -- push notifikasi diperluas ke semua peran
-(admin, manajer, pengurus, kasir) + hint install PWA di halaman
-pengaturan notifikasi.**
+**W13 BATCH 2 SELESAI -- push notifikasi semua peran
+(admin, manajer, pengurus, kasir) via modul terpusat
+`src/lib/notify-scope.ts` + guard 4 API (push subscribe/
+unsubscribe/vapid-key + notification-settings) + PWA install
+hint di halaman pengaturan + test suite ke-41 (test-notify) +
+tutorial TUTORIAL-W13-BATCH2.html. W13 COMPLETE (B1 + B2).
+NEXT: Wave 14 -- e-Struk Interaktif, Member Card Glassmorphic,
+Dashboard Health Meter.**

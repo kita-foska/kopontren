@@ -25,12 +25,34 @@
 - **Gate**: tsc 0; test:all ALL_PASS 40/40; gate (route-exports +
   theme-gate + build) 0; 0 non-ASCII file anyar; frozen utuh;
   tanpa dependency anyar; tanpa perubahan skema.
-- **W13 BATCH 2 (GO, menyusul)**: push notif -- extend notify()
-  ke semua peran (admin, manajer, pengurus, kasir) + guard
-  subscribe dibuka + hint install-PWA di /admin/notifications/
-  settings. Audit: infra 100% ada (SW v11, /api/push/*, VAPID
-  auto-gen, UI "Aktifkan Push"); WA Help = sudah ada W11 (SKIP).
-  Detail audit: _w13_audit.txt.
+### W13 BATCH 2 -- PUSH NOTIF SEMUA PERAN (commit `26fdc40`, dual-push)
+- **Skop terpusat `src/lib/notify-scope.ts`** (modul PURE,
+  zero-dependency): `NOTIFY_ROLES` = admin, manajer, pengurus,
+  kasir; `canReceiveNotif(role)` fail-closed (member/gudang/
+  pembelian/unknown = false); `notifyRecipientsSql()` ->
+  SELECT id FROM users WHERE role IN (...) AND active = 1.
+- **notify()** (lib/notify.ts): penerima kini
+  `getNotifyRecipientIds()` (4 role, user aktif);
+  `getAdminUserIds` dibiarkan (backward-compatible, tak dihapus).
+- **Guard 4 API + 1 page**: push/subscribe, push/unsubscribe,
+  push/vapid-key, notification-settings (GET+POST) + halaman
+  /admin/notifications/settings -- kini pakai
+  `canReceiveNotif(user.role)` (dulu hanya isAdmin); guard-fail
+  page -> redirect roleHome(user.role) (pola H2).
+- **PWA install hint** (notification-settings-client): bila
+  `pushState === 'unavailable'` -> box kuning "Install Aplikasi
+  (Add to Home Screen) dulu" + instruksi Chrome Android / iOS
+  Safari. (Tanpa hint ini tombol Aktifkan Push diam tak
+  berkedip.)
+- **Test**: `scripts/test-notify.ts` (suite ke-41; 19 check
+  termasuk "member TIDAK ada di skop" -- syarat penting W13).
+- **Tutorial**: docs/TUTORIAL-W13-BATCH2.html (commit C3;
+  inline SVG, 0 emoji).
+- **Gate**: tsc 0; test:all 41/41; gate build 0; 0 non-ASCII;
+  frozen utuh; tanpa dependency anyar; TANPA perubahan skema
+  (v34).
+- **W13 SELESAI** (B1 + B2). Lanjut Wave 14: e-Struk
+  Interaktif, Member Card Glassmorphic, Health Meter.
 
 ## 2026-10-19
 ### R1 DARURAT: 3 TABEL TURSO TERHAPUS -- RESTORE VIA `scripts/restore-db.js` (Gus Fi via DeepSeek, 19 Okt 2026)
