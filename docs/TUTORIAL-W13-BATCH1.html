@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial: Navigasi Melayang &amp; Getar POS -- Kopontren Al Ittihad</title>
+<style>
+  :root {
+    --maroon: #7A1835;
+    --ink: #1f2430;
+    --soft: #5b6472;
+    --line: #e5e0e4;
+    --card: #faf7f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: var(--ink);
+    background: #f3eef0;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  header.hero {
+    background: var(--maroon);
+    color: #fff;
+    border-radius: 14px;
+    padding: 28px 24px;
+    margin-bottom: 24px;
+  }
+  header.hero h1 { margin: 0 0 8px; font-size: 24px; }
+  header.hero p { margin: 0; color: #f3d9e0; font-size: 15px; }
+  section {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+  }
+  section h2 { margin: 0 0 12px; font-size: 18px; color: var(--maroon); }
+  .note {
+    background: var(--card);
+    border-left: 4px solid var(--maroon);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--soft);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--card); }
+  code {
+    background: #f1edf0;
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-size: 13px;
+    font-family: Consolas, monospace;
+  }
+  .fig { text-align: center; margin: 14px 0; }
+  .fig figcaption { font-size: 13px; color: var(--soft); margin-top: 8px; }
+  footer {
+    font-size: 13px;
+    color: var(--soft);
+    text-align: center;
+    margin-top: 26px;
+  }
+  ul, ol { padding-left: 20px; }
+  li { margin: 5px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Tutorial W13 Batch 1: Navigasi Melayang dan Getar di Kasir</h1>
+  <p>Kopontren Al Ittihad -- dua penyempurnaan layar HP: bar navigasi bawah
+  kini berbentuk pil yang melayang, dan tombol uang tunai di kasir kini
+  memberi getar. Dibuat 26 Oktober 2026.</p>
+</header>
+
+<section>
+  <h2>1. Apa yang berubah?</h2>
+  <ol>
+    <li><strong>Bar navigasi bawah (mobile)</strong> kini berbentuk
+    <em>pil melayang</em> -- mengambang di atas layar, sudut melengkung,
+    ada bayangan, dan sedikit transparan. Di halaman Kasir
+    (<code>/kasir</code>) bar ini <strong>otomatis disembunyikan</strong>
+    supaya layar kasir penuh dan tidak bertabrakan dengan bar keranjang POS.</li>
+    <li><strong>Tombol uang tunai di Kasir</strong> (Lunas, 10k, 20k, 50k,
+    100k) kini <strong>bergetar sebentar</strong> saat ditekan. Transaksi
+    berhasil bergetar dengan pola tenang, transaksi gagal bergetar dengan
+    pola tegas. HP Android saja yang bergetar; HP lain tidak terpengaruh.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>2. Bentuk baru navigasi bawah</h2>
+  <p style="margin-top:0;">Perbandingannya seperti ini:</p>
+
+  <div class="fig">
+    <svg width="430" height="240" viewBox="0 0 430 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Perbandingan bar navigasi lama dan baru">
+      <rect x="20" y="14" width="180" height="212" rx="16" fill="#fff" stroke="#cfc8cd" stroke-width="2"/>
+      <rect x="34" y="34" width="152" height="90" rx="8" fill="#f3eef0" stroke="#e5e0e4"/>
+      <text x="110" y="84" font-size="13" fill="#5b6472" text-anchor="middle">Area konten</text>
+      <rect x="34" y="150" width="152" height="60" fill="#fff" stroke="#8a8488" stroke-width="1.5"/>
+      <circle cx="58" cy="170" r="7" fill="#7A1835"/>
+      <circle cx="96" cy="170" r="7" fill="#c9c3c7"/>
+      <circle cx="134" cy="170" r="7" fill="#c9c3c7"/>
+      <circle cx="172" cy="170" r="7" fill="#c9c3c7"/>
+      <text x="110" y="198" font-size="11" fill="#5b6472" text-anchor="middle">Menempel penuh di bawah</text>
+      <text x="110" y="242" font-size="13" fill="#1f2430" text-anchor="middle" font-weight="bold">SEBELUM (Bar Rata)</text>
+
+      <rect x="230" y="14" width="180" height="212" rx="16" fill="#fff" stroke="#cfc8cd" stroke-width="2"/>
+      <rect x="244" y="34" width="152" height="100" rx="8" fill="#f3eef0" stroke="#e5e0e4"/>
+      <text x="320" y="80" font-size="13" fill="#5b6472" text-anchor="middle">Area konten lebih lega</text>
+      <rect x="244" y="176" width="152" height="44" rx="22" fill="#fff" stroke="#7A1835" stroke-width="2"/>
+      <circle cx="266" cy="198" r="7" fill="#7A1835"/>
+      <rect x="278" y="194" width="34" height="8" rx="4" fill="#f3eef0"/>
+      <circle cx="330" cy="198" r="7" fill="#c9c3c7"/>
+      <rect x="342" y="194" width="34" height="8" rx="4" fill="#f3eef0"/>
+      <text x="320" y="234" font-size="11" fill="#5b6472" text-anchor="middle">Pil mengambang + bayangan</text>
+      <text x="320" y="242" font-size="13" fill="#1f2430" text-anchor="middle" font-weight="bold">SEKARANG (Pil Melayang)</text>
+    </svg>
+    <figcaption>Item aktif kini terlihat sebagai kotak membulat berwarna
+    maroon terang di dalam pil -- bukan garis kecil di bawah ikon.</figcaption>
+  </div>
+
+  <p class="note">Bar pil hanya muncul di <strong>layar HP / tablet</strong>
+  (lebar di bawah 768 piksel). Di komputer tetap memakai menu samping
+  seperti biasa.</p>
+</section>
+
+<section>
+  <h2>3. Kenapa Kasir tidak punya bar pil?</h2>
+  <p>Halaman Kasir sudah punya <strong>bar keranjang menempel di bawah</strong>
+  ("3 item | Rp 25.000 -- Lihat Keranjang"). Kalau bar pil ikut muncul,
+  keduanya akan bertabrakan dan menutupi tombol bayar. Maka di halaman
+  Kasir, bar pil <strong>disembunyikan otomatis</strong>:</p>
+
+  <div class="fig">
+    <svg width="430" height="150" viewBox="0 0 430 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Layar kasir dengan bar keranjang saja">
+      <rect x="125" y="10" width="180" height="126" rx="14" fill="#fff" stroke="#cfc8cd" stroke-width="2"/>
+      <rect x="139" y="24" width="152" height="62" rx="8" fill="#f3eef0" stroke="#e5e0e4"/>
+      <text x="215" y="60" font-size="12" fill="#5b6472" text-anchor="middle">Keranjang belanja</text>
+      <rect x="139" y="102" width="152" height="24" rx="12" fill="#7A1835"/>
+      <text x="215" y="118" font-size="11" fill="#fff" text-anchor="middle">3 item | Rp 25.000 &gt;</text>
+      <text x="215" y="148" font-size="12" fill="#5b6472" text-anchor="middle">Di Kasir: bar keranjang saja, bar pil tersembunyi</text>
+    </svg>
+  </div>
+
+  <p>Kasir tetap bisa ke halaman lain lewat <strong>ikon navigasi</strong>
+  atau tombol kembali browser -- tidak kehilangan akses apa pun.</p>
+</section>
+
+<section>
+  <h2>4. Getar di tombol uang tunai</h2>
+  <p>Ketika kasir menekan tombol nominal di bagian "Uang diterima",
+  HP Android bergetar sebentar sebagai tanda tombol merespons:</p>
+
+  <table>
+    <tr><th>Momen</th><th>Getar</th><th>Rasanya</th></tr>
+    <tr>
+      <td>Tekan tombol Lunas / 10k / 20k / 50k / 100k</td>
+      <td><code>12 ms</code></td>
+      <td>Sentuhan ringan sekali</td>
+    </tr>
+    <tr>
+      <td>Transaksi berhasil tercatat</td>
+      <td><code>[18, 40, 18]</code> ms</td>
+      <td>Dua denyut pelan -- tanda "aman"</td>
+    </tr>
+    <tr>
+      <td>Transaksi gagal (uang kurang, nominal tidak cocok, server menolak)</td>
+      <td><code>[60, 40, 60]</code> ms</td>
+      <td>Dua denyut tegas -- tanda "periksa lagi"</td>
+    </tr>
+  </table>
+
+  <p class="note">Getar hanya ada di HP Android (API
+  <code>navigator.vibrate</code>). Di iPhone dan komputer, tombol tetap
+  berfungsi seperti biasa -- getar tidak muncul, tidak ada kesalahan.
+  Tidak ada izin khusus yang diminta.</p>
+
+  <div class="fig">
+    <svg width="430" height="120" viewBox="0 0 430 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tombol nominal dengan getar">
+      <rect x="30" y="16" width="370" height="88" rx="12" fill="#faf7f8" stroke="#e5e0e4"/>
+      <text x="46" y="40" font-size="12" fill="#5b6472">Uang diterima (Rp)</text>
+      <rect x="46" y="50" width="150" height="30" rx="6" fill="#fff" stroke="#cfc8cd"/>
+      <rect x="210" y="50" width="52" height="30" rx="8" fill="#f3eef0" stroke="#8a8488"/>
+      <text x="236" y="70" font-size="11" fill="#1f2430" text-anchor="middle">Lunas</text>
+      <rect x="270" y="50" width="44" height="30" rx="8" fill="#f3eef0" stroke="#8a8488"/>
+      <text x="292" y="70" font-size="11" fill="#1f2430" text-anchor="middle">10k</text>
+      <rect x="322" y="50" width="44" height="30" rx="8" fill="#f3eef0" stroke="#8a8488"/>
+      <text x="344" y="70" font-size="11" fill="#1f2430" text-anchor="middle">20k</text>
+      <rect x="374" y="50" width="44" height="30" rx="8" fill="#f3eef0" stroke="#8a8488"/>
+      <text x="396" y="70" font-size="11" fill="#1f2430" text-anchor="middle">50k</text>
+      <text x="215" y="115" font-size="12" fill="#5b6472" text-anchor="middle">Tombol-tombol ini kini bergetar saat ditekan</text>
+    </svg>
+  </div>
+</section>
+
+<section>
+  <h2>5. Cara mencoba sendiri (5 langkah)</h2>
+  <ol>
+    <li>Buka aplikasi di HP (atau mode HP di Chrome/Firefox), pastikan
+    lebar layar di bawah 768 piksel agar bar bawah muncul.</li>
+    <li>Berada di halaman Ringkasan: lihat bar bawah berbentuk
+    <strong>pil melayang</strong> dengan bayangan di tepi layar.</li>
+    <li>Tekan item navigasi lain -- item yang aktif akan mendapat
+    kotak membulat berwarna maroon terang di dalam pil.</li>
+    <li>Masuk ke <strong>Kasir</strong>: bar pil menghilang, tinggal bar
+    keranjang di bawah.</li>
+    <li>Di Kasir, masukkan 1 barang, tekan tombol <strong>20k</strong>:
+    HP Android bergetar sekilas. Selesaikan transaksi: getar tenang.
+    Ulangi dengan nominal yang salah: getar tegas.</li>
+  </ol>
+</section>
+
+<footer>
+  Kopontren Al Ittihad -- Tutorial W13 Batch 1 (Navigasi Melayang &amp;
+  Getar POS). Dibuat 26 Oktober 2026. Detail teknis:
+  <code>src/components/bottom-nav.tsx</code>, <code>src/lib/format.ts</code>
+  (fungsi <code>buzz</code>), <code>src/components/pos-client.tsx</code>.
+</footer>
+
+</div>
+</body>
+</html>
+
