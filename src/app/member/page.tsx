@@ -132,7 +132,7 @@ export default async function MemberPage() {
         Assalamu&apos;alaikum, {member?.name || user.display_name || user.username}
       </h1>
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-        Selamat {wibDayBand()} WIB, semoga berkah. Kartu Member Anda -- poin, saldo reward,
+        Sugeng {wibDayBand()}, muga-muga sedaya lancar lan berkah. Kartu Member Anda -- poin, saldo reward,
         transaksi, dan pinjaman koperasi (read-only).
       </p>
       <MemberDashboardClient

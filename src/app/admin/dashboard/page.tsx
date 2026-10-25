@@ -230,7 +230,7 @@ export default async function AdminDashboardPage() {
               Assalamu&apos;alaikum, {user.display_name || user.username}
             </h1>
             <p className="mt-1 text-xs text-white/80 sm:text-sm">
-              Dashboard Admin -- Selamat {wibDayBand()} WIB, semoga berkah |{' '}
+              Dashboard Admin -- Sugeng {wibDayBand()}, muga-muga sedaya lancar lan berkah.{' '}
               {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
                 new Date()
               )}{' '}
