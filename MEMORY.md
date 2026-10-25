@@ -6389,3 +6389,42 @@ Google/WA login = TUNDA (Wave 12, audit + tashih).
   + error page), B2 mobile card, B3 palet/glass/ambient,
   B4 empty ramah. Google/WA login = Wave 12.
 
+## W11 B1 SAPAAN ISLAMI + WA HELP + ERROR PAGE -- LEPAS (25-10-2026)
+Ruling Gus Fi (via DeepSeek, 25 Okt): B1 GO COMMIT;
+B2 GO CODE; B3/B4 sasampunipun B2; Google/WA login TUNDA
+(Wave 12).
+
+- C1 = 3719f53 (7 file, +127/-14):
+  - src/lib/format.ts (+13): helper anyar wibDayBand()
+    (band WIB deterministik: pagi 04-10, siang 10-15,
+    sore 15-18, sanes malam; UTC+7 tanpa DST).
+  - src/app/page.tsx: hero kasir + hero sanes =
+    "Assalamu'alaikum, {nama}" + "Selamat {band} WIB,
+    semoga berkah".
+  - src/app/admin/dashboard + pengurus/dashboard: h1 hero
+    = greeting + subtitle "Dashboard Admin/Global -- Selamat
+    {band} WIB, semoga berkah | {date} | {label}".
+  - src/app/member/page.tsx: h1 = greeting (member?.name
+    fallback) + subtitle kartu member.
+  - src/app/login/page.tsx: footer "Butuh bantuan? [ikon
+    MessageCircle] Hubungi via WhatsApp" -> helpWa() =
+    shareWa (lib/rekap, pola low-stock) + nomor saking
+    /api/settings store_phone, fallback share sheet
+    (deep-link wa.me, tanpa API credentials).
+  - src/app/error.tsx (ANYAR, 59 baris): global error
+    boundary (client): "Maaf, terjadi kesalahan" + Muat
+    Ulang (reset, tanpa auto-reset agar galat server
+    boten loop) + Bantuan WhatsApp (shareWa); visual
+    konsisten login (hero-bg + glow).
+- C2 docs: commit iki.
+- Gates: tsc --noEmit 0; gate (route-exports + theme +
+  next build) LULUS; test:all 0 FAIL (1x libuv Windows
+  close-flake nalika exit = environmental, precedent
+  orphan node flake); 0 non-ASCII di diff; frozen intact;
+  tanpa skema; fiqih: none.
+- Next (menunggu ACC Gus Fi): B2 mobile card standard
+  (7 tabel: audit, persetujuan, hutang, zis, produk,
+  shift, member -- pola kas-client "card sm:hidden" +
+  "hidden sm:table"), B3 palet/glass/ambient, B4 empty
+  ramah.
+

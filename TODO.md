@@ -197,6 +197,20 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       tanpa skema, fiqih: none. Detail: entri 'EYE TOGGLE
       PASSWORD -- LEPAS' di MEMORY.md. Note: Google/WA
       login = TUNDA Wave 12 (audit + tashih).
+- [x] **W11 B1 LEPAS 25 Okt (C1 3719f53, dual-push
+      master+main verified)**: sapaan Islami di hero
+      (home kasir+ringkasan, dashboard admin, dashboard
+      pengurus, halaman member) + "Selamat {pagi|siang|
+      sore|malam} WIB" (helper wibDayBand di
+      lib/format.ts) + Bantuan WhatsApp di footer login
+      (shareWa lib/rekap, nomor dari /api/settings,
+      fallback share sheet) + error.tsx anyar ("Maaf,
+      terjadi kesalahan" + Muat Ulang + Bantuan WA).
+      Gates: tsc 0, gate LULUS, test:all 0 FAIL (1x libuv
+      close-flake environmental), 0 non-ASCII, frozen
+      intact, tanpa skema, fiqih: none. Detail: entri
+      'W11 B1 ... LEPAS' di MEMORY.md. Next: B2 mobile
+      card (GO CODE), B3 palet/glass, B4 empty ramah.
 
       `@media print`. Tanpa perubahan kode.
 - [x] AUDIT 3x (21 Sep): `audit_log` auto-purge - SELESAI
