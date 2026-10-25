@@ -26,6 +26,9 @@
   --color-info: #2563eb; /* blue-600 */
   --color-gold: #fbbf24; /* amber-400 (highlight premium) */
   --color-wine: #7a1c1c; /* cetak kartu member */
+  /* W11 B3: shadow ambient token (lembut & diffuse, kesan premium) --
+     light = nuansa maroon, dark = hitam pekat. Dipakai .card-glass. */
+  --shadow-ambient: 0 10px 30px -12px rgba(23, 10, 14, 0.18);
 }
 
 html {
@@ -34,6 +37,8 @@ html {
 
 html.dark {
   color-scheme: dark; /* pasangan dari :root di atas */
+  /* W11 B3: varian dark token ambient. */
+  --shadow-ambient: 0 10px 30px -12px rgba(0, 0, 0, 0.55);
 }
 
 body {
@@ -56,6 +61,14 @@ body {
     /* UX-4: radius/shadow via token (rounded-card = 16px, shadow-card =
        shadow-sm — nilai identik dengan versi lama, hanya referensi token). */
     @apply rounded-card border border-slate-200 bg-white shadow-card dark:border-navy-700 dark:bg-navy-800;
+  }
+  .card-glass {
+    /* W11 B3 (B3): kartu glassmorphism premium -- dipakai bareng .card
+       ("card card-glass"): bg semi-transparan + backdrop-blur + shadow
+       ambient token (var --shadow-ambient; light/dark beda nilai).
+       Additive: tanpa .card-glass, tampilan .card persis seperti biasa. */
+    @apply rounded-card border-white/40 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-white/5;
+    box-shadow: var(--shadow-ambient);
   }
   /* ===== UX-4 FASE E (E1): kelas kartu seragam — additive, migrasi E2
      memakai kelas ini (drift shadow/radius antar-halaman ditutup). ===== */

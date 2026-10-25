@@ -1253,9 +1253,9 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
       {tab === 'shu' && (
         <div className="space-y-4">
           <div className="card p-4">
-            <h2 className="mb-3 font-bold">
+            <h2 className="mb-3 flex items-center gap-2 font-bold">
               <TermTip term="SHU" tip={TIPS.shu}>
-                Alokasi SHU
+                <Badge tone="gold">SHU</Badge> Alokasi
               </TermTip>
             </h2>
             <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
@@ -1373,7 +1373,9 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
             )}
           </div>
           <div className="card p-4">
-            <h2 className="mb-3 font-bold">Riwayat SHU ({d.shu.length})</h2>
+            <h2 className="mb-3 flex items-center gap-2 font-bold">
+              <Badge tone="gold">SHU</Badge> Riwayat ({d.shu.length} alokasi)
+            </h2>
             {d.shu.length === 0 ? (
               <Empty compact text="Belum ada alokasi SHU. Isi form di atas." />
             ) : (

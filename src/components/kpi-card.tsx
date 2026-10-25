@@ -9,11 +9,14 @@ import type { KpiDelta } from '@/lib/format';
  * pengurus. Komponen server (tanpa hook/handler) -> aman utk RSC;
  * TermTip (client, dari ui.tsx) dirender sebagai anak.
  *
- * Kebijakan warna (UX-4, tanpa token baru):
+ * Kebijakan warna (UX-4, tanpa token baru; W11 B3 = tampilan glass):
  * - token role semantik dari tailwind.config.ts:
- *   success = emerald, risk = rose, attention = amber, info = blue;
+ *   success = emerald (delta KPI positif, dark: emerald-400),
+ *   risk = rose, attention = amber, info = blue;
  * - identitas maroon (skala accent) tetap utk warna nilai KPI;
- * - slate netral utk tone 'flat'.
+ * - slate netral utk tone 'flat';
+ * - W11 B3: kelas .card-glass (globals.css) = bg semi-transparan +
+ *   backdrop-blur + shadow ambient (token --shadow-ambient light/dark).
  */
 export type KpiCardDef = {
   label: string;
@@ -41,7 +44,7 @@ export function KpiCard({
     <Link
       href={href}
       className={
-        'group card fade-up relative flex flex-col justify-between p-4 tile-hover border-slate-200/80 hover:border-accent-400/50 dark:border-navy-700 ' +
+        'group card card-glass fade-up relative flex flex-col justify-between p-4 tile-hover border-slate-200/80 hover:border-accent-400/50 dark:border-navy-700 ' +
         (warn ? 'border-attention-500/60 ring-1 ring-attention-500/30' : '')
       }
     >
