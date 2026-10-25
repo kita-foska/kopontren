@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W15-P1: Perbaikan Tampilan Spidometer (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .cmp { display: flex; gap: 16px; flex-wrap: wrap; }
+  .cmp figure { flex: 1 1 300px; margin: 0; background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 12px; }
+  .cmp figcaption { font-size: .9rem; text-align: center; margin-top: 8px; color: #555; }
+  .old { border-top: 4px solid #f43f5e; }
+  .new { border-top: 4px solid #10b981; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial W15-P1: Tampilan Spidometer Diperbaiki (Health Meter)</h1>
+<p><b>Untuk siapa:</b> pengurus, manajer, dan admin yang biasa membuka
+   <b>Dashboard Pengurus</b> (layar /pengurus/dashboard). Tidak perlu paham
+   teknologi -- cukup baca dari atas ke bawah.</p>
+<p><b>Apa yang berubah:</b> spidometer Health Meter (fitur W14-3) kini
+   tampil lebih rapi. <b>Angka skornya TIDAK berubah</b> -- yang diperbaiki
+   hanya <i>gambarannya</i>, agar mudah dibaca dan tidak bertabrakan.
+   Tidak ada tombol baru, tidak ada langkah kerja baru.</p>
+
+<h2>1. Jarum Tidak Lagi Menimpa Angka</h2>
+<div class="cmp">
+  <figure class="old">
+    <svg viewBox="0 0 200 110" role="img" aria-label="Sebelum: jarum menimpa angka 50" style="width:100%">
+      <path d="M 20 100 A 80 80 0 0 1 75.28 23.91" fill="none" stroke="#f43f5e" stroke-opacity="0.25" stroke-width="10"/>
+      <path d="M 75.28 23.91 A 80 80 0 0 1 176.09 75.28" fill="none" stroke="#f59e0b" stroke-opacity="0.25" stroke-width="10"/>
+      <path d="M 176.09 75.28 A 80 80 0 0 1 180 100" fill="none" stroke="#10b981" stroke-opacity="0.25" stroke-width="10"/>
+      <path d="M 20 100 A 80 80 0 0 1 100 20" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round"/>
+      <text x="8" y="103" font-size="8" fill="#94a3b8">0</text>
+      <text x="71.5" y="15.5" font-size="8" fill="#94a3b8">40</text>
+      <text x="187.5" y="74.5" font-size="8" fill="#94a3b8">90</text>
+      <text x="192" y="103" font-size="8" fill="#94a3b8">100</text>
+      <line x1="100" y1="100" x2="100" y2="42" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="100" cy="100" r="4" fill="#475569"/>
+      <text x="100" y="84" text-anchor="middle" font-size="26" font-weight="800" fill="#f59e0b">50</text>
+      <text x="100" y="96" text-anchor="middle" font-size="8" fill="#94a3b8">dari 100</text>
+    </svg>
+    <figcaption><b>SEBELUM</b> (skor 50): jarum memanjang dari tengah ke
+    atas -- menimpa angka "50". Sulit dibaca.</figcaption>
+  <figure class="new">
+    <svg viewBox="0 0 200 110" role="img" aria-label="Sesudah: jarum melayang, angka terbaca" style="width:100%">
+      <path d="M 20 100 A 80 80 0 0 1 75.28 23.91" fill="none" stroke="#f43f5e" stroke-opacity="0.25" stroke-width="10"/>
+      <path d="M 75.28 23.91 A 80 80 0 0 1 176.09 75.28" fill="none" stroke="#f59e0b" stroke-opacity="0.25" stroke-width="10"/>
+      <path d="M 176.09 75.28 A 80 80 0 0 1 180 100" fill="none" stroke="#10b981" stroke-opacity="0.25" stroke-width="10"/>
+      <path d="M 20 100 A 80 80 0 0 1 100 20" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round"/>
+      <line x1="34" y1="100" x2="28" y2="100" stroke="#94a3b8" stroke-width="2"/>
+      <line x1="79.6" y1="37.2" x2="77.8" y2="31.5" stroke="#94a3b8" stroke-width="2"/>
+      <line x1="162.8" y1="79.6" x2="168.5" y2="77.75" stroke="#94a3b8" stroke-width="2"/>
+      <line x1="166" y1="100" x2="172" y2="100" stroke="#94a3b8" stroke-width="2"/>
+      <text x="8" y="103" font-size="8" fill="#94a3b8">0</text>
+      <text x="71.5" y="15.5" font-size="8" fill="#94a3b8">40</text>
+      <text x="187.5" y="74.5" font-size="8" fill="#94a3b8">90</text>
+      <text x="192" y="103" font-size="8" fill="#94a3b8">100</text>
+      <line x1="100" y1="62" x2="100" y2="42" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="100" cy="100" r="4" fill="#475569"/>
+      <text x="100" y="84" text-anchor="middle" font-size="26" font-weight="800" fill="#f59e0b">50</text>
+      <text x="100" y="96" text-anchor="middle" font-size="8" fill="#94a3b8">dari 100</text>
+    </svg>
+    <figcaption><b>SESUDAH</b> (skor 50): jarum "melayang" di atas angka --
+    skor tetap terbaca dengan jelas.</figcaption>
+  </figure>
+</div>
+
+<h2>2. Garis Batas Zona (Tick)</h2>
+<p>Ditaruh tanda pendek (tick) di setiap batas zona: <b>0, 40, 90, dan 100</b>.
+   Dulu batasnya hanya berupa angka-angka kecil; kini ada garis penanda tepat
+   di tepi pita warna, sehingga awam langsung tahu di mana zona merah
+   berakhir dan zona kuning dimulai.</p>
+
+<h2>3. Angka Kuning Lebih Muncul di Mode Gelap</h2>
+<p>Bila ponsel/layar memakai mode gelap (dark mode), angka skor berwarna
+   kuning kini sedikit lebih cerah (<code>amber-400</code>), konsisten
+   dengan warna hijau dan merah yang memang sudah terbaca di mode gelap.</p>
+
+<div class="hint"><b>Catatan penting untuk awam:</b> <b>Tidak ada</b>
+   perubahan cara kerja. Skornya dihitung dengan cara yang sama persis
+   (100 dikurangi penalti, lihat Tutorial W14-3). Yang diperbaiki murni
+   gambarannya. Auto-refresh otomatis (angka berubah sendiri tanpa
+   membuka ulang halaman) <b>belum</b> termasuk perbaikan ini -- angka
+   selalu segar selama halaman dibuka ulang.</div>
+
+<h2>Ringkasan</h2>
+<table>
+  <tr><th>Perbaikan</th><th>Sebelum</th><th>Sesudah</th></tr>
+  <tr><td>Jarum</td><td>Panjang dari tengah -- menimpa angka saat skor 35-65</td><td>"Melayang" di atas angka -- skor selalu terbaca</td></tr>
+  <tr><td>Batas zona</td><td>Hanya angka 0/40/90/100</td><td>Angka + garis tick di tepi pita warna</td></tr>
+  <tr><td>Angka kuning (dark mode)</td><td>Warna sama di mode terang/gelap</td><td>Lebih cerah di mode gelap (amber-400)</td></tr>
+  <tr><td>Keterangan</td><td colspan="2">Fitur, tombol, dan angka skor TIDAK berubah. 0 emoji, ikon tetap inline SVG.</td></tr>
+</table>
+</main>
+</body>
+</html>
