@@ -24,11 +24,11 @@ import type { Role } from '@/lib/auth';
 type BottomItem = { href: string; label: string; Icon: LucideIcon };
 
 /**
- * Bottom nav (mobile, <lg) — maks 5 item per peran.
+ * Bottom nav (mobile, <lg) - maks 5 item per peran.
  * Item dikurasi mengikuti matriks permission (groupsFor, src/components/sidebar.tsx):
  * semua href di sini legal untuk peran masing-masing.
  * Halaman /kasir TIDAK memakai bottom nav (POS punya sticky bottom bar sendiri)
- * — pengecekan dilakukan di Shell, tidak di sini.
+ * - pengecekan dilakukan di Shell, tidak di sini.
  * FIX NAV (26 Okt): lapisan z-30 -- WAJIB di bawah overlay hamburger (z-40)
  * agar saat drawer terbuka, scrim menutupi + mengunci bottom nav (bug lama:
  * z-50 = setara drawer, pill tetap cemerlang & bisa diklik di atas scrim).
