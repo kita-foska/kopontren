@@ -208,7 +208,7 @@ export default async function PengurusDashboardPage() {
               Assalamu&apos;alaikum, {user.display_name || user.username}
             </h1>
             <p className="mt-1 text-xs text-white/80 sm:text-sm">
-              Dashboard Global -- Sugeng {wibDayBand()}, muga-muga sedaya lancar lan berkah.{' '}
+              Dashboard Global -- Selamat {wibDayBand()}, semoga hari Anda lancar dan berkah.{' '}
               {new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeZone: 'Asia/Jakarta' }).format(
                 new Date()
               )}{' '}

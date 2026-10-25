@@ -104,7 +104,7 @@ export default async function DashboardPage() {
               Assalamu&apos;alaikum, {user.display_name || user.username}
             </p>
             <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-              Sugeng {wibDayBand()}, muga-muga sedaya lancar lan berkah.
+              Selamat {wibDayBand()}, semoga hari Anda lancar dan berkah.
             </p>
             <p className="mt-3 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Sesi kasir · {dateLine}
@@ -197,7 +197,7 @@ export default async function DashboardPage() {
               Assalamu&apos;alaikum, {user.display_name || user.username}
             </h1>
             <p className="mt-1 text-sm text-white/70">
-              Sugeng {wibDayBand()}, muga-muga sedaya lancar lan berkah. {dateLine}
+              Selamat {wibDayBand()}, semoga hari Anda lancar dan berkah. {dateLine}
             </p>
           </div>
 
