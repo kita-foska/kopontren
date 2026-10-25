@@ -190,6 +190,33 @@
    - **NEXT W14**: Wave 14 TUNTAS (W14-1 + W14-2 + FIX NAV +
      W14-3); tunggu Wave 15.
 
+### W15-P1 -- HEALTH POLISH: JARUM MELYANG + TICK ZONA + DARK AMBER (ACC GO CODE W15 26 Okt, ruling: visual only, no polling)
+- **Temuan audit read-only (26 Okt)**: spidometer W14-3 sudah terpasang
+  di /pengurus/dashboard + /admin/health. 3 cacat visual: (1) jarum
+  digambar dari pusat -> skor 35..65 (jarum hampir vertikal) menembus
+  teks skor besar (baseline y=84); (2) batas zona (0/40/90/100) hanya
+  angka, tanpa tanda batas; (3) skor amber tak punya dark variant
+  (green/rose sudah punya).
+- **Fix (1 file, src/components/health-meter.tsx; logika health.ts TIDAK
+  diubah -- suite 44 tetap hijau)**:
+  1. Jarum "melayang": segmen pointAt(score,38) -> pointAt(score,58)
+     (dulu dari pusat 100,100); hub r4 tetap di pusat.
+  2. Tick batas zona: garis pendek r66->r72 di 0/40/90/100 (warna netral
+     slate-400/dark:slate-500).
+  3. Skor: `fill-amber-500 dark:fill-amber-400`.
+- **Ruling (Gus Fi via DeepSeek)**: P1 = finishing visual saja;
+  auto-refresh polling 30 detik = scope anyar, TIDAK termasuk W15.
+- **Gate**: tsc 0; test:all 49 file 0 fail (agregat 1380 passed, 0
+  failed); gate build 0 (route-exports OK + theme-gate OK); 0 non-ASCII
+  (file batch); 4 frozen utuh (diff kosong); TANPA dependency anyar;
+  TANPA perubahan skema (v34).
+- **Tutorial**: docs/TUTORIAL-W15-1.html (inline SVG sebelum/sesudah,
+  0 emoji). C2 = seksi menika + TODO "WAVE 15".
+- **Sisa W15**: P2a OmniSearch (kalkulator + deep-link 3 titik + suite
+  45) dan P2b Micro-Interactions (ripple CSS + cart spring) -- STEP
+  2/3 GO CODE. W16 sudah ACC: menunggu W15 rampung (purgecss, font
+  [400,600] opsi B, lighthouse devDep, artifacts/ ke .gitignore).
+
 
 ## 2026-10-19
 ### R1 DARURAT: 3 TABEL TURSO TERHAPUS -- RESTORE VIA `scripts/restore-db.js` (Gus Fi via DeepSeek, 19 Okt 2026)

@@ -2928,4 +2928,26 @@ Dashboard Health Meter.**
   test:all 45/45; gate build 0; 0 non-ASCII (file batch);
   frozen utuh; TANPA perubahan skema (v34). Detail:
   MEMORY.md seksi "W14-3".
+**WAVE 15 (26 Okt 2026):**
+- [x] **W15-P1 Health Polish -- SELESAI (ACC GO CODE 26 Okt, ruling:
+  visual only, no polling):** 3 cacat visual spidometer W14-3 diperbaiki
+  di src/components/health-meter.tsx (1 file, logika tak diubah):
+  (1) jarum "melayang" radius 38->58 tak lagi menembus teks skor saat
+  skor 35..65; (2) tick batas zona 0/40/90/100 (garis pendek r66->72,
+  warna netral) agar awam mudah membaca batas zona; (3) skor amber
+  kini punya dark variant (fill-amber-500 dark:fill-amber-400).
+  Auto-refresh polling 30 detik = scope anyar, TIDAK termasuk W15.
+  TUTORIAL-W15-1.html (inline SVG sebelum/sesudah, 0 emoji). Gate: tsc
+  0; test:all 49 file 0 fail; gate build 0; 0 non-ASCII (file batch);
+  4 frozen utuh; TANPA dependency anyar; TANPA perubahan skema (v34).
+  Detail: MEMORY.md seksi "W15-P1".
+- [ ] **W15-P2a OmniSearch (command palette) -- STEP 2:** lib/calc.ts
+  safeCalc() pure no-eval (kalkulator: 25000 * 12 = 300000) + deteksi
+  ekspresi di command-palette (skip fetch /api/search) + deep-link
+  ?q= 3 titik (admin produk, admin member, kasir POS auto-add Enter)
+  + suite 45 (test-calc). Ruling: 3 titik; /laporan prefill ditunda.
+- [ ] **W15-P2b Micro-Interactions -- STEP 3:** ripple CSS-only
+  (btn-ripple via BTN_BASE -> semua tombol) + cart spring (cart-pop,
+  key badge mengikuti jumlah item) + kedua kelas masuk blok
+  prefers-reduced-motion. Ruling: berlaku semua tombol.
 
