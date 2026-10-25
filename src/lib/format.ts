@@ -128,3 +128,18 @@ export function wibDayBand(now: Date = new Date()): 'pagi' | 'siang' | 'sore' | 
   if (h >= 15 && h < 18) return 'sore';
   return 'malam';
 }
+
+/**
+ * W13: umpan balik getar (haptic) -- navigator.vibrate.
+ * HP Android: bergetar; desktop / iOS Safari: aman tanpa efek
+ * (navigator.vibrate tidak ada atau tidak didukung, langsung lolos).
+ * `pattern` = durasi (ms) atau sekuens [getar, jeda, getar, ...].
+ */
+export function buzz(pattern: number | number[] = 12): void {
+  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+  try {
+    navigator.vibrate(pattern);
+  } catch {
+    /* perangkat tanpa getara -- biarkan saja */
+  }
+}

@@ -70,13 +70,15 @@ const NAV: Record<Role, BottomItem[]> = {
 export function BottomNav({ role }: { role: Role }) {
   const pathname = usePathname();
   const items = NAV[role] ?? NAV.member;
+  // /kasir tidak memakai bottom nav -- POS punya sticky bottom bar sendiri;
+  // pengecekan dilakukan di Shell (showBottomNav), bukan di sini.
   return (
     <nav
       aria-label="Navigasi bawah"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur md:hidden dark:border-navy-700 dark:bg-navy-900/95"
+      className="fixed inset-x-3 bottom-3 z-50 rounded-2xl bg-white/90 shadow-lg ring-1 ring-black/5 backdrop-blur-md md:hidden dark:bg-navy-900/90 dark:ring-white/10"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="mx-auto flex max-w-6xl items-stretch justify-around">
+      <div className="mx-auto flex max-w-6xl items-stretch justify-around px-2">
         {items.map(({ href, label, Icon }) => {
           const active = href === '/' ? pathname === '/' : pathname === href;
           return (
@@ -85,21 +87,14 @@ export function BottomNav({ role }: { role: Role }) {
               href={href}
               aria-current={active ? 'page' : undefined}
               className={
-                'flex min-w-16 flex-1 flex-col items-center gap-1 px-1 py-2.5 text-2xs font-bold transition-colors ' +
+                'flex min-w-16 flex-1 flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-2xs font-bold transition-colors ' +
                 (active
-                  ? 'text-accent-600 dark:text-accent-300'
+                  ? 'bg-accent-50 text-accent-700 dark:bg-accent-500/15 dark:text-accent-300'
                   : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200')
               }
             >
               <Icon className="h-5 w-5" />
               <span className="leading-none">{label}</span>
-              <span
-                aria-hidden="true"
-                className={
-                  'mt-0.5 h-0.5 w-8 rounded-full ' +
-                  (active ? 'bg-accent-500' : 'bg-transparent')
-                }
-              />
             </Link>
           );
         })}

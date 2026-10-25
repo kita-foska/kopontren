@@ -15,7 +15,7 @@ import {
   useToast,
   useTablistNav,
 } from '@/components/ui';
-import { rp, rpShort, fmtDateTime } from '@/lib/format';
+import { rp, rpShort, fmtDateTime, buzz } from '@/lib/format';
 import { strukWaText, shareWa } from '@/lib/rekap';
 import { strukPdfHtml } from '@/lib/struk-pdf';
 import { generateStrukJpeg, generateStrukPdf } from '@/lib/struk-media';
@@ -842,6 +842,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           rpShort(total - receivedNum) +
           '. Silakan periksa kembali nominal.'
       );
+      buzz([60, 40, 60]);
       return;
     }
     if (mix && mixSum !== total) {
@@ -851,6 +852,7 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           (mixSum < total ? ' (kurang)' : ' (lebih)') +
           '. Lengkapi nominal tiap metode.'
       );
+      buzz([60, 40, 60]);
       return;
     }
     setBusy(true);
@@ -914,9 +916,12 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
             ? ' -- Total bisa berubah (diskon/poin). Perbarui nominal campur, lalu coba lagi.'
             : '';
         showToast((r.error || 'Gagal menyimpan transaksi.') + hint);
+        buzz([60, 40, 60]);
       }
       return;
     }
+    // W13: getar sukses -- transaksi tercatat (atau duplikat terkunci aman).
+    buzz([18, 40, 18]);
     // P15-A CONFIDENCE: transaksi tersimpan = sudah tersinkron ke server
     // (baru atau duplikat) -- stempel waktu utk label "Tersinkron ... WIB".
     setLastSync(new Date().toISOString());
@@ -2196,7 +2201,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                   <div className="flex flex-wrap gap-1">
                     <button
                       type="button"
-                      onClick={() => setReceived(String(total))}
+                      onClick={() => {
+                        setReceived(String(total));
+                        buzz(12);
+                      }}
                       title="Fix 4: isi otomatis nominal total -- lunas tanpa kembalian"
                       className="rounded bg-slate-100 px-2 py-1 text-1xs font-bold hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-200"
                     >
@@ -2206,7 +2214,10 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
                       <button
                         key={nom}
                         type="button"
-                        onClick={() => setReceived(String(nom))}
+                        onClick={() => {
+                          setReceived(String(nom));
+                          buzz(12);
+                        }}
                         className="rounded bg-slate-100 px-2 py-1 text-1xs font-bold hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-200"
                       >
                         {nom >= 1000 ? nom / 1000 + 'k' : nom}
