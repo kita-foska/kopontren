@@ -6454,8 +6454,38 @@ Ruling Gus Fi (via DeepSeek, 25 Okt): B2 GO COMMIT
   next build) LULUS; test:all 0 FAIL (18 ALL_PASS,
   tanpa flake); 0 non-ASCII di diff; frozen intact;
   tanpa skema; fiqih: none.
-- Next (menunggu ACC Gus Fi): B3 palet+glass
-  (--shadow-ambient token, utility .card-glass,
-  promosi palet emerald KPI positif + gold SHU),
-  B4 empty ramah.
+- Next: B3 palet+glass (GO CODE).
+
+## W11 B3 PALET + GLASS PREMIUM -- LEPAS (25-10-2026)
+Ruling Gus Fi (via DeepSeek, 25 Okt): B3 GO COMMIT
+(audit DeepSeek: SEDAP, sedaya gate lulus). C1 = a9ede47.
+
+- globals.css (+13): token `--shadow-ambient` di :root
+  (light = maroon-soft 0 10px 30px -12px rgba(23,10,14,.18))
+  + varian dark di html.dark (hitam pekat .55). Utility
+  `.card-glass` (layer components, additive: tanpa kelas iki
+  tampilan .card ora owah) = bg semi-transparan (white/70
+  light, white/5 dark) + backdrop-blur-xl + border
+  semi-transparan + box-shadow var(--shadow-ambient).
+- kpi-card.tsx (+11/-4): tile KPI dashboard admin + pengurus
+  ngegunani "card card-glass" (kesan premium; hover:shadow-md
+  tetep nggandhewi shadow utility nalika hover). Emerald KPI
+  positif = verifikasi (saka ngginun `text-success-600 /
+  dark:text-success-400`, boten owah = tanpa regresi).
+- koperasi-client.tsx (+8/-3): tab SHU -- gold badge
+  (`Badge tone="gold"` = amber-400, tone wis wonten di
+  ui.tsx L20) di 2 header: "Alokasi" (TermTip nglingkupi
+  badge+teks) + "Riwayat SHU (n)" -> badge SHU + "Riwayat (n
+  alokasi)".
+- Hero boten di-glass (kepatuhan UX-5 hero FLAT; theme-gate
+  lulus = verifikasi). Glass = KPI mung (target
+  "dashboard hero/KPI").
+- Gates: tsc --noEmit 0; check-route-exports OK;
+  check-theme-gate OK; next build 0; test:all 0 FAIL (18
+  ALL_PASS baseline, kados B1/B2); 0 non-ASCII di diff;
+  frozen intact; tanpa skema; fiqih: none.
+- Next (menunggu ACC Gus Fi): B4 empty ramah (prop tone
+  Empty: default/success/warning; "Alhamdulillah! ..." +
+  aksen emerald; 8-10 halaman prioritas transaksi/stok/
+  laporan).
 

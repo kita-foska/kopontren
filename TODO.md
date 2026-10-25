@@ -226,6 +226,25 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
       skema, fiqih: none. Detail: entri 'W11 B2 ...
       LEPAS' di MEMORY.md. Next: B3 palet+glass
       (GO CODE), B4 empty ramah.
+- [x] **W11 B3 LEPAS 25 Okt (C1 a9ede47, dual-push
+      master+main verified)**: palet + glass premium --
+      globals.css (+13): token `--shadow-ambient`
+      (light/dark) + utility `.card-glass` (additive:
+      bg semi-transparan + backdrop-blur-xl + border
+      semi-transparan + shadow ambient; tanpa kelas iki
+      tampilan .card persis biasa); kpi-card.tsx: tile
+      KPI dashboard admin + pengurus ngegunani "card
+      card-glass" (emerald KPI positif = verifikasi
+      saka ngginun, tanpa owahan);
+      koperasi-client.tsx: tab SHU -- gold badge
+      (Badge tone="gold") di "Alokasi" + "Riwayat SHU".
+      Hero boten di-glass (UX-5 hero FLAT; theme-gate
+      lulus). Gates: tsc 0, check-route-exports OK,
+      check-theme-gate OK, next build 0, test:all 0
+      FAIL (18 ALL_PASS baseline), 0 non-ASCII, frozen
+      intact, tanpa skema, fiqih: none. Detail: entri
+      'W11 B3 ... LEPAS' di MEMORY.md. Next: B4 empty
+      ramah (GO CODE).
 - [x] AUDIT 3x (21 Sep): `audit_log` auto-purge - SELESAI
       (22 Sep): `purgeAuditLog` di lib/notify.ts (default 90 hari +
       invalidasi cache) + cron job `audit` & diinklusi job `all`;
