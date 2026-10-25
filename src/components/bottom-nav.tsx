@@ -29,6 +29,9 @@ type BottomItem = { href: string; label: string; Icon: LucideIcon };
  * semua href di sini legal untuk peran masing-masing.
  * Halaman /kasir TIDAK memakai bottom nav (POS punya sticky bottom bar sendiri)
  * — pengecekan dilakukan di Shell, tidak di sini.
+ * FIX NAV (26 Okt): lapisan z-30 -- WAJIB di bawah overlay hamburger (z-40)
+ * agar saat drawer terbuka, scrim menutupi + mengunci bottom nav (bug lama:
+ * z-50 = setara drawer, pill tetap cemerlang & bisa diklik di atas scrim).
  */
 const MANAJER_ITEMS: BottomItem[] = [
   { href: '/', label: 'Ringkasan', Icon: Home },
@@ -75,7 +78,7 @@ export function BottomNav({ role }: { role: Role }) {
   return (
     <nav
       aria-label="Navigasi bawah"
-      className="fixed inset-x-3 bottom-3 z-50 rounded-2xl bg-white/90 shadow-lg ring-1 ring-black/5 backdrop-blur-md md:hidden dark:bg-navy-900/90 dark:ring-white/10"
+      className="fixed inset-x-3 bottom-3 z-30 rounded-2xl bg-white/90 shadow-lg ring-1 ring-black/5 backdrop-blur-md md:hidden dark:bg-navy-900/90 dark:ring-white/10"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="mx-auto flex max-w-6xl items-stretch justify-around px-2">
