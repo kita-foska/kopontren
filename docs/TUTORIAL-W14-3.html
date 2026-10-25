@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W14-3: Health Meter (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .demo-meter { max-width: 340px; margin: 12px auto; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial: Health Meter / Spidometer Kesehatan Sistem (W14-3)</h1>
+<p><b>Untuk siapa:</b> pengurus, manajer, dan admin yang membuka <b>Dashboard Pengurus</b>
+   (layar /pengurus/dashboard). Tidak perlu paham teknologi apa pun -- cukup
+   baca dari atas ke bawah.</p>
+<p><b>Apa yang baru:</b> di bagian atas dashboard kini tampil <b>spidometer
+   (health meter)</b> -- seperti spidometer mobil. Jarumnya menunjuk skor
+   <b>0 sampai 100</b> untuk kesehatan sistem: database, backup, dan
+   notifikasi push. Di sebelahnya ada 3 baris rincian.</p>
+
+<h2>1. Membaca Spidometer</h2>
+<div class="demo-meter" aria-label="Contoh spidometer kesehatan, skor 85">
+  <svg viewBox="0 0 200 110" role="img" aria-label="Ilustrasi spidometer skor 85 dari 100">
+    <path d="M 20 100 A 80 80 0 0 1 75.28 23.91" fill="none" stroke="#f43f5e" stroke-opacity="0.25" stroke-width="10"/>
+    <path d="M 75.28 23.91 A 80 80 0 0 1 176.09 75.28" fill="none" stroke="#f59e0b" stroke-opacity="0.25" stroke-width="10"/>
+    <path d="M 176.09 75.28 A 80 80 0 0 1 180 100" fill="none" stroke="#10b981" stroke-opacity="0.25" stroke-width="10"/>
+    <path d="M 20 100 A 80 80 0 0 1 171.28 63.68" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round"/>
+    <text x="8" y="103" font-size="8" fill="#94a3b8">0</text>
+    <text x="71.57" y="15.5" font-size="8" fill="#94a3b8">40</text>
+    <text x="187.5" y="74.5" font-size="8" fill="#94a3b8">90</text>
+    <text x="192" y="103" font-size="8" fill="#94a3b8">100</text>
+    <line x1="100" y1="100" x2="151.68" y2="73.67" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="100" cy="100" r="4" fill="#475569"/>
+    <text x="100" y="84" text-anchor="middle" font-size="26" font-weight="800" fill="#f59e0b">85</text>
+    <text x="100" y="96" text-anchor="middle" font-size="8" fill="#94a3b8">dari 100</text>
+  </svg>
+</div>
+<table>
+  <tr><th>Warna Jarum / Skor</th><th>Maknanya</th></tr>
+  <tr><td><b>Hijau</b> (skor 90 ke atas)</td><td>Sistem <b>sehat</b>. Tidak perlu tindakan apa pun.</td></tr>
+  <tr><td><b>Kuning/amber</b> (skor 40-89)</td><td>Ada <b>hal yang perlu perhatian</b>: mis. backup sudah
+      lama belum diekspor, database agak lambat, atau push notifikasi belum
+      diaktifkan. Lihat baris rincian di samping untuk tahu mana yang kuning.</td></tr>
+  <tr><td><b>Merah</b> (skor di bawah 40)</td><td>Ada <b>gangguan</b>: umumnya database tak terjangkau
+      (skor langsung jatuh ke 30). Hubungi pengelola sistem / admin.</td></tr>
+</table>
+
+<h2>2. Tiga Baris Rincian di Samping Jarum</h2>
+<table>
+  <tr><th>Baris</th><th>Yang Ditampilkan</th></tr>
+  <tr><td><b>Database</b></td><td>Status koneksi database: <b>OK</b> (cepat), <b>LAMBAT</b>
+      (perlu perhatian), atau <b>GAGAL</b> (tidak terjangkau). Angka di
+      belakangnya = waktu respon dalam milidetik (mis. "42 ms" = sangat cepat).</td></tr>
+  <tr><td><b>Backup</b></td><td>Tanggal backup terakhir + berapa hari lalu + siapa yang
+      mengekspor. Jika belum pernah ada backup, tampil <b>BELUM</b> berwarna kuning.</td></tr>
+  <tr><td><b>Push</b></td><td>Notifikasi push (perangkat/browser) <b>PUSH ON</b> (kunci push
+      sudah diset, normal) atau <b>PUSH OFF</b> (belum diset; notifikasi dalam
+      aplikasi tetap jalan). Ditampilkan juga jumlah notifikasi tersimpan.</td></tr>
+</table>
+<p>Titik warna di depan tiap baris: hijau = baik, kuning = perlu perhatian,
+   merah = gangguan.</p>
+
+<h2>3. Tautan "Kesehatan Sistem" di Bawah Rincian</h2>
+<p>Baris kecil di bawah rincian adalah <b>drill-down</b>: tautan menuju
+   halaman <b>Kesehatan Sistem</b> (menu admin) yang memuat <b>7 kartu
+   lengkap</b> -- database, koneksi, versi skema, cache, log audit, backup,
+   dan notifikasi. Tautan ini hanya aktif untuk peran <b>admin</b>; peran
+   lain tetap melihat spidomernya, dengan keterangan bahwa detail lengkap
+   berada di halaman admin.</p>
+<div class="hint">
+  <b>Kenapa ada dua tampilan?</b> Spidometer di dashboard pengurus adalah
+  <i>ringkasan cepat</i> (jantung yang sama dengan halaman admin -- satu
+  sumber data, dua tampilan). Jika jarum kuning/merah, admin memeriksa
+  7 kartu detail; pengurus cukup melihat apakah perlu bertindak atau tidak.
+</div>
+
+<h2>4. Kapan Angka Ini Berubah?</h2>
+<p>Spidometer dihitung ulang <b>setiap kali halaman dashboard dibuka atau
+   dimuat ulang</b> (tanpa tombol khusus). Angka yang tampil adalah kondisi
+   saat itu. Jika database sedang bermasalah, spidometer akan merah dan
+   halaman lain tetap berjalan normal; spidometer itu sendiri yang melapor,
+   bukan sistem yang rusak.</p>
+
+<h2>5. Ringkasan Cepat</h2>
+<table>
+  <tr><th>Situasi</th><th>Yang Anda Lihat</th></tr>
+  <tr><td>Semua sehat</td><td>Skor 100, jarum hijau di ujung kanan, semua baris hijau.</td></tr>
+  <tr><td>Backup sudah lama (lebih dari 30 hari)</td><td>Baris Backup kuning; skor turun 10.</td></tr>
+  <tr><td>Database lambat (500-2000 ms)</td><td>Baris Database kuning ("LAMBAT"); skor turun 10.</td></tr>
+  <tr><td>Database tidak terjangkau</td><td>Skor 30, jarum merah; baris Database "GAGAL". Hubungi admin.</td></tr>
+  <tr><td>Push belum diaktifkan</td><td>Baris Push "PUSH OFF" kuning; notifikasi in-app tetap normal.</td></tr>
+</table>
+<p style="margin-top:40px;font-size:.85rem;color:#666">
+  Tutorial W14-3 -- Health Meter. Dokumentasi internal Kopontren AL Ittihad.
+</p>
+</main>
+</body>
+</html>
