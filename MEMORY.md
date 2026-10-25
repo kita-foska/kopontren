@@ -53,6 +53,51 @@
   (v34).
 - **W13 SELESAI** (B1 + B2). Lanjut Wave 14: e-Struk
   Interaktif, Member Card Glassmorphic, Health Meter.
+ ### W14-1 -- e-STRUK INTERAKTIF: LINK PUBLIK HMAC + TOMBOL BAGIKAN POS (commit `942f74f`, dual-push GitHub master+main)
+ - **env `STRUK_LINK_SECRET` (anyar, opsional)**: kunci
+   HMAC-SHA256 (node:crypto, `timingSafeEqual`) utk tanda
+   tangan link e-Struk; min 16 char. `.env` lokal: 64-hex
+   acak (sudah terisi; file ter-ignore git). Tanpa env:
+   `GET /api/struk-link` balas 503 + pesan jelas; tombol POS
+   tetap ada, tampil toast -- TANPA crash, fitur POS lain
+   aman. **Aksi Gus Fi (setelah push): set di Vercel
+   (Settings -> Env Vars), salin 64-hex dari .env lokal.**
+ - **lib/struk-link.ts (anyar, pure)**: token deterministik
+   `<saleId>.<hex16>` + `verifyEstructToken` (timing-safe;
+   tolak ID tak dikenal / digest rusak / secret kosong),
+   `hasEstructSecret()`, `buildEstructUrl()`,
+   `saleToEstructOpts()` = mapper satu-sumber (baris sales ->
+   struk-media StructPdfOpts; POS = halaman publik: layout
+   PDF/JPEG/WA sama persis -- konsistensi gaya m-banking W7).
+ - **Halaman PUBLIK `/struk/[token]` (tanpa auth; middleware
+   exception)**: gaya m-banking (reuse layout
+   `struk-media.STRUCT_MEDIA` + `StructMediaClient`): logo,
+   Tgl+WIB, kasir, pembeli, member, detail baris, TOTAL
+   sorot, metode bayar, poin; 4 aksi (Unduh PDF / Unduh Foto
+   -- dynamic import pola wadi-report, Kirim WA, Salin Teks).
+   Token tak valid -> halaman ramah "tidak valid / belum
+   lengkap", TANPA bocor detail data.
+ - **API `GET /api/struk-link?id=N`**: guard role POS
+   (kasir/admin -- pola /api/sales), 400/404/403/503 pesan
+   jelas; hanya mengembalikan link (bukan data struk --
+   data dibaca dari `id` oleh halaman publik).
+ - **POS (pos-client.tsx)**: tombol "Bagikan Link" di dialog
+   struk (icon Link2): fetch API -> `navigator.share`
+   (mobile) / clipboard (desktop); guard `mediaBusy`.
+ - **Test**: `scripts/test-estruct.ts` suite #42 (28 check:
+   deterministik, valid, digest rusak, ID tak dikenal,
+   secret kosong, mapping cash/non-cash, guard BOM/emoji).
+   `test:all` kini = 43 suite.
+ - **Tutorial**: docs/TUTORIAL-W14-1.html (commit C3; inline
+   SVG, 0 emoji, layar awam + setup Vercel + analogi HMAC
+   (cap resi) vs JWT vs base64 signed + FAQ + peta istilah).
+ - **Gate**: tsc 0; test:all 43/43 hijau; gate
+   (route-exports + theme-gate + build) 0; 0 non-ASCII;
+   frozen utuh; tanpa dependency anyar; TANPA perubahan
+   skema (v34).
+ - **NEXT W14**: W14-2 Member Glassmorphic Card (O4),
+   W14-3 Health Meter (O5).
+
 
 ## 2026-10-19
 ### R1 DARURAT: 3 TABEL TURSO TERHAPUS -- RESTORE VIA `scripts/restore-db.js` (Gus Fi via DeepSeek, 19 Okt 2026)

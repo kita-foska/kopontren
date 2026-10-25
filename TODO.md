@@ -2859,3 +2859,27 @@ hint di halaman pengaturan + test suite ke-41 (test-notify) +
 tutorial TUTORIAL-W13-BATCH2.html. W13 COMPLETE (B1 + B2).
 NEXT: Wave 14 -- e-Struk Interaktif, Member Card Glassmorphic,
 Dashboard Health Meter.**
+**WAVE 14 (26 Okt 2026):**
+- [x] **W14-1 e-Struk Interaktif (link publik HMAC + tombol
+  "Bagikan Link" POS) -- LEPAS 26 Okt 2026 (C1 `942f74f`,
+  dual-push GitHub master+main terverifikasi; ACC Gus Fi via
+  DeepSeek audit, gate 43/43 hijau):** halaman PUBLIK
+  /struk/<token> gaya m-banking TANPA login (token HMAC-SHA256
+  deterministik `lib/struk-link.ts`, verify timing-safe;
+  token tak valid -> halaman ramah, tanpa bocor detail);
+  graceful bila `STRUK_LINK_SECRET` belum ada (API 503 +
+  toast POS, tanpa crash); 4 aksi reuse lib/struk-media
+  (PDF/JPEG/WA/salin) + mapper satu-sumber
+  `saleToEstructOpts()`; test-estruct suite #42 (28 check);
+  TUTORIAL-W14-1.html (inline SVG, 0 emoji). Gate: tsc 0;
+  test:all 43/43; gate build 0; 0 non-ASCII; frozen utuh;
+  tanpa dependency; TANPA perubahan skema (v34). **Aksi
+  Gus Fi: set `STRUK_LINK_SECRET` di Vercel (64-hex, salin
+  dari .env lokal).** Detail: MEMORY.md seksi "W14-1".
+- [ ] **W14-2 Member Glassmorphic Card (O4): kartu 300x100,
+  glassmorphic, QR keanggotaan, salin nomor, poin + tier,
+  dark mode, print CSS @page portrait. NEXT.**
+- [ ] **W14-3 Dashboard Health Meter (O5): 4 gauge
+  (transaksi pending, antrean offline, kesehatan DB,
+  kesiapan PWA).**
+
