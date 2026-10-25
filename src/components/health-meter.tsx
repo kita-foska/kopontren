@@ -16,6 +16,8 @@ import {
  * tanpa hook -- render identik di server & klien, tanpa hydration issue).
  * Logika skor/zone/baris = src/lib/health.ts (pure; diuji suite 44).
  * Semua ikon = inline SVG; 0 emoji/unicode (gate).
+ * W15 P1 polish visual: jarum melayang (radius 38->58, tak menembus teks
+ * skor), tick batas zona 0/40/90/100, skor amber dapat dark variant.
  */
 
 /** Warna zona (token tailwind: success=emerald, amber, rose). */
@@ -65,7 +67,11 @@ export function HealthMeter({ cards, drillHref, drillNote }: HealthMeterProps) {
   const score = healthScore(cards);
   const tone = healthScoreTone(score);
   const rows = healthMeterRows(cards);
-  const needle = pointAt(score, 58);
+  // W15 P1: jarum "melayang" (segmen radius 38->58, tidak lagi dari pusat)
+  // agar saat skor 35..65 (jarum hampir vertikal) tidak menembus teks skor
+  // besar di tengah gauge (baseline y=84, tinggi font 26).
+  const needleTip = pointAt(score, 58);
+  const needleBase = pointAt(score, 38);
   const progressEnd = pointAt(score, 80);
   const toneCls =
     tone === 'green'
@@ -100,6 +106,24 @@ export function HealthMeter({ cards, drillHref, drillNote }: HealthMeterProps) {
               strokeLinecap="round"
             />
           )}
+          {/* W15 P1: tick batas zona (0/40/90/100) -- garis pendek di dalam
+              pita zona agar awam mudah membaca batas antara zona. */}
+          {[0, 40, 90, 100].map((v) => {
+            const t0 = pointAt(v, 66);
+            const t1 = pointAt(v, 72);
+            return (
+              <line
+                key={`tick-${v}`}
+                x1={t0.x}
+                y1={t0.y}
+                x2={t1.x}
+                y2={t1.y}
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-slate-400 dark:text-slate-500"
+              />
+            );
+          })}
           {[0, 40, 90, 100].map((v) => {
             const p = pointAt(v, 92);
             return (
@@ -116,10 +140,10 @@ export function HealthMeter({ cards, drillHref, drillNote }: HealthMeterProps) {
             );
           })}
           <line
-            x1="100"
-            y1="100"
-            x2={needle.x}
-            y2={needle.y}
+            x1={needleBase.x}
+            y1={needleBase.y}
+            x2={needleTip.x}
+            y2={needleTip.y}
             stroke="currentColor"
             strokeWidth="3"
             strokeLinecap="round"
@@ -136,7 +160,7 @@ export function HealthMeter({ cards, drillHref, drillNote }: HealthMeterProps) {
               tone === 'green'
                 ? 'fill-success-600 dark:fill-success-400'
                 : tone === 'amber'
-                  ? 'fill-amber-500'
+                  ? 'fill-amber-500 dark:fill-amber-400'
                   : 'fill-rose-500'
             }
           >
