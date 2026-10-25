@@ -92,7 +92,8 @@ export function LowStockClient({
       </div>
       {items.length === 0 ? (
         <Empty
-          text="Semua stok aman (≥ 10). Tidak ada alert."
+          tone="success"
+          text="Alhamdulillah, semua stok aman (min. 10). Tidak ada alert."
           ctaLabel={canManageStock ? 'Kelola Produk' : undefined}
           ctaHref={canManageStock ? '/admin/produk' : undefined}
         />

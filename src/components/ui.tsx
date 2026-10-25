@@ -718,6 +718,7 @@ export function Empty({
   ctaOnClick,
   ctaVariant = 'ghost',
   compact,
+  tone = 'default',
 }: {
   text: string;
   action?: React.ReactNode;
@@ -734,6 +735,10 @@ export function Empty({
   ctaVariant?: ButtonVariant;
   /** Padding kecil utk konteks padat (sel tabel, box sub-list). */
   compact?: boolean;
+  /** W11 B4: aksen ramah -- 'success' (emerald, kondisi positif
+      "Alhamdulillah...") / 'warning' (amber, perlu perhatian).
+      'default' = tampilan lama persis (zero-delta). */
+  tone?: 'default' | 'success' | 'warning';
 }) {
   // UX-2: CTA opsional di empty state — kosong bukan dead-end, tapi arah.
   // B1: render via <Button>; ctaVariant kini ButtonVariant (superset — nilai
@@ -750,14 +755,30 @@ export function Empty({
       </Button>
     )
   ) : null;
+  // W11 B4: tone aksen -- success (emerald) = kondisi positif;
+  // warning (amber) = perlu perhatian; default = kelas lama persis.
+  const toneCls =
+    tone === 'success'
+      ? 'border-success-300/60 bg-success-50 text-success-700 dark:border-success-700/50 dark:bg-success-900/15 dark:text-success-300'
+      : tone === 'warning'
+        ? 'border-attention-300/60 bg-attention-50 text-attention-700 dark:border-attention-700/50 dark:bg-attention-900/15 dark:text-attention-300'
+        : 'border-slate-300 text-slate-500 dark:border-navy-600 dark:text-slate-400';
+  const iconCls =
+    tone === 'success'
+      ? 'text-success-400 dark:text-success-500'
+      : tone === 'warning'
+        ? 'text-attention-400 dark:text-attention-500'
+        : 'text-slate-300 dark:text-slate-600';
   return (
     <div
       className={
-        'rounded-2xl border border-dashed border-slate-300 text-center text-slate-500 dark:border-navy-600 dark:text-slate-400 ' +
+        'rounded-2xl border border-dashed text-center ' +
+        toneCls +
+        ' ' +
         (compact ? 'px-3 py-4 text-xs' : 'px-4 py-8 text-sm')
       }
     >
-      {icon && <div className="mb-2 flex justify-center text-slate-300 dark:text-slate-600">{icon}</div>}
+      {icon && <div className={'mb-2 flex justify-center ' + iconCls}>{icon}</div>}
       {text}
       {(cta || action) && (
         <div className="mt-3 flex flex-col items-center gap-2">

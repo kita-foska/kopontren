@@ -749,7 +749,7 @@ export function AkadClient({ canWrite }: { canWrite: boolean }) {
       <div className="card p-4">
         <h2 className="mb-3 font-bold">Riwayat Akad ({d.rows.length})</h2>
         {d.rows.length === 0 ? (
-          <Empty compact text="Belum ada akad. Gunakan form di atas." />
+          <Empty compact text="Belum ada akad tercatat. Gunakan form di atas." />
         ) : (
           <Table minW="min-w-[720px]">
             <thead>

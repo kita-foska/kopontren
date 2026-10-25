@@ -450,10 +450,11 @@ export function LaporanClient({
         {filteredSales.length === 0 && (
           <Empty
             icon={<FileText className="h-8 w-8" />}
+            tone={q ? 'default' : 'success'}
             text={
               q
                 ? 'Tidak ada transaksi yang cocok dengan filter pencarian.'
-                : 'Belum ada transaksi pada periode ini.'
+                : 'Alhamdulillah, belum ada transaksi pada periode ini.'
             }
             // UX-2: CTA "Mulai transaksi" hanya utk role yg bisa buka POS
             // (admin/manajer/kasir). Pengurus read-only: teks saja.

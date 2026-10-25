@@ -201,7 +201,7 @@ export function KasClient() {
               <TEmpty colSpan={4}>
                 <Empty
                   compact
-                  text="Belum ada gerakan kas."
+                  text="Belum ada gerakan kas tercatat. Mulai lewat form di atas."
                   ctaLabel="Catat jurnal kas"
                   ctaOnClick={() =>
                     document
@@ -256,7 +256,7 @@ export function KasClient() {
         {data.rows.length === 0 && (
           <Empty
             compact
-            text="Belum ada gerakan kas."
+            text="Belum ada gerakan kas tercatat. Mulai lewat form di atas."
             ctaLabel="Catat jurnal kas"
             ctaOnClick={() =>
               document.getElementById('kas-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })

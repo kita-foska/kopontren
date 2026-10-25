@@ -1071,7 +1071,7 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
           <div className="card p-4">
             <h2 className="mb-3 font-bold">Riwayat Mutasi Simpanan ({d.history.length})</h2>
             {d.history.length === 0 ? (
-              <Empty compact text="Belum ada mutasi simpanan." />
+              <Empty compact text="Belum ada mutasi simpanan tercatat." />
             ) : (
               <Table minW="min-w-[640px]">
                 <thead>
@@ -1619,7 +1619,7 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
               </TermTip>
             </h2>
             {d.loans.length === 0 ? (
-              <Empty compact text="Belum ada pinjaman anggota (qardh)." />
+              <Empty compact text="Belum ada pinjaman anggota (qardh) tercatat." />
             ) : (
               <div className="overflow-x-auto">
                 <Table minW="min-w-[980px]">

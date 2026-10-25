@@ -206,7 +206,8 @@ export function ReturClient() {
           {rets.length === 0 && (
             <Empty
               compact
-              text="Belum ada."
+              tone="success"
+              text="Alhamdulillah, tidak ada retur tercatat."
               ctaLabel="Catat retur"
               ctaOnClick={() =>
                 document

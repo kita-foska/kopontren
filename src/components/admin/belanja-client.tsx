@@ -202,7 +202,7 @@ export function BelanjaClient() {
               {data.purchases.length === 0 && (
                 <Empty
                   compact
-                  text="Belum ada."
+                  text="Belum ada belanja supplier tercatat."
                   ctaLabel="Catat belanja"
                   ctaOnClick={() =>
                     document
@@ -278,7 +278,7 @@ export function BelanjaClient() {
               {data.expenses.length === 0 && (
                 <Empty
                   compact
-                  text="Belum ada."
+                  text="Belum ada pengeluaran tercatat."
                   ctaLabel="Catat pengeluaran"
                   ctaOnClick={() =>
                     document

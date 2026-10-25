@@ -653,7 +653,7 @@ export function ZakatClient() {
           // I-4 UX-6: empty state CTA "Catat Verifikasi" scroll ke form
           // harga emas di atas (admin-only; form ini hanya render is_admin).
           <Empty
-            text="Belum ada log verifikasi harga emas."
+            text="Belum ada log verifikasi harga emas tercatat."
             ctaLabel="Catat Verifikasi"
             ctaVariant="ghost"
             ctaOnClick={() =>
@@ -681,7 +681,8 @@ export function ZakatClient() {
           // Simpan ke Riwayat). CTA hanya bila perhitungan sudah termuat
           // (tombol tsb disabled tanpa calc).
           <Empty
-            text="Belum ada riwayat zakat."
+            tone="success"
+            text="Alhamdulillah, belum ada riwayat zakat tercatat."
             ctaLabel={c ? 'Simpan ke Riwayat' : undefined}
             ctaVariant="ghost"
             ctaOnClick={

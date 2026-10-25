@@ -300,7 +300,8 @@ export function HutangClient({ admin }: { admin: boolean }) {
           })}
           {payables.length === 0 && (
             <Empty
-              text="Belum ada."
+              tone="success"
+              text="Alhamdulillah, tidak ada utang supplier terbuka."
               ctaLabel="Catat hutang"
               ctaOnClick={() =>
                 document

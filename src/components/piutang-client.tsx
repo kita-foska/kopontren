@@ -268,7 +268,8 @@ export function PiutangClient({ admin }: { admin: boolean }) {
           {debts.length === 0 && (
             <Empty
               compact
-              text="Belum ada."
+              tone="success"
+              text="Alhamdulillah, tidak ada piutang terbuka."
               ctaLabel="Catat piutang"
               ctaOnClick={() =>
                 document
