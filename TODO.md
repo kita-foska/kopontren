@@ -186,6 +186,17 @@ Prioritas: [!] tinggi · [m] sedang · [r] rendah.
   kasih); test Section K (38/38); deviasi ACC: garis '=' ASCII
   + alamat static (settings TUNDA); detail MEMORY.md 'STRUK
   MEDIA OPTION A -- LEPAS'.
+- [x] **EYE TOGGLE PASSWORD LEPAS 25 Okt (C1 db5e99a,
+      dual-push master+main verified)**: src/app/login/
+      page.tsx (tombol mata inline SVG lucide Eye/EyeOff;
+      type password/text; aria-label "Tampilkan password" /
+      "Sembunyikan password"; input pr-10 + placeholder
+      ASCII). Gates: tsc 0, test:all ALL_PASS (34 script,
+      runner `node` native), gate (route-exports + theme +
+      build) LULUS, 0 non-ASCII di diff, frozen intact,
+      tanpa skema, fiqih: none. Detail: entri 'EYE TOGGLE
+      PASSWORD -- LEPAS' di MEMORY.md. Note: Google/WA
+      login = TUNDA Wave 12 (audit + tashih).
 
       `@media print`. Tanpa perubahan kode.
 - [x] AUDIT 3x (21 Sep): `audit_log` auto-purge - SELESAI

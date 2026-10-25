@@ -6361,3 +6361,31 @@ environmental -- DB lokal data/kopontren.db stale 29 Sep, CPU
 aktif, DB tak diwrite) -> kill + restart gate lulus wadha.
 Residual: monitor VPS (orphan node + flake W10-2 precedent).
 
+## EYE TOGGLE PASSWORD -- LEPAS (25-10-2026)
+Ruling Gus Fi (via DeepSeek, 25 Okt): eye toggle GO CODE (P1);
+Google/WA login = TUNDA (Wave 12, audit + tashih).
+
+- C1 = db5e99a (1 file: src/app/login/page.tsx +23/-9):
+  import Eye/EyeOff (lucide-react), state showPw, input
+  type={showPw ? 'text' : 'password'} + pr-10, tombol mata
+  absolute right-1.5 (aria-label + title dinamis
+  "Tampilkan password" / "Sembunyikan password", inline SVG
+  via lucide, token dark navy/slate). Placeholder bullet
+  existing ("bullet 8") diganti ASCII "........" (gate 0
+  non-ASCII di diff).
+- C2 docs: commit ini (MEMORY.md +section ini; TODO.md
+  +baris EYE TOGGLE LEPAS).
+- Gates C1: tsc --noEmit 0; test:all ALL_PASS (34 scripts;
+  runner repo asli `node` Node 24 type-stripping --
+  members-phone 26 ok, wadi 13 pass, 0 fail); gate
+  (check-route-exports + check-theme-gate + next build)
+  LULUS; 0 non-ASCII di diff; frozen intact; tanpa skema;
+  fiqih: none.
+- Note lingkungan: package.json lokal sempat override `npx
+  tsx` (crash esbuild "Top-level await not supported in
+  cjs" di Node 24.19) -- REVERT ke committed (`node`
+  runner); file tsx TIDAK ikut commit.
+- Next (menunggu ACC Gus Fi): Wave 11 B1 (Sapaan + WA help
+  + error page), B2 mobile card, B3 palet/glass/ambient,
+  B4 empty ramah. Google/WA login = Wave 12.
+
