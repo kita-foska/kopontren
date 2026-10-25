@@ -95,8 +95,48 @@
    (route-exports + theme-gate + build) 0; 0 non-ASCII;
    frozen utuh; tanpa dependency anyar; TANPA perubahan
    skema (v34).
- - **NEXT W14**: W14-2 Member Glassmorphic Card (O4),
-   W14-3 Health Meter (O5).
+  ### W14-2 -- MEMBER GLASSMORPHIC CARD: KARTU 300x100 + TILT 3D + SALIN NOMOR (ACC GO CODE 26 Okt)
+  - **tailwind.config.ts**: token `wine` diperluas (800 #5E1414,
+    900 #420E0E utk gradasi kartu); 4 komentar lama karakter
+    em-dash -> `-` (file kini 0 non-ASCII).
+  - **lib/member-card.ts (anyar, pure)**: `glassTiltDeg` (pusat
+    = 0/0; tepi = +/-maks; clamp; pembulatan 1 desimal; guard
+    ukuran 0), `glassTiltTransform` (0/0 -> "none"; selain itu
+    perspective(700px) + deg), `glassTierBadge` (gold -> GOLD
+    amber / silver -> SILVER slate, case-insensitif; kosong atau
+    tak dikenal -> null tanpa crash), `glassCardCopyValue`
+    (token QR bila ada -- itulah yg dipindai kasir; selain itu
+    nomor member/id).
+  - **components/member-glass-card.tsx (anyar)**: kartu 300x100
+    glassmorphic (gradasi wine-700/800/900 + lapisan refleksi
+    kaca), chip SVG, nama + HP (truncate), poin + saldo reward
+    (tabular-nums), badge tier di pojok kanan atas (kelas sama
+    dgn MemberQrBadge), QR thumbnail (reuse dependency `qrcode`,
+    toDataURL 160px -- pola MemberQrBadge), kotak "Belum" bila
+    token QR kosong. Tombol "Salin Nomor" (clipboard + indikator
+    "Disalin" 1.5 dtk; fail-safe tanpa crash) + CTA "Lihat
+    Detail" membuka modal MemberQrBadge EXISTING (tanpa
+    duplikasi cetak/perbarui). Tilt 3D HANYA pointer mouse fine
+    + hormati prefers-reduced-motion; MOBILE = statis. Cetak:
+    `@media print { @page A4 portrait }`. 0 dependency anyar.
+  - **personal-dashboard-client.tsx**: kartu glass ter-mount di
+    PALING ATAS dashboard (di atas grid ringkasan), prop
+    `member` + `qr={memberQr}` (sinkron otomatis bila QR
+    auto-generate di modal) + `onDetail` -> setQrOpen(true).
+  - **Test**: `scripts/test-member-card.ts` suite #43 (22 check:
+    6 tilt, 2 transform, 4 badge, 2 salin, 3 guard BOM/emoji,
+    5 sifat kode: mobile-statis/reuse-qrcode/print-portrait/gradasi
+    wine/mount dashboard). `test:all` kini = 44 suite.
+  - **Tutorial**: docs/TUTORIAL-W14-2.html (inline SVG, 0
+    emoji, layar awam: apa itu kartu glass, efek 3D (komputer
+    vs HP), tombol Salin Nomor/Lihat Detail, cetak portrait,
+    bila QR belum ada, ringkasan cepat).
+  - **Gate**: tsc 0; test:all 44/44; gate build 0; 0 non-ASCII
+    (file batch); frozen utuh; tanpa dependency anyar; TANPA
+    perubahan skema (v34).
+  - **NEXT W14**: W14-3 Dashboard Health Meter (O5) -- 4 gauge
+    (transaksi pending, antrean offline, kesehatan DB, kesiapan
+    PWA).
 
 
 ## 2026-10-19

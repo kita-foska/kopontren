@@ -2876,10 +2876,28 @@ Dashboard Health Meter.**
   tanpa dependency; TANPA perubahan skema (v34). **Aksi
   Gus Fi: set `STRUK_LINK_SECRET` di Vercel (64-hex, salin
   dari .env lokal).** Detail: MEMORY.md seksi "W14-1".
-- [ ] **W14-2 Member Glassmorphic Card (O4): kartu 300x100,
-  glassmorphic, QR keanggotaan, salin nomor, poin + tier,
-  dark mode, print CSS @page portrait. NEXT.**
+- [x] **W14-2 Member Glassmorphic Card (O4) -- SELESAI
+  (kode + test + tutorial; ACC GO CODE 26 Okt):** kartu
+  300x100 glassmorphic wine (gradasi 700/800/900 + refleksi
+  kaca) di PALING ATAS dashboard member
+  (src/components/member/personal-dashboard-client.tsx);
+  chip + nama + HP + poin + saldo reward + badge tier
+  GOLD/SILVER (kelas sama dgn MemberQrBadge) + QR thumbnail
+  (reuse dependency qrcode, toDataURL -- 0 dependency anyar);
+  tombol "Salin Nomor" (clipboard: token QR bila ada, selain
+  itu id member; indikator "Disalin") + CTA "Lihat Detail"
+  membuka modal MemberQrBadge EXISTING (sinkron state
+  memberQr, tanpa duplikasi fitur cetak/perbarui). Tilt 3D
+  halus HANYA pointer mouse fine + hormati
+  prefers-reduced-motion; MOBILE = statis. Print CSS
+  @page A4 portrait. Helper pure lib/member-card.ts
+  (glassTiltDeg/glassTiltTransform/glassTierBadge/
+  glassCardCopyValue). Test: test-member-card suite #43
+  (22 check). TUTORIAL-W14-2.html (inline SVG, 0 emoji).
+  Gate: tsc 0; test:all 44/44; gate build 0; 0 non-ASCII
+  (file batch); frozen utuh; TANPA perubahan skema (v34).
+  Detail: MEMORY.md seksi "W14-2".
 - [ ] **W14-3 Dashboard Health Meter (O5): 4 gauge
   (transaksi pending, antrean offline, kesehatan DB,
-  kesiapan PWA).**
+  kesiapan PWA). NEXT.**
 
