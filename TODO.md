@@ -2961,3 +2961,16 @@ Dashboard Health Meter.**
   c134039); 0 dependency anyar; TANPA perubahan skema (v34). Detail:
   MEMORY.md seksi "W15-P2b".
 
+
+- [x] **W16-A Code-Splitting + Font Opsi B -- SELESAI (ACC GO CODE 26
+  Okt):** charts.tsx di-lazy via next/dynamic ssr:false di 2 call-site
+  (pengurus-dashboard-client + admin/laporan-admin-client, loading
+  PageSkeleton); POS tetap pos-lazy (React.lazy, sudah ada,
+  diverifikasi); layout.tsx Plus_Jakarta_Sans weight ['400','600']
+  (Opsi B; prop Next 15 = `weight` string, TIDAK `weights`). Chore
+  ASCII 3 file (5+47+2 karakter). Verifikasi: string "chart-bar" hanya
+  di chunk 6126.* (4.3 KB), bukan main. JS 3012.5 -> 3011.7 KB;
+  CSS 69.5 -> 70.7 KB; font 4 woff2 ~58 KB. Gate v7: tsc 0; test:all
+  green; gate build 0 (clean .next); 0 dependency anyar; TANPA
+  perubahan skema (v34). TUTORIAL-W16-1.html (0 emoji). Detail:
+  MEMORY.md seksi "W16-A".

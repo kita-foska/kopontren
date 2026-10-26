@@ -6936,3 +6936,29 @@ agar cadangan v33 Ujrah tetap utuh bila Gus Fi
 menashih-kan. Kaidah baru: sebelum bump skema, cek
 seksi menika + MEMORY "W9/W10 Ujrah" dulu.
 
+
+## W16-A -- Code-Splitting + Font Opsi B (26-10-2026, ACC GO CODE)
+- charts.tsx (SalesBarChart + HourBarChart, CSS murni, 0 dependency)
+  di-code-split: 2 call-site statis diganti next/dynamic ssr:false +
+  loading PageSkeleton:
+  - pengurus-dashboard-client.tsx (SalesBarChart)
+  - admin/laporan-admin-client.tsx (HourBarChart; pola sama dgn
+    V1Client)
+- POS TIDAK dirombak: pos-lazy.tsx (React.lazy + Suspense) sudah
+  memotong pos-client sejak lama -- diverifikasi, tetap apa adanya.
+- Font Opsi B (layout.tsx): Plus_Jakarta_Sans weight ['400','600']
+  eksplisit. CATATAN: prop Next 15 = `weight` (BUKAN `weights`) dan
+  bobot = string union ('400','600'). Sebelum: tanpa weight (default
+  variable font). Kini 4 file woff2 (latin + latin-ext utk 2 bobot,
+  unicode-range) total ~58 KB.
+- Verifikasi build: string "chart-bar" HANYA di chunk terpisah
+  6126.* (4.3 KB) -- bukan main/dashboard chunk.
+- Chore ASCII file tersentuh: pengurus-dashboard-client (5),
+  laporan-admin-client (47, pre-existing), layout.tsx (2: panah +
+  em-dash) -> 0 non-ASCII.
+- Baseline/hasil: JS chunks 3012.5 -> 3011.7 KB (split pindah
+  antar-chunk, total ~sama); CSS 69.5 -> 70.7 KB.
+- Gate: tsc 0; test:all green (51 suites, suite pungkasan 51/0);
+  gate build 0 (clean .next); frozen 4 file untouched; 0 dependency
+  anyar; skema tetap v34.
+- TUTORIAL-W16-1.html (0 emoji, diagram inline SVG).
