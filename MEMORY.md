@@ -256,6 +256,28 @@
 - **Gate v6**: tsc 0; test:all green (spt suite 45, 51 check);
   gate build 0; 6 file 0 non-ASCII; dual-push.
 
+### W15-P2b -- MICRO-INTERACTIONS: RIPPLE TOMBOL + SPRING BADGE TROLI (ACC GO CODE W15)
+- **Ruling**: berlaku semua tombol; CSS-only 0 JS.
+- **Implementasi (3 file)**:
+  1. `globals.css`: dua kelas baru + keyframes, keduanya masuk blok
+     `prefers-reduced-motion: reduce`:
+     - `.btn-ripple`: pseudo-element `::after` lingkaran menyebar saat
+       `:active` (animasi 0.45s) -- murni CSS, tanpa JS.
+     - `.cart-pop`: keyframes spring pop (scale 1 -> 1.28 -> 1, 0.28s).
+  2. `ui.tsx`: kelas `btn-ripple` ditambahkan ke `BTN_BASE` --
+     sehingga berlaku untuk SEMUA tombol `<Button>` (semua varian +
+     ukuran).
+  3. `pos-client.tsx`: badge "N item" di header Keranjang Kasir
+     dibungkus `<span key={cart.length} className="cart-pop">` --
+     key berubah mengikuti jumlah item, React remount span, animasi
+     CSS otomatis berjalan lagi (tanpa JS per-keperian).
+- **Chore file batch**: em-dash & karakter non-ASCII lain di
+  `globals.css` + `ui.tsx` dikonversi ke ASCII (pola spt commit
+  `c134039`); "Memproses..." / "Memuat..." tetap user-facing.
+- **Tutorial**: `docs/TUTORIAL-W15-3.html` (C3).
+- **Gate v7**: tsc 0; test:all green; gate build 0; 3 file 0
+  non-ASCII; 0 dependency anyar; TANPA perubahan skema (v34).
+
 ## 2026-10-19
 ### R1 DARURAT: 3 TABEL TURSO TERHAPUS -- RESTORE VIA `scripts/restore-db.js` (Gus Fi via DeepSeek, 19 Okt 2026)
 - **INSIDEN**: kesalahan fatal (DeepSeek) menghapus tabel

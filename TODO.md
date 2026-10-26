@@ -2951,8 +2951,13 @@ Dashboard Health Meter.**
   test:all green; gate build 0; 6 file 0 non-ASCII; 0 dependency
   anyar; TANPA perubahan skema (v34). Detail: MEMORY.md seksi
   "W15-P2a".
-- [ ] **W15-P2b Micro-Interactions -- STEP 3:** ripple CSS-only
-  (btn-ripple via BTN_BASE -> semua tombol) + cart spring (cart-pop,
-  key badge mengikuti jumlah item) + kedua kelas masuk blok
-  prefers-reduced-motion. Ruling: berlaku semua tombol.
+- [x] **W15-P2b Micro-Interactions -- SELESAI (STEP 3, ACC GO CODE 26
+  Okt, ruling: berlaku semua tombol):** ripple CSS-only
+  (btn-ripple via BTN_BASE -> semua tombol, pseudo-element :active
+  0 JS) + cart spring (cart-pop, key badge mengikuti jumlah item di
+  pos-client) + kedua kelas masuk blok prefers-reduced-motion.
+  TUTORIAL-W15-3.html (demo CSS, 0 emoji). Gate v7: tsc 0; test:all
+  green; gate build 0; 3 file 0 non-ASCII (chore em-dash spt pola
+  c134039); 0 dependency anyar; TANPA perubahan skema (v34). Detail:
+  MEMORY.md seksi "W15-P2b".
 
