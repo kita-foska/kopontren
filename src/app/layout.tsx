@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { SwRegister } from '@/components/sw-register';
+import { WebVitalsReporter } from '@/components/web-vitals-reporter';
 import { T } from '@/lib/tokens';
 
 // Font utama aplikasi (P1 audit UI): sebelum 26 Sep, 'Plus Jakarta Sans'
@@ -58,7 +59,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
-      <body>{children}<SwRegister /></body>
+      <body>
+        {children}
+        <SwRegister />
+        <WebVitalsReporter />
+      </body>
     </html>
   );
 }

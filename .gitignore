@@ -70,3 +70,6 @@ _*.ts
 # generated SW (W10-2): sumber = public/sw.src.js (tracked, FROZEN);
 # public/sw.js = generated oleh scripts/inject-sw-version.mjs -- JANGAN commit
 public/sw.js
+
+# W16-C: keluaran Lighthouse lokal (json + html) -- jangan di-commit
+artifacts/
