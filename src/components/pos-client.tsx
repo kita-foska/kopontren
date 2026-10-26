@@ -334,6 +334,38 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
   // Search debounce 300ms: grid produk memakai qDeb supaya re-render tidak
   // terjadi setiap ketikan; handler Enter (barcode scanner) tetap live.
   const [qDeb, setQDeb] = useState('');
+  // W15 P2a (OmniSearch deep-link): prefill ?q= dari command palette /
+  // tautan ke kolom pencarian. Bila cocok PERSIS (barcode/nama) saat
+  // produk sudah load, auto-add (setara tombol Enter) -- flag pending
+  // dikonsumsi sekali setelah load. BUKAN useSearchParams (hindari
+  // Suspense); ?q= dibersihkan via replaceState agar refresh tidak
+  // mengulang auto-add.
+  const pendingQRef = useRef('');
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const uq = new URLSearchParams(window.location.search).get('q');
+    if (!uq) return;
+    setQ(uq);
+    pendingQRef.current = uq;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('q');
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }, []);
+  useEffect(() => {
+    const uq = pendingQRef.current;
+    if (!uq || products.length === 0) return;
+    pendingQRef.current = '';
+    const term = uq.trim().toLowerCase();
+    const hit =
+      products.find((p) => (p.barcode || '').toLowerCase() === term) ||
+      products.find((p) => p.name.toLowerCase() === term) ||
+      null;
+    if (hit) {
+      add(hit);
+      showToast('Ditambahkan: ' + hit.name);
+      setQ('');
+    }
+  }, [products]);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customer, setCustomer] = useState('');
   const [pay, setPay] = useState<'cash' | 'tf' | 'wa'>('cash');

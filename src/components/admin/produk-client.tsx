@@ -90,6 +90,20 @@ export function ProdukClient() {
   const [cat, setCat] = useState(
     () => readSavedView<{ category?: string }>(SAVEDVIEW_KEYS.produk)?.category ?? ''
   );
+  // W15 P2a (OmniSearch deep-link): prefill ?q= dari command palette /
+  // tautan (prioritas di atas saved view UX-7E). useEffect + URLSearchParams
+  // window (BUKAN useSearchParams -- hindari Suspense di route ini).
+  // Setelah terpakai, ?q= dibersihkan (replaceState) agar refresh tak
+  // mengulang prefill.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const uq = new URLSearchParams(window.location.search).get('q');
+    if (!uq) return;
+    setQ(uq);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('q');
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }, []);
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   // Kelola massal: pilih baris -> stok/kategori/hapus massal via /api/products/bulk
   const [selected, setSelected] = useState<Set<number>>(new Set());

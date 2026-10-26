@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { levelOk, MENU_ITEMS } from '@/components/sidebar';
 import type { AppUser } from '@/lib/auth';
 import { canAccess, isManager } from '@/lib/features';
+import { formatCalcResult, isCalcExpr, safeCalc } from '@/lib/calc';
 
 type SearchResults = {
   products: { id: number; name: string; category: string; unit: string; base_price: number; stock: number; barcode: string }[];
@@ -55,10 +56,16 @@ export function CommandPalette({
   }, [open]);
 
   // Live-search: debounce 300ms; q < 2 karakter = tidak fetch (aturan 7A).
+  // W15 P2a: bila query = ekspresi kalkulator ("25000 * 12") hitung lokal
+  // via lib/calc (aman, no eval) -- TANPA fetch /api/search.
   useEffect(() => {
     const qq = q.trim();
     if (qq.length < 2) {
       setResults(null);
+      return;
+    }
+    if (isCalcExpr(qq)) {
+      setResults(null); // mode kalkulator: results dikosongkan, section kalkulator tampil
       return;
     }
     const ctl = new AbortController();
@@ -92,6 +99,32 @@ export function CommandPalette({
           }))
         : [];
       s.push({ title: 'Pintar | Navigasi', items: nav });
+    }
+
+    // W15 P2a: kalkulator lokal -- deteksi ekspresi aritmetika, hitung
+    // tanpa fetch (lib/calc, no eval). Enter pada hasil = hasil dipakai
+    // sebagai query lanjutan (chaining: "25000 * 12" -> 300000).
+    const calcExpr = q.trim();
+    if (isCalcExpr(calcExpr)) {
+      const val = safeCalc(calcExpr);
+      s.push({
+        title: 'Pintar | Kalkulator',
+        items: [
+          val !== null
+            ? {
+                kind: 'result' as const,
+                label: calcExpr + ' = ' + formatCalcResult(val),
+                sub: 'Enter utk lanjutkan hitungan',
+                run: () => setQ(String(val)),
+              }
+            : {
+                kind: 'result' as const,
+                label: calcExpr + ' ...',
+                sub: 'Ekspresi belum lengkap / tak valid',
+                run: () => {},
+              },
+        ],
+      });
     }
     // 2b-0 (M1, 12 Okt): baris Aksi ("Ganti tema" dkk.) HANYA tampil
     // saat mode cari (q >= 2). Idle = nav-only -- tap backdrop /
@@ -205,7 +238,7 @@ export function CommandPalette({
           }
           className="w-full border-0 bg-transparent px-4 py-3.5 text-[15px] outline-none dark:bg-transparent"
         />
-        {q.trim().length >= 2 && !results && (
+        {q.trim().length >= 2 && !results && !isCalcExpr(q.trim()) && (
           <p className="border-t border-stroke px-4 py-2 text-xs text-soft">Pintar mencari...</p>
         )}
         <div ref={listRef} id="palette-listbox" role="listbox" aria-label="Pilihan komando" className="max-h-[46vh] overflow-auto border-t border-stroke">
