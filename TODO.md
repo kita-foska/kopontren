@@ -2989,3 +2989,31 @@ Dashboard Health Meter.**
   tsc 0; test:all 51/0; route-exports + theme-gate OK; gate build
   0; 3 file code 0 non-ASCII; frozen 4 file untouched; skema v34.
   TUTORIAL-W16-2.html (0 emoji). Detail: MEMORY.md seksi "W16-B".
+- [x] **W16-C Lighthouse CLI + Web-Vitals -- SELESAI (ACC GO CODE 26
+  Okt, GO COMMIT 26 Okt):** lighthouse@^13.5.0 devDep (devDeps
+  11->12) + script `lighthouse:mobile`
+  (`--form-factor=mobile`; `--preset=mobile` TIDAK valid di
+  lighthouse@13 -- deviasi ACC)
+  + .gitignore `artifacts/`; reporter web-vitals
+  src/components/web-vitals-reporter.tsx (next/web-vitals
+  built-in, 0 dependency anyar, production-only, log
+  CLS/FCP/LCP/INP/TTFB + rating) mounted di layout.tsx; A/B
+  font-display diukur: swap Perf 98/TBT 50ms vs optional Perf
+  97/TBT 110ms -> TETEP 'swap' (bukti, bukan tebak); preload
+  font + aspect-ratio N/A (bukti: next/font tak menyisipkan
+  link preload di build App Router, 0 hero/remote image); skor
+  final
+  Perf 98 / A11y 94 / BP 100 / SEO 92 / CLS 0 / TTFB 10ms / TBT
+  50ms (98 = localhost production build; baseline 58 Antigravity
+  = Vercel -- bukan apple-to-apple; Gus Fi ACC tak perlu
+  re-cek Vercel); klarifikasi frozen 26 Okt: daftar =
+  public/sw.src.js, src/lib/pos-client.tsx,
+  src/app/api/reports/route.ts, src/app/api/rekap/route.ts
+  (handover 14 Okt stale); 9 file scratch root repo dihapus
+  (tree bersih). Gate: tsc 0; test:all chain purna 0 FAIL;
+  gate build EXIT 0; 0 non-ASCII; frozen 4 file untouched;
+  skema v34; +1 devDep (lighthouse). TUTORIAL-W16-3.html
+  (0 emoji). Detail: MEMORY.md seksi "W16-C".
+- [ ] **W17 (menunggu GO CODE): a11y polish + push-notif + SW
+  revamp;**
+  UI/UX design (3.4) ditunda ke W17/W18 (keputusan Gus Fi).

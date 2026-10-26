@@ -7017,7 +7017,73 @@ seksi menika + MEMORY "W9/W10 Ujrah" dulu.
   UNTOUCHED; skema tetap v34; +1 devDep (total 11).
 - TUTORIAL-W16-2.html (0 emoji, diagram SVG inline).
 
-## W16-C -- Lighthouse & web-vitals (SEBELUMNYA, planning)
-GO CODE W16-C menyusul dari DeepSeek (belum diterima saat
-penulisan) -- prioritas: Lighthouse audit baseline + perbaiki
-web-vitals. Detail menyusul di seksi ini.
+## W16-C -- Lighthouse CLI + Web-Vitals Reporting (26-10-2026, ACC GO
+CODE, dual-push commit `7b6f8a7` C1 + C2 + C3)
+- Housekeeping awal (termasuk dalam ACC W16-C): hapus 9 file
+  scratch untracked di root repo (_css_*.css x6 bukti A/B W16-B +
+  _commit_msg_w16b.txt + _dev_w16b.log + _dev_w16b.err.log); tree
+  bersih sebelum kerja (git status --porcelain kosong).
+- Lighthouse CLI (STEP 2): lighthouse@^13.5.0 devDep (devDeps 11 ->
+  12; dependencies 10 tak terdampak). Script anyar
+  `lighthouse:mobile` = `node -e mkdir ./artifacts` +
+  `lighthouse http://localhost:3000 --form-factor=mobile
+  --output=json --output=html
+  --output-path=./artifacts/lighthouse-mobile
+  --chrome-flags=--headless` + .gitignore +`artifacts/`.
+  DEVIASI (ACC DeepSeek 4): (1) `--preset=mobile` di GO CODE
+  TIDAK valid di lighthouse@13 (preset mobile dihapus LH12+)
+  -> `--form-factor=mobile` (ekivalen, intent sama); (2) mkdir
+  artifacts di depan -- LH tak menciptakan parent dir
+  (--output-path) -> run pertama gagal tanpa ini; (3)
+  `--chrome-flags=--headless` tak di-quote (cmd escaping, hasil
+  sama); (4) browser = Edge (msedge) via CHROME_PATH -- tak ada
+  Chrome di mesin ini.
+- Web-vitals reporter (STEP 3a):
+  src/components/web-vitals-reporter.tsx (37 baris, ASCII,
+  'use client') memakai `useReportWebVitals` BUILT-IN
+  next/web-vitals (next 15.5.25) -- 0 dependency anyar; guard
+  `process.env.NODE_ENV !== 'production'` (compile-time, dev
+  bebas noise); log CLS/FCP/LCP/INP/TTFB + rating, contoh
+  `[web-vitals] LCP = 2.4 (delta 2.4) [rating=good]`; mount
+  <WebVitalsReporter/> di body layout.tsx (semua halaman);
+  renderer null, tanpa DOM.
+- A/B font-display (STEP 4, Lighthouse mobile production build
+  localhost:3000): 'swap' = Perf 98 / FCP 1.2s / LCP 2.4s / CLS
+  0 / TTFB 10ms / TBT 50ms; 'optional' = Perf 97 / TBT 110ms /
+  CLS 0 / FCP+LCP sama. RULING: TETEP 'swap' -- optional justru
+  TBT 2x lipat + perf -1, tanpa CLS untung, plus risiko
+  fallback permanen di jaringan lambat. layout.tsx final =
+  'swap' (sama dgn W16-A; angka run 'swap' = angka final).
+- STEP 5 N/A (bukti): (a) next/font TIDAK memotongkan
+  <link rel="preload" as="font"> di build App Router (0 hit di
+  HTML home + 4 halaman statis; 9 @font-face tertanam di CSS
+  critical 70.4 KB; URL woff2 = hash build-time, tak dapat
+  diketahui di authoring time) -> preload manual tak feasible,
+  TIDAK ditambahkan; (b) hero/remote image = 0 (5 <img> = QR
+  data-URI dalam container fixed) -> aspect-ratio tanpa target.
+- Skor Lighthouse final ('swap'): Perf 98, A11y 94, Best
+  Practices 100, SEO 92, Agentic-Browsing 50; FCP 1.2s, LCP
+  2.4s, CLS 0, TTFB 10ms, TBT 50ms, Speed Index 1.2s. Laporan:
+  artifacts/lh-run1-swap.json/.html + lh-run2-optional.*
+  (semua gitignored, tak di-commit). INP tak terukur di audit
+  headless -> ditangani monitoring runtime (reporter di atas).
+  CAVEAT (ACC Gus Fi): skor 98 = localhost production build;
+  baseline 58 (audit Antigravity) = Vercel production -- bukan
+  perbandingan apple-to-apple; Gus Fi memutuskan TIDAK perlu
+  re-cek Vercel (98 sudah sangat baik).
+- Klarifikasi frozen (ACC Gus Fi 26 Okt via DeepSeek): daftar
+  frozen = public/sw.src.js, src/lib/pos-client.tsx,
+  src/app/api/reports/route.ts, src/app/api/rekap/route.ts
+  (konsisten dgn gate W16-B; daftar handover 14 Okt = STALE,
+  ditinggalkan). public/sw.js = generated (gitignored,
+  re-stempel tiap build via scripts/inject-sw-version.mjs;
+  sumber beku = sw.src.js).
+- Gate: tsc --noEmit 0; test:all chain purna 0 FAIL (suite
+  pungkasan #44 health-meter + #45 calc dumadi); gate build
+  EXIT 0 (clean .next); 0 non-ASCII di baris/file anyar;
+  frozen 4 file (list di atas) UNTOUCHED (diff kosong); skema
+  tetap v34; +1 devDep baru (lighthouse, total 12).
+- TUTORIAL-W16-3.html (0 emoji, diagram SVG inline).
+- **W16 SELESAI** (A + B + C). Lanjut W17: a11y polish +
+  push-notif + SW revamp; UI/UX design (3.4) ditunda ke
+  W17/W18 (keputusan Gus Fi).
