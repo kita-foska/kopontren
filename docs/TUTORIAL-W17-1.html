@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W17-A: Layar Lebih Jernih, Fokus Keyboard Terlihat (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+  figure { text-align: center; margin: 18px 0; }
+  figure figcaption { font-size: .9rem; color: #555; margin-top: 8px; }
+  .demo { background: #f8f3f5; border: 1px solid #e5d5da; border-radius: 10px; padding: 16px; text-align: left; }
+  .demo .lab { display: block; font-size: .72rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 4px; }
+  .demo .old { color: #64748b; }
+  .demo .new { color: #475569; }
+  .demo .row { display: flex; gap: 8px; align-items: flex-start; }
+  .demo .row > div { flex: 1; }
+  .demo .col2 { border-left: 2px solid #d8c4cb; padding-left: 18px; }
+  .demo .btn { display: inline-block; margin-top: 6px; padding: 6px 14px; border-radius: 8px; font-size: .85rem; }
+  .demo .btn-off { background: #e5dde0; color: #9a8f94; }
+  .demo .field { margin-top: 10px; }
+  .demo .field input { display: block; width: 100%; max-width: 240px; padding: 7px 10px; font-size: .9rem; border: 1px solid #cbb8bf; border-radius: 8px; background: #fff; }
+  .demo .field .ring { outline: 2px solid #7A1835; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial W17-A: Layar Lebih Jernih, Fokus Keyboard Terlihat</h1>
+<p><b>Untuk siapa:</b> semua pengguna (kasir, pengurus, admin). Tidak
+   ada tombol baru dan tidak ada layar baru. Yang berubah: teks
+   kecil di layar terang <b>lebih gelap</b> sehingga lebih mudah
+   dibaca; ada <b>bingkai penanda</b> saat Anda menavigasi dengan
+   tombol Tab pada keyboard; tombol yang nonaktif tidak lagi
+   "berkilau"; dan pesan kosong/gagal kini <b>dibacakan</b> alat
+   baca layar untuk pengguna tunan. Data dan tampilan Anda
+   <b>tetap sama</b> -- hanya kejernihan dan kemudahan pakainya
+   yang naik.</p>
+
+<h2>1. Apa yang berubah?</h2>
+<table>
+  <tr><th>No</th><th>Perubahan</th><th>Yang Anda rasakan</th></tr>
+  <tr>
+    <td>1</td>
+    <td><b>Teks kecil lebih gelap:</b> label isian (mis. "Nama
+        Pengguna") dan teks keterangan kecil di layar terang
+        memakai warna abu yang lebih gelap. Sebelum: rasio kontras
+        4,3 : 1 (di bawah standar minimal 4,5 : 1 untuk teks
+        kecil). Sesudah: 6,9 : 1 -- lolos standar aksesibilitas
+        internasional (WCAG tingkat AA). Mode gelap tidak diubah
+        karena sudah sejak awal memenuhi standar (7,1 : 1).</td>
+    <td>Label dan keterangan kecil terbaca lebih jelas, terutama
+        di layar yang disinari lampu atau matahari. Tidak ada yang
+        berantakan -- hanya warnanya sedikit lebih gelap.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><b>Bingkai penanda navigasi keyboard:</b> bila Anda
+        pindah-pindah tombol/isi dengan menekan <code>Tab</code>
+        pada keyboard, elemen yang sedang aktif diberi bingkai
+        merah marun di sekelilingnya. Elemen yang sudah punya
+        penanda sendiri (kotak isian, tombol utama) tidak
+        mendapat bingkai ganda. Klik dengan tetikus <b>tidak</b>
+        menampilkan bingkai -- perilaku tetap seperti biasa.</td>
+    <td>Yang bekerja tanpa tetikus (hanya keyboard, atau alat
+        bantu) sekarang <i>dapat melihat</i> posisi kursor
+        berada. Bagi pengguna tetikus: tidak ada yang berubah.</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><b>Tombol nonaktif tidak "berkilau":</b> efek gelombang
+        (ripple) saat tombol ditekan kini hanya terjadi pada
+        tombol yang sedang aktif. Tombol yang sedang abu-abu
+        (nonaktif) tidak lagi memicu efek kilau.</td>
+    <td>Perilakunya memang sudah benar sejak awal -- aturan itu
+        kini dibuat tegas, jadi efek kilau tidak akan pernah
+        "keluar" pada tombol mati.</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td><b>Pesan status dibacakan layar bicara:</b> ketika
+        daftar kosong ("Belum ada ...") atau muncul pesan gagal,
+        alat baca layar (screen reader, dipakai pengguna tunan)
+        kini otomatis membacakannya; ikon kotak-kosong dan
+        segitiga-peringatan ditambahkan di samping pesan itu.
+        Semua ikon gambar garis, tanpa menambah perangkat apa
+        pun.</td>
+    <td>Pengguna tunan dapat mendengar status halaman. Bagi
+        pengguna biasa: ikon kecil yang sopan di samping pesan
+        kosong/gagal.</td>
+  </tr>
+</table>
+<h2>2. Coba sendiri (60 detik)</h2>
+<ol style="font-size:.95rem">
+  <li>Buka aplikasi, masuk ke halaman mana saja (mis. daftar
+      produk atau laporan).</li>
+  <li>Tekan tombol <code>Tab</code> tiga sampai lima kali.
+      Perhatikan: elemen yang sedang aktif mendapat
+      <b>bingkai marun</b> di sekelilingnya.</li>
+  <li>Bandingkan warna label isian di halaman Login dengan
+      dulu: sedikit lebih gelap dan lebih tegas.</li>
+  <li>Cari daftar yang sedang kosong -- ikon kotak kecil kini
+      muncul di samping tulisan "Belum ada ...".</li>
+</ol>
+
+<figure class="demo" style="background:#f8f3f5; border:1px solid #e5d5da; border-radius:10px; padding:16px; text-align:left">
+  <div style="display:flex; gap:16px; align-items:flex-start">
+    <div style="flex:1">
+      <span style="display:block; font-size:.72rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin-bottom:4px; color:#64748b">Sebelum -- abu muda</span>
+      Nama Pengguna
+      <div style="font-size:.75rem; color:#64748b">&nbsp;keterangan yang lebih kecil ...</div>
+      <span style="display:inline-block; margin-top:6px; padding:6px 14px; border-radius:8px; font-size:.85rem; background:#e5dde0; color:#9a8f94">Kirim (nonaktif)</span>
+    </div>
+    <div style="flex:1; border-left:2px solid #d8c4cb; padding-left:16px">
+      <span style="display:block; font-size:.72rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin-bottom:4px; color:#475569">Sekarang -- abu gelap</span>
+      Nama Pengguna
+      <div style="font-size:.75rem; color:#475569">&nbsp;keterangan yang lebih kecil ...</div>
+      <span style="display:inline-block; margin-top:6px; padding:6px 14px; border-radius:8px; font-size:.85rem; background:#e5dde0; color:#9a8f94">Kirim (nonaktif -- tanpa kilau)</span>
+    </div>
+  </div>
+  <div style="margin-top:12px">
+    <span style="display:block; font-size:.72rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; margin-bottom:4px; color:#475569">Tekan Tab -- bingkai muncul:</span>
+    <input type="text" readonly value="klik / tekan Tab di sini" aria-label="Contoh kotak isian dengan bingkai fokus"
+      style="display:block; width:100%; max-width:240px; padding:7px 10px; font-size:.9rem; border:1px solid #cbb8bf; border-radius:8px; background:#fff; outline:2px solid #7A1835; outline-offset:2px">
+  </div>
+  <figcaption style="font-size:.85rem; color:#555; margin-top:10px">Pemodelan perubahan: teks abu lebih gelap (kanan) dan bingkai marun 2 piksel pada kotak isian saat fokus keyboard.</figcaption>
+</figure>
+
+<h2>3. Bukti ukurannya (skor aksesibilitas)</h2>
+<p style="font-size:.93rem">Sebelum W17-A, alat pengukur Lighthouse
+(versi ponsel, halaman Login) mencatat <b>lima item gagal</b>
+pada pengujian kontras warna; skor kategori aksesibilitas 94.
+Setelah perubahan: <b>nol item gagal</b>, skor naik menjadi
+<b>98</b>. Pengujian lain (ukuran tombol, praktik baik, mesin
+pencari) tetap lolos seperti sebelumnya.</p>
+<figure>
+<svg viewBox="0 0 420 150" width="420" role="img"
+     aria-label="Diagram perbandingan: sebelum W17-A ada 5 item kontras gagal, sesudahnya 0; skor aksesibilitas 94 naik ke 98">
+  <line x1="40" y1="110" x2="390" y2="110" stroke="#c9b8bd" stroke-width="1"/>
+  <line x1="40" y1="40" x2="40" y2="110" stroke="#c9b8bd" stroke-width="1"/>
+  <text x="44" y="30" font-size="11" fill="#555">Item kontras gagal (0 -- 5)</text>
+  <rect x="70" y="50" width="60" height="60" fill="#7A1835" rx="4"/>
+  <text x="100" y="44" font-size="12" font-weight="bold" fill="#7A1835" text-anchor="middle">5</text>
+  <text x="100" y="126" font-size="11" fill="#555" text-anchor="middle">sebelum</text>
+  <rect x="180" y="98" width="60" height="12" fill="#3f6b3f" rx="4"/>
+  <text x="210" y="92" font-size="12" font-weight="bold" fill="#3f6b3f" text-anchor="middle">0</text>
+  <text x="210" y="126" font-size="11" fill="#555" text-anchor="middle">sekarang</text>
+  <line x1="290" y1="20" x2="290" y2="130" stroke="#c9b8bd" stroke-width="1"/>
+  <text x="315" y="30" font-size="11" fill="#555">Skor aksesibilitas (0 -- 100)</text>
+  <rect x="300" y="66" width="40" height="44" fill="#7A1835" rx="4"/>
+  <text x="320" y="60" font-size="12" font-weight="bold" fill="#7A1835" text-anchor="middle">94</text>
+  <text x="320" y="126" font-size="10" fill="#555" text-anchor="middle">sebelum</text>
+  <rect x="352" y="40" width="40" height="70" fill="#3f6b3f" rx="4"/>
+  <text x="372" y="34" font-size="12" font-weight="bold" fill="#3f6b3f" text-anchor="middle">98</text>
+  <text x="372" y="126" font-size="10" fill="#555" text-anchor="middle">sekarang</text>
+</svg>
+<figcaption>Grafik perubahan hasil ukur Lighthouse (halaman Login,
+pengujian ponsel): jumlah item kontras yang gagal dan skor
+kategori aksesibilitas.</figcaption>
+</figure>
+
+<h2>4. Kenapa penting?</h2>
+<p style="font-size:.93rem">Kopontren melayani berbagai orang --
+termasuk yang penglihatannya melemah atau yang bekerja tanpa
+tetikus. Standar WCAG tingkat AA adalah tolok ukur
+internasional: teks kecil harus kontras minimal 4,5 : 1, dan
+navigasi keyboard harus selalu bisa dilihat posisinya. Perubahan
+ini tidak menambah fitur, tetapi membuat aplikasi
+<b>menjangkau lebih banyak orang</b> -- dan sekaligus menutup
+catatan terakhir dari audit pengukur W16-C.</p>
+
+<p class="hint"><b>Catatan:</b> Perubahan hanya pada warna teks,
+bingkai fokus, efek tombol, dan pengumuman layar bicara.
+<b>Tidak ada</b> perubahan layar, tombol, atau data -- dan tidak
+ada yang perlu Anda lakukan (tanpa setup ulang, tanpa pilihan
+yang harus diganti).</p>
+</main>
+</body>
+</html>
