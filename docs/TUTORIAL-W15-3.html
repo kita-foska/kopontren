@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W15-P2b: Tombol Berripple + Badge Troli Melompat (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+  .demo { background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 20px; margin: 14px 0; }
+  .demo figcaption, .demo p.cap { font-size: .9rem; text-align: center; margin-top: 10px; color: #555; }
+  .demo-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 8px 18px; font-size: .95rem; font-weight: 600;
+    color: #fff; background: var(--maroon); border: 0; border-radius: 8px;
+    position: relative; overflow: hidden; cursor: pointer;
+    transition: transform .15s;
+  }
+  .demo-btn:active { transform: scale(.98); }
+  .demo-btn::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 0; height: 0; border-radius: 50%;
+    background: rgba(255,255,255,.35);
+    transform: translate(-50%, -50%); opacity: 0; pointer-events: none;
+  }
+  .demo-btn:active::after { animation: rip 0.45s ease-out; }
+  @keyframes rip {
+    from { width: 0; height: 0; opacity: 1; }
+    to { width: 200px; height: 200px; opacity: 0; }
+  }
+  .demo-badge {
+    display: inline-block; background: #1d4ed8; color: #fff;
+    font-size: .8rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .demo-badge.pop { animation: cps 0.28s ease; }
+  @keyframes cps {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.28); }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .demo-btn::after, .demo-badge.pop { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial W15-P2b: Tombol "Berripple" + Badge Troli "Melompat"</h1>
+<p><b>Untuk siapa:</b> semua pengguna (kasir, manajer, admin). Tidak
+   ada langkah baru dan tidak ada tombol baru -- yang berubah hanya
+   <b>rasa saat memakainya</b>: tombol kini menampilkan efek kecil
+   (ripple) saat ditekan, dan badge jumlah item di keranjang kasir
+   "melompat" pendek setiap ada item baru ditambahkan.</p>
+
+<h2>1. Efek Ripple di Tombol</h2>
+<p>Saat menekan tombol mana pun di aplikasi, muncul lingkaran kecil
+   yang menyebar dari tengah tombol -- memberi konfirmasi visual
+   "kebenaran tombol didengar". Ini berlaku untuk <b>semua tombol</b>
+   di aplikasi (tombol maroon, tombol sekunder, tombol ikon, dsb).</p>
+<figure class="demo">
+  <button type="button" class="demo-btn">Coba tekan saya</button>
+  <p class="cap">Coba: tekan tombol di atas. Lingkaran putih menyebar
+  seketika saat tombol ditekan, lalu hilang.</p>
+</figure>
+<div class="hint"><b>Saat sentuh di HP</b> efeknya terasa jelas:
+  layar sentuh tidak punya "warna tombol berubah" setajam mouse,
+  maka ripple menjadi umpan balik sentuhan yang halus.</div>
+
+<h2>2. Badge Troli "Melompat"</h2>
+<p>Di layar Kasir, angka item di bagian atas Keranjang
+  (mis. "3 item") kini melompat pendek setiap berubah -- menandai
+  kasir bahwa keranjang baru saja bertambah tanpa harus
+  memperhatikan terus.</p>
+<figure class="demo">
+  <span class="demo-badge pop">3 item</span>
+  <p class="cap">Contoh badge. Dalam aplikasi, lompatan ini terjadi
+  otomatis setiap item ditambahkan atau dihapus.</p>
+</figure>
+
+<h2>3. Pengaturan Gerak Terbatas (Reduced Motion)</h2>
+<p>Jika perangkat Anda memakai pengaturan
+   <b>"Kurangi animasi"</b> (Windows: Ease my motion; HP
+   biasanya di menu aksesibilitas), kedua efek ini
+   <b>matikan sendiri</b> -- tombol tetap berfungsi normal,
+   hanya tanpa animasi. Tidak perlu diubah apa pun.</p>
+
+<h2>Rangkuman</h2>
+<p>(1) Semua tombol kini berripple saat ditekan. (2) Badge jumlah
+   item keranjang kasir melompat setiap berubah. (3) Jika
+   perangkatnya memakai "kurangi animasi", semuanya otomatis
+   mati -- fungsi tidak berubah. Tidak ada data atau skema
+   yang disentuh.</p>
+</main>
+</body>
+</html>
