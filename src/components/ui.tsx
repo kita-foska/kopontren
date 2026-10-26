@@ -9,7 +9,7 @@ import { fetchTimeout, fetchRetry, isAbort } from '@/lib/fetch-util';
 
 const tones: Record<string, string> = {
   blue: 'bg-accent-500/15 text-accent-600 dark:text-accent-300',
-  // P3 audit: light text-amber-700 (dulu -600 ≈3:1 di bg terang, gagal AA).
+  // P3 audit: light text-amber-700 (dulu -600 -3:1 di bg terang, gagal AA).
   amber: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
   green: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300',
   red: 'bg-rose-500/15 text-rose-600 dark:text-rose-300',
@@ -38,7 +38,7 @@ export function Badge({
   );
 }
 
-/** Inisial maksimal 2 huruf dari nama — dipakai avatar di header + drawer. */
+/** Inisial maksimal 2 huruf dari nama - dipakai avatar di header + drawer. */
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
@@ -46,12 +46,12 @@ export function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-/* ── UX-4 FASE B (B1): primitive Button — inti UX-4
-   7 varian × 3 ukuran; a11y: min touch target 44px (kecuali variant link),
+/* -- UX-4 FASE B (B1): primitive Button - inti UX-4
+   7 varian x 3 ukuran; a11y: min touch target 44px (kecuali variant link),
    iconOnly wajib aria-label, loading = spinner + aria-busy, active =
    aria-pressed (toggle/filter chip), focus-visible ring, type default
-   'button' (aman form). Fase B.2–B.4: migrasi 208 <button> + 13 <a>
-   ad-hoc/`btn-*` → <Button>; 5 rules CSS .btn* dihapus di D0 (FASE D;
+   'button' (aman form). Fase B.2-B.4: migrasi 208 <button> + 13 <a>
+   ad-hoc/`btn-*` -> <Button>; 5 rules CSS .btn* dihapus di D0 (FASE D;
    catatan lama menuliskan B.4, padahal belum pernah terjadi). */
 export type ButtonVariant =
   | 'primary'
@@ -64,7 +64,7 @@ export type ButtonVariant =
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const BTN_BASE =
-  'inline-flex items-center justify-center gap-1.5 rounded-field font-semibold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex items-center justify-center gap-1.5 rounded-field font-semibold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 btn-ripple';
 
 const BTN_SIZE: Record<ButtonSize, string> = {
   // Target sentuh a11y: md = 44px (standar); sm = 36px utk area padat.
@@ -94,14 +94,14 @@ const BTN_VARIANT: Record<ButtonVariant, string> = {
   danger: 'bg-rose-600 text-white hover:bg-rose-700',
   // Semantik attention = amber-500.
   amber: 'bg-amber-500 text-slate-900 hover:bg-amber-400',
-  // Highlight premium (token gold #fbbf24) — khusus tier/badge, bukan aksi umum.
+  // Highlight premium (token gold #fbbf24) - khusus tier/badge, bukan aksi umum.
   gold: 'bg-amber-400 text-slate-900 hover:bg-amber-300',
   // Teks-only: tanpa min-height (44px hanya utk tombol sejati).
-  // Teks-only: tanpa min-height/padding (ukuran di-skip utk link → inherit).
+  // Teks-only: tanpa min-height/padding (ukuran di-skip utk link -> inherit).
   link: 'text-accent-600 underline-offset-2 hover:underline dark:text-accent-300',
 };
 
-// active=true → chip/toggle terpilih (fill accent, override bg varian).
+// active=true -> chip/toggle terpilih (fill accent, override bg varian).
 const BTN_ACTIVE = 'border-accent-500 bg-accent-500 text-white hover:bg-accent-500';
 
 type ButtonBaseProps = Omit<
@@ -117,31 +117,31 @@ type ButtonBaseProps = Omit<
   iconOnly?: boolean;
   /** Spinner Loader2 + disabled + aria-busy (tombol tidak bisa diklik). */
   loading?: boolean;
-  /** Label pengganti children saat loading (mis. 'Memproses…'). Opsional. */
+  /** Label pengganti children saat loading (mis. 'Memproses...'). Opsional. */
   loadingLabel?: React.ReactNode;
-  /** Keadaan terpilih (filter chip/toggle) → fill accent + aria-pressed. */
+  /** Keadaan terpilih (filter chip/toggle) -> fill accent + aria-pressed. */
   active?: boolean;
   /** Lebar penuh (mengganti utilitas w-full ad-hoc). */
   full?: boolean;
-  /** Override/merge terakhir — tetap bisa utk kasus khusus (kartu/tile). */
+  /** Override/merge terakhir - tetap bisa utk kasus khusus (kartu/tile). */
   className?: string;
 };
 
 /** Branch <button> (default): `href` dilarang agar tersamaran <a> tak sengaja. */
 type ButtonAsButton = ButtonBaseProps & { as?: 'button'; href?: never };
-/** Branch <a>: `href` WAJIB. Bila as='a' tanpa href saat runtime →
+/** Branch <a>: `href` WAJIB. Bila as='a' tanpa href saat runtime ->
     fallback render <button> + console.warn (jaringan pengaman). */
 type ButtonAsLink = Omit<ButtonBaseProps, 'type' | 'disabled' | 'focusable'> & {
   as: 'a';
   href: string;
-  // Unduhan aset (mis. PNG QRIS) — diteruskan ke <a> lewat linkRest.
+  // Unduhan aset (mis. PNG QRIS) - diteruskan ke <a> lewat linkRest.
   download?: string;
 };
 
 export type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 export function Button(props: ButtonProps) {
-  // 2.5: destructure eksplisit key kustom → `...rest` hanya sisakan atribut
+  // 2.5: destructure eksplisit key kustom -> `...rest` hanya sisakan atribut
   // HTML (self-documenting; tak ada key kustom bocor ke DOM).
   const {
     variant: variantProp = 'primary',
@@ -160,7 +160,7 @@ export function Button(props: ButtonProps) {
   const attrs = rest as Record<string, unknown>;
   const type = (attrs['type'] as 'button' | 'submit' | 'reset' | undefined) ?? 'button';
 
-  // 2.2: kombinasi iconOnly + variant="link" tak didukung → dev-warn +
+  // 2.2: kombinasi iconOnly + variant="link" tak didukung -> dev-warn +
   // fallback ke "ghost" agar tetap ada frame persegi.
   const variant: ButtonVariant =
     iconOnly && variantProp === 'link'
@@ -171,7 +171,7 @@ export function Button(props: ButtonProps) {
 
   const cls = [
     BTN_BASE,
-    // 2.1: link = teks-only → skip metrik ukuran (min-height/padding) agar tak
+    // 2.1: link = teks-only -> skip metrik ukuran (min-height/padding) agar tak
     // ada konflik kelas min-h-* antar-size & variant.
     variant === 'link' ? '' : BTN_SIZE[size],
     iconOnly ? BTN_ICON[size] : '',
@@ -182,7 +182,7 @@ export function Button(props: ButtonProps) {
     className ?? '',
   ].filter(Boolean).join(' ');
 
-  // Ikon depan / spinner: loading → Loader2 muter; iconOnly → tanpa teks.
+  // Ikon depan / spinner: loading -> Loader2 muter; iconOnly -> tanpa teks.
   const lead = loading ? (
     <Loader2
       aria-hidden="true"
@@ -195,7 +195,7 @@ export function Button(props: ButtonProps) {
   const content =
     loading && loadingLabel != null ? loadingLabel : (attrs['children'] as React.ReactNode);
 
-  // 2.6: iconOnly tanpa teks & tanpa aria-label → dev-warn (Boolean check).
+  // 2.6: iconOnly tanpa teks & tanpa aria-label -> dev-warn (Boolean check).
   if (
     iconOnly &&
     !attrs['aria-label'] &&
@@ -227,9 +227,9 @@ export function Button(props: ButtonProps) {
     );
   }
 
-  // Fallback: as='a' tanpa href → render <button> (jaringan pengaman runtime).
+  // Fallback: as='a' tanpa href -> render <button> (jaringan pengaman runtime).
   if (as === 'a' && typeof console !== 'undefined')
-    console.warn('[Button] as="a" tanpa href — fallback ke <button>.');
+    console.warn('[Button] as="a" tanpa href - fallback ke <button>.');
 
   const btnRest = { ...attrs };
   delete btnRest['children'];
@@ -252,13 +252,13 @@ export function Button(props: ButtonProps) {
  * Navigasi keyboard tablist (WCAG 16.20 / pola APG "tabs", aktivasi
  * otomatis): ArrowRight/ArrowLeft memindahkan fokus (wrap), Home/End
  * lompat ke tab pertama/terakhir. Saat pindah fokus, tab langsung
- * diaktifkan (click() pada tombol — handler onClick yang sama yang
+ * diaktifkan (click() pada tombol - handler onClick yang sama yang
  * dipakai mouse juga jalan). Cara pakai:
  *
  *   const { onTabKeyDown } = useTablistNav(getKey, setKey);
- *   <div role="tablist" onKeyDown={onTabKeyDown}>…
+ *   <div role="tablist" onKeyDown={onTabKeyDown}>...
  *
- * getKey(index) → key tab di index i; setKey(k) → aktifkan tab k.
+ * getKey(index) -> key tab di index i; setKey(k) -> aktifkan tab k.
  */
 export function useTablistNav<T extends string>(
   getKey: (index: number) => T,
@@ -301,7 +301,7 @@ export function useTablistNav<T extends string>(
 }
 
 /**
- * Avatar lingkaran berisi inisial nama — identitas user di header + drawer.
+ * Avatar lingkaran berisi inisial nama - identitas user di header + drawer.
  * `sm` = 28px (header), `md` = 36px (kartu profil drawer).
  */
 export function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
@@ -351,8 +351,8 @@ export function Modal({
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  /** FASE G1: sm=max-w-xs (320, label/simpel) · md=max-w-lg (512, default =
-      zero-delta untuk modal existing) · lg=max-w-2xl (672, form lebar). */
+  /** FASE G1: sm=max-w-xs (320, label/simpel)  -  md=max-w-lg (512, default =
+      zero-delta untuk modal existing)  -  lg=max-w-2xl (672, form lebar). */
   size?: 'sm' | 'md' | 'lg';
   /** FASE G1: kelas tambahan untuk panel (mis. "dark:bg-white" pratinjau label). */
   panelClassName?: string;
@@ -449,7 +449,7 @@ export function Modal({
 export type ToastTone = 'info' | 'success' | 'error' | 'warning' | 'critical';
 
 /**
- * UX-6 I-2: slot aksi di dalam toast (mis. "Urungkan") — primitif:
+ * UX-6 I-2: slot aksi di dalam toast (mis. "Urungkan") - primitif:
  * tombol saja; logika undo/dampaknya milik situs pemanggil.
  * Klik tombol = run() lalu toast ditutup (onClose).
  */
@@ -474,7 +474,7 @@ export function Toast({
   msg: string;
   tone?: ToastTone;
   onClose: () => void;
-  /** null = tanpa aksi (state 5-tuple `useToast`) — aman, render-guard
+  /** null = tanpa aksi (state 5-tuple `useToast`) - aman, render-guard
    *  pakai `action && msg`. */
   action?: ToastAction | null;
 }) {
@@ -488,7 +488,7 @@ export function Toast({
     return () => clearTimeout(t);
   }, [msg, tone]);
   // Live region harus PERSISTEN di DOM agar screen reader mengumumkan
-  // perubahan pesan — saat kosong dirender sr-only, bukan di-unmount.
+  // perubahan pesan - saat kosong dirender sr-only, bukan di-unmount.
   // tone error/critical: role=alert + assertive (pengguna HARUS tahu, a11y).
   return (
     <div
@@ -519,11 +519,11 @@ export function Toast({
 }
 
 /**
- * useToast — tuple [msg, showToast, clearToast, tone, action].
- * Backward-compatible: destructure 2–4 elemen lama tetap valid
+ * useToast - tuple [msg, showToast, clearToast, tone, action].
+ * Backward-compatible: destructure 2-4 elemen lama tetap valid
  * (elemen ke-4 = tone terakhir, default 'info'; elemen ke-5 = aksi
  * terakhir atau null).
- * showToast(msg, tone?, action?) — tone/aksi opsional; tanpa arg = info
+ * showToast(msg, tone?, action?) - tone/aksi opsional; tanpa arg = info
  * tanpa aksi (zero-delta). UX-6 I-2.
  */
 export function useToast(): [
@@ -536,7 +536,7 @@ export function useToast(): [
   const [msg, setMsg] = useState('');
   const [tone, setTone] = useState<ToastTone>('info');
   const [action, setAction] = useState<ToastAction | null>(null);
-  // Identitas STABIL (useCallback, deps kosong — setMsg/setTone memang
+  // Identitas STABIL (useCallback, deps kosong - setMsg/setTone memang
   // stabil): beberapa komponen meletakkan showToast di deps array
   // useEffect; perilaku lama (elemen ke-2 = setMsg, selalu stabil)
   // dipertahankan agar tidak ada re-run effect per-render.
@@ -557,7 +557,7 @@ export function useToast(): [
 }
 
 /**
- * useConfirm — pengganti window.confirm() native dengan Modal design system
+ * useConfirm - pengganti window.confirm() native dengan Modal design system
  * (focus-trap, ESC, bottom-sheet di mobile). Dipakai untuk aksi destruktif.
  *
  * Dipakai di komponen client:
@@ -576,11 +576,11 @@ export function useConfirm() {
    * UX-6 I-6: param `risk` eksplisit menggantikan heuristic lama
    * `confirmLabel==='Hapus'`:
    *   L1 = tanpa modal (proceed langsung)
-   *   L2 = confirm biasa (default — 15 situs lama tak berubah)
+   *   L2 = confirm biasa (default - 15 situs lama tak berubah)
    *   L3 = tombol merah + ringkasan dampak (impact[])
    *   L4 = L3 + input alasan (wajib; tombol disabled sampai diisi;
-   *        V1: alasan hanya gate sisi klien — BELUM dikirim ke server;
-   *        wire V2 = catatan MEMORY § UX-6 I-6)
+   *        V1: alasan hanya gate sisi klien - BELUM dikirim ke server;
+   *        wire V2 = catatan MEMORY - UX-6 I-6)
    *   L5 = L3 + ketik frasa konfirmasi persis (typeToConfirm)
    */
   type Risk = 1 | 2 | 3 | 4 | 5;
@@ -611,7 +611,7 @@ export function useConfirm() {
   }) {
     const risk = o.risk ?? 2;
     if (risk === 1) {
-      // L1: aksi tanpa konfirmasi — proceed langsung.
+      // L1: aksi tanpa konfirmasi - proceed langsung.
       void o.proceed();
       return;
     }
@@ -638,7 +638,7 @@ export function useConfirm() {
     setBusy(true);
     try {
       // L4: alasan diteruskan ke proceed (V1: situs boleh mengabaikan;
-      // param alasan server-side = V2 — liha MEMORY § UX-6 I-6).
+      // param alasan server-side = V2 - liha MEMORY - UX-6 I-6).
       await req.proceed(req.risk === 4 ? { reason: reason.trim() } : undefined);
     } finally {
       setBusy(false);
@@ -665,7 +665,7 @@ export function useConfirm() {
             }
             onClick={onConfirm}
           >
-            {busy ? 'Memproses…' : req.confirmLabel}
+            {busy ? 'Memproses...' : req.confirmLabel}
           </Button>
         </>
       }
@@ -725,7 +725,7 @@ export function Empty({
   /** Ikon opsional di atas teks (mis. Lucide, ukuran h-7 w-7). */
   icon?: React.ReactNode;
   /** CTA siap pakai: render tombol/link (B1: via Button, target sentuh
-      44px pada md; ctaVariant kini ButtonVariant — superset nilai lama).
+      44px pada md; ctaVariant kini ButtonVariant - superset nilai lama).
       ctaHref = link antar-halaman; ctaOnClick = aksi di halaman (buka form
       / scroll ke form). Default ghost (halaman admin padat); primary utk
       halaman aksi (dashboard kasir / laporan). */
@@ -740,8 +740,8 @@ export function Empty({
       'default' = tampilan lama persis (zero-delta). */
   tone?: 'default' | 'success' | 'warning';
 }) {
-  // UX-2: CTA opsional di empty state — kosong bukan dead-end, tapi arah.
-  // B1: render via <Button>; ctaVariant kini ButtonVariant (superset — nilai
+  // UX-2: CTA opsional di empty state - kosong bukan dead-end, tapi arah.
+  // B1: render via <Button>; ctaVariant kini ButtonVariant (superset - nilai
   // lama 'primary'/'ghost' tetap valid).
   const ctaCls = compact ? 'text-xs' : '';
   const cta = ctaLabel ? (
@@ -791,10 +791,10 @@ export function Empty({
 }
 
 /**
- * UX-6 I-5: primitive error state — pesan manusia (dari helper, jangan
+ * UX-6 I-5: primitive error state - pesan manusia (dari helper, jangan
  * raw) + tombol "Muat ulang" (opsional) + detail teknis collapsible
  * (<details>) utk support/debug: endpoint + pesan, tersembunyi default.
- * F1: <pre> pakai text-1xs (perbaikan ACC — bukan text-[11px]).
+ * F1: <pre> pakai text-1xs (perbaikan ACC - bukan text-[11px]).
  */
 export function ErrorState({
   text,
@@ -875,7 +875,7 @@ export function StatusBadge({
 
 /**
  * Skeleton loading: placeholder shimmer untuk halaman berat yang dimuat
- * lazily (fallback next/dynamic) — user melihat struktur halaman, bukan
+ * lazily (fallback next/dynamic) - user melihat struktur halaman, bukan
  * layar kosong, sementara JS chunk diunduh.
  * Kontras dinaikkan (a11y): baris bg-slate-300 / dark:bg-navy-500 agar
  * terlihat jelas di kedua tema tanpa bergantung animasi.
@@ -900,7 +900,7 @@ export function PageSkeleton() {
           />
         ))}
       </div>
-      <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Memuat…</p>
+      <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Memuat...</p>
     </div>
   );
 }
@@ -909,8 +909,8 @@ export function PageSkeleton() {
  * TermTip (UX-3): tooltip penjelasan istilah teknis/istilah keislaman
  * (HPP, Nisab, Haul, Ujrah, dll.) di samping label. Hover = buka,
  * klik/tap = pin (mobile); ESC / klik luar = tutup. Posisi otomatis:
- * elemen di separuh kanan layar → anchor `right` (tooltip ke kiri),
- * separuh kiri → anchor `left` (tooltip ke kanan). Deteksi via
+ * elemen di separuh kanan layar -> anchor `right` (tooltip ke kiri),
+ * separuh kiri -> anchor `left` (tooltip ke kanan). Deteksi via
  * getBoundingClientRect saat buka (sekali, murah).
  */
 export function TermTip({
@@ -953,7 +953,7 @@ export function TermTip({
     const el = ref.current;
     if (el) {
       const r = el.getBoundingClientRect();
-      // Elemen di separuh kanan viewport → tooltip merapat ke kanan
+      // Elemen di separuh kanan viewport -> tooltip merapat ke kanan
       // (anchor right) agar tak meluber keluar layar.
       setAnchor(r.left > window.innerWidth / 2 ? 'right' : 'left');
     }
@@ -993,7 +993,7 @@ export function TermTip({
 }
 
 /**
- * Inti api() — fetch JSON + envelope {ok, data, error}. Galat
+ * Inti api() - fetch JSON + envelope {ok, data, error}. Galat
  * di-differentiate: fetch gagal total (offline/CORS/DNS) = "Kesalahan
  * jaringan."; respons dgn badan non-JSON (mis. halaman 5xx HTML saat
  * query Turso meledak) = "Server sedang bermasalah (HTTP X)."
@@ -1011,7 +1011,7 @@ async function apiCall<T>(
       headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
     });
   } catch (e) {
-    // Fetch itu sendiri gagal (koneksi putus, offline, CORS, DNS) →
+    // Fetch itu sendiri gagal (koneksi putus, offline, CORS, DNS) ->
     // benar-benar kesalahan jaringan.
     return {
       ok: false,
@@ -1024,7 +1024,7 @@ async function apiCall<T>(
     data = (await res.json()) as T & { error?: string };
   } catch {
     // Terima respons tapi badan bukan JSON (halaman error 5xx dari
-    // platform / exception tak tertangani di route) → tampilkan status
+    // platform / exception tak tertangani di route) -> tampilkan status
     // HTTP agar bisa dibedakan dari gangguan jaringan murni.
     return {
       ok: false,
@@ -1050,10 +1050,10 @@ export async function api<T = unknown>(
 /**
  * Varian api() dengan resilience GET (fetchRetry): 1 retry otomatis
  * (backoff 800ms) bila percobaan pertama kena jaringan putus / timeout
- * / 5xx / 429 — khas cold start Vercel + query agregat berat saat
+ * / 5xx / 429 - khas cold start Vercel + query agregat berat saat
  * dashboard/laporan pertama dibuka. Envelope & galat identik dengan
  * api(). PERUNTUKAN: pemanggil GET read-only (load awal / refresh data).
- * Jangan pakai utk aksi tombol (PATCH/DELETE/non-GET) — fetchRetry
+ * Jangan pakai utk aksi tombol (PATCH/DELETE/non-GET) - fetchRetry
  * memang tidak mengulang method selain GET.
  */
 export async function apiRetry<T = unknown>(
@@ -1063,13 +1063,13 @@ export async function apiRetry<T = unknown>(
   return apiCall(url, init, (u, i) => fetchRetry(u, i));
 }
 
-/* ── UX-4 FASE D (D1): primitive Tabel — Table/Th/Td/Trow/TEmpty ──
+/* -- UX-4 FASE D (D1): primitive Tabel - Table/Th/Td/Trow/TEmpty --
    Kelas CSS legacy .th/.td/.table-row di globals.css SUDAH DIHAPUS
    (migrasi D2a/D2b selesai); styling tabel kini 100% Tailwind via
    constant TH_CLS / TD_CLS / TROW_BORDER di bawah.
-   `Table` hanya render <table> — wrapper div (card/overflow/hidden sm:block)
+   `Table` hanya render <table> - wrapper div (card/overflow/hidden sm:block)
    & mobile-card sm:hidden tetap milik pemanggil (sudah Tailwind murni).
-   Trow menyebarkan atribut tr mentah (key, aria-hidden, style) → spacer
+   Trow menyebarkan atribut tr mentah (key, aria-hidden, style) -> spacer
    row sticky-scroll (member-client) tetap bisa. Varian border:
    'top' (default, slate-100/navy-700), 'bottom' (slate-100/navy-800,
    utk zakat), 'none' (warna border custom via className, mis. panel
@@ -1138,7 +1138,7 @@ export function Td({
   );
 }
 
-/** Baris isi — padanan rule .table-row; hover utk tabel interaktif;
+/** Baris isi - padanan rule .table-row; hover utk tabel interaktif;
  *  border utk varian arah/warna. Sisa atribut tr (aria-hidden, style,
  *  dll) disebarkan ke <tr>. */
 export function Trow({
@@ -1190,12 +1190,12 @@ export function TEmpty({
   );
 }
 
-/* ── UX-4 FASE E (E1): primitive pill — FilterPill + TogglePill
+/* -- UX-4 FASE E (E1): primitive pill - FilterPill + TogglePill
    Chip/toggle seragam (additive; migrasi E3 memakai komponen ini):
    - FilterPill: chip rounded-full utk filter/tab (periode laporan,
      kategori POS). Inactive = border + hover bg (versi lengkap,
-     termasuk dark:hover — menstandarkan micro-drift tab POS).
-   - TogglePill: 2 mode — 'tinted' (toggle status produk: soft-tint
+     termasuk dark:hover - menstandarkan micro-drift tab POS).
+   - TogglePill: 2 mode - 'tinted' (toggle status produk: soft-tint
      emerald/slate, rounded-full) + 'segmented' (metode pembayaran
      POS: rounded-lg + ikon + badge nomor; accent = 'accent'|'amber').
    a11y: type default 'button' + aria-pressed; atribut button lainnya

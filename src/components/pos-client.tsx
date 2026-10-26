@@ -1853,7 +1853,13 @@ export function PosClient({ admin, cashier }: { admin: boolean; cashier?: string
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-bold flex items-center gap-2">
               Keranjang Kasir
-              {cart.length > 0 && <Badge tone="blue">{cart.length} item</Badge>}
+              {cart.length > 0 && (
+                // W15-P2b: key = jumlah item -- berubah maka span di-mount
+                // ulang, animasi CSS .cart-pop (spring pop) berjalan lagi.
+                <span key={cart.length} className="cart-pop inline-flex">
+                  <Badge tone="blue">{cart.length} item</Badge>
+                </span>
+              )}
               {/* W8 ITEM 3: chip pending cart -- klik = buka modal
                   Lanjutkan / Hapus (terisi oleh auto-save / tab lain). */}
               {pending && cart.length === 0 && (
