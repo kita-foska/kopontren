@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W16-A: Halaman Lebih Ringan + Font Lebih Hemat (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+  figure { text-align: center; margin: 18px 0; }
+  figure figcaption { font-size: .9rem; color: #555; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial W16-A: Halaman Lebih Ringan + Font Lebih Hemat</h1>
+<p><b>Untuk siapa:</b> semua pengguna (kasir, pengurus, admin). Tidak
+   ada tombol baru, tidak ada layar baru, dan tidak ada data yang
+   berubah. Yang berubah hanya "cara aplikasi memuat dirinya":
+   lebih hemat unduhan, lebih cepat tampil.</p>
+
+<h2>1. Apa yang berubah?</h2>
+<table>
+  <tr><th>No</th><th>Perubahan</th><th>Yang Anda rasakan</th></tr>
+  <tr>
+    <td>1</td>
+    <td><b>Pemotongan kode (code-splitting):</b> grafik penjualan
+        di dashboard pengurus dan grafik "jam sibuk" di admin
+        laporan kini diunduh <i>saja saat panelnya dibuka</i>,
+        bukan setiap kali halaman dimuat. (Layar kasir sudah lama
+        memakai pola yang sama.)</td>
+    <td>Halaman dashboard/admin terasa sedikit lebih cepat tampil.
+        Saat grafik dimuat ada kerangka abu-abu berkedip
+        (skeleton) sebentar -- itu normal.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><b>Font lebih hemat:</b> font "Plus Jakarta Sans" kini
+        hanya menyediakan 2 ketebalan yang benar-benar dipakai
+        (regular + semibold), bukan seluruh rentang ketebalan.</td>
+    <td>Unduhan lebih kecil -- terasa paling nyata di sinyal
+        lemah. Tampilan teks tidak berubah.</td>
+  </tr>
+</table>
+
+<h2>2. Sebelum &amp; sesudah (gambarnya)</h2>
+<figure>
+<svg width="560" height="150" viewBox="0 0 560 150" role="img"
+     aria-label="Diagram: sebelum, semua kode didownload sekaligus; sesudah, kode inti didownload dulu dan potongan grafik menyusul saat dibutuhkan">
+  <!-- BEFORE -->
+  <text x="10" y="18" font-size="13" font-weight="bold" fill="#7A1835">SEBELUM</text>
+  <rect x="10" y="28" width="240" height="40" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="20" y="52" font-size="12" fill="#241b1e">satu paket besar: inti + grafik + semua-nya</text>
+  <text x="10" y="86" font-size="11" fill="#555">semua didownload saat buka halaman</text>
+  <!-- AFTER -->
+  <text x="300" y="18" font-size="13" font-weight="bold" fill="#7A1835">SESUDAH</text>
+  <rect x="300" y="28" width="130" height="40" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="310" y="52" font-size="12" fill="#241b1e">paket inti (kecil)</text>
+  <line x1="430" y1="48" x2="470" y2="48" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="470,48 460,43 460,53" fill="#7A1835"/>
+  <rect x="474" y="28" width="76" height="40" fill="#fff" stroke="#7A1835" stroke-dasharray="4 3"/>
+  <text x="482" y="52" font-size="12" fill="#241b1e">grafik</text>
+  <text x="300" y="86" font-size="11" fill="#555">grafik menyusul hanya saat panel dibuka</text>
+  <!-- font note -->
+  <rect x="10" y="105" width="540" height="34" fill="#fff7e6" stroke="#f59e0b"/>
+  <text x="20" y="126" font-size="12" fill="#241b1e">Font: dulu 1 file berat (semua ketebalan) -&gt; sekarang 2 file ringan (regular + semibold)</text>
+</svg>
+<figcaption>Perbandingan unduhan. Kotak putus-putus = dimuat belakangan,
+hanya bila memang dibuka.</figcaption>
+</figure>
+
+<h2>3. Apakah ada yang hilang atau rusak?</h2>
+<p>Tidak. Semua fitur lama tetap ada tempatnya. Tiga hal yang
+   layak dicatat:</p>
+<ul>
+  <li>Grafik di dashboard pengurus &amp; admin (panel "Jam Sibuk")
+      kini dimuat terpisah. Saat pertama membuka panel, muncul
+      kerangka abu-abu sejenak sebelum batang grafinya --
+      persis seperti tombol "Memuat komponen..." yang sudah ada.</li>
+  <li>Teks di seluruh aplikasi tetap memakai font yang sama
+      (Plus Jakarta Sans); yang diperkecil hanya ukuran
+      unduhannya.</li>
+  <li>Database, menu, hak akses, dan semua tombol: tidak
+      berubah sama sekali.</li>
+</ul>
+
+<h2>4. Cara mengecek sendiri (opsional, untuk admin)</h2>
+<ol>
+  <li>Buka dashboard pengurus (mobile atau desktop), pilih panel
+      "Penjualan". Akan terlihat kerangka abu-abu sebentar,
+      lalu grafik batang muncul. Itu menandakan potongan grafik
+      baru saja terunduh.</li>
+  <li>Di komputer, tekan <code>F12</code> (DevTools) -&gt; tab
+      <code>Network</code> -&gt; filter <code>Font</code>. Buka
+      halaman mana saja: yang terunduh hanya file font untuk
+      ketebalan regular dan semibold, bukan semuanya.</li>
+</ol>
+
+<div class="hint"><b>Catatan singkat:</b> perubahan ini bersifat
+penghematan teknis. Jika ada grafik yang terasa lambat muncul,
+itu memang sedang diunduh -- sekali diunduh, akan terasa cepat
+di kunjungan berikutnya.</div>
+</main>
+</body>
+</html>
