@@ -3014,6 +3014,27 @@ Dashboard Health Meter.**
   gate build EXIT 0; 0 non-ASCII; frozen 4 file untouched;
   skema v34; +1 devDep (lighthouse). TUTORIAL-W16-3.html
   (0 emoji). Detail: MEMORY.md seksi "W16-C".
-- [ ] **W17 (menunggu GO CODE): a11y polish + push-notif + SW
-  revamp;**
+- [x] **W17-A a11y/UX Polish -- SELESAI (ACC GO CODE 26 Okt, GO
+  COMMIT 26 Okt):** 14 file. (1) Fallback fokus keyboard global
+  `@layer base :focus-visible` (outline 2px accent + offset 2px;
+  utk elemen interaktif tanpa gaya fokus sendiri -- bare
+  button/a ad-hoc, FilterPill, item menu role, shortcut input;
+  aturan utility input focus:ring / Button focus-visible:ring
+  menang -> 0 indikator ganda; mouse click tetap tanpa outline).
+  (2) Kontras permukaan terang: .label + .card-label + teks
+  kecil (slate-500 4.33:1 GAGAL AA -> slate-600 6.9:1 LULUS;
+  dark 7.1:1 tak diubah) di login, struk, admin clients,
+  breadcrumb, health-meter, dst. (3) .btn-ripple:disabled tak
+  memicu ripple (eksplisit). (4) Empty/ErrorState/TEmpty
+  + aria-live="polite" + ikon default inline SVG (0
+  dependensi). Lighthouse mobile /login (Edge, production
+  localhost:3000): color-contrast 5 item gagal -> 0 (audit PASS);
+  A11y 94 -> 98; Perf 98 -> 96 (noise antar-run); BP 100, SEO 92
+  tetap. Sisa gagal a11y = landmark-one-main (struktural,
+  DI LUAR CAKUPAN W17-A). Gate: tsc 0; test:all chain purna 0
+  FAIL; gate
+  build 0 (clean .next); 0 non-ASCII baris/file anyar; skema
+  v34 tak berubah; frozen 4 file untouched. TUTORIAL-W17-1.html
+  (0 emoji). Detail: MEMORY.md seksi "W17-A".
+- [ ] **W17 sisanya (menunggu GO CODE): push-notif + SW revamp;**
   UI/UX design (3.4) ditunda ke W17/W18 (keputusan Gus Fi).

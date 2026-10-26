@@ -7087,3 +7087,63 @@ CODE, dual-push commit `7b6f8a7` C1 + C2 + C3)
 - **W16 SELESAI** (A + B + C). Lanjut W17: a11y polish +
   push-notif + SW revamp; UI/UX design (3.4) ditunda ke
   W17/W18 (keputusan Gus Fi).
+
+## W17-A -- a11y/UX Polish (26-10-2026, ACC GO CODE, dual-push commit
+`a4402ca` C1 + C2 + C3)
+- Cakupan = bagian a11y polish umbra W17 (push-notif + SW revamp
+  masih menunggu GO). W17-A menutup 5 pelanggaran contrast terbuka
+  dari audit Lighthouse W16-C (A11y 94, color-contrast FAIL 5
+  item).
+- 14 file (C1):
+  - globals.css: (a) `@layer base { :focus-visible { outline: 2px
+    solid var(--accent); outline-offset: 2px } }` -- fallback
+    fokus keyboard global utk elemen interaktif yg TIDAK punya
+    gaya fokus sendiri (bare <button>/<a> ad-hoc,
+    FilterPill/TogglePill, item menu role, shortcut <input>
+    dialog). Alas @layer base: aturan layer utilities/components
+    (.input focus:ring + outline-none, <Button>
+    focus-visible:ring) MENANG -> 0 indikator ganda; browser
+    hanya memuat :focus-visible saat fokus keyboard (mouse
+    click = tanpa outline, perilaku standar). (b) `.label` +
+    `.card-label` light `text-slate-500` (#64748b; 4.33:1 pada
+    permukaan #f8f3f5 -- GAGAL audit W16-C, AA butuh 4.5:1) ->
+    `text-slate-600` (#475569 = 6.9:1 AA); dark `text-slate-400`
+    pada navy-800 = 7.1:1 (sudah AA) TIDAK diubah. (c)
+    `.btn-ripple:disabled::after { animation: none }` -- tombol
+    disabled tak memicu ripple (defense-in-depth; <button
+    disabled> memang tak memuat :active, aturan membuatnya
+    eksplisit).
+  - ui.tsx: Empty + ErrorState + TEmpty dapat
+    `aria-live="polite"` (pesan kosong/gagal yg muncul-ulang
+    saat retry/ubah filter diumumkan screen reader); ikon
+    default Empty (kotak) + ikon peringatan ErrorState =
+    inline SVG (aturan proyek: SEMUA ikon inline SVG, 0
+    dependency ikon); detail teknis ErrorState + teks TEmpty
+    `slate-500` -> `slate-600`.
+  - login/page.tsx, struk/[token]/page.tsx, data-client,
+    export-center-client, export-progress, gl-client,
+    pengguna-client, produk-client, breadcrumb,
+    estrut-actions, health-meter: swap kelas kontras permukaan
+    terang (slate-500 -> slate-600) + komentar ASCII-only
+    (em-dash/simbol non-ASCII diganti -- aturan gate: 0
+    non-ASCII di baris/file anyar).
+- Verifikasi Lighthouse mobile /login (tooling W16-C; Edge via
+  CHROME_PATH krn tak ada Chrome di mesin ini; localhost:3000 =
+  production build, metoda sama persis dgn W16-C):
+  BEFORE (baseline lh-run1-swap.json) = A11y 94,
+  color-contrast FAIL 5 item (label login 4.33:1 x3,
+  text-xs 4.33:1, text-[11px] 2.33:1). AFTER
+  (artifacts/lh-w17a-after, gitignored) = A11y 98,
+  color-contrast PASS (0 item); target-size tetap PASS;
+  performance 98 -> 96 (noise antar-run, TBT/CLS tak berubah
+  material); Best Practices 100, SEO 92, agentic-browsing 50
+  tetap. Sisa gagal a11y LUAR cakupan W17-A: landmark-one-main
+  (struktural, ada sejak awal).
+- Gate: tsc --noEmit 0; test:all chain purna 0 FAIL; gate build
+  EXIT 0 (clean .next); 0 non-ASCII di baris/file anyar; skema
+  tetap v34; frozen 4 file (public/sw.src.js, src/lib/
+  pos-client.tsx, src/app/api/reports/route.ts,
+  src/app/api/rekap/route.ts) UNTOUCHED.
+- TUTORIAL-W17-1.html (0 emoji, diagram SVG inline).
+- Lanjut W17: push-notif + SW revamp (menunggu GO CODE,
+  keputusan Gus Fi).
