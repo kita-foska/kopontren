@@ -2941,11 +2941,16 @@ Dashboard Health Meter.**
   0; test:all 49 file 0 fail; gate build 0; 0 non-ASCII (file batch);
   4 frozen utuh; TANPA dependency anyar; TANPA perubahan skema (v34).
   Detail: MEMORY.md seksi "W15-P1".
-- [ ] **W15-P2a OmniSearch (command palette) -- STEP 2:** lib/calc.ts
+- [x] **W15-P2a OmniSearch (command palette) -- SELESAI (STEP 2, ACC GO
+  CODE 26 Okt, ruling 3 titik):** lib/calc.ts
   safeCalc() pure no-eval (kalkulator: 25000 * 12 = 300000) + deteksi
   ekspresi di command-palette (skip fetch /api/search) + deep-link
   ?q= 3 titik (admin produk, admin member, kasir POS auto-add Enter)
-  + suite 45 (test-calc). Ruling: 3 titik; /laporan prefill ditunda.
+  + suite 45 (test-calc, 51 check). Ruling: 3 titik; /laporan prefill
+  ditunda. TUTORIAL-W15-2.html (inline demo, 0 emoji). Gate v6: tsc 0;
+  test:all green; gate build 0; 6 file 0 non-ASCII; 0 dependency
+  anyar; TANPA perubahan skema (v34). Detail: MEMORY.md seksi
+  "W15-P2a".
 - [ ] **W15-P2b Micro-Interactions -- STEP 3:** ripple CSS-only
   (btn-ripple via BTN_BASE -> semua tombol) + cart spring (cart-pop,
   key badge mengikuti jumlah item) + kedua kelas masuk blok

@@ -216,7 +216,45 @@
   45) dan P2b Micro-Interactions (ripple CSS + cart spring) -- STEP
   2/3 GO CODE. W16 sudah ACC: menunggu W15 rampung (purgecss, font
   [400,600] opsi B, lighthouse devDep, artifacts/ ke .gitignore).
+- **Catatan utk W15-P2a/P2b**: gate build `gate` tetap 0 error;
+  lighthouse (devDep local) bisa dipakai W15-P2b utk baseline
+  perf/UX micro-interaction.
 
+### W15-P2a -- OMNISEARCH: KALKULATOR LOKAL + DEEP-LINK ?q= 3 TITIK (ACC GO CODE W15, ruling 3 titik)
+- **Ruling**: OmniSearch = 3 titik (admin produk, admin member, kasir);
+  prefill /laporan ditunda; kalk "25000 * 12 = 300.000" langsung
+  dari kotak Pintar.
+- **Implementasi (6 file + package.json)**:
+  1. `src/lib/calc.ts` (ANYAR, pure 0 import): `isCalcExpr()` +
+     `safeCalc()` shunting-yard + RPN -- TANPA eval/Function; dukung
+     `+ - * /`, kurung, persen, desimal, unary. Anti-OOM (jangkar
+     iterasi), div0/overflow/kurung miring = null; hasil dibulatkan
+     maks 4 desimal. `formatCalcResult()` locale id-ID (300000 ->
+     "300.000").
+  2. `command-palette.tsx`: query terdeteksi ekspresi -> section
+     "Pintar | Kalkulator" (Enter = hasil jadi query lanjutan) +
+     SKIP fetch /api/search.
+  3. `admin/produk-client.tsx` + `admin/member-client.tsx`: prefill
+     `?q=` mount via `useEffect` + URLSearchParams window (BUKAN
+     useSearchParams -- hindari Suspense); ?q= prioritas di atas
+     saved view; URL dibersihkan replaceState.
+  4. `pos-client.tsx`: prefill `?q=` + AUTO-ADD (setara Enter) bila
+     cocok persis barcode/nama setelah produk load (ref pending
+     sekali pakai).
+  5. `scripts/test-calc.ts` (ANYAR, suite 45, 51 check): hasil
+     benar (prioritas/kurung/persen/unary/bulatkan), null utk
+     crash-input (OOM/long-div/deep-paren), isCalcExpr positif/
+     negatif, format id-ID. Package: `test:calc` + masuk test:all.
+  6. **Bug kritis yang diperbaiki di calc.ts**: (a) tokenizer
+     operator tanpa i++ = infinite loop OOM -> jangkar; (b) RPN
+     eval urutan pop (kanan dulu utk - dan /); (c) `up` (unary)
+     harus pop DULU sebelum operator biner berpresedensi lebih
+     rendah; (d) saat POP 'up' dari ops stack, harus dipush ke
+     out sebagai `{k:'up'}` BUKAN `{k:'op',v:'up'}` -- kalau
+     salah, RPN eval underflow -> null (detected v6 suite).
+- **Tutorial**: `docs/TUTORIAL-W15-2.html` (C3).
+- **Gate v6**: tsc 0; test:all green (spt suite 45, 51 check);
+  gate build 0; 6 file 0 non-ASCII; dual-push.
 
 ## 2026-10-19
 ### R1 DARURAT: 3 TABEL TURSO TERHAPUS -- RESTORE VIA `scripts/restore-db.js` (Gus Fi via DeepSeek, 19 Okt 2026)
