@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, apiRetry, Button, ErrorState, PageSkeleton, TermTip, Toast, useTablistNav, useToast } from '@/components/ui';
 import { rp, startOfDayJakarta, todayWibStr } from '@/lib/format';
-import { HourBarChart, type HourPoint } from '../charts';
+import dynamic from 'next/dynamic';
+import { type HourPoint } from '../charts';
+
+// W16-A: grafik jam sibuk di-code-split (chunk admin, bukan main).
+const HourBarChart = dynamic(
+  () => import('../charts').then((m) => m.HourBarChart),
+  { ssr: false, loading: () => <PageSkeleton /> }
+);
 import { buildLabaRugiWa, shareRekap } from '@/lib/rekap';
 import type { KeuanganPayload } from '@/lib/keuangan';
 import type { NeracaPayload } from '@/lib/neraca';
@@ -41,7 +48,7 @@ type Neraca = NeracaPayload & {
 /** Preset periode Laba-Rugi; 'custom' ditangani input tanggal user. */
 type PlPreset = '1' | '7' | '30' | 'bulan' | 'tahun' | 'custom';
 
-/** Preset → rentang hari kalender WIB (ujung selalu hari ini WIB). */
+/** Preset -> rentang hari kalender WIB (ujung selalu hari ini WIB). */
 function plPresetRange(p: Exclude<PlPreset, 'custom'>): { from: string; to: string } {
   const t = todayWibStr();
   switch (p) {
@@ -123,14 +130,14 @@ function PlRow({
 export function LaporanAdminClient() {
   const [tab, setTab] = useState<'ringkasan' | 'laba' | 'neraca'>('ringkasan');
     // UX-8B: navigasi keyboard tablist (pola APG: ArrowLeft/Right wrap,
-    // Home/End) — konsisten dengan useTablistNav di pos/belanja/data/konsinyasi.
+    // Home/End) -- konsisten dengan useTablistNav di pos/belanja/data/konsinyasi.
     const TAB_KEYS = ['ringkasan', 'laba', 'neraca'] as const;
     const { onTabKeyDown } = useTablistNav<'ringkasan' | 'laba' | 'neraca'>(
       (i) => TAB_KEYS[i],
       setTab
     );
   // UX-7E: periode dipulihkan dari saved view (validasi ke set chip
-  // 1/7/30/365 — nilai tak dikenal jatuh ke default 30).
+  // 1/7/30/365 -- nilai tak dikenal jatuh ke default 30).
   const [period, setPeriod] = useState(() => {
     const saved = readSavedView<{ period?: string | number }>(SAVEDVIEW_KEYS.laporan)?.period;
     const p = String(saved ?? '');
@@ -208,15 +215,15 @@ export function LaporanAdminClient() {
     }
   }
 
-  if (!s) return <p className="text-sm text-slate-500">Memuat…</p>;
+  if (!s) return <p className="text-sm text-slate-500">Memuat...</p>;
 
   const cards = [
     { key: 'penjualan', label: 'Penjualan', value: rp(s.sales_total), sub: s.sales_count + ' transaksi', cls: 'text-accent-500 dark:text-accent-300' },
     { key: 'hpp', label: <TermTip term="HPP" tip="Harga Pokok Penjualan = biaya modal membeli produk. Dasar hitung laba/kotor dan zakat (mode HPP konservatif).">HPP (biaya produk)</TermTip>, value: rp(s.cogs), sub: 'basis harga beli', cls: 'text-amber-700 dark:text-amber-400' },
-    { key: 'laba', label: <TermTip term="Laba Kotor" tip="Selisih net penjualan dikurangi net HPP (V2-2: net Σ retur & net COGS retur), sebelum beban operasional. Indikator sehat/tidaknya harga jual.">Laba Kotor</TermTip>, value: rp(s.profit), sub: 'net penjualan − net HPP (V2-2)', cls: s.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' },
+    { key: 'laba', label: <TermTip term="Laba Kotor" tip="Selisih net penjualan dikurangi net HPP (V2-2: net sum retur & net COGS retur), sebelum beban operasional. Indikator sehat/tidaknya harga jual.">Laba Kotor</TermTip>, value: rp(s.profit), sub: 'net penjualan - net HPP (V2-2)', cls: s.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' },
     { key: 'kas-keluar', label: 'Kas Keluar (belanja)', value: rp(s.purchases_total), sub: 'stok masuk', cls: 'text-rose-600 dark:text-rose-400' },
     { key: 'pengeluaran', label: 'Pengeluaran', value: rp(s.expenses_total), sub: 'listrik, operasional', cls: 'text-rose-600 dark:text-rose-400' },
-    { key: 'arus-kas', label: 'Arus Kas Neto', value: rp(s.cash_net), sub: 'masuk − keluar', cls: s.cash_net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' },
+    { key: 'arus-kas', label: 'Arus Kas Neto', value: rp(s.cash_net), sub: 'masuk - keluar', cls: s.cash_net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' },
   ];
 
   // Jam Sibuk: jam puncak (transaksi terbanyak) + label periode ramah
@@ -305,7 +312,7 @@ export function LaporanAdminClient() {
         ))}
       </div>
 
-      {/* Jam Sibuk — distribusi transaksi per jam WIB (endpoint /api/reports/hourly).
+      {/* Jam Sibuk -- distribusi transaksi per jam WIB (endpoint /api/reports/hourly).
           Silent-fail: gagal memuat tidak menghancurkan kartu di tab Ringkasan. */}
       <div className="mt-4 card p-4">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
@@ -313,13 +320,13 @@ export function LaporanAdminClient() {
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {periodLabel}
             {peak
-              ? ' · Puncak: ' +
+              ? ' - Puncak: ' +
                 p2(peak.h) +
-                '.00–' +
+                '.00-' +
                 p2((peak.h + 1) % 24) +
-                '.00 WIB · ' +
+                '.00 WIB - ' +
                 peak.c +
-                ' transaksi · ' +
+                ' transaksi - ' +
                 rp(peak.t)
               : ''}
           </span>
@@ -336,7 +343,7 @@ export function LaporanAdminClient() {
           <p className="py-8 text-center text-sm text-slate-500">{hourlyErr}</p>
         ) : (
           /* Skeleton (UX-8A): placeholder bar jam (24) menggantikan teks
-             "Memuat…" — stabil layout, sinyal visual grafik sedang dimuat. */
+             "Memuat..." -- stabil layout, sinyal visual grafik sedang dimuat. */
           <div className="flex h-32 items-end gap-1 py-4" aria-busy="true" role="status">
             {Array.from({ length: 24 }, (_, i) => (
               <div
@@ -360,7 +367,7 @@ export function LaporanAdminClient() {
                 <li key={t.name} className="flex items-center justify-between text-sm">
                   <span>{t.name}</span>
                   <span className="text-slate-500 dark:text-slate-400">
-                    {t.qty} terjual · <b className="text-slate-800 dark:text-slate-200">{rp(t.revenue)}</b>
+                    {t.qty} terjual - <b className="text-slate-800 dark:text-slate-200">{rp(t.revenue)}</b>
                   </span>
                 </li>
               ))}
@@ -397,8 +404,8 @@ export function LaporanAdminClient() {
 }
 
 /**
- * FASE A1 — tab "Laba-Rugi": P&L Operasional V1 via /api/keuangan.
- * "Berdasarkan transaksi yang tercatat" — BUKAN akuntansi final (batas
+ * FASE A1 -- tab "Laba-Rugi": P&L Operasional V1 via /api/keuangan.
+ * "Berdasarkan transaksi yang tercatat" -- BUKAN akuntansi final (batas
  * tampil di kotak "Catatan V1", sumber: KEUANGAN_NOTES @ lib/keuangan.ts).
  */
 export function LabaRugiTab() {
@@ -471,12 +478,12 @@ export function LabaRugiTab() {
           </button>
         ))}
         <button type="button" onClick={() => setPreset('custom')} className={btnPreset(preset === 'custom')}>
-          Rentang…
+          Rentang...
         </button>
         {preset === 'custom' && (
           <span className="flex items-center gap-1 text-xs">
             <input type="date" className="input" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
-            –
+            -
             <input type="date" className="input" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
           </span>
         )}
@@ -497,7 +504,7 @@ export function LabaRugiTab() {
         <ErrorState
           text={err}
           onRetry={load}
-          tech={'GET /api/keuangan — ' + err}
+          tech={'GET /api/keuangan -- ' + err}
         />
       ) : data ? (
         <div className="grid gap-3 md:grid-cols-2">
@@ -505,23 +512,23 @@ export function LabaRugiTab() {
             <div className="mb-2 flex items-baseline justify-between gap-2">
               <h2 className="font-bold">Laba-Rugi Operasional (V2-2)</h2>
               <span className="text-xs text-slate-500 dark:text-slate-400">
-                {plPeriodLabel(data.from, data.to)} · {data.sales_count} transaksi
+                {plPeriodLabel(data.from, data.to)} - {data.sales_count} transaksi
               </span>
             </div>
             <PlRow label="Penjualan Bruto" value={rp(data.pendapatan.bruto)} sub="neto + potongan + redeem" />
-            <PlRow indent label="Diskon manual" value={'−' + rp(data.pendapatan.diskonManual)} neg />
-            <PlRow indent label="Diskon member" value={'−' + rp(data.pendapatan.diskonMember)} neg />
-            <PlRow indent label="Redeem poin/saldo" value={'−' + rp(data.pendapatan.redeem)} neg />
-            <PlRow indent label="Retur tercatat" value={'−' + rp(data.pendapatan.retur)} neg />
+            <PlRow indent label="Diskon manual" value={'-' + rp(data.pendapatan.diskonManual)} neg />
+            <PlRow indent label="Diskon member" value={'-' + rp(data.pendapatan.diskonMember)} neg />
+            <PlRow indent label="Redeem poin/saldo" value={'-' + rp(data.pendapatan.redeem)} neg />
+            <PlRow indent label="Retur tercatat" value={'-' + rp(data.pendapatan.retur)} neg />
             <PlRow label="Pendapatan Bersih" value={rp(data.pendapatan.bersih)} strong />
-            <PlRow label={<TermTip term="HPP (COGS)" tip="Harga Pokok Penjualan (COGS) dihitung dari snapshot HPP saat penjualan — bukan HPP harga beli terkini. Bila HPP item tak tercatat, pakai harga beli produk saat ini.">HPP (COGS)</TermTip>} value={'−' + rp(data.hpp)} neg sub="snapshot saat penjualan" />
+            <PlRow label={<TermTip term="HPP (COGS)" tip="Harga Pokok Penjualan (COGS) dihitung dari snapshot HPP saat penjualan -- bukan HPP harga beli terkini. Bila HPP item tak tercatat, pakai harga beli produk saat ini.">HPP (COGS)</TermTip>} value={'-' + rp(data.hpp)} neg sub="snapshot saat penjualan" />
             {data.hppRetur > 0 && (
               <PlRow
                 indent
                 label={
                   <TermTip
                     term="COGS Retur (Dibalik)"
-                    tip="V2-2: Σ returns.cogs per periode — offset COGS dari barang yang kembali (snapshot saat write). Retur pre-V2-2 cogs = 0."
+                    tip="V2-2: sum returns.cogs per periode -- offset COGS dari barang yang kembali (snapshot saat write). Retur pre-V2-2 cogs = 0."
                   >
                     Dibalik COGS Retur
                   </TermTip>
@@ -533,7 +540,7 @@ export function LabaRugiTab() {
             <PlRow label="Laba Kotor" value={rp(data.labaKotor)} strong />
             <PlRow
               label="Beban Operasional"
-              value={'−' + rp(data.beban.total)}
+              value={'-' + rp(data.beban.total)}
               neg
               sub={data.beban.count + ' jurnal'}
             />
@@ -553,7 +560,7 @@ export function LabaRugiTab() {
                       key={k.kategori}
                       indent
                       label={k.kategori}
-                      value={'−' + rp(k.total)}
+                      value={'-' + rp(k.total)}
                       sub={k.count + ' jurnal'}
                       neg
                     />
@@ -562,7 +569,7 @@ export function LabaRugiTab() {
             )}
             <PlRow
               label="Laba Bersih"
-              value={data.labaBersih < 0 ? '−' + rp(-data.labaBersih) : rp(data.labaBersih)}
+              value={data.labaBersih < 0 ? '-' + rp(-data.labaBersih) : rp(data.labaBersih)}
               strong
               neg={data.labaBersih < 0}
             />
@@ -603,7 +610,7 @@ export function LabaRugiTab() {
             <h2 className="mb-2 font-bold">Catatan V1</h2>
             <ul className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
               {data.notes.map((n) => (
-                <li key={n}>• {n}</li>
+                <li key={n}>- {n}</li>
               ))}
             </ul>
           </div>
@@ -616,7 +623,7 @@ export function LabaRugiTab() {
 }
 
 /**
- * FASE A3 — tab "Neraca": Neraca Sederhana V1 (foto posisi per hari ini)
+ * FASE A3 -- tab "Neraca": Neraca Sederhana V1 (foto posisi per hari ini)
  * via /api/neraca (modul src/lib/neraca.ts). Tanpa pemilih periode:
  * neraca = snapshot (saldo kas kumulatif, stok & tagihan terbuka saat
  * ini), berbeda dgn Laba-Rugi/Arus Kas yang berbasis rentang.
@@ -643,7 +650,7 @@ export function NeracaTab() {
     <div>
       <div className="mb-3 flex items-center gap-2">
         <span className="text-xs text-slate-500 dark:text-slate-400">
-          Snapshot per {todayWibStr()} · V1
+          Snapshot per {todayWibStr()} - V1
         </span>
         <Button variant="ghost" className="ml-auto" onClick={() => void load()}>
           Muat ulang
@@ -656,7 +663,7 @@ export function NeracaTab() {
         <ErrorState
           text={err}
           onRetry={load}
-          tech={'GET /api/neraca — ' + err}
+          tech={'GET /api/neraca -- ' + err}
         />
       ) : data ? (
         <div className="grid gap-3 md:grid-cols-2">
@@ -664,14 +671,14 @@ export function NeracaTab() {
             <h2 className="mb-2 font-bold">Aset</h2>
             <PlRow
               label="Kas"
-              value={data.kas < 0 ? '−' + rp(-data.kas) : rp(data.kas)}
+              value={data.kas < 0 ? '-' + rp(-data.kas) : rp(data.kas)}
               neg={data.kas < 0}
-              sub="penjualan − belanja − pengeluaran + jurnal kas"
+              sub="penjualan - belanja - pengeluaran + jurnal kas"
             />
             <PlRow
               label="Stok (nilai harga beli)"
               value={rp(data.stok.total)}
-              sub={data.stok.count + ' produk · ' + data.stok.units + ' unit'}
+              sub={data.stok.count + ' produk - ' + data.stok.units + ' unit'}
             />
             <PlRow
               label="Piutang (terbuka)"
@@ -689,7 +696,7 @@ export function NeracaTab() {
                     <li key={s.name} className="flex items-center justify-between">
                       <span>{s.name}</span>
                       <span className="text-slate-500 dark:text-slate-400">
-                        {s.qty} unit ·{' '}
+                        {s.qty} unit -{' '}
                         <b className="text-slate-800 dark:text-slate-200">{rp(s.total)}</b>
                       </span>
                     </li>
@@ -714,8 +721,8 @@ export function NeracaTab() {
             <PlRow label="Total Kewajiban" value={rp(data.liabilitas_total)} strong />
             <div className="mt-3 border-t border-slate-200 pt-3 dark:border-navy-700">
               <PlRow
-                label="Modal Setara (aset − kewajiban)"
-                value={data.modal_setara < 0 ? '−' + rp(-data.modal_setara) : rp(data.modal_setara)}
+                label="Modal Setara (aset - kewajiban)"
+                value={data.modal_setara < 0 ? '-' + rp(-data.modal_setara) : rp(data.modal_setara)}
                 neg={data.modal_setara < 0}
                 strong
               />
@@ -724,7 +731,7 @@ export function NeracaTab() {
                 <b className="text-slate-600 dark:text-slate-300">
                   {rp(data.off_balance.konsinyasi.total)}
                 </b>{' '}
-                · {data.off_balance.konsinyasi.count} item
+                - {data.off_balance.konsinyasi.count} item
               </p>
             </div>
           </div>
@@ -742,7 +749,7 @@ export function NeracaTab() {
                   <li key={i} className="flex items-center justify-between">
                     <span>{t.name}</span>
                     <span className="text-slate-500 dark:text-slate-400">
-                      {t.due_date ? 'jatuh ' + t.due_date + ' · ' : ''}
+                      {t.due_date ? 'jatuh ' + t.due_date + ' - ' : ''}
                       <b className="text-slate-800 dark:text-slate-200">{rp(t.remaining)}</b>
                     </span>
                   </li>
@@ -760,7 +767,7 @@ export function NeracaTab() {
                   <li key={i} className="flex items-center justify-between">
                     <span>{t.name}</span>
                     <span className="text-slate-500 dark:text-slate-400">
-                      {t.due_date ? 'jatuh ' + t.due_date + ' · ' : ''}
+                      {t.due_date ? 'jatuh ' + t.due_date + ' - ' : ''}
                       <b className="text-slate-800 dark:text-slate-200">{rp(t.remaining)}</b>
                     </span>
                   </li>
@@ -773,7 +780,7 @@ export function NeracaTab() {
             <h2 className="mb-2 font-bold">Catatan V1</h2>
             <ul className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
               {data.notes.map((n) => (
-                <li key={n}>• {n}</li>
+                <li key={n}>- {n}</li>
               ))}
             </ul>
           </div>

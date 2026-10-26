@@ -6,16 +6,21 @@ import { T } from '@/lib/tokens';
 
 // Font utama aplikasi (P1 audit UI): sebelum 26 Sep, 'Plus Jakarta Sans'
 // dideklarasikan di tailwind.config/globals.css tapi TIDAK pernah di-load
-// → render jadi fallback system font. Kini self-hosted via next/font
+// -- render jadi fallback system font. Kini self-hosted via next/font
 // (CSS variable --font-jakarta; tanpa request runtime).
+// W16-A (Font Opsi B, ruling 26 Okt): weight [400, 600] eksplisit --
+// hanya 2 file woff2 (regular + semibold) self-hosted, bukan variable
+// font penuh. bobot 700/800 (bila muncul di UI) disintetiskan browser,
+// acceptable saking ruling.
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
+  weight: ['400', '600'],
   variable: '--font-jakarta',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'Kopontren AL ITTIHAD — Kasir & Pembukuan',
+  title: 'Kopontren AL ITTIHAD - Kasir & Pembukuan',
   description:
     'Kasir & pembukuan Kopontren AL ITTIHAD: POS, stok, belanja, kas, laporan, rekap WhatsApp.',
   manifest: '/manifest.json',

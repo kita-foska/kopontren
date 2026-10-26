@@ -1,9 +1,16 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { SalesBarChart, type DailyPoint } from '@/components/charts';
+import dynamic from 'next/dynamic';
+import { type DailyPoint } from '@/components/charts';
 import { Button, PageSkeleton, Table, Td, Th, Trow, Toast, api, apiRetry, useToast } from '@/components/ui';
 import { fmtDate, rp } from '@/lib/format';
+
+// W16-A: grafik penjualan di-code-split (chunk dashboard, bukan main).
+const SalesBarChart = dynamic(
+  () => import('@/components/charts').then((m) => m.SalesBarChart),
+  { ssr: false, loading: () => <PageSkeleton /> }
+);
 import {
   buildReportRows,
   csvCell,
@@ -56,7 +63,7 @@ export function PengurusDashboardClient() {
 
   const load = useCallback(async (n: number) => {
     setErr('');
-    // apiRetry: GET read-only load awal/refresh dashboard — tahan cold
+    // apiRetry: GET read-only load awal/refresh dashboard -- tahan cold
     // start Vercel (1 retry, backoff 800ms). Aksi tombol tetap api().
     const r = await apiRetry<ReportData>('/api/reports?days=' + n);
     if (!r.ok) setErr(r.error || 'Gagal memuat laporan.');
@@ -183,18 +190,18 @@ export function PengurusDashboardClient() {
               Export CSV
             </Button>
             <Button variant="ghost" onClick={() => void exportXlsx()} disabled={busy === 'xlsx'}>
-              {busy === 'xlsx' ? 'Membuat…' : 'Export Excel'}
+              {busy === 'xlsx' ? 'Membuat...' : 'Export Excel'}
             </Button>
             <Button variant="ghost" onClick={printPdf}>
               Cetak / PDF
             </Button>
             <Button variant="primary" onClick={() => void waReport()} disabled={busy === 'wa'}>
-              {busy === 'wa' ? 'Membuka…' : 'Laporan via WA'}
+              {busy === 'wa' ? 'Membuka...' : 'Laporan via WA'}
             </Button>
           </div>
         </div>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          Periode {data.days} hari · sejak {fmtDate(data.from)} · {data.stores.length}{' '}
+          Periode {data.days} hari - sejak {fmtDate(data.from)} - {data.stores.length}{' '}
           cabang terdaftar (penjualan masih tercatat global, belum per-cabang)
         </p>
       </div>
