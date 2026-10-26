@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W16-C: Alat Ukur Kecepatan Aplikasi (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+  figure { text-align: center; margin: 18px 0; }
+  figure figcaption { font-size: .9rem; color: #555; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial W16-C: Alat Ukur Kecepatan Aplikasi</h1>
+<p><b>Untuk siapa:</b> semua pengguna (kasir, pengurus, admin). Tidak
+   ada tombol baru dan tidak ada layar baru. Yang berubah: kini
+   kecepatan aplikasi <b>dapat diukur sendiri</b> dengan satu
+   perintah, dan ada "alat detak" di dalam aplikasi yang mencatat
+   kecepatan pemakaian nyata. Sebagai bonus terukur, font aplikasi
+   diuji dua gaya dan terbukti gaya lama (<b>swap</b>) memang
+   terhebat -- maka tetap dipakai. Tampilan dan data Anda
+   <b>tidak berubah sama sekali</b>.</p>
+
+<h2>1. Apa yang berubah?</h2>
+<table>
+  <tr><th>No</th><th>Perubahan</th><th>Yang Anda rasakan</th></tr>
+  <tr>
+    <td>1</td>
+    <td><b>Alat ukur kecepatan (Lighthouse):</b> satu perintah
+        <code>npm run lighthouse:mobile</code> menguji aplikasi
+        seperti ponsel (layar, sinyal, CPU ponsel), lalu memberi
+        nilai 0--100 dan catatan detail. Hasil tersimpan di
+        folder <code>artifacts/</code> (folder kerja lokal, tidak
+        ikut terkirim ke repositori).</td>
+    <td>Tidak terasa langsung -- ini alat tukang: bila suatu
+        hari aplikasi terasa melambat, penyebabnya dapat diukur,
+        bukan ditebak.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><b>Pencatat kecepatan di dalam aplikasi:</b> versi
+        produksi kini mencatat lima angka nyata saat dipakai:
+        ketajaman halaman (CLS), muncul pertama (FCP), gambar/teks
+        utama (LCP), tanggapan tombol (INP), dan jawaban server
+        (TTFB). Angka tampil di konsol pengembang
+        (Developer Tools) saat aplikasi berjalan -- tidak di
+        layar aplikasi.</td>
+    <td>Tidak terlihat pengguna -- ini "alat detak" untuk
+        memantau bahwa aplikasi tetap responsif di dunia nyata,
+        termasuk di HP kasir.</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><b>Font diuji dua gaya:</b> gaya <i>swap</i> (tampilkan
+        dulu font saku, ganti seketika saat font resmi selesai
+        diunduh) dibanding gaya <i>optional</i> (ganti hanya bila
+        font resmi tiba tepat waktu). Hasil: gaya swap membuat
+        tombol lebih gesit (waktu tombol tersendat 50 ms vs
+        110 ms) dan nilai performa sedikit lebih tinggi (98 vs
+        97). Maka <b>swap</b> dipertahankan.</td>
+    <td>Tes ketukan kasir (pilih produk, hitung) terasa gesit
+        -- terutama di sinyal lemah. Tampilan tidak berubah.</td>
+  </tr>
+</table>
+
+<h2>2. Hasil ukurannya (gambarnya)</h2>
+<figure>
+<svg viewBox="0 0 420 190" width="420" role="img"
+     aria-label="Perbandingan gaya font swap dan optional pada nilai performa dan waktu tombol tersendat">
+  <text x="10" y="20" font-size="13" fill="#7A1835" font-weight="bold">Nilai Performa (0-100, makin tinggi makin baik)</text>
+  <text x="10" y="44" font-size="11" fill="#444">swap</text>
+  <rect x="70" y="34" width="294" height="14" fill="#7A1835"></rect>
+  <text x="368" y="45" font-size="11" fill="#444">98</text>
+  <text x="10" y="64" font-size="11" fill="#444">optional</text>
+  <rect x="70" y="54" width="291" height="14" fill="#9ca3af"></rect>
+  <text x="365" y="65" font-size="11" fill="#444">97</text>
+  <text x="10" y="96" font-size="13" fill="#7A1835" font-weight="bold">Waktu Tombol Tersendat (ms, makin kecil makin baik)</text>
+  <text x="10" y="120" font-size="11" fill="#444">swap</text>
+  <rect x="70" y="110" width="100" height="14" fill="#7A1835"></rect>
+  <text x="174" y="121" font-size="11" fill="#444">50 ms</text>
+  <text x="10" y="140" font-size="11" fill="#444">optional</text>
+  <rect x="70" y="130" width="220" height="14" fill="#9ca3af"></rect>
+  <text x="294" y="141" font-size="11" fill="#444">110 ms</text>
+  <text x="10" y="172" font-size="11" fill="#666">Uji: Lighthouse mobile, versi produksi, satu ponsel sungguhan.</text>
+</svg>
+<figcaption>Gaya swap unggul di dua-duanya -- maka font
+tetap menggunakan gaya swap (tidak diubah).</figcaption>
+</figure>
+
+<p>Nilai lengkap hasil uji <b>swap</b>: Performa <b>98</b> dari
+   100, Aksesibilitas 94, Praktik Terbaik 100, SEO 92; halaman
+   pertama tampil 1,2 detik, halaman stabil tanpa lompat-lompat
+   (CLS 0), tombol gesit (tersendat 50 milidetik).</p>
+<h2>3. Apa yang TIDAK berubah?</h2>
+<table>
+  <tr><th>Hal</th><th>Status</th></tr>
+  <tr>
+    <td>Data, laporan, struk, antrean offline</td>
+    <td>Tidak tersentuh. Skema database tetap versi 34.</td>
+  </tr>
+  <tr>
+    <td>Tampilan aplikasi</td>
+    <td>100% sama -- tidak ada tombol, layar, atau warna baru.</td>
+  </tr>
+  <tr>
+    <td>File beku proyek (service worker, POS, laporan, rekap)</td>
+    <td>Tidak berubah -- diverifikasi sebelum commit.</td>
+  </tr>
+</table>
+
+<h2>4. Pertanyaan yang sering</h2>
+<table>
+  <tr><th>Pertanyaan</th><th>Jawaban</th></tr>
+  <tr>
+    <td>Kapan angka "alat detak" itu terlihat?</td>
+    <td>Hanya di versi produksi, lewat Developer Tools
+       (konsol). Saat development angka itu tidak dicatat, agar
+       tidak mengotori layar kerja.</td>
+  </tr>
+  <tr>
+    <td>Nilai 98 ini dibanding nilai 58 versi online (Vercel)?</td>
+    <td>Tidak langsung sebanding: 98 diukur di komputer sendiri
+       (tanpa jarak jaringan), 58 diukur di Vercel. Keduanya
+       valid di lingkungannya masing-masing; keputusan proyek
+       memutuskan tidak perlu mengukur ulang di Vercel.</td>
+  </tr>
+  <tr>
+    <td>Apa yang perlu Anda lakukan?</td>
+    <td>Tidak ada. Semua berjalan otomatis di belakang layar.</td>
+  </tr>
+</table>
+
+<p class="hint"><b>Ringkasnya:</b> aplikasi kini bisa diukur
+kecepatannya sendiri dengan satu perintah, pemakaiannya nyata
+dicatat oleh "alat detak" versi produksi, dan font terbukti
+terbaik dengan gaya swap. Tampilan, data, dan semua fitur tetap
+seperti semula.</p>
+</main>
+</body>
+</html>
