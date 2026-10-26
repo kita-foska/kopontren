@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W16-B: Unduhan Gaya Lebih Hemat (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+  figure { text-align: center; margin: 18px 0; }
+  figure figcaption { font-size: .9rem; color: #555; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial W16-B: Unduhan Gaya Lebih Hemat</h1>
+<p><b>Untuk siapa:</b> semua pengguna (kasir, pengurus, admin). Tidak
+   ada tombol baru, tidak ada layar baru, dan tidak ada data yang
+   berubah. Tampilan aplikasi pun <b>100% tidak berubah</b>. Yang
+   berubah hanya "berat" berkas gaya (CSS) yang diunduh saat aplikasi
+   dibuka di lingkungan produksi -- sekarang sedikit lebih ringan.</p>
+
+<h2>1. Apa yang berubah?</h2>
+<table>
+  <tr><th>No</th><th>Perubahan</th><th>Yang Anda rasakan</th></tr>
+  <tr>
+    <td>1</td>
+    <td><b>Penyulingan gaya (CSS purge) saat build produksi:</b>
+        gaya-gaya yang ternyata <i>tidak terpakai</i> oleh halaman
+        mana pun dihapus otomatis dari berkas CSS final. Empat gaya
+        lama yang memang sudah tidak dipakai terhapus; semua gaya
+        yang dipakai (termasuk font, efek tombol, struk, tabel, dan
+        mode gelap) <b>tetap utuh</b>.</td>
+    <td>Unduhan sedikit lebih kecil (70,7 KB menjadi 68,8 KB --
+        hemat sekitar 2 KB). Terasa paling nyata di sinyal lemah.
+        Tampilan tidak berubah sama sekali.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><b>Mode pengembangan tidak tersuling:</b> penyulingan hanya
+        aktif saat build produksi (<code>next build</code>). Saat
+        pengembangan (<code>next dev</code>) seluruh gaya tetap
+        tersedia, jadi layar tidak pernah rusak saat coding
+        setengah jalan.</td>
+    <td>Tidak terasa langsung -- ini jaga-jaga agar pengembangan
+        tetap lancar dan aman.</td>
+  </tr>
+</table>
+
+<h2>2. Sebelum &amp; sesudah (gambarnya)</h2>
+<figure>
+<svg width="560" height="170" viewBox="0 0 560 170" role="img"
+     aria-label="Diagram: sebelum, berkas gaya 70,7 KB memuat gaya terpakai dan tak terpakai; sesudah, 68,8 KB hanya gaya terpakai">
+  <text x="10" y="18" font-size="13" font-weight="bold" fill="#7A1835">SEBELUM</text>
+  <rect x="10" y="28" width="200" height="120" rx="8" fill="#f5ecec" stroke="#7A1835"/>
+  <rect x="24" y="44" width="172" height="26" rx="4" fill="#7A1835"/>
+  <text x="110" y="61" font-size="11" fill="#fff" text-anchor="middle">gaya terpakai (semua)</text>
+  <rect x="24" y="78" width="172" height="26" rx="4" fill="#c9a3ac"/>
+  <text x="110" y="95" font-size="11" fill="#fff" text-anchor="middle">gaya tak terpakai (4)</text>
+  <rect x="24" y="112" width="172" height="26" rx="4" fill="#e9d5da"/>
+  <text x="110" y="129" font-size="11" fill="#4a2a31" text-anchor="middle">total: 70,7 KB</text>
+  <line x1="225" y1="88" x2="330" y2="88" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="330,88 320,83 320,93" fill="#7A1835"/>
+  <text x="278" y="78" font-size="10" fill="#555" text-anchor="middle">build produksi</text>
+  <text x="350" y="18" font-size="13" font-weight="bold" fill="#7A1835">SETELAH</text>
+  <rect x="350" y="28" width="200" height="120" rx="8" fill="#eef7ef" stroke="#2f7d32"/>
+  <rect x="364" y="44" width="172" height="26" rx="4" fill="#2f7d32"/>
+  <text x="450" y="61" font-size="11" fill="#fff" text-anchor="middle">gaya terpakai (sama)</text>
+  <rect x="364" y="78" width="172" height="26" rx="4" fill="#dcefe0"/>
+  <text x="450" y="95" font-size="11" fill="#2f5d33" text-anchor="middle">gaya tak terpakai: HILANG</text>
+  <rect x="364" y="112" width="172" height="26" rx="4" fill="#cfe8d4"/>
+  <text x="450" y="129" font-size="11" fill="#1d4023" text-anchor="middle">total: 68,8 KB</text>
+</svg>
+<figcaption>Berkas gaya sebelum dan sesudah penyulingan. Yang terhapus
+hanya gaya yang tidak dipakai oleh halaman mana pun; tampilan
+akhirnya sama persis.</figcaption>
+</figure>
+
+<h2>3. Bagaimana kami memastikan tidak ada yang rusak?</h2>
+<p>Penyulingan gaya berisiko: kalau salah aturan, tampilan bisa
+   berubah (warna hilang, tabel tidak melekat, dsb). Karena itu kami
+   <b>membandingkan setiap gaya</b> di berkas sebelum dan sesudah,
+   lalu mengecek satu per satu: semua gaya yang benar-benar dipakai
+   di halaman (font, mode gelap, efek tombol <i>ripple</i>,
+   animasi keranjang, struk, grafik, kepala tabel yang "melekati"
+   saat digulir, warna maroon, dan lain-lain) <b>masih ada</b> di
+   berkas final. Hasilnya: <b>0 gaya terpakai yang hilang</b> --
+   tidak ada perubahan tampilan.</p>
+
+<h2>4. Pertanyaan yang sering muncul</h2>
+<table>
+  <tr><th>Pertanyaan</th><th>Jawaban singkat</th></tr>
+  <tr>
+    <td>Kenapa hematannya kecil (sekitar 2 KB)?</td>
+    <td>Generator gaya kami (Tailwind) memang sudah hanya membuat
+       gaya yang terpakai, jadi "sampah"-nya sedikit. Penyulingan
+       ini bekerja sebagai <b>jaga-jaga</b>: ia membuang sisa gaya
+       tak terpakai dan terus menjaga hal itu saat fitur
+       ditambah/dihapus di gelombang berikutnya.</td>
+  </tr>
+  <tr>
+    <td>Apakah mode gelap / tema berubah?</td>
+    <td>Tidak. Gaya mode gelap sengaja dipertahankan (masuk dalam
+       daftar aman), dan gerbang tema (<code>theme-gate</code>)
+       lulus seperti biasa.</td>
+  </tr>
+  <tr>
+    <td>Apakah data tersimpan / struk / laporan berubah?</td>
+    <td>Tidak. Tidak ada perubahan data, skema database tetap
+       versi 34, dan tidak ada alur yang disentuh.</td>
+  </tr>
+</table>
+
+<p class="hint"><b>Ringkasnya:</b> berkas gaya produksi kini sedikit
+lebih ringan dan terus terjaga bebas "gaya mayat". Tampilan, data,
+dan semua fitur tetap seperti semula. Tidak ada yang perlu
+Anda lakukan.</p>
+</main>
+</body>
+</html>
+

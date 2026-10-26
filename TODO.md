@@ -2974,3 +2974,18 @@ Dashboard Health Meter.**
   green; gate build 0 (clean .next); 0 dependency anyar; TANPA
   perubahan skema (v34). TUTORIAL-W16-1.html (0 emoji). Detail:
   MEMORY.md seksi "W16-A".
+- [x] **W16-B CSS Purge Production -- SELESAI (ACC GO CODE 26 Okt,
+  GO x3):** @fullhuman/postcss-purgecss@^8 devDep (devDeps 10->11;
+  API v8: defaultExtractor = FUNCTION). postcss.config.mjs:
+  purgecss PRODUCTION-ONLY (NODE_ENV=production; next dev TIDAK
+  purge); extractor maximal-run /[^'"`{}<>\s;]+/g (2 revisi: v1
+  kurang -> salah-hapus !important/hex/koma/[&_thead]; v2 +
+  delimiter <> utk tag compound); safelist ketat (next/font /^_/,
+  dark, variant prefix, custom class; 'lsp' TIDAK disalin -- 0
+  hit). CSS 70.7 -> 68.8 KB (-1.9 KB); diff class BEFORE vs FINAL
+  (postcss-selector-parser): 4 class terhapus SEMUA unused
+  (top-10->top-100, ring->ring-1, table-row, animate-bounce);
+  TRUE REGRESSIONS = 0; spot check 10 class critical OK. Gate v8:
+  tsc 0; test:all 51/0; route-exports + theme-gate OK; gate build
+  0; 3 file code 0 non-ASCII; frozen 4 file untouched; skema v34.
+  TUTORIAL-W16-2.html (0 emoji). Detail: MEMORY.md seksi "W16-B".

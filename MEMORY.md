@@ -6962,3 +6962,62 @@ seksi menika + MEMORY "W9/W10 Ujrah" dulu.
   gate build 0 (clean .next); frozen 4 file untouched; 0 dependency
   anyar; skema tetap v34.
 - TUTORIAL-W16-1.html (0 emoji, diagram inline SVG).
+
+## W16-B -- CSS Purge Production (postcss-purgecss) (26-10-2026, ACC GO CODE)
+- @fullhuman/postcss-purgecss@^8.0.0 (devDeps 10 -> 11). PurgeCSS v8
+  API: `defaultExtractor` = FUNCTION (content) => string[] -- BUKAN
+  object `extractors` ala v5/v6 (di v8 itu crash/diabaikan). Verif:
+  node_modules/purgecss/lib/purgecss.d.ts L99-101, L170-171, L451-454.
+- postcss.config.mjs: purgecss PRODUCTION-ONLY (gate
+  `process.env.NODE_ENV === 'production'`). next dev TIDAK purge --
+  class dynamic (dark:, group-hover:) tetap aman saat development.
+  content = ./src/**/*.{ts,tsx,js,jsx}.
+- EXTRACTOR (2 revisi hasil diff audit -- JANGAN kembalikan ke v1):
+  v1 (awal) -?[a-zA-Z0-9_:/[\]().-]+ KURANG: tak tangkap ! (important
+  !py-1.5), # (hex accent-[#7A1835]), , (rgba/koma), & (arbitrary
+  variant [&_thead]) -> purgecss salah-hapus class yang masih
+  dipakai = REGRESSION (ketahuan dari diff class BEFORE vs AFTER).
+  v2 (final, DI-KOMMIT): /[^'"`{}<>\s;]+/g ("maximal run") --
+  delimeter cuma whitespace/'/"//{}/;/<> . Over-extract =
+  over-retain = AMAN (token sampah tanpa CSS = no-op). <> jadi
+  delimeter agar <thead> (JSX) mengeluarkan token tag polos `thead`
+  -- purgecss butuh hasTag() utk selector compound
+  .[&_thead]:sticky thead (class tabel sticky di ui.tsx). Aman
+  krn arbitrary variant child [&>x] = 0 hit di source (grep 26 Okt).
+- SAFELIST KETAT (recon, bukan salin sample buta): standard =
+  [dark, group, peer, btn-ripple, cart-pop, receipt-print,
+  chart-bar]; deep = [/^_/ (next/font hashed class __variable_*/
+  __className_* -- nama build-time TIDAK ada di source, tanpa ini
+  FONT PATAH), /^dark/, /^group/, /^peer/, /^hover/, /^focus/,
+  /^active/, /^data-/, /^aria-/, /^btn-/, /^cart-/, /^receipt/,
+  /^chart/]. Class 'lsp' TIDAK ADA di codebase (grep case-sens
+  0 hit) -- tidak disalin. fontFace/keyframes/variables tetap
+  default (false) -- jaga @font-face next/font + keyframes kustom.
+- Ukuran CSS (A/B build production, layout sama): 70.7 KB (tanpa
+  purgecss) -> 68.8 KB (purgecss final) = -1.9 KB (2.7%). Kecil
+  karena Tailwind JIT sudah prune -- purgecss buang sisa class
+  benar2 unused. A/B diukur dgn kill dev server + Remove-Item
+  .next sebelum tiap build (dev server menimpa .next -> ENOENT
+  race + hash CSS berubah).
+- VERIFIKASI STRUKTURAL (anti-regresi, 0 visual breakage): diff
+  class BEFORE vs FINAL via postcss-selector-parser: 4 class
+  terhapus (top-10, table-row, ring, animate-bounce) -- SEMUA tak
+  terpakai di source (top-10 sebenarnya top-100; ring sebenarnya
+  ring-1; dst). TRUE REGRESSIONS = 0. Spot check OK: __variable_*,
+  __className_*, btn-ripple, cart-pop, receipt-print, chart-bar,
+  dark, [&_thead]:sticky/top-0/bg-slate-100, !py-1.5,
+  accent-[#7A1835]. Alat: _diff_css.js + _inspect_purgecss.js
+  (scratch, TIDAK di-commit; _css_before_pure.css /
+  _css_after_final.css = bukti A/B, gitignore tak cover -> untracked
+  report, hapus setelah ACC bila Gus Fi mau).
+- Gate v8: tsc 0; test:all 51/0; route-exports + theme-gate OK;
+  gate build 0 (clean .next, 30-37s); 3 file code 0 non-ASCII;
+  frozen 4 file (public/sw.js, src/lib/pos-client.tsx,
+  src/app/api/reports/route.ts, src/app/api/rekap/route.ts)
+  UNTOUCHED; skema tetap v34; +1 devDep (total 11).
+- TUTORIAL-W16-2.html (0 emoji, diagram SVG inline).
+
+## W16-C -- Lighthouse & web-vitals (SEBELUMNYA, planning)
+GO CODE W16-C menyusul dari DeepSeek (belum diterima saat
+penulisan) -- prioritas: Lighthouse audit baseline + perbaiki
+web-vitals. Detail menyusul di seksi ini.
