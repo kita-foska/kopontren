@@ -84,7 +84,7 @@ export function DataClient() {
 
   /** Unduh via fetch -> Blob -> objectURL: tanpa tab baru/flicker,
    *  dengan busy-state & toast. (window.open('/api/...') membuka tab
-   *  kosong dulu sebelum download — pengalaman buruk di browser modern.) */
+   *  kosong dulu sebelum download -- pengalaman buruk di browser modern.) */
   async function downloadFile(url: string, filename: string) {
     if (busy) return;
     setBusy('dl');
@@ -211,7 +211,7 @@ export function DataClient() {
               </p>
             </div>
             <Button variant="primary" full disabled={busy === 'dl'} onClick={exportJson}>
-              {busy === 'dl' ? 'Mengunduh…' : 'Unduh Backup JSON'}
+              {busy === 'dl' ? 'Mengunduh...' : 'Unduh Backup JSON'}
             </Button>
           </div>
 
@@ -226,7 +226,7 @@ export function DataClient() {
               </p>
             </div>
             <Button variant="ghost" full className="font-bold" disabled={busy === 'dl'} onClick={exportSalesCsv}>
-              {busy === 'dl' ? 'Mengunduh…' : 'Unduh CSV Penjualan'}
+              {busy === 'dl' ? 'Mengunduh...' : 'Unduh CSV Penjualan'}
             </Button>
           </div>
 
@@ -248,7 +248,7 @@ export function DataClient() {
               onChange={importJson}
             />
             <Button variant="ghost" full className="font-bold" disabled={busy === 'import'} onClick={() => fileRef.current?.click()}>
-              {busy === 'import' ? 'Memproses…' : 'Pilih File Backup'}
+              {busy === 'import' ? 'Memproses...' : 'Pilih File Backup'}
             </Button>
           </div>
 
@@ -263,7 +263,7 @@ export function DataClient() {
               </p>
             </div>
             <Button variant="danger" full disabled={busy === 'reset'} onClick={resetAll}>
-              {busy === 'reset' ? 'Menghapus…' : 'Hapus Semua Data'}
+              {busy === 'reset' ? 'Menghapus...' : 'Hapus Semua Data'}
             </Button>
           </div>
         </div>
@@ -336,7 +336,7 @@ export function DataClient() {
                       {l.table_name} {l.record_id != null ? '#' + l.record_id : ''}
                     </Td>
                     <Td className="max-w-xs truncate text-xs text-slate-500 dark:text-slate-400">
-                      {l.new_value || l.old_value || '—'}
+                      {l.new_value || l.old_value || '--'}
                     </Td>
                   </Trow>
                 ))}
@@ -349,7 +349,7 @@ export function DataClient() {
           {canMore && (
             <div className="p-1 text-center">
               <Button variant="ghost" size="sm" onClick={loadMoreLogs} disabled={loadingMore}>
-                {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
+                {loadingMore ? 'Memuat...' : 'Muat lebih banyak'}
               </Button>
             </div>
           )}

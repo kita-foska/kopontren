@@ -143,7 +143,7 @@ export function ExportCenterClient() {
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : st?.status === 'fail'
                   ? 'text-rose-600 dark:text-rose-400'
-                  : 'text-slate-400 dark:text-slate-500';
+                  : 'text-slate-400 dark:text-slate-400';
             const stText =
               st?.status === 'ok'
                 ? st.filename
@@ -162,7 +162,7 @@ export function ExportCenterClient() {
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     {t.label}
                   </p>
-                  <p className="truncate text-xs text-slate-400 dark:text-slate-500">
+                  <p className="truncate text-xs text-slate-400 dark:text-slate-400">
                     {t.endpoint}
                   </p>
                 </div>

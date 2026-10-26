@@ -78,7 +78,7 @@ function statusText(it: ExportProgressItem): { text: string; cls: string } {
     };
   if (it.status === 'running')
     return { text: 'mengunduh...', cls: 'text-accent-500' };
-  return { text: 'siap', cls: 'text-slate-400 dark:text-slate-500' };
+  return { text: 'siap', cls: 'text-slate-400 dark:text-slate-400' };
 }
 
 export function ExportProgressList({

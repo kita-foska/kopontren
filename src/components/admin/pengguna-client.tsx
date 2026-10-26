@@ -563,7 +563,7 @@ export function PenggunaClient() {
                           'ml-2 font-bold ' +
                           (u.allow_google
                             ? 'text-emerald-600 hover:text-emerald-500 dark:text-emerald-400'
-                            : 'text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300')
+                            : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300')
                         }
                       >
                         {u.allow_google ? 'Google: ON' : 'Google: OFF'}

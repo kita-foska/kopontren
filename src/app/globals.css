@@ -41,6 +41,21 @@ html.dark {
   --shadow-ambient: 0 10px 30px -12px rgba(0, 0, 0, 0.55);
 }
 
+/* W17-A (a11y): global keyboard-focus fallback -- outline 2px accent +
+   offset 2px untuk elemen interaktif yang TIDAK punya gaya fokus sendiri
+   (bare <button>/<a> ad-hoc, FilterPill/TogglePill, item menu role,
+   shortcut <input> dialog, dst). Letak @layer base: aturan layer
+   components/utilities (.input focus:ring + outline-none, <Button>
+   focus-visible:ring) MENANG atas aturan ini -> tanpa indikator ganda.
+   Browser hanya memuat :focus-visible saat fokus keyboard (mouse click
+   tetap tanpa outline, sesuai perilaku standar). */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
 body {
   /* P1 audit: var(--font-jakarta) (self-hosted via next/font, layout.tsx)
      didahulikan; 'Plus Jakarta Sans' + system = fallback bila var tak ada. */
@@ -101,12 +116,16 @@ body {
      dihapus (B.4 debt) - 0 referensi di source; semua tombol memakai
      primitive <Button> (ui.tsx). */
   .label {
-    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400;
+    /* W17-A (a11y): slate-500 (#64748b) pada permukaan terang 4.33:1
+       (gagal WCAG AA 4.5:1 -- audit Lighthouse W16-C); slate-600
+       (#475569) = 6.9:1. Dark: slate-400 pada navy-800 = 7.1:1 (sudah AA). */
+    @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400;
   }
   .card-label {
     /* FASE F2: unifikasi micro-label KPI (4 varian -> varian dominan):
-       text-xs font-bold uppercase tracking-wide + warna slate. */
-    @apply text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400;
+       text-xs font-bold uppercase tracking-wide + warna slate.
+       W17-A: light slate-500 -> slate-600 (kontras AA, alasan sbb .label). */
+    @apply text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-400;
   }
   /* ===== Modernisasi UI: hero FLAT (tanpa gradient) + micro-animasi 0.2s ===== */
   .hero-bg {
@@ -180,6 +199,14 @@ body {
 }
 .btn-ripple:active::after {
   animation: btn-ripple-spread 0.45s ease-out;
+}
+
+/* W17-A (a11y): tombol disabled TIDAK memicu ripple -- aturan eksplisit
+   (defense-in-depth: <button disabled> memang tak memuat :active, tapi
+   aturan ini membuat perilaku itu tegas & tidak bergantung pada semantik
+   browser). */
+.btn-ripple:disabled::after {
+  animation: none;
 }
 
 @keyframes btn-ripple-spread {

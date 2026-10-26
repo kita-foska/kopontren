@@ -700,7 +700,7 @@ export function ProdukClient() {
                         />
                       ) : (
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-slate-100 dark:bg-navy-800">
-                          <Package className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                          <Package className="h-4 w-4 text-slate-400 dark:text-slate-400" />
                         </div>
                       )}
                       <div className="min-w-0">

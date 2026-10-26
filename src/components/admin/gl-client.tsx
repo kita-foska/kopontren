@@ -154,7 +154,7 @@ export function GLClient() {
                       className={
                         'text-xs font-bold ' +
                         (r.diff === 0
-                          ? 'text-slate-400 dark:text-slate-500'
+                          ? 'text-slate-400 dark:text-slate-400'
                           : 'text-rose-600 dark:text-rose-400')
                       }
                     >

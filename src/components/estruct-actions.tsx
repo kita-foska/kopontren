@@ -100,7 +100,7 @@ export function EstructActions({
           Salin Teks
         </Button>
       </div>
-      <p className="mt-3 flex items-center justify-center gap-1 text-center text-1xs text-slate-400 dark:text-slate-500">
+      <p className="mt-3 flex items-center justify-center gap-1 text-center text-1xs text-slate-400 dark:text-slate-400">
         <LinkIcon className="h-3 w-3" />
         Simpan halaman ini -- bisa dibuka kembali (link personal, tak mudah ditebak)
       </p>

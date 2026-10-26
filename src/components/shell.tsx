@@ -23,16 +23,16 @@ import { Radio } from 'lucide-react';
 export function Shell({ user, children }: { user: AppUser; children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  // Bottom nav (mobile) tampil di semua halaman Shell kecuali /kasir —
+  // Bottom nav (mobile) tampil di semua halaman Shell kecuali /kasir --
   // POS punya sticky bottom bar sendiri (jangan sampai jadi dua bar).
   const showBottomNav = pathname !== '/kasir';
   // UX-5 H4: breadcrumb visual mung rute nested /admin/* /pengurus/*.
   const showBreadcrumb =
     pathname.startsWith('/admin/') || pathname.startsWith('/pengurus/');
 
-  // UX-7B: Command Palette global — Ctrl/Cmd+K toggle, Escape tutup.
+  // UX-7B: Command Palette global -- Ctrl/Cmd+K toggle, Escape tutup.
   const [paletteOpen, setPaletteOpen] = useState(false);
-  // UX-7C: Cheatsheet pintasan global — ? toggle (di luar /kasir: di sana POS
+  // UX-7C: Cheatsheet pintasan global -- ? toggle (di luar /kasir: di sana POS
   // punya "Panduan Kasir" sendiri via ? lokal, jangan dua panel sekaligus).
   const [cheatOpen, setCheatOpen] = useState(false);
   useHotkeys(
@@ -42,7 +42,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
       '?': (e) => {
         if (pathname === '/kasir') return; // hotkey ? milik Panduan Kasir POS
         // '?' yang diketik di kolom input (input/textarea/select) tidak
-        // boleh membuka panel — pola guard sama dengan pos-client (inTextTarget).
+        // boleh membuka panel -- pola guard sama dengan pos-client (inTextTarget).
         const t = e.target as HTMLElement | null;
         if (
           t &&
@@ -54,7 +54,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
         setCheatOpen((v) => !v);
       },
     },
-    // UX-7C: listener WAJIB aktif — argumen `false` lama (7B) membuat Ctrl+K
+    // UX-7C: listener WAJIB aktif -- argumen `false` lama (7B) membuat Ctrl+K
     // tak terdaftar sama sekali (shell hanya ter-render utk user login,
     // jadi selalu aman diaktifkan).
     true
@@ -71,7 +71,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
 
   // Logout: invalidasi sesi di server, lalu lempar ke /login.
   async function handleLogout() {
-    // Timeout 10 dtk + catch: invalidasi sesi best-effort — tetap redirect
+    // Timeout 10 dtk + catch: invalidasi sesi best-effort -- tetap redirect
     // ke /login walau gagal (sesi server berakhir lewat idle/cookie expiry).
     try {
       await fetchTimeout('/api/auth/logout', { method: 'POST' });
@@ -81,7 +81,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
     router.push('/login');
   }
 
-  // M1-4: role switcher — POST /api/auth/switch-role, lalu router.refresh()
+  // M1-4: role switcher -- POST /api/auth/switch-role, lalu router.refresh()
   // (server re-render menu sesuai role baru; tak ada state menu di client).
   const [switchOpen, setSwitchOpen] = useState(false);
   const [switchBusy, setSwitchBusy] = useState(false);
@@ -127,7 +127,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
   //   event 'kopontren:theme-change' (detail = theme) -> terapkan sekarang
   //   tanpa reload.
   // meta theme-color (chrome browser mobile) ikut disinkron. Catatan:
-  // manifest PWA tetap maroon (statik, tak bisa diubah runtime) —
+  // manifest PWA tetap maroon (statik, tak bisa diubah runtime) --
   // konstrain desain, bukan bug.
   // SYNC POINT hex: nilai ac500 di bawah = layer CSS T2 (globals.css)
   // = swatch di pengguna-client.tsx. Ubah ketiganya bareng.
@@ -137,7 +137,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
     const root = document.documentElement;
     if (brand === 'maroon') delete root.dataset.brand;
     else root.dataset.brand = brand;
-    // Phase 2c: SATU sumber BRAND_ACCENTS (lib/tokens.ts) — SYNC POINT
+    // Phase 2c: SATU sumber BRAND_ACCENTS (lib/tokens.ts) -- SYNC POINT
     // dgn layer CSS T2 (globals.css ac500 per preset). Meta theme-color
     // tetap hex literal (browser tak menerima CSS var) tapi tak lagi
     // dikesankan ulang. Guard: scripts/test-brand-sync.ts.
@@ -207,7 +207,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
 
   return (
     <div className="min-h-screen">
-      {/* UX-8C: skip-link (a11y): tersembunyi sampai di-focus via Tab —
+      {/* UX-8C: skip-link (a11y): tersembunyi sampai di-focus via Tab --
           user keyboard melompat langsung dari navigasi ke konten utama. */}
       <a
         href="#main-content"
@@ -271,7 +271,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
               onClick={() => setPaletteOpen(true)}
               aria-label="Buka komando & pencarian (Ctrl K)"
               title="Pencarian & komando (Ctrl K)"
-              className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2 text-xs text-slate-500 dark:border-navy-600 dark:text-slate-400"
+              className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-2 text-xs text-slate-500 dark:border-navy-600 dark:text-slate-400"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="7" />
@@ -282,14 +282,14 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
               </kbd>
             </button>
             {/* UX-7C: pemicu cheatsheet pintasan (discovery; ? tetap jalan).
-                Disembunyikan di /kasir — di sana ? milik "Panduan Kasir" POS. */}
+                Disembunyikan di /kasir -- di sana ? milik "Panduan Kasir" POS. */}
             {pathname !== '/kasir' && (
               <button
                 type="button"
                 onClick={() => setCheatOpen(true)}
                 aria-label="Pintasan keyboard (?)"
                 title="Pintasan keyboard (?)"
-                className="hidden h-8 items-center gap-1.5 rounded-lg border border-slate-200 px-2 text-xs text-slate-500 sm:flex dark:border-navy-600 dark:text-slate-400"
+                className="hidden h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-2 text-xs text-slate-500 sm:flex dark:border-navy-600 dark:text-slate-400"
               >
                 <kbd className="rounded bg-slate-100 px-1 text-[10px] font-semibold text-slate-500 dark:bg-navy-800 dark:text-slate-400">
                   ?
@@ -350,7 +350,7 @@ export function Shell({ user, children }: { user: AppUser; children: React.React
                       disabled={switchBusy}
                       onClick={() => switchRole(r)}
                       className={
-                        'flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-semibold transition disabled:opacity-50 ' +
+                        'flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-semibold transition disabled:opacity-40 ' +
                         (r === user.role
                           ? 'text-accent-500'
                           : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-navy-700')

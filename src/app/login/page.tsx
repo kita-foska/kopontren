@@ -82,14 +82,14 @@ export default function LoginPage() {
         return;
       }
       // Arahkan ke setup PIN bila belum punya PIN, atau diminta reset (?reset=1).
-      // Password di-simpan sementara (sessionStorage) utk aturan "PIN ≠ password",
+      // Password di-simpan sementara (sessionStorage) utk aturan "PIN != password",
       // lalu dihapus halaman setup setelah dipakai.
       const reset = new URLSearchParams(window.location.search).get('reset') === '1';
       if (!data.pin_configured || reset) {
         sessionStorage.setItem('__kop_pw', password);
         window.location.replace('/login/pin/setup');
       } else {
-        // H2: redirect role-aware — /api/auth/login membalas user.role;
+        // H2: redirect role-aware -- /api/auth/login membalas user.role;
         // roleHome menormalkan (member -> /member; role internal -> /).
         window.location.replace(roleHome(data.user?.role));
       }
@@ -143,7 +143,7 @@ export default function LoginPage() {
             <h1 className="text-xl font-extrabold leading-tight tracking-tight text-accent-600 dark:text-accent-300">
               Kopontren AL ITTIHAD
             </h1>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Kasir &amp; Pembukuan</p>
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">Kasir &amp; Pembukuan</p>
           </div>
         </div>
         <form onSubmit={submit} className="space-y-3">
@@ -180,7 +180,7 @@ export default function LoginPage() {
                 onClick={() => setShowPw((v) => !v)}
                 aria-label={showPw ? 'Sembunyikan password' : 'Tampilkan password'}
                 title={showPw ? 'Sembunyikan password' : 'Tampilkan password'}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-navy-700 dark:hover:text-slate-200"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-navy-700 dark:hover:text-slate-200"
               >
                 {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -197,7 +197,7 @@ export default function LoginPage() {
             variant="primary"
             className="w-full shadow-lg shadow-accent-500/25"
           >
-            {busy ? 'Memproses…' : 'Masuk'}
+            {busy ? 'Memproses...' : 'Masuk'}
           </Button>
         </form>
         {/* W12 (v34): pintu Google OAuth (alur manual, zero dependensi).
@@ -207,7 +207,7 @@ export default function LoginPage() {
         <div className="mt-5">
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-slate-200 dark:bg-navy-700"></div>
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               atau
             </span>
             <div className="h-px flex-1 bg-slate-200 dark:bg-navy-700"></div>
@@ -245,10 +245,10 @@ export default function LoginPage() {
             </p>
           )}
         </div>
-        <p className="mt-5 text-center text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-5 text-center text-xs text-slate-600 dark:text-slate-400">
           Akun dibuat oleh Pengurus. Hubungi pengurus jika belum punya username.
         </p>
-        <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-center text-xs text-slate-600 dark:text-slate-400">
           Butuh bantuan?{' '}
           <button
             type="button"

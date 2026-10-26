@@ -121,7 +121,7 @@ export default async function EstructPage({
               <span className="font-semibold text-accent-700 dark:text-accent-300">{opts.no}</span>
               <span>{opts.tgl}</span>
             </div>
-            <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+            <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-400">
               Kasir: <span className="font-semibold text-slate-600 dark:text-slate-300">{opts.kasir}</span>
             </p>
             {opts.customer ? (

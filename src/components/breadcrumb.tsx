@@ -47,7 +47,7 @@ export function Breadcrumb({ path }: { path: string }) {
       </Link>
       {items.map((it, i) => (
         <span key={i} className="flex items-center gap-1.5">
-          <span aria-hidden className="text-slate-400 dark:text-slate-500">
+          <span aria-hidden className="text-slate-400 dark:text-slate-400">
             /
           </span>
           {i === items.length - 1 ? (

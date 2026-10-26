@@ -64,7 +64,7 @@ export type ButtonVariant =
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const BTN_BASE =
-  'inline-flex items-center justify-center gap-1.5 rounded-field font-semibold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 btn-ripple';
+  'inline-flex items-center justify-center gap-1.5 rounded-field font-semibold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 btn-ripple';
 
 const BTN_SIZE: Record<ButtonSize, string> = {
   // Target sentuh a11y: md = 44px (standar); sm = 36px utk area padat.
@@ -757,20 +757,43 @@ export function Empty({
   ) : null;
   // W11 B4: tone aksen -- success (emerald) = kondisi positif;
   // warning (amber) = perlu perhatian; default = kelas lama persis.
+  // W17-A (a11y): default tone light slate-500 -> slate-600 (kontras AA
+  // 4.5:1 pada kartu putih; slate-500 = 4.76:1 pada putih murni tapi
+  // hanya 4.33:1 pada latar hangat -- sama akar dg temuan Lighthouse
+  // W16-C di .label).
   const toneCls =
     tone === 'success'
       ? 'border-success-300/60 bg-success-50 text-success-700 dark:border-success-700/50 dark:bg-success-900/15 dark:text-success-300'
       : tone === 'warning'
         ? 'border-attention-300/60 bg-attention-50 text-attention-700 dark:border-attention-700/50 dark:bg-attention-900/15 dark:text-attention-300'
-        : 'border-slate-300 text-slate-500 dark:border-navy-600 dark:text-slate-400';
+        : 'border-slate-300 text-slate-600 dark:border-navy-600 dark:text-slate-400';
   const iconCls =
     tone === 'success'
       ? 'text-success-400 dark:text-success-500'
       : tone === 'warning'
         ? 'text-attention-400 dark:text-attention-500'
         : 'text-slate-300 dark:text-slate-600';
+  // W17-A (a11y): ikon default inline SVG (kotak kosong, currentColor) --
+  // empty state selalu punya konteks visual walau pemanggil tak mem-passing
+  // `icon`. Aturan proyek: SEMUA ikon inline SVG (tak menambah dependensi).
+  const defaultIcon = (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-7 w-7"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
+  );
   return (
     <div
+      aria-live="polite"
       className={
         'rounded-2xl border border-dashed text-center ' +
         toneCls +
@@ -778,7 +801,7 @@ export function Empty({
         (compact ? 'px-3 py-4 text-xs' : 'px-4 py-8 text-sm')
       }
     >
-      {icon && <div className={'mb-2 flex justify-center ' + iconCls}>{icon}</div>}
+      <div className={'mb-2 flex justify-center ' + iconCls}>{icon || defaultIcon}</div>
       {text}
       {(cta || action) && (
         <div className="mt-3 flex flex-col items-center gap-2">
@@ -806,15 +829,35 @@ export function ErrorState({
   tech?: string;
 }) {
   return (
-    <div className="card p-4">
-      <p className="text-sm font-medium text-rose-600 dark:text-rose-400">{text}</p>
+    // W17-A (a11y): aria-live polite -- error state kerap muncul/muncul
+    // ulang setelah retry; screen reader mengumumkan perubahannya.
+    // Ikon peringatan inline SVG (aturan proyek: 0 dependensi ikon).
+    <div className="card p-4" aria-live="polite">
+      <p className="flex items-center gap-1.5 text-sm font-medium text-rose-600 dark:text-rose-400">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-4 w-4 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z" />
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+        </svg>
+        {text}
+      </p>
       {onRetry && (
         <Button variant="ghost" className="mt-2" onClick={onRetry}>
           Muat ulang
         </Button>
       )}
       {tech && (
-        <details className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        /* W17-A (a11y): detail slate-500 -> slate-600 (kontras AA). */
+        <details className="mt-2 text-xs text-slate-600 dark:text-slate-400">
           <summary className="cursor-pointer select-none font-medium">Detail teknis</summary>
           <pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded bg-slate-100 p-2 text-1xs leading-relaxed text-slate-600 dark:bg-slate-900/60 dark:text-slate-300">
             {tech}
@@ -1180,9 +1223,12 @@ export function TEmpty({
 }) {
   return (
     <tr>
+      {/* W17-A (a11y): aria-live polite (pesan "tak ada baris" muncul saat
+          filter berubah) + slate-500 -> slate-600 (kontras AA pada tabel). */}
       <td
         colSpan={colSpan}
-        className={'py-6 text-center text-sm text-slate-500 dark:text-slate-400 ' + (className ?? '')}
+        aria-live="polite"
+        className={'py-6 text-center text-sm text-slate-600 dark:text-slate-400 ' + (className ?? '')}
       >
         {children}
       </td>
