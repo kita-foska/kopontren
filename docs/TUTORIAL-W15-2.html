@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W15-P2a: Kalkulator + Tautan Langsung di Kotak Pintar (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .cmp { display: flex; gap: 16px; flex-wrap: wrap; }
+  .cmp figure { flex: 1 1 300px; margin: 0; background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 12px; }
+  .cmp figcaption { font-size: .9rem; text-align: center; margin-top: 8px; color: #555; }
+  .old { border-top: 4px solid #f43f5e; }
+  .new { border-top: 4px solid #10b981; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+  .mock { font-family: "Cascadia Code", Consolas, monospace; font-size: .95rem; }
+  .mock .box { border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; padding: 10px 12px; margin: 6px 0; }
+  .mock .res { background: #eef7f1; border: 1px solid #10b981; border-radius: 8px; padding: 10px 12px; margin-top: 6px; }
+  .mock .res b { color: #047857; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial W15-P2a: Kotak Pintar Kini Bisa Menjumlahkan + Tautan Langsung</h1>
+<p><b>Untuk siapa:</b> kasir, manajer, dan admin. Tidak perlu paham
+   teknologi -- cukup baca dari atas ke bawah. Dua fitur baru di
+   <b>Kotak Pintar</b> (tombol kaca, di atas layar, atau tekan
+   <code>Ctrl+K</code>): <b>kalkulator langsung</b> dan
+   <b>tautan langsung</b> ke hasil pencarian.</p>
+
+<h2>1. Hitung Langsung: 25000 x 12 = 300.000</h2>
+<p>Di layar <b>Kasir</b> (<code>/pos</code>), ketik ekspresi hitungan
+   di Kotak Pintar. Hasilnya muncul seketika <b>di bawah</b> kotak
+   -- tanpa meninggalkan layar kasir.</p>
+<div class="mock">
+  <div class="box">Pintar -- ketik apa saja...&nbsp;&nbsp;<b>25000 * 12</b></div>
+  <div class="res"><b>Kalkulator: 25000 * 12 = 300.000</b>&nbsp; (tekan Enter
+  agar hasilnya jadi kata kunci lanjutan)</div>
+</div>
+<div class="hint"><b>Apa yang boleh diketik:</b> penjumlahan
+  <code>+</code>, pengurangan <code>-</code>, perkalian <code>*</code>
+  (atau tanda x), pembagian <code>/</code> (atau &divide;),
+  kurung <code>( )</code>, persen <code>50%</code>, koma dan titik
+  desimal, tanda kurung siku dan kurung kurawal otomatis dibersihkan.
+  Tanda = dan spasi boleh.<br>
+  <b>Tidak didukung</b> (aman, tidak akan crash): input super panjang
+  lebih dari 64 karakter, kurung tak seimbang, pembagian dengan 0,
+  angka melampaui batas, huruf di tengah ekspresi.</div>
+
+<h2>2. Contoh yang Berguna di Kasir</h2>
+<table>
+  <tr><th>Ketik</th><th>Hasil</th><th>Gunanya</th></tr>
+  <tr><td class="mock">25000 * 12</td><td>300.000</td>
+      <td>Total 12 botol x harga 25.000 (stok/hitung cepat)</td></tr>
+  <tr><td class="mock">500000 / 10</td><td>50.000</td>
+      <td>Membagi kas harian per 10 hari</td></tr>
+  <tr><td class="mock">75% * 40000</td><td>30000</td>
+      <td>Disc 75% dari harga 40.000</td></tr>
+  <tr><td class="mock">(15000 + 25000) * 3</td><td>120000</td>
+      <td>Paket 2 item x 3 porsi, kurung dipatuhi</td></tr>
+</table>
+<p>Ketik tanda <code>x</code> juga berfungsi sebagai perkalian
+   (mis. <code>25000x12</code>), sesuai kebiasaan mengetik cepat.</p>
+
+<h2>3. Tautan Langsung: Bagikan Hasil Pencarian (Tanpa Login Ulang Cari)</h2>
+<p>Kini hasil pencarian bisa <b>dibagikan</b> lewat tautan.
+   Tiga layar mendukung <code>?q=</code>:</p>
+<table>
+  <tr><th>Layar</th><th>Tautan contoh</th><th>Perilaku</th></tr>
+  <tr><td>Manajemen &gt; Produk<br><code>/admin/produk</code></td>
+      <td class="mock">/admin/produk?q=Prada</td>
+      <td>Kotak cari langsung terisi "Prada" -- daftar produk
+      menyaring seketika.</td></tr>
+  <tr><td>Manajemen &gt; Anggota<br><code>/admin/member</code></td>
+      <td class="mock">/admin/member?q=Iqbal</td>
+      <td>Sama -- terisi kata kunci anggota.</td></tr>
+  <tr><td>Kasir<br><code>/pos</code></td>
+      <td class="mock">/pos?q=Prada</td>
+      <td>Kotak terisi "Prada"; <b>jika ada SATU produk yang
+      cocok persis</b> (nama atau barcode), produk itu
+      <b>ditalik otomatis</b> ke troli -- setara tekan Enter
+      sekali. Lebih dari satu cocok = hanya terisi, kasir
+      pilih sendiri (aman, tidak salah talik).</td></tr>
+</table>
+<div class="hint"><b>Bagaimana cara membuktakannya:</b> salin
+  tautan di atas, tempel ke browser, buka link -- kotak
+  pencarian di layar target langsung berisi kata kunci.
+  Tautan ini berguna untuk berbagi "cari barang X" antar
+  kasir tanpa harus mengetik ulang.</div>
+
+<h2>4. Keamanan (Tidak Perlu Diingat, Cukup Tahu)</h2>
+<p>Hitungan dikerjakan <b>langsung di perangkat</b> (tanpa
+   dikirim ke server). Input aneh (huruf di tengah, kurung
+   tak seimbang, input raksasa) <b>dibuang diam-diam</b> --
+   tidak akan merusak aplikasi. Tidak ada perubahan skema,
+   tidak ada data baru.</p>
+
+<h2>Rangkuman</h2>
+<p>(1) Ketik <code>25000 * 12</code> di Kotak Pintar = hasil
+   <b>300.000</b> seketika. (2) Tautan
+   <code>/pos?q=...</code> / <code>/admin/produk?q=...</code> /
+   <code>/admin/member?q=...</code> mengisi kotak cari --
+   di Kasir, cocok persis = talik otomatis. (3) Semua aman:
+   tanpa server, tanpa crash.</p>
+</main>
+</body>
+</html>
