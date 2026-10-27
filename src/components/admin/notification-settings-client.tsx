@@ -178,7 +178,8 @@ export function NotificationSettingsClient() {
             <Bell className="h-5 w-5 text-accent-500" />
             <div>
               <p className="text-sm font-bold">Push Notification (PWA)</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400"
+                 aria-live="polite">
                 {pushState === 'granted'
                   ? 'Aktif — notifikasi muncul di perangkat (bahkan app tertutup).'
                   : pushState === 'denied'
@@ -223,7 +224,8 @@ export function NotificationSettingsClient() {
 
       {/* Toggle jenis */}
       {loading ? (
-        <div className="card p-8 text-center text-sm text-slate-500">Memuat…</div>
+        <div className="card p-8 text-center text-sm text-slate-500"
+             role="status">Memuat...</div>
       ) : (
         groups.map((g) =>
           g.list.length ? (
