@@ -37,6 +37,7 @@ import {
   useToast,
   useTablistNav,
 } from '@/components/ui';
+import { InfoTooltip } from '@/components/info-tooltip';
 import { fmtDateTime, rp } from '@/lib/format';
 import { wibToday } from '@/lib/zakat-period';
 import { recordLastFetch } from '@/lib/offline-status';
@@ -709,16 +710,22 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
                     onChange={(e) => setMRumpun(e.target.value)}
                   />
                 </label>
-                <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
-                  NPWP
-                  <input
-                    className="input mt-1"
-                    placeholder="opsional"
-                    maxLength={60}
-                    value={mNpwp}
-                    onChange={(e) => setMNpwp(e.target.value)}
+                <div className="flex items-start gap-1 md:col-span-1">
+                  <label className="block flex-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    NPWP
+                    <input
+                      className="input mt-1"
+                      placeholder="opsional"
+                      maxLength={60}
+                      value={mNpwp}
+                      onChange={(e) => setMNpwp(e.target.value)}
+                    />
+                  </label>
+                  <InfoTooltip
+                    text="Nomor Pokok Wajib Pajak (NPWP) -- opsional; dipakai utk tagihan formal & pelaporan pajak."
+                    label="Keterangan NPWP"
                   />
-                </label>
+                </div>
                 <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
                   Member Since
                   <input
@@ -935,15 +942,21 @@ export function KoperasiClient({ canWrite }: { canWrite: boolean }) {
                       onChange={(e) => setSAmt(e.target.value)}
                     />
                   </label>
-                  <label className="block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:col-span-1">
-                    Tanggal (WIB)
-                    <input
-                      className="input mt-1"
-                      type="date"
-                      value={sDate}
-                      onChange={(e) => setSDate(e.target.value)}
+                  <div className="flex items-start gap-1 md:col-span-1">
+                    <label className="block flex-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      Tanggal (WIB)
+                      <input
+                        className="input mt-1"
+                        type="date"
+                        value={sDate}
+                        onChange={(e) => setSDate(e.target.value)}
+                      />
+                    </label>
+                    <InfoTooltip
+                      text="Waktu Indonesia Barat (WIB) -- seluruh transaksi & laporan memakai zona WIB."
+                      label="Keterangan Tanggal (WIB)"
                     />
-                  </label>
+                  </div>
                 </div>
                 <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
                   Akun simpanan: 2050 pokok, 2060 wajib, 2070 sukarela (Sek.7.2.3).

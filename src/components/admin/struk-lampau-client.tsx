@@ -23,6 +23,8 @@ import {
   PageSkeleton,
   useToast,
 } from '@/components/ui';
+import { EmptyState } from '@/components/empty-state';
+import { TableScroll } from '@/components/responsive-table-wrapper';
 import { fmtDateTime, rp } from '@/lib/format';
 import { payMethodLabel } from '@/lib/pay-methods';
 import { generateStrukJpeg, generateStrukPdf } from '@/lib/struk-media';
@@ -221,12 +223,10 @@ export function StrukLampauClient() {
       ) : loading && rows.length === 0 ? (
         <PageSkeleton />
       ) : rows.length === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Tidak ada transaksi pada periode terpilih.
-        </p>
+        <EmptyState compact={false} message="Tidak ada transaksi pada periode terpilih." />
       ) : (
         <>
-          <div className="overflow-x-auto">
+          <TableScroll>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -285,7 +285,7 @@ export function StrukLampauClient() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
             Menampilkan {rows.length} dari {total} transaksi.
           </p>

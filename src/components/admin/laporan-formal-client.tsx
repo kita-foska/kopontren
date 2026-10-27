@@ -14,6 +14,8 @@ import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api, Badge, Button, ErrorState, PageSkeleton, Td, Table, TermTip, Th, Trow } from '@/components/ui';
+import { EmptyState } from '@/components/empty-state';
+import { TableScroll } from '@/components/responsive-table-wrapper';
 import { rp, todayWibStr } from '@/lib/format';
 import type { PosisiPayload } from '@/lib/laporan/posisi';
 import type { LkaPayload } from '@/lib/laporan/lka';
@@ -304,7 +306,7 @@ function DetailRows({
   names: (code: string) => string;
 }) {
   return (
-    <div className="overflow-x-auto">
+    <TableScroll>
       <Table minW="min-w-[36rem]">
         <thead>
           <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -323,7 +325,7 @@ function DetailRows({
           ))}
         </tbody>
       </Table>
-    </div>
+    </TableScroll>
   );
 }
 
@@ -376,9 +378,10 @@ function PosisiStatement({ p }: { p: FormalResp }) {
         {s.ekuitas.some((r) => r.value !== 0) ? (
           <DetailRows rows={s.ekuitas} names={names} />
         ) : (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Belum ada ekuitas (30xx) s.d. {p.as_of}.
-          </p>
+          <EmptyState
+            compact={false}
+            message={`Belum ada ekuitas (30xx) s.d. ${p.as_of}.`}
+          />
         )}
         <div className="mt-3">
           <Line label="Total ekuitas (30xx)" value={t.total_ekuitas} />
@@ -559,7 +562,7 @@ function LkaStatement({ p }: { p: LkaResp }) {
         <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
           MEMO (tidak dijumlahkan ke laba bersih)
         </h3>
-        <div className="overflow-x-auto">
+        <TableScroll>
           <Table minW="min-w-[30rem]">
             <thead>
               <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -578,7 +581,7 @@ function LkaStatement({ p }: { p: LkaResp }) {
               ))}
             </tbody>
           </Table>
-        </div>
+        </TableScroll>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           Ujrah konsinyasi (4040), cashback (2030), dan SHU (3020) ditampilkan sebagai
           memo saja; TIDAK masuk perhitungan laba bersih.
@@ -687,7 +690,7 @@ function LpeStatement({ p }: { p: LpeResp }) {
         <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
           Perubahan Ekuitas s.d. {p.as_of} (kumulatif, Sek.5.3)
         </h3>
-        <div className="overflow-x-auto">
+        <TableScroll>
           <Table minW="min-w-[46rem]">
             <thead>
               <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -724,7 +727,7 @@ function LpeStatement({ p }: { p: LpeResp }) {
               </Trow>
             </tbody>
           </Table>
-        </div>
+        </TableScroll>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           Saldo penuh ekuitas (SUM 30xx, kredit-debit) = <b>{rp(p.full_balance_ekuitas)}</b>.
           Saldo Akhir = Saldo Awal + SHU + Alokasi - Distribusi; distribusi SHU (dibagi ke
@@ -737,7 +740,7 @@ function LpeStatement({ p }: { p: LpeResp }) {
         <h3 className="mb-2 text-sm font-bold text-rose-700 dark:text-rose-400">
           MEMO -- Simpanan Anggota (kewajiban, bukan ekuitas)
         </h3>
-        <div className="overflow-x-auto">
+        <TableScroll>
           <Table minW="min-w-[30rem]">
             <thead>
               <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -761,7 +764,7 @@ function LpeStatement({ p }: { p: LpeResp }) {
               </Trow>
             </tbody>
           </Table>
-        </div>
+        </TableScroll>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           2050/2060/2070 (Simpanan Pokok/Wajib/Sukarela) adalah kewajiban kepada anggota
           (Kolom 1/2 Sek.4.2) -- TIDAK dijumlahkan ke total ekuitas di atas.
@@ -884,7 +887,7 @@ function LakStatement({ p }: { p: LakResp }) {
         <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
           Laporan Arus Kas Usaha s.d. {p.as_of} (Sek.5.4)
         </h3>
-        <div className="overflow-x-auto">
+        <TableScroll>
           <Table minW="min-w-[36rem]">
             <thead>
               <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -916,7 +919,7 @@ function LakStatement({ p }: { p: LakResp }) {
               </Trow>
             </tbody>
           </Table>
-        </div>
+        </TableScroll>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           Identitas footer: saldo_awal + neto_aktivitas + pergeseran_kas_sosial = saldo_akhir.
           Transfer antar-kas (1010&lt;&gt;1020 / 1100) bukan aktivitas.
@@ -938,7 +941,7 @@ function LakStatement({ p }: { p: LakResp }) {
         <h3 className="mb-2 text-sm font-bold text-slate-700 dark:text-slate-300">
           Kas usaha per akun (1010 + 1020)
         </h3>
-        <div className="overflow-x-auto">
+        <TableScroll>
           <Table minW="min-w-[40rem]">
             <thead>
               <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -968,14 +971,14 @@ function LakStatement({ p }: { p: LakResp }) {
               ))}
             </tbody>
           </Table>
-        </div>
+        </TableScroll>
       </div>
 
       <div className="card p-4">
         <h3 className="mb-2 text-sm font-bold text-emerald-700 dark:text-emerald-400">
           {ks.name} ({ks.code}) -- seksi terpisah
         </h3>
-        <div className="overflow-x-auto">
+        <TableScroll>
           <Table minW="min-w-[40rem]">
             <thead>
               <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -998,12 +1001,12 @@ function LakStatement({ p }: { p: LakResp }) {
               </Trow>
             </tbody>
           </Table>
-        </div>
+        </TableScroll>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           Kas sosial (ZIS) TIDAK dijumlahkan ke kas usaha (anti-campur, Sek.5.4).
         </p>
         {ks.rincian.length > 0 && (
-          <div className="mt-3 overflow-x-auto">
+          <TableScroll className="mt-3">
             <Table minW="min-w-[30rem]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -1024,7 +1027,7 @@ function LakStatement({ p }: { p: LakResp }) {
                 ))}
               </tbody>
             </Table>
-          </div>
+          </TableScroll>
         )}
       </div>
     </div>
@@ -1375,7 +1378,7 @@ function CalkStatement({ p }: { p: CalkResp }) {
                 </tbody>
               </Table>
             ) : (
-              <p className="text-xs text-slate-500 dark:text-slate-400">Belum ada aliran ZIS (non-pembuka).</p>
+              <EmptyState compact message="Belum ada aliran ZIS (non-pembuka)." />
             )}
           </div>
         </div>
@@ -1686,7 +1689,7 @@ function RatLpeSection({ p }: { p: RatResp }) {
   return (
     <div className="card p-4">
       <h3 className="mb-2 text-sm font-bold">PERUBAHAN EKUITAS -- TAHUN {p.tahun}</h3>
-      <div className="overflow-x-auto">
+      <TableScroll>
         <Table minW="min-w-[44rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -1722,7 +1725,7 @@ function RatLpeSection({ p }: { p: RatResp }) {
             </Trow>
           </tbody>
         </Table>
-      </div>
+      </TableScroll>
       <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
         Saldo penuh ekuitas (SUM 30xx s.d. {p.period_to}) = <b>{rp(p.lpe.full_balance_ekuitas)}</b>;
         total simpanan anggota (kewajiban, bukan ekuitas) = {rp(p.lpe.memos.simpanan_total)}.
@@ -1754,7 +1757,7 @@ function RatLakSection({ p }: { p: RatResp }) {
   return (
     <div className="card p-4">
       <h3 className="mb-2 text-sm font-bold">ARUS KAS -- TAHUN {p.tahun}</h3>
-      <div className="overflow-x-auto">
+      <TableScroll>
         <Table minW="min-w-[52rem]">
           <thead>
             <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -1792,7 +1795,7 @@ function RatLakSection({ p }: { p: RatResp }) {
             </Trow>
           </tbody>
         </Table>
-      </div>
+      </TableScroll>
       <div className="mt-3 space-y-3">
         {actBlock('Aktivitas Operasional', a.operasional)}
         {actBlock('Aktivitas Investasi', a.investasi)}
@@ -1803,7 +1806,7 @@ function RatLakSection({ p }: { p: RatResp }) {
           <h4 className="mb-1 text-xs font-bold text-sky-700 dark:text-sky-400">
             Rincian Pergerakan Kas Sosial (1100)
           </h4>
-          <div className="overflow-x-auto">
+          <TableScroll>
             <Table minW="min-w-[36rem]">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -1822,7 +1825,7 @@ function RatLakSection({ p }: { p: RatResp }) {
                 ))}
               </tbody>
             </Table>
-          </div>
+          </TableScroll>
         </div>
       )}
       <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -1873,7 +1876,7 @@ function RatShuSection({ p }: { p: RatResp }) {
         paparan input admin -- modul ini TIDAK melakukan distribusi otomatis.
       </p>
       {s.rows.length > 0 && (
-        <div className="mt-3 overflow-x-auto">
+        <TableScroll className="mt-3">
           <Table minW="min-w-[56rem]">
             <thead>
               <tr className="border-b border-slate-200 dark:border-navy-700">
@@ -1903,7 +1906,7 @@ function RatShuSection({ p }: { p: RatResp }) {
               ))}
             </tbody>
           </Table>
-        </div>
+        </TableScroll>
       )}
     </div>
   );

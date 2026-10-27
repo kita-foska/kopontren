@@ -29,6 +29,28 @@
   /* W11 B3: shadow ambient token (lembut & diffuse, kesan premium) --
      light = nuansa maroon, dark = hitam pekat. Dipakai .card-glass. */
   --shadow-ambient: 0 10px 30px -12px rgba(23, 10, 14, 0.18);
+  /* W18-A (UI/UX High Polish): token spacing/radius/shadow -- additive
+     (nilai identik dgn token tailwind.config.ts: rounded-field 0.5rem,
+     rounded-card 1rem, shadow-card). Kelas komponen baru (.table-scroll,
+     .info-tip) + .card mereferensikan var ini; 0 perubahan visual. */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem; /* 24px */
+  --space-7: 2rem; /* 32px */
+  --space-8: 3rem; /* 48px */
+  --radius-sm: 0.5rem; /* = rounded-field */
+  --radius-md: 1rem; /* = rounded-card */
+  --radius-lg: 1.25rem; /* panel besar (opsional) */
+  --radius-full: 9999px; /* pill */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* = shadow-card */
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --surface-elev: #ffffff; /* permukaan elevasi (fade scroll tabel, tooltip) */
+  --line: #e2e8f0; /* garis tipis (slate-200) */
+  --tip-ink: #334155; /* isi tooltip (slate-700 pada permukaan terang) */
 }
 
 html {
@@ -39,6 +61,10 @@ html.dark {
   color-scheme: dark; /* pasangan dari :root di atas */
   /* W11 B3: varian dark token ambient. */
   --shadow-ambient: 0 10px 30px -12px rgba(0, 0, 0, 0.55);
+  /* W18-A: varian dark utk token elevasi (fade scroll + tooltip). */
+  --surface-elev: var(--nsurface); /* navy-800 */
+  --line: var(--nborder); /* navy-700 */
+  --tip-ink: #f1f5f9; /* ntext - kontras pada permukaan navy-800 */
 }
 
 /* W17-A (a11y): global keyboard-focus fallback -- outline 2px accent +
@@ -76,6 +102,11 @@ body {
     /* UX-4: radius/shadow via token (rounded-card = 16px, shadow-card =
        shadow-sm - nilai identik dengan versi lama, hanya referensi token). */
     @apply rounded-card border border-slate-200 bg-white shadow-card dark:border-navy-700 dark:bg-navy-800;
+    /* W18-A: referensi eksplisit ke token CSS (nilai identik dgn @apply
+       di atas -- murni tokenisasi, 0 drift visual). Catatan: kelas .btn
+       tak ada lagi (UX-4: semua tombol = primitive <Button> di ui.tsx). */
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
   }
   .card-glass {
     /* W11 B3 (B3): kartu glassmorphism premium -- dipakai bareng .card
@@ -141,6 +172,72 @@ body {
   .chart-bar {
     transform-origin: bottom;
     animation: grow-up 0.2s ease both;
+  }
+
+  /* ===== W18-A (UI/UX High Polish): pembungkus tabel + tooltip ===== */
+  /* TableScroll (responsive-table-wrapper.tsx): fade kanan = CSS murni
+     (var --surface-elev per mode); JS komponen hanya menampakkan
+     .table-scroll-fade saat masih ada konten ke kanan. */
+  .table-scroll {
+    position: relative;
+  }
+  .table-scroll-inner {
+    overflow-x: auto;
+  }
+  .table-scroll-fade {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 2rem;
+    pointer-events: none;
+    background: linear-gradient(to right, transparent, var(--surface-elev));
+  }
+
+  /* InfoTooltip (info-tooltip.tsx): gelembur info -- open murni CSS
+     (:hover/:focus-within), 0 JS. Token: --radius-sm + --shadow-md. */
+  .info-tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    line-height: 0;
+  }
+  .info-tip-trigger {
+    display: inline-flex;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #94a3b8; /* slate-400 - glyph dekoratif (trigger = aria-label) */
+    cursor: help;
+  }
+  .info-tip-bubble {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translate(-50%, 2px);
+    width: max-content;
+    max-width: 240px;
+    padding: calc(var(--space-1) * 1.5) var(--space-2);
+    background: var(--surface-elev);
+    color: var(--tip-ink);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    font-size: 11px;
+    line-height: 1.35;
+    font-weight: 500;
+    text-align: left;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    z-index: 30;
+    pointer-events: none;
+  }
+  .info-tip:hover .info-tip-bubble,
+  .info-tip:focus-within .info-tip-bubble {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
   }
 }
 
@@ -253,6 +350,10 @@ body {
   .cart-pop,
   .btn-ripple::after {
     animation: none !important;
+  }
+  /* W18-A: tooltip tak "meluncur" (transisi) saat reduced-motion. */
+  .info-tip-bubble {
+    transition: none !important;
   }
 }
 

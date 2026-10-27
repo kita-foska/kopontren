@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PageSkeleton, Table, Td, TEmpty, Trow, Th, Empty, api, Button, StatusBadge, Modal, TermTip, Toast, TogglePill, useConfirm, useToast } from '@/components/ui';
 import { ProductBarcodeLabel } from '@/components/admin/product-label';
+import { InfoTooltip } from '@/components/info-tooltip';
 import { rp } from '@/lib/format';
 import { r3 } from '@/lib/multisatuan';
 import { parseWholesaleJson } from '@/lib/wholesale';
@@ -569,6 +570,10 @@ export function ProdukClient() {
             placeholder="Stok +/-"
             value={bulkStock}
             onChange={(e) => setBulkStock(e.target.value)}
+          />
+          <InfoTooltip
+            text="Perubahan stok RELATIF utk semua produk terpilih: isi +5 = tambah 5, -2 = kurangi 2 (bukan nilai akhir stok)."
+            label="Keterangan Stok plus/minus"
           />
           <Button
             variant="ghost"
