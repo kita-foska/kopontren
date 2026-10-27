@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W17-B: Cara Menerima Notifikasi di HP (Kopontren AL Ittihad)</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  .note { background: #eef4ff; border-left: 4px solid #2563eb; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+  figure { text-align: center; margin: 18px 0; }
+  figure figcaption { font-size: .9rem; color: #555; margin-top: 8px; }
+  ol.steps { font-size: .95rem; }
+  ol.steps li { margin: 8px 0; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial W17-B: Cara Menerima Notifikasi di HP</h1>
+<p><b>Untuk siapa:</b> kasir, pengurus, dan admin. Tidak ada layar
+   baru dan tidak ada tombol baru -- yang berubah: aplikasi kini
+   dapat <b>memanggil HP Anda</b> lewat notifikasi (push) walau
+   aplikasi sedang tertutup atau tidak dibuka. Halamannya sudah ada:
+   <b>Pengaturan Notifikasi</b>. Tutorial ini menunjukkan cara
+   mengaktifkannya, cara memasang aplikasi ke layar HP, dan cara
+   mematikannya kembali.</p>
+
+<h2>1. Apa yang baru?</h2>
+<p style="font-size:.93rem">Sebelumnya, aplikasi hanya menampilkan
+   pesan di dalam aplikasi (in-app) -- Anda harus membuka aplikasi
+   untuk melihatnya. Kini, hal yang penting (misalnya ada transaksi
+   yang perlu disetujui, stok menipis, atau pengingat) dapat
+   <b>langsung muncul di HP</b> seperti pesan dari aplikasi lain,
+   meskipun aplikasi sedang tertutup. Ini memakai fitur "Web Push"
+   bawaan perambin modern -- tidak perlu mengunduh aplikasi
+   tambahan.</p>
+
+<h2>2. Cara mengaktifkan notifikasi di HP</h2>
+<ol class="steps">
+  <li>Buka aplikasi, lalu masuk ke menu <b>Pengaturan
+      Notifikasi</b> (halaman <code>/admin/notifications/
+      settings</code>).</li>
+  <li>Pada kartu <b>"Push Notification (PWA)"</b>, tekan tombol
+      <b>"Aktifkan Push"</b>.</li>
+  <li>Perambin menampilkan kotak izin <b>"Izinkan notifikasi?"</b>
+      -- pilih <b>Izinkan</b> (Allow).</li>
+  <li>Status berubah menjadi <b>"Aktif -- notifikasi muncul di
+      perangkat."</b> Selesai.</li>
+</ol>
+<figure>
+<svg viewBox="0 0 460 130" width="460" role="img"
+     aria-label="Diagram alur empat langkah: buka Pengaturan Notifikasi, tekan Aktifkan Push, izinkan perambin, lalu status menjadi Aktif">
+  <rect x="10"  y="45" width="94" height="44" rx="8" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="57"  y="63" font-size="11" fill="#241b1e" text-anchor="middle">Buka</text>
+  <text x="57"  y="77" font-size="11" fill="#241b1e" text-anchor="middle">Pengaturan</text>
+  <line x1="104" y1="67" x2="122" y2="67" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="122,67 114,63 114,71" fill="#7A1835"/>
+  <rect x="126" y="45" width="94" height="44" rx="8" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="173" y="63" font-size="11" fill="#241b1e" text-anchor="middle">Tekan</text>
+  <text x="173" y="77" font-size="11" fill="#241b1e" text-anchor="middle">Aktifkan Push</text>
+  <line x1="220" y1="67" x2="238" y2="67" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="238,67 230,63 230,71" fill="#7A1835"/>
+  <rect x="242" y="45" width="94" height="44" rx="8" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="289" y="63" font-size="11" fill="#241b1e" text-anchor="middle">Izinkan</text>
+  <text x="289" y="77" font-size="11" fill="#241b1e" text-anchor="middle">perambin</text>
+  <line x1="336" y1="67" x2="354" y2="67" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="354,67 346,63 346,71" fill="#7A1835"/>
+  <rect x="358" y="45" width="92" height="44" rx="8" fill="#3f6b3f" stroke="#3f6b3f"/>
+  <text x="404" y="63" font-size="11" fill="#ffffff" text-anchor="middle">Status:</text>
+  <text x="404" y="77" font-size="11" fill="#ffffff" text-anchor="middle">Aktif</text>
+</svg>
+<figcaption>Alur empat langkah untuk mengaktifkan notifikasi push
+
+<h2>3. Cara memasang aplikasi ke layar HP (disarankan)</h2>
+<p style="font-size:.93rem">Agar notifikasi paling andal -- terutama
+   di iPhone -- sebaiknya "pasang" aplikasinya ke layar beranda
+   (istilahnya <b>install aplikasi / PWA</b>):</p>
+<table>
+  <tr><th>Perangkat</th><th>Cara memasang</th></tr>
+  <tr>
+    <td><b>Android (Chrome)</b></td>
+    <td>Buka aplikasinya di Chrome, tekan menu tiga titik di
+        pojok kanan atas, pilih <b>"Install aplikasi"</b> atau
+        <b>"Tambah ke layar utama"</b>.</td>
+  </tr>
+  <tr>
+    <td><b>iPhone / iPad (Safari)</b></td>
+    <td>Buka aplikasinya di Safari, tekan ikon Bagikan (kotak
+        dengan tanda panah keluar di bilah bawah), lalu pilih
+        <b>"Ke Layar Beranda"</b>.</td>
+  </tr>
+</table>
+<p class="note">Jika pada kartu "Push Notification" tertulis
+<b>"Browser/perangkat ini tidak mendukung Web Push"</b>, berarti
+perangkat Anda membutuhkan langkah pemasangan di atas. Setelah
+terpasang, buka ulang halaman Pengaturan Notifikasi, lalu tekan
+"Aktifkan Push".</p>
+
+<h2>4. Alur di balik layar: izin, daftar, terima notifikasi</h2>
+<p style="font-size:.93rem">Setelah Anda menekan "Aktifkan Push" dan
+   mengizinkan perambin, terjadi tiga tahap berikut. Anda tidak
+   perlu melakukan apa-apa setelahnya -- semuanya berjalan
+   otomatis.</p>
+<figure>
+<svg viewBox="0 0 460 160" width="460" role="img"
+     aria-label="Diagram tiga tahap: perambin memberi izin, HP mendaftar ke server memakai kunci VAPID, server mengirim push saat ada peristiwa sehingga notifikasi muncul di HP walau aplikasi tertutup">
+  <rect x="10"  y="30" width="130" height="100" rx="8" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="75"  y="55"  font-size="11" font-weight="bold" fill="#7A1835" text-anchor="middle">1. Izin</text>
+  <text x="75"  y="80"  font-size="10" fill="#241b1e" text-anchor="middle">Perambin</text>
+  <text x="75"  y="94"  font-size="10" fill="#241b1e" text-anchor="middle">memberi izin</text>
+  <text x="75"  y="108" font-size="10" fill="#241b1e" text-anchor="middle">push</text>
+  <line x1="140" y1="80" x2="158" y2="80" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="158,80 150,76 150,84" fill="#7A1835"/>
+  <rect x="162" y="30" width="130" height="100" rx="8" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="227" y="55"  font-size="11" font-weight="bold" fill="#7A1835" text-anchor="middle">2. Daftar</text>
+  <text x="227" y="80"  font-size="10" fill="#241b1e" text-anchor="middle">HP mendaftar</text>
+  <text x="227" y="94"  font-size="10" fill="#241b1e" text-anchor="middle">ke server</text>
+  <text x="227" y="108" font-size="10" fill="#241b1e" text-anchor="middle">kunci VAPID</text>
+  <line x1="292" y1="80" x2="310" y2="80" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="310,80 302,76 302,84" fill="#7A1835"/>
+  <rect x="314" y="30" width="130" height="100" rx="8" fill="#3f6b3f" stroke="#3f6b3f"/>
+  <text x="379" y="55"  font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">3. Terima</text>
+  <text x="379" y="80"  font-size="10" fill="#ffffff" text-anchor="middle">Server kirim</text>
+  <text x="379" y="94"  font-size="10" fill="#ffffff" text-anchor="middle">push; muncul</text>
+  <text x="379" y="108" font-size="10" fill="#ffffff" text-anchor="middle">di HP</text>
+</svg>
+<figcaption>Tiga tahap otomatis setelah izin diberikan: HP
+mendaftarkan diri ke server (kunci VAPID), lalu server mengirim
+
+<h2>5. Cara mematikannya kembali</h2>
+<ol class="steps">
+  <li><b>Matikan push sepenuhnya:</b> pada kartu "Push
+      Notification", tekan <b>"Nonaktifkan Push"</b>. HP Anda
+      berhenti menerima notifikasi push dari aplikasi ini.</li>
+  <li><b>Bisukan jenis tertentu saja:</b> di bawah kartu itu ada
+      daftar jenis notifikasi. Matikan saklar <b>"Push"</b> pada
+      jenis yang tidak ingin muncul di HP, biarkan saklar
+      <b>"In-app"</b> jika masih ingin dilihat di dalam aplikasi.</li>
+</ol>
+<p style="font-size:.93rem">On/off ini bersifat per HP: HP lain yang
+   sudah diaktifkan tidak ikut terpengaruh.</p>
+
+<h2>6. Jika tidak bekerja (troubleshooting)</h2>
+<table>
+  <tr><th>Gejala</th><th>Penyebab</th><th>Solusi</th></tr>
+  <tr>
+    <td>Tulisan "tidak mendukung Web Push"</td>
+    <td>Perambin/perangkat membutuhkan PWA terpasang (umum di
+        iPhone)</td>
+    <td>Lihat bagian 3: pasang ke layar beranda, lalu ulangi
+        "Aktifkan Push"</td>
+  </tr>
+  <tr>
+    <td>Tombol tidak bisa ditekan di komputer</td>
+    <td>Web Push hanya berjalan di alamat aman (HTTPS)</td>
+    <td>Pakai alamat produksi yang diawali <code>https://</code>;
+        mode lokal (<code>http://</code>) memang tidak mendukung
+        push</td>
+  </tr>
+  <tr>
+    <td>Kotak izin tidak muncul / status "ditolak"</td>
+    <td>Izin sebelumnya pernah ditolak</td>
+    <td>Buka pengaturan situs perambin, cari "Notifikasi", ubah
+        menjadi "Izinkan", lalu segarkan halaman</td>
+  </tr>
+  <tr>
+    <td>Push aktif tetapi notifikasi tidak masuk</td>
+    <td>Notifikasi sistem dimatikan (mode diam / hemat baterai)</td>
+    <td>Matikan mode diam; izinkan aplikasi ini di pengaturan
+        notifikasi sistem HP</td>
+  </tr>
+</table>
+
+<h2>7. Kenapa ini penting?</h2>
+<p style="font-size:.93rem">Kasir dan pengurus sering tidak
+   membuka aplikasi terus-menerus. Dengan push, hal penting
+   sampai di HP tepat waktu -- tanpa harus mengecek aplikasi
+   berkali-kali. Ini bukan fitur baru yang mengubah cara kerja;
+   ia hanya menambah satu cara lagi untuk menerima pesan yang
+   sudah ada sebelumnya di dalam aplikasi.</p>
+
+<p class="hint"><b>Catatan:</b> Mengaktifkan push cukup sekali per
+HP. Setelah aktif, tidak ada yang perlu dilakukan lagi. Untuk
+berhenti, tekan "Nonaktifkan Push". Data dan tampilan aplikasi
+<b>tidak berubah</b> -- ini hanya menambah cara menerima pesan,
+bukan mengubah isi pesannya.</p>
+</main>
+</body>
+</html>
+notifikasi saat ada peristiwa -- walau aplikasi tertutup.</figcaption>
+</figure>
+satu kali.</figcaption>
+</figure>
