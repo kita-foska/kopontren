@@ -3036,5 +3036,19 @@ Dashboard Health Meter.**
   build 0 (clean .next); 0 non-ASCII baris/file anyar; skema
   v34 tak berubah; frozen 4 file untouched. TUTORIAL-W17-1.html
   (0 emoji). Detail: MEMORY.md seksi "W17-A".
-- [ ] **W17 sisanya (menunggu GO CODE): push-notif + SW revamp;**
-  UI/UX design (3.4) ditunda ke W17/W18 (keputusan Gus Fi).
+- [x] **W17-B push-notif (Pilihan A: tutorial + a11y polish) --
+  SELESAI (ACC GO CODE 27 Okt, GO COMMIT 27 Okt):** Audit read-only
+  nemokan fitur push-notif SUDAH LENGKAP sejak W13 B2 (web-push
+  ^3.6.7 dependencies, VAPID keys, tabel push_subscriptions, 3
+  endpoint, pipeline, role guard, halaman settings, UI toggle, SW
+  push handler) -- TIDAK ADA kode anyar. Work = (1) a11y polish
+  notification-settings-client.tsx (2 baris: aria-live="polite"
+  status push + role="status" loading + "Memuat..." ASCII);
+  (2) TUTORIAL-W17-2.html (0 emoji/non-ASCII, SVG inline). Gate:
+  tsc 0; test:notify 19 passed; gate build EXIT 0; 0 non-ASCII;
+  skema v34; 0 new dep; frozen 4 file untouched. Detail:
+  MEMORY.md seksi "W17-B".
+- [ ] **W17 sisanya (menunggu GO CODE): SW revamp (W17-C, butuh ACC
+  thaw public/sw.src.js); UI/UX design (3.4) + /settings umum +
+  master toggle push (W17-D, butuh ACC schema change) (keputusan
+  Gus Fi).**

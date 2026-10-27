@@ -7147,3 +7147,41 @@ CODE, dual-push commit `7b6f8a7` C1 + C2 + C3)
 - TUTORIAL-W17-1.html (0 emoji, diagram SVG inline).
 - Lanjut W17: push-notif + SW revamp (menunggu GO CODE,
   keputusan Gus Fi).
+
+## W17-B -- push-notif: Pilihan A (tutorial + a11y polish) (27-10-2026,
+ACC GO CODE + GO COMMIT)
+- Keputusan Gus Fi = Pilihan A (minimal) karena AUDIT (read-only)
+  menemukan fitur push-notif SUDAH LENGKAP sejak W13 B2. Tidak ada
+  kode anyar, tidak ada schema change, tidak ada new dependency,
+  frozen file tidak disentuh.
+- Cakupan aktual W17-B (2 item):
+  (1) a11y polish src/components/admin/notification-settings-client.tsx
+      (2 baris): (a) aria-live="polite" pada <p> status push
+      (granted/denied/unavailable) agar screen reader mengumumkan
+      perubahan status; (b) role="status" pada div loading +
+      normalisasi "Memuat..." (ASCII). Ikon lucide-react
+      (Bell/Save/Loader2) = existing, dipertahankan (aturan: ikon
+      BARU = inline SVG). Disabled state toggle: tidak ada efek
+      ripple (sudah benar).
+  (2) docs/TUTORIAL-W17-2.html (BARU): tutorial layar-awam cara
+      menerima notifikasi di HP (aktifkan push, install PWA, alur
+      izin->daftar->terima, unsubscribe, troubleshooting
+      HTTPS/browser/iOS Safari, kenapa penting). 0 emoji, 0
+      non-ASCII, diagram SVG inline, semantic HTML
+      (main/h1/h2/section/table/figure).
+- Bukti fitur existing (W13 B2): web-push ^3.6.7 di dependencies
+  (BUKAN transitive); notify.ts ensureVapidKeys (VAPID auto-generate
+  + tabel vapid_keys); db.ts tabel push_subscriptions (v10);
+  /api/push/{subscribe,unsubscribe,vapid-key} (auth + role guard
+  canReceiveNotif: admin/manajer/pengurus/kasir); pipeline
+  webpush.sendNotification + hapus sub mati + log notification_logs;
+  halaman /admin/notifications/settings; SW push handler
+  public/sw.src.js:112-138 (FROZEN, tak diubah).
+- Gate: tsc --noEmit 0; test:notify 19 passed 0 failed (smoke area
+  push); gate build EXIT 0 (clean .next); 0 non-ASCII di baris/file
+  anyar; skema tetap v34; 0 new dependency; frozen 4 file
+  (public/sw.src.js, src/lib/pos-client.tsx, src/app/api/reports/
+  route.ts, src/app/api/rekap/route.ts) UNTOUCHED.
+- Lanjut W17: W17-C (SW revamp, butuh ACC thaw public/sw.src.js);
+  W17-D (UI/UX design 3.4 + /settings umum + master toggle push,
+  butuh ACC schema change) -- menunggu keputusan Gus Fi.
