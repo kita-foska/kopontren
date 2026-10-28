@@ -3082,8 +3082,11 @@ Dashboard Health Meter.**
   route.ts, src/app/api/rekap/route.ts) UNTOUCHED. Detail:
   MEMORY.md seksi "W18-B". TUTORIAL-W18-2.html (layar-awam,
   0 emoji/non-ASCII, SVG inline).
-- [ ] **W19 (menunggu GO CODE): kandidat = konsistensi stock<5
+- [ ] **W19 (roadmap GO 28-10, menunggu GO CODE): Data Export +
+  POS Pro. Kandidat backlog (sisa W18-B): konsistensi stock<5
   landing (src/app/page.tsx) + badge POS (frozen pos-client.tsx,
   butuh ACC thaw) dengan ambang LOW_STOCK_WHERE; lanjut W17:
   W17-C SW revamp (ACC thaw public/sw.src.js) + W17-D (ACC schema
   change) (keputusan Gus Fi).**
+- [ ] **W20 (roadmap GO 28-10): Advanced + Integrations.**
+- [ ] **W21+ (roadmap GO 28-10): Barcode, Multi-bahasa, QRIS.**
