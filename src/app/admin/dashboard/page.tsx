@@ -5,6 +5,7 @@ import { kpiDelta, rp, startOfDayJakarta, wibDayBand } from '@/lib/format';
 import { dataPerLabel, wibTime } from '@/lib/confidence';
 import { Shell } from '@/components/shell';
 import { LowStockClient } from '@/components/admin/low-stock-client';
+import { LOW_STOCK_WHERE } from '@/lib/low-stock';
 import { ActivityFeed, type FeedItem, type KpiMover } from '@/components/activity-feed';
 import { Button } from '@/components/ui';
 import { KpiGrid, type KpiCardDef } from '@/components/kpi-card';
@@ -91,11 +92,13 @@ export default async function AdminDashboardPage() {
   );
   // Prediksi stok: rata-rata terjual 14 hari terakhir -> sisa ±berapa hari.
   const d14 = startOfDayJakarta(-13);
+  // W18-B: ambang low-stock pakai LOW_STOCK_WHERE (single source of truth
+  // lib/low-stock): min_stock per produk bila >0, selain itu global 10.
   const lowStockSimple = (
     (await d
       .prepare(
         `SELECT p.id, p.name, p.stock, p.unit FROM products p
-         WHERE p.active = 1 AND p.stock < 10 ORDER BY p.stock ASC LIMIT 12`
+         WHERE ${LOW_STOCK_WHERE} ORDER BY p.stock ASC LIMIT 12`
       )
       .all()) as { id: number; name: string; stock: number; unit: string }[]
   );

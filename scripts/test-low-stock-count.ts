@@ -1,16 +1,18 @@
 /**
- * COUNTER (POST-W5, 2026-10-13) -- Unit test src/lib/low-stock.ts
- * (modul pure utk badge stok menipis + API /api/low-stock-count).
- * Suite 32 (test:all = 32).
+ * COUNTER (POST-W5, 2026-10-13) + W18-B (2026-10-28) -- Unit test
+ * src/lib/low-stock.ts (modul pure utk badge stok menipis + API
+ * /api/low-stock-count + ambang min_stock per produk).
  * Node langsung (type-stripping, Node >= 23.6), konvensi sama dgn
  * test-roles.ts / test-member-export.ts: modul hermetis diuji
  * langsung + node:sqlite in-memory utk query count.
  *     npm run test:low-stock-count   (== node scripts/test-low-stock-count.ts)
  *
  * Sifat yang diuji:
- *  - Definisi D1: threshold 10; SQL bentuk "SELECT COUNT(*) ...
- *    active = 1 AND stock < 10"; query benar-benar berjalan di
- *    SQLite (boundary: stock 10 TIDAK dihitung; inactive TIDAK).
+ *  - Definisi D1 (W18-B): ambang efektif COALESCE(NULLIF(min_stock,0), 10);
+ *    SQL "SELECT COUNT(*) ... active = 1 AND stock < COALESCE(NULLIF(min_stock,0),10)";
+ *    query benar-benar berjalan di SQLite (boundary: stock 10 TIDAK dihitung
+ *    bila ambang global; min_stock 20 & stock 15 HITUNG; inactive TIDAK).
+ *  - Helper W18-B: effectiveMinStock() / isLowStock() (pure).
  *  - Gerbang tier D4: 401 anon / 403 role tanpa tier 'stock'
  *    (kasir/pengurus/pembelian/member) / 200 (admin/manajer/gudang).
  *  - Respons D1: normalisasi count (bulat >= 0; selain itu null --
@@ -22,10 +24,13 @@
 import { DatabaseSync } from 'node:sqlite';
 import type { AppUser } from '../src/lib/auth.ts';
 import {
+  effectiveMinStock,
   LOW_STOCK_CACHE_CONTROL,
   LOW_STOCK_COUNT_SQL,
   LOW_STOCK_STATUS,
   LOW_STOCK_THRESHOLD,
+  LOW_STOCK_WHERE,
+  isLowStock,
   lowStockCount,
   lowStockGate,
   lowStockLabel,
@@ -45,18 +50,41 @@ function ok(name: string, cond: boolean, detail = ''): void {
 const asUser = (role: string) => ({ role }) as unknown as AppUser;
 
 async function main() {
-  console.log('# low-stock-count (COUNTER POST-W5, suite 32)\n');
+  console.log('# low-stock-count (COUNTER POST-W5 + W18-B min_stock)\n');
 
-  // -- Definisi D1: threshold & bentuk query --
-  ok('threshold: 10 (identik widget dashboard)', LOW_STOCK_THRESHOLD === 10);
+  // -- Definisi D1 (W18-B): threshold & bentuk query --
+  ok('threshold global: 10', LOW_STOCK_THRESHOLD === 10);
   ok(
-    'sql: COUNT(*) atas products, active = 1 AND stock < 10',
+    'sql: COUNT(*) atas products, ambang efektif COALESCE(NULLIF(min_stock,0),10)',
     LOW_STOCK_COUNT_SQL.includes('SELECT COUNT(*)') &&
       LOW_STOCK_COUNT_SQL.includes('FROM products') &&
-      LOW_STOCK_COUNT_SQL.includes('active = 1') &&
-      LOW_STOCK_COUNT_SQL.includes('stock < 10'),
+      LOW_STOCK_COUNT_SQL.includes(LOW_STOCK_WHERE),
     LOW_STOCK_COUNT_SQL,
   );
+  ok(
+    'WHERE bersama: active = 1 + COALESCE(NULLIF(min_stock,0),10)',
+    LOW_STOCK_WHERE === 'active = 1 AND stock < COALESCE(NULLIF(min_stock,0), 10)',
+    LOW_STOCK_WHERE,
+  );
+
+  // -- Helper W18-B: ambang efektif per produk --
+  ok('effectiveMinStock: 0 -> 10 (ambang global)', effectiveMinStock(0) === 10);
+  ok(
+    'effectiveMinStock: null/undefined/NaN -> 10',
+    effectiveMinStock(null) === 10 && effectiveMinStock(undefined) === 10 && effectiveMinStock(NaN) === 10,
+  );
+  ok('effectiveMinStock: -3 -> 10 (nilai tak valid = global)', effectiveMinStock(-3) === 10);
+  ok(
+    'effectiveMinStock: 20 -> 20; 7.4 -> 7 (dibulatkan ke bawah)',
+    effectiveMinStock(20) === 20 && effectiveMinStock(7.4) === 7,
+  );
+  ok('isLowStock: min 20, stok 15 -> menipis', isLowStock(15, 20) === true);
+  ok('isLowStock: min 20, stok 25 -> aman', isLowStock(25, 20) === false);
+  ok(
+    'isLowStock: min 0 (global), stok 9 -> menipis; stok 10 -> aman',
+    isLowStock(9, 0) === true && isLowStock(10, 0) === false,
+  );
+  ok('isLowStock: stok tepat = ambang -> AMAN (stock < ambang, strict)', isLowStock(20, 20) === false);
 
   // -- Gerbang tier D4: 401 / 403 / 200 --
   ok('gate: tak login -> anon (401)', lowStockGate(null) === 'anon' && lowStockGate(undefined) === 'anon');
@@ -89,26 +117,34 @@ async function main() {
       lowStockCount(-1) === null,
   );
 
-  // -- Query nyata di SQLite in-memory (boundary) --
+  // -- Query nyata di SQLite in-memory (boundary, W18-B: + kolom min_stock) --
   {
     const d = new DatabaseSync(':memory:');
     d.exec(`CREATE TABLE products (
       id INTEGER PRIMARY KEY, name TEXT NOT NULL,
-      active INTEGER NOT NULL DEFAULT 1, stock INTEGER NOT NULL DEFAULT 0)`);
-    const ins = d.prepare('INSERT INTO products (id, name, active, stock) VALUES (?, ?, ?, ?)');
-    ins.run(1, 'A', 1, 9); // active, stok menipis -> HITUNG
-    ins.run(2, 'B', 1, 10); // stok 10 = normal -> TIDAK
-    ins.run(3, 'C', 0, 5); // tidak aktif -> TIDAK
-    ins.run(4, 'D', 1, 0); // stok habis -> HITUNG
-    ins.run(5, 'E', 1, 3); // active, menipis -> HITUNG
+      active INTEGER NOT NULL DEFAULT 1, stock INTEGER NOT NULL DEFAULT 0,
+      min_stock INTEGER NOT NULL DEFAULT 0)`);
+    const ins = d.prepare('INSERT INTO products (id, name, active, stock, min_stock) VALUES (?, ?, ?, ?, ?)');
+    ins.run(1, 'A', 1, 9, 0); // min_stock 0 -> ambang global 10; stok 9 < 10 -> HITUNG
+    ins.run(2, 'B', 1, 10, 0); // stok 10 = ambang global (strict <) -> TIDAK
+    ins.run(3, 'C', 0, 5, 0); // tidak aktif -> TIDAK
+    ins.run(4, 'D', 1, 0, 0); // stok habis -> HITUNG
+    ins.run(5, 'E', 1, 3, 0); // active, menipis -> HITUNG
+    ins.run(6, 'F', 1, 15, 20); // W18-B: min_stock 20, stok 15 < 20 -> HITUNG
+    ins.run(7, 'G', 1, 6, 5); // W18-B: min_stock 5, stok 6 > 5 -> TIDAK
+    ins.run(8, 'H', 1, 20, 20); // stok tepat = min_stock -> TIDAK (strict <)
     const n = (d.prepare(LOW_STOCK_COUNT_SQL).get() as { n: number }).n;
-    ok('query: boundary (9 hitung, 10 tidak, inactive tidak) -> 3', n === 3, 'n=' + n);
-    ins.run(6, 'F', 1, 9);
+    ok(
+      'query: boundary (9/0/3/min20&15 hitung; 10, inactive, min5&6, stok=min tidak) -> 4',
+      n === 4,
+      'n=' + n,
+    );
+    ins.run(9, 'I', 1, 4, 0);
     const n2 = (d.prepare(LOW_STOCK_COUNT_SQL).get() as { n: number }).n;
-    ok('query: bertambah setelah insert -> 4', n2 === 4, 'n=' + n2);
+    ok('query: bertambah setelah insert -> 5', n2 === 5, 'n=' + n2);
     d.close();
     const empty = new DatabaseSync(':memory:');
-    empty.exec('CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, stock INTEGER NOT NULL DEFAULT 0)');
+    empty.exec('CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, stock INTEGER NOT NULL DEFAULT 0, min_stock INTEGER NOT NULL DEFAULT 0)');
     const ne = (empty.prepare(LOW_STOCK_COUNT_SQL).get() as { n: number }).n;
     ok('query: tabel kosong -> 0', ne === 0, 'n=' + ne);
     empty.close();
@@ -122,6 +158,7 @@ async function main() {
   {
     const sample = [
       LOW_STOCK_COUNT_SQL,
+      LOW_STOCK_WHERE,
       LOW_STOCK_CACHE_CONTROL,
       lowStockLabel(12, true),
       lowStockLabel(12, false),

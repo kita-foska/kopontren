@@ -600,7 +600,9 @@ async function migrate(d: Db) {
       ')'
   );
   // Seed default timeout sesi (hanya kalau belum ada; admin bisa override).
-  await d.exec("INSERT INTO settings (key, value) VALUES ('session_timeout', '3600') ON CONFLICT(key) DO NOTHING");
+  // W18-B: default 1800 dtk (30 menit, spec 15-30 mnt); install existing
+  // tak terpengaruh (baris settings sudah ada; ON CONFLICT DO NOTHING).
+  await d.exec("INSERT INTO settings (key, value) VALUES ('session_timeout', '1800') ON CONFLICT(key) DO NOTHING");
 
   // ── Notifikasi (2026): in-app + web push, HANYA admin ──
   // notifications: baris notifikasi in-app per user admin (user_id selalu
@@ -1003,8 +1005,9 @@ export const SHOP_SETTING_DEFAULTS: Record<string, string> = {
   receipt_footer: 'Jazakumullah Khairan Katsiran',
   currency: 'Rp',
   timezone: 'Asia/Jakarta',
-  // Detik. Idle timeout sesi (default 3600 = 1 jam). Bisa diubah admin.
-  session_timeout: '3600',
+  // Detik. Idle timeout sesi (W18-B: default 1800 = 30 menit, spec 15-30 mnt).
+  // Bisa diubah admin (rentang valid 60 - cookie max).
+  session_timeout: '1800',
   // FASE P4 (akad wakalah bil ujrah, keputusan pengurus 2026-09-24): komisi toko
   // utk konsinyasi (% dr harga jual); bagian pemilik = 100 - rate. Upah
   // baru tercatat saat barang terjual, tidak di muka. Default 20.

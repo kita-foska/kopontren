@@ -440,7 +440,7 @@ export function PenggunaClient() {
         <div className="card p-4">
           <h2 className="mb-1 font-bold">Keamanan sesi</h2>
           <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-            Auto-logout bila tidak ada aktivitas selama N detik (default 3600 = 1 jam).
+            Auto-logout bila tidak ada aktivitas selama N detik (default 1800 = 30 menit).
             Berlaku utk sesi berikutnya.
           </p>
           <div className="flex items-center gap-2">

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui';
 import { KpiGrid, type KpiCardDef } from '@/components/kpi-card';
 import { HealthMeter } from '@/components/health-meter';
 import { buildHealthCards } from '@/lib/health';
+import { LOW_STOCK_WHERE } from '@/lib/low-stock';
 import { collectHealthInput } from '@/lib/health-collector';
 import {
   TrendingUp,
@@ -61,9 +62,11 @@ export default async function PengurusDashboardPage() {
   const memberCount = ((await d.prepare(`SELECT COUNT(*) c FROM members`).get()) as {
     c: number;
   }).c;
+  // W18-B: COUNT stok menipis pakai LOW_STOCK_WHERE (single source of
+  // truth lib/low-stock): min_stock per produk bila >0, selain itu global 10.
   const lowStock = (
     (await d
-      .prepare(`SELECT COUNT(*) c FROM products WHERE active = 1 AND stock < 10`)
+      .prepare(`SELECT COUNT(*) c FROM products WHERE ${LOW_STOCK_WHERE}`)
       .get()) as { c: number }
   ).c;
   const storeCount = ((await d.prepare(`SELECT COUNT(*) c FROM stores`).get()) as {

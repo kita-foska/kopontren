@@ -334,8 +334,16 @@ export async function notify(input: NotifyInput): Promise<NotifyResult> {
 }
 // ── Pemicu berbasis peristiwa (dipanggil dari route bisnis) ──
 
-/** Stok berubah (manual / pasca penjualan): < 5 menipis, = 0 habis. */
-export async function notifyStockChange(productId: number, stock: number, name: string, unit: string) {
+/** Stok berubah (manual / pasca penjualan):
+ *  W18-B: < min_stock menipis (min_stock>0), selain itu < 5 menipis; = 0 habis.
+ *  `minStock` = ambang per produk (0/undefined = ambang global 5). */
+export async function notifyStockChange(
+  productId: number,
+  stock: number,
+  name: string,
+  unit: string,
+  minStock?: number,
+) {
   if (stock <= 0) {
     await notify({
       type: 'stock_out',
@@ -344,11 +352,15 @@ export async function notifyStockChange(productId: number, stock: number, name: 
       link: '/admin/produk',
       dedupeMinutes: 60,
     });
-  } else if (stock < 5) {
+    return;
+  }
+  // W18-B: ambang efektif = min_stock bila di-set (>0), selain itu global 5.
+  const ambang = Number(minStock) > 0 ? Math.floor(Number(minStock)) : 5;
+  if (stock < ambang) {
     await notify({
       type: 'stock_low',
       title: 'Stok Menipis',
-      message: `${name} tersisa ${stock} ${unit}.`,
+      message: `${name} tersisa ${stock} ${unit}${Number(minStock) > 0 ? ` (min ${Math.floor(Number(minStock))})` : ''}.`,
       link: '/admin/produk',
       dedupeMinutes: 60,
     });
@@ -361,18 +373,19 @@ export async function notifyStockAfterSale(productIds: number[]) {
   const d = await db();
   const unique = [...new Set(productIds.map(Number))].filter(Boolean);
   const rows = (await d
-    .prepare(`SELECT id, name, stock, unit FROM products WHERE id IN (${ph(unique.length)})`)
-    .all(...unique)) as { id: number; name: string; stock: number; unit: string }[];
+    .prepare(`SELECT id, name, stock, unit, min_stock FROM products WHERE id IN (${ph(unique.length)})`)
+    .all(...unique)) as { id: number; name: string; stock: number; unit: string; min_stock?: number }[];
   // Batasi deretan notifikasi per transaksi (audit [r]): hanya produk di
-  // bawah ambang (< 5) yang diperiksa, urutkan stok terendah dulu (habis
+  // bawah ambang (W18-B: min_stock bila >0, selain itu < 5) yang diperiksa,
+  // urutkan stok terendah dulu (habis
   // diprioritaskan), dan cap 5 produk paling kritis agar transaksi ramai
   // tidak memicu puluhan round-trip beruntun. Produk di luar cap tetap
   // kebagian saat transaksi berikutnya (dedupe 60 mnt di notify()).
   const critical = rows
-    .filter((p) => Number(p.stock || 0) < 5)
+    .filter((p) => Number(p.stock || 0) < (Number(p.min_stock) > 0 ? Math.floor(Number(p.min_stock)) : 5))
     .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0))
     .slice(0, 5);
-  for (const p of critical) await notifyStockChange(p.id, p.stock, p.name, p.unit);
+  for (const p of critical) await notifyStockChange(p.id, p.stock, p.name, p.unit, p.min_stock);
 }
 
 /** Transaksi besar (> Rp 1.000.000). */

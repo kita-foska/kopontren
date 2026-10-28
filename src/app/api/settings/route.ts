@@ -22,7 +22,7 @@ export async function GET() {
     store_phone: s.store_phone,
     currency: s.currency,
     receipt_footer: s.receipt_footer,
-    session_timeout: Number.isFinite(st) && st > 0 ? Math.round(st) : 3600,
+    session_timeout: Number.isFinite(st) && st > 0 ? Math.round(st) : 1800,
     // FASE P4: komisi konsinyasi utk titipan BARU (akad ju'alah).
     konsinyasi_commission: clampRate(s.konsinyasi_commission),
     // QRIS (2026-09-25): konfigurasi encoder (src/lib/qris.ts) utk

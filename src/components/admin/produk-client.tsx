@@ -7,6 +7,7 @@ import { InfoTooltip } from '@/components/info-tooltip';
 import { rp } from '@/lib/format';
 import { r3 } from '@/lib/multisatuan';
 import { parseWholesaleJson } from '@/lib/wholesale';
+import { isLowStock } from '@/lib/low-stock';
 import { readSavedView, writeSavedView, SAVEDVIEW_KEYS } from '@/lib/saved-view';
 import { recordLastFetch } from '@/lib/offline-status';
 import { Download, Package } from 'lucide-react';
@@ -30,6 +31,8 @@ type Product = {
   image_url?: string;
   /** v30 multi-satuan: JSON string [{unit, qty_per_base, price}]. '' = satuan tunggal. */
   pack_units?: string;
+  /** W18-B: stok minimum (ambang low-stock per produk; 0 = pakai ambang global 10). */
+  min_stock?: number;
 };
 type Resp = { products: Product[]; categories?: string[] };
 /** Baris tier grosir yang sedang disusun di form (belum disimpan). */
@@ -72,6 +75,8 @@ const emptyForm = {
   barcode: '',
   is_consignment: 0,
   image_url: '',
+  // W18-B: 0 = pakai ambang global (stok < 10); >0 = ambang per produk.
+  min_stock: 0,
 };
 
 export function ProdukClient() {
@@ -184,7 +189,14 @@ export function ProdukClient() {
 
   function openEdit(p?: Product) {
     if (p) {
-      setForm({ ...p, barcode: p.barcode ?? '', is_consignment: p.is_consignment === 1 ? 1 : 0, image_url: p.image_url ?? '' });
+      setForm({
+        ...p,
+        barcode: p.barcode ?? '',
+        is_consignment: p.is_consignment === 1 ? 1 : 0,
+        image_url: p.image_url ?? '',
+        // W18-B: produk lama (cache klien lama) boleh tak punya min_stock.
+        min_stock: p.min_stock ?? 0,
+      });
       // Muat tier grosir dari kolom `wholesale` produk (diisi subquery
       // /api/products) -- bila field tidak ada (klien/cache lama), fetch
       // langsung dari endpoint prices supaya form tetap utuh.
@@ -750,9 +762,12 @@ export function ProdukClient() {
                       >
                         {stockBusy ? '...' : 'Simpan'}
                       </Button>
+                      {/* W18-B: badge "menipis" pakai ambang efektif per produk
+                          (min_stock bila >0, selain itu ambang global 10 --
+                          identik definisi counter LOW_STOCK_WHERE). */}
                       {p.stock <= 0 ? (
                         <StatusBadge status="habis" />
-                      ) : p.stock < 5 ? (
+                      ) : isLowStock(p.stock, p.min_stock) ? (
                         <StatusBadge status="tipis" />
                       ) : (
                         <StatusBadge status="aman" />
@@ -882,9 +897,12 @@ export function ProdukClient() {
                     {stockBusy ? '...' : 'Simpan'}
                   </Button>
                 </div>
+                {/* W18-B: badge "menipis" pakai ambang efektif per produk
+                    (min_stock bila >0, selain itu global 10) -- konsisten
+                    dgn tabel desktop + counter dashboard. */}
                 {p.stock <= 0 ? (
                   <StatusBadge status="habis" />
-                ) : p.stock < 5 ? (
+                ) : isLowStock(p.stock, p.min_stock) ? (
                   <StatusBadge status="tipis" />
                 ) : (
                   <StatusBadge status="aman" />
@@ -977,6 +995,23 @@ export function ProdukClient() {
               })}
             </div>
           )}
+          {/* W18-B: Stok Minimum -- ambang low-stock per produk.
+              0 = pakai ambang global (stok < 10); >0 = badge & counter
+              memakai nilai tsb (mis. min 20: stok < 20 = menipis). */}
+          <div className="col-span-2">
+            {F('min_stock', {
+              numeric: true,
+              label: (
+                <TermTip
+                  term="Stok Minimum"
+                  tip="Batas bawah stok sebelum produk dianggap menipis. 0 = pakai ambang global (stok < 10). Contoh: isi 20 berarti produk tampil 'menipis' saat stok < 20 dan masuk daftar peringatan dashboard."
+                >
+                  Stok minimum (0 = ambang global)
+                </TermTip>
+              ),
+              ph: '0 = ambang global (stok < 10)',
+            })}
+          </div>
           {/* W5.2 NEG-1: barang titipan (konsinyasi) -- stok boleh negatif,
               penjualan tak diblokir saat stok habis (flag server-side). */}
           <div className="col-span-2">

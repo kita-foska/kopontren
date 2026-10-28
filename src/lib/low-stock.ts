@@ -1,27 +1,55 @@
 /**
- * COUNTER (POST-W5, 2026-10-13): modul pure utk low-stock counter
- * (badge header + API /api/low-stock-count). Hermetis: TIDAK ada
- * dependensi server (@/db, next/headers), saged diimpor route API
- * (via '@/lib/low-stock') dan diuji Node type-stripping langsung
- * (scripts/test-low-stock-count.ts, pola test-roles.ts).
+ * COUNTER (POST-W5, 2026-10-13) + W18-B (2026-10-28): modul pure utk
+ * low-stock counter (badge header + API /api/low-stock-count) + ambang
+ * "stok minimum" per produk. Hermetis: TIDAK ada dependensi server
+ * (@/db, next/headers), saged diimpor route API (via '@/lib/low-stock')
+ * dan diuji Node type-stripping langsung (scripts/test-low-stock-count.ts).
  *
- * Definisi "stok menipis" identik widget dashboard
- * (admin/dashboard/page.tsx + admin/low-stock-client.tsx, OQ-22):
- * produk active = 1 dengan stock < 10. TIDAK memakai alert_threshold
- * per-Produk (batas notifikasi, bukan batas low-stock).
+ * Definisi "stok menipis" (W18-B): produk active = 1 dengan
+ * stock < COALESCE(NULLIF(min_stock,0), 10) --
+ * ambang per-PRODUK (kolom min_stock, W18-B) nglampahaken menawi
+ * min_stock > 0; menawi 0 (default), ambang global 10 tetep.
+ * Backward-compat: produk lama min_stock=0 -> perilaku sama persis
+ * dengan sebelum W18-B.
+ *
+ * Single source of truth SQL: LOW_STOCK_WHERE diginaken counter,
+ * dashboard admin (list + forecast), lan dashboard pengurus --
+ * saged hipun definisi sadosika.
  */
 import { canAccess } from './features.ts';
 import type { AppUser } from './auth.ts';
 
-/** Batas low-stock (D1): stock < 10. 10 sendiri = TIDAK menipis. */
+/** Ambang global low-stock (D1): stock < 10 (dipungap menawi min_stock = 0). */
 export const LOW_STOCK_THRESHOLD = 10;
+
+/**
+ * Fragmen WHERE bersama (W18-B, single source of truth):
+ * "menipis" = active SAGES stock ing ngandhap ambang efektif
+ * (min_stock per produk, utawi global 10 menawi boten dipun setel).
+ */
+export const LOW_STOCK_WHERE =
+  'active = 1 AND stock < COALESCE(NULLIF(min_stock,0), ' + LOW_STOCK_THRESHOLD + ')';
 
 /**
  * Query hitung jumlah (bukan payload katalog -- header harus ringan).
  * Alias `n` agar baris hasil { n } mudah dinormalisasi lowStockCount().
  */
-export const LOW_STOCK_COUNT_SQL =
-  'SELECT COUNT(*) AS n FROM products WHERE active = 1 AND stock < ' + LOW_STOCK_THRESHOLD;
+export const LOW_STOCK_COUNT_SQL = 'SELECT COUNT(*) AS n FROM products WHERE ' + LOW_STOCK_WHERE;
+
+/**
+ * W18-B: ambang efektif utk 1 produk (pure, testable): min_stock > 0
+ * ngginakaken nilai tsb (dibulakkekan ing pangisor); sanstunipun
+ * ambang global 10. Minus/NaN/null -> ambang global.
+ */
+export function effectiveMinStock(minStock?: number | null): number {
+  const m = Math.floor(Number(minStock) || 0);
+  return m > 0 ? m : LOW_STOCK_THRESHOLD;
+}
+
+/** W18-B: stok produk saged menipis? (dibandingakaken ambang efektif). */
+export function isLowStock(stock: unknown, minStock?: number | null): boolean {
+  return Number(stock) < effectiveMinStock(minStock);
+}
 
 /** Hasil cek gerbang tier utk role user. */
 export type LowStockGate = 'anon' | 'denied' | 'ok';

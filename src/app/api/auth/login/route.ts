@@ -13,6 +13,7 @@ import {
 } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { clientIp } from '@/lib/client-ip';
+import { createLoginThrottle } from '@/lib/login-throttle';
 
 // Fungsi ini bisa memicu migrasi skema Turso (v31) pada cold start:
 // fullInit + rebuild 3 tabel + retry SQLITE_BUSY bisa >60 detik
@@ -22,46 +23,27 @@ import { clientIp } from '@/lib/client-ip';
 // (headroom utk migration + retry; klien login menunggu <=90s).
 export const maxDuration = 90;
 
-// ── Anti brute-force (per-instansi) ─────────────────────────────────────────
-// Pembatasan percobaan login per username+IP: 10 kegagalan dalam 15 menit
-// -> kunci 15 menit. In-memory (tidak shared antar instance Vercel) —
-// pertahanan bertingkat; PIN tetap jadi lapis kedua setelah login.
-const LOGIN_MAX_FAILS = 10;
-const LOGIN_WINDOW_MS = 15 * 60 * 1000;
-const LOGIN_LOCK_MS = 15 * 60 * 1000;
-type LoginAttempt = { fails: number[]; lockedUntil: number };
-const loginThrottle = new Map<string, LoginAttempt>();
+// -- Anti brute-force (W18-B: modul hermetis src/lib/login-throttle.ts) --
+// Lapis L1 (existing): 10 gagal / 15 mnt / username+IP -> kunci 15 mnt.
+// Lapis L2 (W18-B): 5 gagal / 15 mnt / IP (lepas username) -> kunci IP
+// 15 mnt -- menutup brute-force yang gonta-ganti username dari IP sama.
+// In-memory per-instansi (pertahanan bertingkat; PIN tetap lapis kedua).
+// Diuji hermetis: scripts/test-login-throttle.ts.
+const throttle = createLoginThrottle();
 
-function throttleKey(username: string, req: Request): string {
-  // clientIp() = kanan-paling x-forwarded-for (hop yang ditambahkan
-  // edge Vercel, tak bisa di-forge). Dulu ambil kiri-paling — penyerang
-  // bisa memutar kunci via header palsu dan lockout tak pernah terpicu.
+/** Cek kedua lapis (L2 per-IP duluan, lalu L1): detik sisa kunci;
+ *  null = masih boleh mencoba. */
+function loginLockedSec(username: string, req: Request): number | null {
   const ip = clientIp(req);
-  return username.toLowerCase() + '|' + ip;
-}
-
-/** Kembalikan sisa detik kunci, atau null bila masih boleh mencoba. */
-function loginLocked(key: string): number | null {
-  const rec = loginThrottle.get(key);
-  if (rec && rec.lockedUntil > Date.now()) return Math.ceil((rec.lockedUntil - Date.now()) / 1000);
+  const ipRemain = throttle.ipLockRemainingMs(ip);
+  if (ipRemain > 0) return Math.ceil(ipRemain / 1000);
+  const userRemain = throttle.userLockRemainingMs(username, ip);
+  if (userRemain > 0) return Math.ceil(userRemain / 1000);
   return null;
 }
 
-function recordLoginFail(key: string): void {
-  const now = Date.now();
-  const rec = loginThrottle.get(key) ?? { fails: [], lockedUntil: 0 };
-  rec.fails = rec.fails.filter((t) => now - t < LOGIN_WINDOW_MS);
-  rec.fails.push(now);
-  if (rec.fails.length >= LOGIN_MAX_FAILS) {
-    rec.lockedUntil = now + LOGIN_LOCK_MS;
-    rec.fails = [];
-  }
-  loginThrottle.set(key, rec);
-  // Batasi ukuran Map agar tidak tak berujung (key = username+IP unik).
-  if (loginThrottle.size > 500) {
-    const oldest = loginThrottle.keys().next().value;
-    if (oldest !== undefined) loginThrottle.delete(oldest);
-  }
+function recordLoginFail(username: string, req: Request): void {
+  throttle.recordFailure(username, clientIp(req));
 }
 
 export async function POST(req: Request) {
@@ -71,11 +53,10 @@ export async function POST(req: Request) {
   if (!username || !password) {
     return NextResponse.json({ error: 'Username & password wajib diisi' }, { status: 400 });
   }
-  const key = throttleKey(username, req);
-  const lockSec = loginLocked(key);
+  const lockSec = loginLockedSec(username, req);
   if (lockSec) {
     return NextResponse.json(
-      { error: 'Terlalu banyak percobaan. Coba lagi dalam ' + Math.ceil(lockSec / 60) + ' menit.' },
+      { error: 'Terlalu banyak percobaan. Coba lagi dalam ' + Math.max(1, Math.ceil(lockSec / 60)) + ' menit.' },
       { status: 429 }
     );
   }
@@ -105,7 +86,7 @@ export async function POST(req: Request) {
       }
     | undefined;
   if (!user || user.active !== 1) {
-    recordLoginFail(key); // hitung juga username tak dikenal (anti enumerasi)
+    recordLoginFail(username, req); // hitung juga username tak dikenal (anti enumerasi)
     return NextResponse.json(
       { error: 'Username tidak dikenal atau akun nonaktif' },
       { status: 401 }
@@ -116,10 +97,10 @@ export async function POST(req: Request) {
   const ok =
     candidate.length === stored.length && crypto.timingSafeEqual(candidate, stored);
   if (!ok) {
-    recordLoginFail(key);
+    recordLoginFail(username, req);
     return NextResponse.json({ error: 'Password salah' }, { status: 401 });
   }
-  loginThrottle.delete(key); // sukses -> bersihkan pencacat
+  throttle.recordSuccess(username, clientIp(req)); // sukses -> bersihkan pencacat L1+L2
 
   const token = await createSession(user.id);
   // Audit trail: SIAPA login (per-user + IP + user-agent). Best-effort.

@@ -126,10 +126,14 @@ export async function POST(req: Request) {
     }
     packUnits = validated.length > 0 ? JSON.stringify(validated) : '';
   }
+  // W18-B: "stok minimum" per produk (ambang low-stock). 0 = pakai
+  // ambang global (LOW_STOCK_THRESHOLD = 10 di lib/low-stock).
+  // Dipakai: badge stok menipis + notifikasi + counter dashboard.
+  const minStock = Math.max(0, Math.floor(Number(b.min_stock) || 0));
   const info = await d
     .prepare(
-      `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode, is_consignment, image_url, pack_units)
-       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`
+      `INSERT INTO products (name, category, unit, base_price, cost_price, stock, active, barcode, is_consignment, image_url, pack_units, min_stock)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)`
     )
     .run(
       name,
@@ -141,7 +145,8 @@ export async function POST(req: Request) {
       barcode,
       isConsignment,
       imageUrl,
-      packUnits
+      packUnits,
+      minStock
     );
   const id = Number(info.lastInsertRowid);
   // W8 Item 2 (R1b): produk baru TANPA barcode dapat Barcode ID otomatis
@@ -160,6 +165,7 @@ export async function POST(req: Request) {
     stock: stockValue,
     barcode: finalBarcode || undefined,
     is_consignment: isConsignment === 1 ? 1 : undefined,
+    min_stock: minStock > 0 ? minStock : undefined,
   }, req);
   invalidate('products:');
   return NextResponse.json({ ok: true, id, barcode: finalBarcode || undefined });

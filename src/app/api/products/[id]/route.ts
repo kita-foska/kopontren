@@ -30,6 +30,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         category: string;
         is_consignment: number;
         image_url?: string;
+        /** W18-B: ambang low-stock per produk (0 = ambang global). */
+        min_stock?: number;
       }
     | undefined;
   if (!prod) return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 });
@@ -61,8 +63,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       req,
     });
     // Notifikasi stok menipis/habis (best-effort, HANYA admin).
+    // W18-B: sertakan min_stock (0 = ambang global) utk hitung ambang.
     try {
-      await notifyStockChange(prod.id, v, prod.name, prod.unit);
+      await notifyStockChange(prod.id, v, prod.name, prod.unit, prod.min_stock ?? 0);
     } catch (e) {
       console.warn('[notify] pemicu stok gagal:', e);
     }
@@ -115,6 +118,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   // mengirim field, nilai lama dipertahankan (tanpa clobber).
   const newConsignment = b.is_consignment !== undefined ? (b.is_consignment ? 1 : 0) : prod.is_consignment;
   const newImageUrl = b.image_url !== undefined ? String(b.image_url).trim().slice(0, 500) : (prod.image_url ?? '');
+  // W18-B: min_stock (ambang low-stock per produk; 0 = ambang global).
+  // undefined = pertahankan nilai lama (tanpa clobber utk klien lama).
+  const newMinStock =
+    b.min_stock !== undefined
+      ? Math.max(0, Math.floor(Number(b.min_stock) || 0))
+      : (prod.min_stock ?? 0);
   // v30 multi-satuan: pack_units update. Validasi: array [{unit, qty_per_base, price}].
   // V2 (R6): qty_per_base fraksional 0.01-10000 (3 desimal) via
   // validateQpb -- entri tak valid THROW -> 400; price rupiah bulat (R4).
@@ -150,9 +159,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
   await d
     .prepare(
-      `UPDATE products SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, barcode = ?, is_consignment = ?, image_url = ?, pack_units = ? WHERE id = ?`
+      `UPDATE products SET name = ?, category = ?, unit = ?, base_price = ?, cost_price = ?, barcode = ?, is_consignment = ?, image_url = ?, pack_units = ?, min_stock = ? WHERE id = ?`
     )
-    .run(newName, newCategory, newUnit, newBasePrice, newCostPrice, newBarcode, newConsignment, newImageUrl, newPackUnits, prod.id);
+    .run(newName, newCategory, newUnit, newBasePrice, newCostPrice, newBarcode, newConsignment, newImageUrl, newPackUnits, newMinStock, prod.id);
   invalidate('products:');
   // Audit trail diff per-field: hanya field yang benar-benar berubah
   // yang tercatat (mis. "harga 10000 -> 12000").
@@ -173,6 +182,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     changes.image_url = { before: prod.image_url ?? '', after: newImageUrl };
   if (newPackUnits !== (((prod as Record<string, unknown>).pack_units as string) ?? ''))
     changes.pack_units = { before: (prod as Record<string, unknown>).pack_units ?? '', after: newPackUnits };
+  // W18-B: audit min_stock (0 = ambang global, >0 = ambang per produk).
+  if (newMinStock !== (prod.min_stock ?? 0))
+    changes.min_stock = { before: prod.min_stock ?? 0, after: newMinStock };
   await logAudit({
     userId: user.id,
     userName: user.display_name,

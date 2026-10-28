@@ -218,12 +218,13 @@ export async function currentUser(): Promise<AppUser | null> {
 // Idle-timeout sesi + re-auth PIN
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Nilai `session_timeout` (detik) dari settings, dengan cache 60 dtk. */
+/** Nilai `session_timeout` (detik) dari settings, dengan cache 60 dtk.
+ *  W18-B: fallback default 1800 (30 menit) bila settings kosong/error. */
 let _stCache: { at: number; v: number } | null = null;
 const ST_CACHE_TTL_MS = 60_000;
 export async function getSessionTimeoutSec(): Promise<number> {
   if (_stCache && Date.now() - _stCache.at < ST_CACHE_TTL_MS) return _stCache.v;
-  let v = 3600;
+  let v = 1800;
   try {
     const s = await getSettings();
     const n = Number(s.session_timeout);
