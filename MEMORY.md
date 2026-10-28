@@ -7185,3 +7185,71 @@ ACC GO CODE + GO COMMIT)
 - Lanjut W17: W17-C (SW revamp, butuh ACC thaw public/sw.src.js);
   W17-D (UI/UX design 3.4 + /settings umum + master toggle push,
   butuh ACC schema change) -- menunggu keputusan Gus Fi.
+
+## W18-B -- security + business logic: rate limit per-IP, min_stock,
+session 30 menit (29-10-2026, ACC GO CODE + GO COMMIT)
+- Cakupan GO (3 bundle, TIDAK ada schema change -- kolom
+  `min_stock` sudah ada sejak v31):
+  (1) **Rate limit login per-IP** -- modul hermetis baru
+      src/lib/login-throttle.ts (pure function, clock dapat
+      disuntik) menggantikan blok throttle lokal 41 baris di
+      src/app/api/auth/login/route.ts. Dua lapis:
+      - L1 (perilaku lama, IDENTIK): 10 gagal / 15 mnt per
+        user+IP -> kunci pasangan tsb 15 mnt; kunci TAK
+        diperpanjang oleh pencacat berikutnya.
+      - L2 (BARU): 5 gagal / 15 mnt per IP saja (lepas username)
+        -> kunci seluruh IP. Menangkap serangan rotasi IP yang
+        lolos L1 (banyak username, 1 IP).
+      - Suks login = "forgive": pencacat L1 + L2 dibersihkan.
+      - Cap Map 500: pencatatan baru membuang 1 key tertua
+        (tak tumbuh tanpa batas) -- tak tumbang walau 600+ IP
+        penyerang.
+      Halaman login: pesan kunci "Coba lagi dalam N menit"
+      (N = ceil(sisa/60), min 1 -- lama bisa 0) + HTTP 429
+      (tetap).
+  (2) **Aktivasi min_stock per Produk** -- kolom ada sejak v31
+      tapi belum pernah dibaca. lib/low-stock.ts kini single
+      source of truth:
+      - `LOW_STOCK_WHERE = 'active = 1 AND stock <
+        COALESCE(NULLIF(min_stock,0), 10)'` (konstanta SQL
+        bersama), `LOW_STOCK_COUNT_SQL` dibangun dari sana +
+        helper `effectiveMinStock()` / `isLowStock()`.
+      - Backward-compat: min_stock=0 (nilai default kolom) ->
+        ambang global LOW_STOCK_THRESHOLD (10) -- data lama
+        berperilaku sama persis dengan sebelum W18-B.
+      - API: POST /api/products terima min_stock (clamp >= 0)
+        + audit trail; PUT /api/products/[id] terima min_stock
+        (undefined = pertahankan nilai lama, no clobber untuk
+        klien lama) + audit diff field.
+      - UI produk-client: form baru "Stok minimum" (0 = ambang
+        global) + badge "tipis" per-Produk kini memakai
+        isLowStock(stock, min_stock) -- sebelum < 5 hard-code
+        (inkonsisten dgn counter dashboard < 10); kini badge,
+        counter, dan notifikasi satu ambang.
+      - Dashboard admin + pengurus: SQL hard-coded diganti
+        konstanta LOW_STOCK_WHERE / LOW_STOCK_COUNT_SQL.
+      - notify.ts: pemicu stock_low mengikuti ambang efektif
+        per Produk (min_stock>0 dipakai; selain itu ambang
+        dasar); pesan "tersisa N unit (min X)".
+  (3) **session_timeout default 1800 dtk (30 mnt)** dari 3600
+      -- 3 titik: db.ts (seed settings instalasi baru + default
+      map; ON CONFLICT DO NOTHING -> instalasi existing TAK
+      disentuh), auth.ts getSessionTimeoutSec() fallback,
+      GET /api/settings fallback. Nilai tersimpan DB tetap
+      menang (user dapat set di Pengaturan Pengguna).
+- Test: +scripts/test-login-throttle.ts (ANWAR; hermetis, fake
+  clock, 19 kasus: konstanta kontrak L1/L2, kunci IP pd gagal
+  ke-5, IP tetangga tetap bebas, kunci L1 pd ke-10, perpanjangan
+  tidak ada, expiry persis 15 mnt, rotasi jendela 15 mnt,
+  forgive-on-success, cap Map 500). test-low-stock-count 24 ->
+  31 (DDL min_stock + boundary per Produk + helper).
+- Gate: tsc --noEmit 0; test:all chain 51 script 0 FAIL;
+  next build EXIT 0 (clean .next); 0 non-ASCII di baris/file
+  anyar; skema tetap v34; 0 new dependency; frozen 4 file
+  (public/sw.src.js, src/lib/pos-client.tsx, src/app/api/reports/
+  route.ts, src/app/api/rekap/route.ts) UNTOUCHED.
+- Catatan (di luar cakupan W18-B, kandidat W19): halaman
+  landing src/app/page.tsx masih `stock < 5` hard-coded utk
+  kartu landing; badge POS src/lib/pos-client.tsx (FROZEN)
+  masih < 5 -- konsistensi penuh menunggu ACC thaw + GO W19.
+- Lanjut W19: menunggu GO CODE (keputusan Gus Fi).

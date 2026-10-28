@@ -3052,3 +3052,38 @@ Dashboard Health Meter.**
   thaw public/sw.src.js); UI/UX design (3.4) + /settings umum +
   master toggle push (W17-D, butuh ACC schema change) (keputusan
   Gus Fi).**
+
+- [x] **W18-A (UI/UX High Polish) -- SELESAI (commit 5663a3e, 27 Okt):**
+  design tokens (space/radius/shadow/surface-elev/line/tip-ink, dark
+  overrides + reduced-motion) + komponen EmptyState/InfoTooltip/
+  TableScroll; integrasi laporan-formal, struk-lampau, produk,
+  koperasi. Gate: tsc / test:all / route-exports / theme-gate /
+  next build / ascii -- OK. Detail teknis: pesan commit 5663a3e.
+- [x] **W18-B (security + business logic) -- SELESAI (GO CODE 29
+  Okt, GO COMMIT 29 Okt):** (1) Rate limit login per-IP, modul
+  hermetis src/lib/login-throttle.ts: L1 user+IP 10 gagal/15 mnt
+  (perilaku lama, identik) + L2 IP-only 5 gagal/15 mnt (baru;
+  tangkap rotasi IP yang lolos L1); forgive-on-success; cap Map
+  500. (2) min_stock diaktifkan (kolom sejak v31, belum pernah
+  dibaca): LOW_STOCK_WHERE = active=1 AND stock <
+  COALESCE(NULLIF(min_stock,0),10) jadi single source of truth;
+  POST/PUT /api/products terima + audit min_stock; form "Stok
+  minimum" + badge per-Produk di produk-client (badge kini sama
+  dengan counter dashboard); dashboard admin/pengurus pakai SQL
+  bersama; ambang notifikasi notify.ts ikut efektif.
+  Backward-compat: min_stock=0 -> ambang global 10 (data lama
+  tak berubah). (3) session_timeout default 3600 -> 1800 dtk
+  (30 mnt): seed+map db.ts, fallback auth.ts + GET settings;
+  instalasi lama tetap pakai nilai tersimpan. Gate: tsc 0;
+  test:all chain 51 script 0 FAIL (+test-login-throttle baru
+  19 kasus hermetis; test-low-stock-count 24 -> 31); next build
+  EXIT 0; 0 non-ASCII; skema tetap v34; 0 new dep; frozen 4 file
+  (public/sw.src.js, src/lib/pos-client.tsx, src/app/api/reports/
+  route.ts, src/app/api/rekap/route.ts) UNTOUCHED. Detail:
+  MEMORY.md seksi "W18-B". TUTORIAL-W18-2.html (layar-awam,
+  0 emoji/non-ASCII, SVG inline).
+- [ ] **W19 (menunggu GO CODE): kandidat = konsistensi stock<5
+  landing (src/app/page.tsx) + badge POS (frozen pos-client.tsx,
+  butuh ACC thaw) dengan ambang LOW_STOCK_WHERE; lanjut W17:
+  W17-C SW revamp (ACC thaw public/sw.src.js) + W17-D (ACC schema
+  change) (keputusan Gus Fi).**
