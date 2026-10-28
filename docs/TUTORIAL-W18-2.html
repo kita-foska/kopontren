@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial W18-B: Stok Minimum per Produk, Login Lebih Aman, Sesi 30 Menit</title>
+<style>
+  :root { --maroon: #7A1835; --ink: #241b1e; --paper: #fbf9f7; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; color: var(--ink); background: var(--paper); margin: 0; line-height: 1.6; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { color: var(--maroon); font-size: 1.6rem; margin-top: 0; }
+  h2 { color: var(--maroon); border-bottom: 2px solid #eee; padding-bottom: 6px; font-size: 1.2rem; }
+  .hint { background: #fff7e6; border-left: 4px solid #f59e0b; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  .note { background: #eef4ff; border-left: 4px solid #2563eb; padding: 10px 14px; font-size: .92rem; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th, td { border: 1px solid #ddd; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #f5ecec; color: var(--maroon); }
+  code { background: #f1e9e9; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+  figure { text-align: center; margin: 18px 0; }
+  figure figcaption { font-size: .9rem; color: #555; margin-top: 8px; }
+  ol.steps { font-size: .95rem; }
+  ol.steps li { margin: 8px 0; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tutorial W18-B: Tiga Hal yang Berubah di Aplikasi</h1>
+<p><b>Untuk siapa:</b> admin, pengurus, dan kasir. Minggu ini ada
+   tiga perubahan: (1) setiap produk kini bisa punya
+   <b>stok minimum sendiri</b> (mis. barang mahal diperingatkan
+   lebih awal), (2) <b>masuk aplikasi lebih aman</b> -- percobaan
+   login gagal berkali-kali dari alamat yang sama akan
+   dikunci sementara, dan (3) <b>keluar otomatis</b> kini 30
+   menit, bukan 1 jam. Tidak ada menu baru yang harus dicari:
+   semuanya ada di halaman yang sudah biasa Anda buka.</p>
+
+<h2>1. Stok minimum per produk</h2>
+<p style="font-size:.93rem">Sebelumnya, peringatan "stok menipis"
+   berlaku sama untuk semua produk: stok di bawah 10. Kini tiap
+   produk bisa punya ambangnya sendiri lewat kolom
+   <b>"Stok minimum"</b> di form produk. Isi <b>0</b> berarti
+   "pakai aturan standar (10)". Contoh: parfum berharga jual
+   mahal -- isi 20 -- maka begitu stok tinggal 19, produk itu
+   sudah ditandai menipis. Angka ini berakibat tiga tempat
+   sekaligus: badge <i>tipis</i> di tabel produk, penghitung
+   "stok menipis" di dashboard, dan pesan notifikasi
+   ke HP. Sekali diset, satu berlaku di semua tempat --
+   tidak mungkin lagi dashboard bilang 0 padahal tabel
+   bilang masih menipis.</p>
+<div class="note"><b>Bagi instalasi lama:</b> tidak ada yang
+   perlu Anda ubah. Produk yang belum pernah diset nilainya
+   tetap memakai aturan standar (10), sama seperti
+   sebelumnya.</div>
+
+<h2>2. Cara mengatur stok minimum per produk</h2>
+<ol class="steps">
+  <li>Buka <b>Admin &gt; Produk</b>, lalu klik ikon pensil
+      (edit) pada produk yang ingin Anda sesuaikan -- atau
+      tekan <b>+ Tambah</b> untuk produk baru.</li>
+  <li>Di dekat bidang Stok, ada bidang baru
+      <b>"Stok minimum"</b>. Isi angkanya:
+      <b>0</b> = pakai aturan standar, atau angka sesuai
+      kebutuhan (mis. 20).</li>
+  <li>Tekan <b>Simpan</b>. Perubahan tercatat di riwayat
+      perubahan (audit trail) -- siapa yang mengubah dan
+      dari berapa ke berapa.</li>
+</ol>
+<figure>
+<svg viewBox="0 0 520 120" width="520" role="img"
+     aria-label="Diagram: isi kolom Stok minimum; nol berarti standar sepuluh; angka lain berarti ambang sendiri">
+  <rect x="10"  y="38" width="110" height="44" rx="8" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="65"  y="56" font-size="11" fill="#241b1e" text-anchor="middle">Isi "Stok</text>
+  <text x="65"  y="70" font-size="11" fill="#241b1e" text-anchor="middle">minimum"</text>
+  <line x1="120" y1="60" x2="140" y2="60" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="140,60 132,56 132,64" fill="#7A1835"/>
+  <rect x="144" y="38" width="110" height="44" rx="8" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="199" y="56" font-size="11" fill="#241b1e" text-anchor="middle">0 = standar</text>
+  <text x="199" y="70" font-size="11" fill="#241b1e" text-anchor="middle">(sepuluh)</text>
+  <line x1="254" y1="60" x2="274" y2="60" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="274,60 266,56 266,64" fill="#7A1835"/>
+  <rect x="278" y="38" width="110" height="44" rx="8" fill="#f5ecec" stroke="#7A1835"/>
+  <text x="333" y="56" font-size="11" fill="#241b1e" text-anchor="middle">mis. 20 =</text>
+  <text x="333" y="70" font-size="11" fill="#241b1e" text-anchor="middle">ambang sendiri</text>
+  <line x1="388" y1="60" x2="408" y2="60" stroke="#7A1835" stroke-width="2"/>
+  <polygon points="408,60 400,56 400,64" fill="#7A1835"/>
+  <rect x="412" y="38" width="98" height="44" rx="8" fill="#3f6b3f" stroke="#3f6b3f"/>
+  <text x="461" y="56" font-size="11" fill="#ffffff" text-anchor="middle">Menipis bila</text>
+  <text x="461" y="70" font-size="11" fill="#ffffff" text-anchor="middle">stok &lt; angka itu</text>
+</svg>
+<figcaption>Aturan sederhana: produk dianggap menipis bila
+stoknya kurang dari "stok minimum" -- kecuali nilainya 0,
+maka berlaku standar 10.</figcaption>
+</figure>
+
+<h2>3. Login lebih aman (kunci sementara)</h2>
+<p style="font-size:.93rem">Supaya akun tidak dibongkar percobaan
+   kata sandi terus-menerus, sistem menghitung kegagalan
+   login. Aturannya:</p>
+<ul style="font-size:.93rem">
+  <li><b>10 kali gagal</b> untuk nama pengguna + alamat yang
+      sama &gt; nama pengguna itu terkunci <b>15 menit</b>.</li>
+  <li><b>5 kali gagal</b> dari <b>alamat yang sama</b> (apa pun
+      nama penggunanya) &gt; seluruh alamat itu terkunci
+      <b>15 menit</b>. (Ini tambahan baru: mencegah upaya
+      dari satu tempat dengan banyak nama pengguna.)</li>
+</ul>
+<div class="hint"><b>Kalau Anda melihat pesan "Terlalu banyak
+   percobaan -- coba lagi dalam N menit":</b> Anda hanya perlu
+   <b>menunggu</b> (maksimal 15 menit) lalu coba lagi dengan
+   kata sandi yang benar. Tidak perlu admin "membuka kunci"
+   -- kuncinya buka sendiri. Login yang berhasil otomatis
+   mereset semua penghitung.</div>
+
+<h2>4. Keluar otomatis (sesi) kini 30 menit</h2>
+<p style="font-size:.93rem">Agar tidak ada orang lain yang memakai
+   perangkat Anda tanpa login, aplikasi keluar sendiri bila
+   dibiarkan diam. Aturannya kini: <b>30 menit</b> untuk
+   instalasi baru (sebelumnya 1 jam). Instalasi lama tetap
+   memakai lama yang tersimpan sampai diubah. Cara mengubah:
+   <b>Admin &gt; Pengguna</b> &gt; <b>Pengaturan</b> &gt;
+   "Timeout sesi" (dalam detik; 1800 = 30 menit, 3600 =
+   1 jam, 0 = tidak keluar sendiri).</p>
+
+<h2>5. Sering ditanya</h2>
+<table>
+  <tr><th>Pertanyaan</th><th>Jawaban</th></tr>
+  <tr>
+    <td>"Aku terkunci padahal sandiku benar."</td>
+    <td>Berarti ada 5-10 percobaan gagal sebelumnya dari
+        alamat Anda. Tunggu sampai kunci habis (maksimal
+        15 menit), lalu masuk dengan sandi yang
+        benar. Setelah sukses, penghitung kembali nol.</td>
+  </tr>
+  <tr>
+    <td>"Kenapa produk A masih 'tipis' padahal stoknya 7?"</td>
+    <td>Lihat kolom <b>Stok minimum</b>-nya. Bila nilainya 10
+        (atau lebih besar dari 7), memang statusnya menipis.
+        Ubah nilainya bila ingin ambang lain.</td>
+  </tr>
+  <tr>
+    <td>"Dashboard 'stok menipis' beda dengan tabel produk."</td>
+    <td>Sejak W18-B keduanya memakai satu aturan: stok di
+        bawah "stok minimum" produk (atau standar 10 bila
+        kolomnya 0). Tidak mungkin lagi keduanya beda.</td>
+  </tr>
+  <tr>
+    <td>"Keluar otomatis terasa sering sekarang."</td>
+    <td>Untuk instalasi baru memang 30 menit. Bila mau 1 jam,
+        atur "Timeout sesi" ke 3600 di Admin &gt; Pengguna &gt;
+        Pengaturan.</td>
+  </tr>
+</table>
+
+</main>
+</body>
+</html>
+
